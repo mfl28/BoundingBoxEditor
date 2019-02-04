@@ -1,5 +1,6 @@
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Bounds;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.*;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
@@ -19,13 +20,11 @@ public class View extends BorderPane {
     private SelectionRectangle selectionRectangle;
     private VBox topBox;
 
-    ChangeListener<Bounds> changeListener;
+    private MenuItem fileOpenFolderItem;
+    private MenuItem viewFitWindowItem;
+    private MenuItem fileSaveItem;
 
-    MenuItem fileOpenFolderItem;
-    MenuItem viewFitWindowItem;
-    MenuItem fileSaveItem;
-
-    private Vector2D mousePressed = new Vector2D();
+    private DragAnchor mousePressed = new DragAnchor();
 
     // Maybe replace with enums
     private static final String NEXT_ICON_PATH = "icons/arrow_right.png";
@@ -51,6 +50,8 @@ public class View extends BorderPane {
 
         this.setTop(topBox);
         this.setCenter(imagePane);
+        setActionsFromController();
+        setInternalBindingsAndListeners();
     }
 
     private StackPane createImagePane() {
@@ -58,6 +59,8 @@ public class View extends BorderPane {
         imagePane.getStyleClass().add(IMAGE_PANE_STYLE);
         selectionRectangle = new SelectionRectangle();
         imageView = new ImageView();
+        imageView.setSmooth(true);
+        imageView.setCache(true);
 
         imagePane.getChildren().add(imageView);
         imagePane.getChildren().addAll(selectionRectangle.getNodes());
@@ -90,10 +93,6 @@ public class View extends BorderPane {
 
         menuBar.getMenus().addAll(fileMenu, viewMenu);
 
-        fileOpenFolderItem.setOnAction(controller);
-        fileSaveItem.setOnAction(controller);
-        viewFitWindowItem.setOnAction(controller);
-
         return menuBar;
     }
 
@@ -106,7 +105,7 @@ public class View extends BorderPane {
         HBox.setHgrow(leftSpace, Priority.ALWAYS);
         HBox.setHgrow(rightSpace, Priority.ALWAYS);
 
-        zoomSlider = new Slider(1, 1.2, 1);
+        zoomSlider = new Slider(1, 1.5, 1);
         Label zoomLabel = createIconLabel(ZOOM_ICON_PATH);
 
         brightnessSlider = new Slider(-0.5, 0.5, 0);
@@ -116,9 +115,6 @@ public class View extends BorderPane {
         previousButton = createIconButton(PREVIOUS_ICON_PATH);
         toolBar.getItems().addAll(zoomLabel, zoomSlider,
                 leftSpace, previousButton, nextButton, rightSpace, brightnessLabel, brightnessSlider);
-
-        nextButton.setOnAction(controller);
-        previousButton.setOnAction(controller);
 
         return toolBar;
     }
@@ -179,52 +175,9 @@ public class View extends BorderPane {
 
         imageView.setImage(image);
         imageView.setPreserveRatio(true);
-        //imageView.setSmooth(true);
+//        imageView.setViewport(new Rectangle2D(0,0,image.getWidth(), image.getHeight()));
 
         setInitialImageViewSize();
-
-        imagePane.widthProperty().addListener((value, oldValue, newValue) -> {
-            imageView.setFitWidth(Math.min(imageView.getImage().getWidth(), newValue.doubleValue() - 2 * IMAGE_PADDING));
-
-        });
-
-
-        imagePane.heightProperty().addListener((value, oldValue, newValue) -> {
-            imageView.setFitHeight(Math.min(imageView.getImage().getHeight(), newValue.doubleValue() - 2 * IMAGE_PADDING));
-
-        });
-
-        imagePane.setOnMousePressed(controller::onMousePressed);
-        imagePane.setOnMouseDragged(controller::onMouseDragged);
-
-//        imagePane.getChildren().removeAll(selectionRectangle.getNodes());
-//        selectionRectangle = new SelectionRectangle();
-//        imagePane.getChildren().addAll(selectionRectangle.getNodes());
-        if (changeListener != null) {
-            imageView.boundsInParentProperty().removeListener(changeListener);
-        }
-
-        changeListener = (observable, oldValue, newValue) -> {
-            selectionRectangle.setWidth(selectionRectangle.getWidth() * newValue.getWidth() / oldValue.getWidth());
-            selectionRectangle.setHeight(selectionRectangle.getHeight() * newValue.getHeight() / oldValue.getHeight());
-
-            selectionRectangle.setX(newValue.getMinX() + (selectionRectangle.getX() - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
-            selectionRectangle.setY(newValue.getMinY() + (selectionRectangle.getY() - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
-        };
-
-        ColorAdjust colorAdjust = new ColorAdjust();
-        colorAdjust.brightnessProperty().bind(brightnessSlider.valueProperty());
-        imageView.setEffect(colorAdjust);
-
-//        imageView.setOnScroll(e -> {
-//            double delta = e.getDeltaY();
-//            imageView.setFitWidth(imageView.getFitWidth() + delta);
-//            imageView.setFitHeight(imageView.getFitHeight() + delta);
-//            System.out.println(delta);
-//        });
-
-
-        imageView.boundsInParentProperty().addListener(changeListener);
     }
 
     private void setInitialImageViewSize() {
@@ -233,34 +186,123 @@ public class View extends BorderPane {
         double maxAllowedWidth = imagePane.getWidth() - 2 * IMAGE_PADDING;
         double maxAllowedHeight = imagePane.getHeight() - 2 * IMAGE_PADDING;
 
-//        System.out.println("Image Width: " + imageWidth);
-//        System.out.println("Image Height: " + imageHeight);
-//        System.out.println("ImageView before Width: " + imageView.getFitWidth());
-//        System.out.println("ImageView before Height: " + imageView.getFitHeight());
-//        System.out.println("Max Allowed Width: " + maxAllowedWidth);
-//        System.out.println("Max Allowed Height: " + maxAllowedHeight);
-
         imageView.setFitWidth(Math.min(imageWidth, maxAllowedWidth));
         imageView.setFitHeight(Math.min(imageHeight, maxAllowedHeight));
+    }
 
-//        System.out.println("ImageView after Width: " + imageView.getFitWidth());
-//        System.out.println("ImageView after Height: " + imageView.getFitHeight());
+    private void setActionsFromController(){
+        fileOpenFolderItem.setOnAction(controller);
+        fileSaveItem.setOnAction(controller);
+        viewFitWindowItem.setOnAction(controller);
+        nextButton.setOnAction(controller);
+        previousButton.setOnAction(controller);
+
+        imagePane.setOnMousePressed(controller::onMousePressed);
+        imagePane.setOnMouseDragged(controller::onMouseDragged);
+        imagePane.setOnMouseReleased(e -> selectionRectangle.showBBData());
+    }
+
+    private void setInternalBindingsAndListeners(){
+        imagePane.widthProperty().addListener((value, oldValue, newValue) -> {
+            double prefWidth = 0;
+            if(imageView.getImage() != null)
+                prefWidth = imageView.getImage().getWidth();
+            imageView.setFitWidth(Math.min(prefWidth, newValue.doubleValue() - 2 * IMAGE_PADDING));
+                });
+
+        imagePane.heightProperty().addListener((value, oldValue, newValue) -> {
+            double prefHeight = 0;
+            if(imageView.getImage() != null)
+                prefHeight = imageView.getImage().getHeight();
+            imageView.setFitHeight(Math.min(prefHeight, newValue.doubleValue() - 2 * IMAGE_PADDING));
+                });
+
+        imageView.boundsInParentProperty().addListener((observable, oldValue, newValue) -> {
+            selectionRectangle.setWidth(selectionRectangle.getWidth() * newValue.getWidth() / oldValue.getWidth());
+            selectionRectangle.setHeight(selectionRectangle.getHeight() * newValue.getHeight() / oldValue.getHeight());
+
+            selectionRectangle.setX(newValue.getMinX() + (selectionRectangle.getX() - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
+            selectionRectangle.setY(newValue.getMinY() + (selectionRectangle.getY() - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
+        });
+
+        ColorAdjust colorAdjust = new ColorAdjust();
+        colorAdjust.brightnessProperty().bind(brightnessSlider.valueProperty());
+        imageView.setEffect(colorAdjust);
+
+        // not finished
+        imagePane.setOnScroll(e -> {
+            if(e.isControlDown()) {
+                double delta = e.getDeltaY();
+
+                double newFitWidth = Utils.clamp(imageView.getFitWidth() + delta,
+                        0.25 * imagePane.getWidth(), imagePane.getWidth() - 2 * IMAGE_PADDING);
+                double newFitHeight = Utils.clamp(imageView.getFitHeight() + delta,
+                        0.25 * imagePane.getHeight(), imagePane.getHeight() - 2 * IMAGE_PADDING);
+
+//                if(imageView.getFitWidth() + delta > imagePane.getWidth() - 2 * IMAGE_PADDING &&
+//                imageView.getFitHeight() + delta > imagePane.getHeight() - 2 * IMAGE_PADDING){
+//                    System.out.println("viewporting");
+//                    Rectangle2D viewPort = imageView.getViewport();
+//                    double A = e.getX() - viewPort.getMinX();
+//                    double B = viewPort.getWidth() - A;
+//                    double abRatio = A/B;
+//                    double minX = abRatio/(1 + abRatio) * delta;
+//                    double nWidth = A + B - delta;
+//
+//                    double U = e.getY() - viewPort.getMinY();
+//                    double V = viewPort.getHeight() - U;
+//                    double uvRatio = U/V;
+//                    double minY = uvRatio/(1 + uvRatio) * delta;
+//                    double nHeight = U + V - delta;
+//
+//                    imageView.setViewport(new Rectangle2D(minX, minY, nWidth, nHeight));
+//                }
+
+                imageView.setFitWidth(newFitWidth);
+                imageView.setFitHeight(newFitHeight);
+
+
+
+            }
+        });
+
+        imageView.imageProperty().addListener((value, oldValue, newValue) -> {
+                    selectionRectangle.setVisible(false);
+                    zoomSlider.setValue(1);
+                });
+
+
+        zoomSlider.valueProperty().addListener((value, oldValue, newValue) -> {
+            double delta = (newValue.doubleValue() - oldValue.doubleValue())*500;
+
+            double newFitWidth = Utils.clamp(imageView.getFitWidth() + delta,
+                    0.25 * imagePane.getWidth(), imagePane.getWidth() - 2 * IMAGE_PADDING);
+            double newFitHeight = Utils.clamp(imageView.getFitHeight() + delta,
+                    0.25 * imagePane.getHeight(), imagePane.getHeight() - 2 * IMAGE_PADDING);
+
+            imageView.setFitWidth(newFitWidth);
+            imageView.setFitHeight(newFitHeight);
+        });
     }
 
     public void setMousePressed(double x, double y) {
-        mousePressed.x = x;
-        mousePressed.y = y;
+        mousePressed.setX(x);
+        mousePressed.setY(y);
     }
 
     public double getMousePressedX() {
-        return mousePressed.x;
+        return mousePressed.getX();
     }
 
     public double getMousePressedY() {
-        return mousePressed.y;
+        return mousePressed.getY();
     }
 
-    private class Vector2D {
-        public double x, y;
+    public void displayErrorAlert(String title, String header, String content){
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

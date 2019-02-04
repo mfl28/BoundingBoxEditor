@@ -4,7 +4,7 @@
     -fx-my-menu-color-highlighted: #434c5e;      /* Change according to your needs */
     -fx-my-menu-font-color: #d8dee9;             /* Change according to your needs */
     -fx-my-menu-font-color-highlighted: #d8dee9; /* Change according to your needs */
-    -background-color: #3b4252;
+    -my-background-color: #3b4252;
 
 }
 
@@ -90,7 +90,7 @@
 }
 
 .pane {
-    -fx-background-color: -background-color;
+    -fx-background-color: -my-background-color;
 }
 
 .button,

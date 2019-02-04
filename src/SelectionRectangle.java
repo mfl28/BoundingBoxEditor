@@ -4,6 +4,7 @@ import javafx.scene.Node;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SelectionRectangle extends Rectangle {
@@ -280,5 +281,10 @@ public class SelectionRectangle extends Rectangle {
         boundingBoxData.add(this.getY() + this.getHeight());
 
         return boundingBoxData;
+    }
+
+    // Testing
+    public void showBBData(){
+        System.out.println(Arrays.asList(getX(), getY(), getX() + getWidth(), getY() + getHeight()));
     }
 }

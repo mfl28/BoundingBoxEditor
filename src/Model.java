@@ -5,17 +5,17 @@ import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Model {
@@ -25,35 +25,25 @@ public class Model {
     private BooleanBinding hasNextFile;
     private BooleanBinding hasPreviousFile;
     private ObjectBinding<File> currentFile;
+    private ObservableMap<String, List<Double>> boundingBoxData;
 
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
 
     public Model(){
+        fileIndex = new SimpleIntegerProperty(0);
+        boundingBoxData = FXCollections.observableMap(new LinkedHashMap<>());
     }
 
-    public void setImageFileList(Path path){
-        // try/catch and exception handling should be done in Controller class
-        try{
-            imageFileList = FXCollections.observableArrayList(
-                    Files.walk(path, MAX_DIRECTORY_DEPTH)
-                            .filter(p -> Arrays.stream(imageExtensions).anyMatch(p.toString()::endsWith))
-                            .map(p -> new File(p.toString()))
-                            .collect(Collectors.toList())
-            );
-        }
-        catch(SecurityException exception){
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error" + exception.toString());
-            alert.setHeaderText("Cannot open folder.");
-            alert.setContentText("Please chose another folder!");
-            alert.showAndWait();
-        }
-        catch(IOException | UncheckedIOException exception){
-            System.err.println(exception.getClass());
-        }
+    public void setImageFileList(Path path) throws Exception{
+        imageFileList = FXCollections.observableArrayList(
+                Files.walk(path, MAX_DIRECTORY_DEPTH)
+                        .filter(p -> Arrays.stream(imageExtensions).anyMatch(p.toString()::endsWith))
+                        .map(p -> new File(p.toString()))
+                        .collect(Collectors.toList())
+        );
 
-        fileIndex = new SimpleIntegerProperty(0);
+        fileIndex.set(0);
         imageFileListSize = Bindings.size(imageFileList);
         hasNextFile = fileIndex.lessThan(imageFileListSize.subtract(1));
         hasPreviousFile = fileIndex.greaterThan(0);
@@ -86,6 +76,17 @@ public class Model {
 
     public BooleanBinding hasPreviousFileBinding(){
         return hasPreviousFile;
+    }
+
+    public ObservableMap<String, List<Double>> getBoundingBoxData() {
+        return boundingBoxData;
+    }
+
+    void writeBoundingBoxDataToFile(File file) throws IOException {
+        try (PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
+            boundingBoxData.forEach((key, value) -> printWriter.write(key + ", " +
+                        value.stream().map(d -> d.toString()).collect(Collectors.joining(", "))));
+        }
     }
 
     private Image getImageFromFile(File file){
