@@ -12,10 +12,9 @@ import javafx.scene.image.Image;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Model {
@@ -29,10 +28,12 @@ public class Model {
 
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
+    private static final DecimalFormat numberFormat = (DecimalFormat)NumberFormat.getNumberInstance(Locale.ENGLISH);
 
     public Model(){
         fileIndex = new SimpleIntegerProperty(0);
         boundingBoxData = FXCollections.observableMap(new LinkedHashMap<>());
+        numberFormat.applyPattern("#0.0000");
     }
 
     public void setImageFileList(Path path) throws Exception{
@@ -84,9 +85,16 @@ public class Model {
 
     void writeBoundingBoxDataToFile(File file) throws IOException {
         try (PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
-            boundingBoxData.forEach((key, value) -> printWriter.write(key + ", " +
-                        value.stream().map(d -> d.toString()).collect(Collectors.joining(", "))));
+            boundingBoxData.forEach((key, value) -> printWriter.println(key + ", " +
+                        value.stream().map(numberFormat::format).collect(Collectors.joining(", "))));
         }
+    }
+
+    public String getCurrentImageFilePath(){
+        String imagePath = getCurrentImage().getUrl()
+                .replace("/", "\\")
+                .replace("%20", " ");
+        return imagePath.substring(imagePath.indexOf("\\") + 1);
     }
 
     private Image getImageFromFile(File file){

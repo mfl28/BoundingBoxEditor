@@ -1,12 +1,12 @@
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Bounds;
-import javafx.geometry.Rectangle2D;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.geometry.*;
 import javafx.scene.control.*;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 
 public class View extends BorderPane {
     private final Controller controller;
@@ -19,10 +19,15 @@ public class View extends BorderPane {
     private Slider zoomSlider;
     private SelectionRectangle selectionRectangle;
     private VBox topBox;
+    private ToolBar settingsToolBar;
 
     private MenuItem fileOpenFolderItem;
     private MenuItem viewFitWindowItem;
+    private CheckMenuItem viewShowSettingsItem;
+    //private MenuItem viewBoundingBoxColorItem;
     private MenuItem fileSaveItem;
+
+    private ColorPicker boundingBoxColorPicker;
 
     private DragAnchor mousePressed = new DragAnchor();
 
@@ -32,12 +37,15 @@ public class View extends BorderPane {
     private static final String ZOOM_ICON_PATH = "icons/zoom.png";
     private static final String BRIGHTNESS_ICON_PATH = "icons/brightness.png";
     private static final String TOP_BOX_STYLE = "topBox";
+    private static final String SETTINGS_BOX_STYLE = "settingsBox";
     private static final String IMAGE_PANE_STYLE = "pane";
     private static final String FILE_MENU_TEXT = "_File";
     private static final String VIEW_MENU_TEXT = "_View";
     private static final String OPEN_FOLDER_TEXT = "_Open Folder...";
     private static final String SAVE_TEXT = "_Save...";
     private static final String FIT_WINDOW_TEXT = "_Fit Window";
+    private static final String BOUNDING_BOX_COLOR_TEXT = "Bounding Box Color";
+    private static final String SHOW_SETTINGS_BAR_TEXT = "Settings Bar";
     private static final double ICON_WIDTH = 20.0;
     private static final double ICON_HEIGHT = 20.0;
     private static final double IMAGE_PADDING = 30.0;
@@ -47,9 +55,12 @@ public class View extends BorderPane {
         this.controller = controller;
         imagePane = createImagePane();
         topBox = createTopBox();
+        settingsToolBar = createSettingsBar();
+
 
         this.setTop(topBox);
         this.setCenter(imagePane);
+        this.setRight(settingsToolBar);
         setActionsFromController();
         setInternalBindingsAndListeners();
     }
@@ -61,6 +72,7 @@ public class View extends BorderPane {
         imageView = new ImageView();
         imageView.setSmooth(true);
         imageView.setCache(true);
+        imageView.setPickOnBounds(true);
 
         imagePane.getChildren().add(imageView);
         imagePane.getChildren().addAll(selectionRectangle.getNodes());
@@ -86,10 +98,13 @@ public class View extends BorderPane {
         fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT);
 
         viewFitWindowItem = new MenuItem(FIT_WINDOW_TEXT);
+        viewShowSettingsItem = new CheckMenuItem(SHOW_SETTINGS_BAR_TEXT);
+        //boundingBoxColorPicker = new ColorPicker();
+        //viewBoundingBoxColorItem = new MenuItem(BOUNDING_BOX_COLOR_TEXT, boundingBoxColorPicker);
         fileSaveItem = new MenuItem(SAVE_TEXT);
 
         fileMenu.getItems().addAll(fileOpenFolderItem, fileSaveItem);
-        viewMenu.getItems().add(viewFitWindowItem);
+        viewMenu.getItems().addAll(viewFitWindowItem, viewShowSettingsItem);
 
         menuBar.getMenus().addAll(fileMenu, viewMenu);
 
@@ -105,16 +120,17 @@ public class View extends BorderPane {
         HBox.setHgrow(leftSpace, Priority.ALWAYS);
         HBox.setHgrow(rightSpace, Priority.ALWAYS);
 
-        zoomSlider = new Slider(1, 1.5, 1);
-        Label zoomLabel = createIconLabel(ZOOM_ICON_PATH);
+        //zoomSlider = new Slider(1, 1.5, 1);
+        //Label zoomLabel = createIconLabel(ZOOM_ICON_PATH);
 
-        brightnessSlider = new Slider(-0.5, 0.5, 0);
-        Label brightnessLabel = createIconLabel(BRIGHTNESS_ICON_PATH);
+//        brightnessSlider = new Slider(-0.5, 0.5, 0);
+//        Label brightnessLabel = createIconLabel(BRIGHTNESS_ICON_PATH);
 
         nextButton = createIconButton(NEXT_ICON_PATH);
         previousButton = createIconButton(PREVIOUS_ICON_PATH);
-        toolBar.getItems().addAll(zoomLabel, zoomSlider,
-                leftSpace, previousButton, nextButton, rightSpace, brightnessLabel, brightnessSlider);
+//        toolBar.getItems().addAll(zoomLabel, zoomSlider,
+//                leftSpace, previousButton, nextButton, rightSpace, brightnessLabel, brightnessSlider);
+        toolBar.getItems().addAll(leftSpace, previousButton, nextButton, rightSpace);
 
         return toolBar;
     }
@@ -143,6 +159,39 @@ public class View extends BorderPane {
         return label;
     }
 
+    private ToolBar createSettingsBar(){
+        ToolBar settingsBar = new ToolBar();
+        settingsBar.setOrientation(Orientation.VERTICAL);
+        settingsBar.getStyleClass().add(SETTINGS_BOX_STYLE);
+        zoomSlider = new Slider(1, 1.5, 1);
+        Label imageSettings = new Label("Image");
+        Label zoomLabel = createIconLabel(ZOOM_ICON_PATH);
+
+        HBox zoomHBox = new HBox(zoomLabel, zoomSlider);
+        zoomHBox.setPadding(new Insets(20, 0, 20, 0));
+        zoomHBox.setSpacing(10);
+
+        brightnessSlider = new Slider(-0.5, 0.5, 0);
+        Label brightnessLabel = createIconLabel(BRIGHTNESS_ICON_PATH);
+
+        HBox brightnessHBox = new HBox(brightnessLabel, brightnessSlider);
+        brightnessHBox.setPadding(new Insets(20, 0, 20, 0));
+        brightnessHBox.setSpacing(10);
+
+        Label colorLabel = new Label("Bounding Box");
+        boundingBoxColorPicker = new ColorPicker();
+
+        HBox colorHBox = new HBox(colorLabel, boundingBoxColorPicker);
+        colorHBox.setPadding(new Insets(10, 0,10,0));
+        boundingBoxColorPicker.getStyleClass().add("button");
+        //colorHBox.setSpacing(10);
+
+        settingsBar.getItems().addAll(new Separator(), imageSettings, zoomHBox, brightnessHBox, new Separator(), colorLabel, boundingBoxColorPicker);
+        settingsBar.setPadding(new Insets(0, 15, 0, 15));
+        return settingsBar;
+    }
+
+
     public MenuItem getFileOpenFolderItem() {
         return fileOpenFolderItem;
     }
@@ -163,7 +212,7 @@ public class View extends BorderPane {
         return nextButton;
     }
 
-    public Rectangle getSelectionRectangle() {
+    public SelectionRectangle getSelectionRectangle() {
         return selectionRectangle;
     }
 
@@ -194,12 +243,16 @@ public class View extends BorderPane {
         fileOpenFolderItem.setOnAction(controller);
         fileSaveItem.setOnAction(controller);
         viewFitWindowItem.setOnAction(controller);
+        //viewBoundingBoxColorItem.setOnAction(controller);
         nextButton.setOnAction(controller);
         previousButton.setOnAction(controller);
 
-        imagePane.setOnMousePressed(controller::onMousePressed);
-        imagePane.setOnMouseDragged(controller::onMouseDragged);
-        imagePane.setOnMouseReleased(e -> selectionRectangle.showBBData());
+        imageView.setOnMousePressed(controller::onMousePressed);
+        imageView.setOnMouseDragged(controller::onMouseDragged);
+
+        selectionRectangle.setOnMouseEntered(controller::onSelectionRectangleMouseEntered);
+        selectionRectangle.setOnMousePressed(controller::onSelectionRectangleMousePressed);
+        selectionRectangle.setOnMouseDragged(controller::onSelectionRectangleMouseDragged);
     }
 
     private void setInternalBindingsAndListeners(){
@@ -239,30 +292,8 @@ public class View extends BorderPane {
                 double newFitHeight = Utils.clamp(imageView.getFitHeight() + delta,
                         0.25 * imagePane.getHeight(), imagePane.getHeight() - 2 * IMAGE_PADDING);
 
-//                if(imageView.getFitWidth() + delta > imagePane.getWidth() - 2 * IMAGE_PADDING &&
-//                imageView.getFitHeight() + delta > imagePane.getHeight() - 2 * IMAGE_PADDING){
-//                    System.out.println("viewporting");
-//                    Rectangle2D viewPort = imageView.getViewport();
-//                    double A = e.getX() - viewPort.getMinX();
-//                    double B = viewPort.getWidth() - A;
-//                    double abRatio = A/B;
-//                    double minX = abRatio/(1 + abRatio) * delta;
-//                    double nWidth = A + B - delta;
-//
-//                    double U = e.getY() - viewPort.getMinY();
-//                    double V = viewPort.getHeight() - U;
-//                    double uvRatio = U/V;
-//                    double minY = uvRatio/(1 + uvRatio) * delta;
-//                    double nHeight = U + V - delta;
-//
-//                    imageView.setViewport(new Rectangle2D(minX, minY, nWidth, nHeight));
-//                }
-
                 imageView.setFitWidth(newFitWidth);
                 imageView.setFitHeight(newFitHeight);
-
-
-
             }
         });
 
@@ -283,6 +314,12 @@ public class View extends BorderPane {
             imageView.setFitWidth(newFitWidth);
             imageView.setFitHeight(newFitHeight);
         });
+
+        selectionRectangle.strokeProperty().bind(boundingBoxColorPicker.valueProperty());
+
+        // To remove settingsToolbar when it is not visible.
+        settingsToolBar.managedProperty().bind(settingsToolBar.visibleProperty());
+        settingsToolBar.visibleProperty().bind(viewShowSettingsItem.selectedProperty());
     }
 
     public void setMousePressed(double x, double y) {

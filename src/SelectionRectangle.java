@@ -1,7 +1,12 @@
 import javafx.beans.property.DoubleProperty;
+import javafx.geometry.Bounds;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
+import jdk.jshell.execution.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,19 +37,19 @@ public class SelectionRectangle extends Rectangle {
     }
 
     private void addMoveFunctionality() {
-        this.setOnMouseEntered(event -> this.setCursor(Cursor.MOVE));
-
-        this.setOnMousePressed(event -> {
-            dragAnchor.setFromMouseEvent(event);
-            event.consume();
-        });
-
-        this.setOnMouseDragged(event -> {
-            this.setX(this.getX() + event.getX() - dragAnchor.getX());
-            this.setY(this.getY() + event.getY() - dragAnchor.getY());
-            dragAnchor.setFromMouseEvent(event);
-            event.consume();
-        });
+//        this.setOnMouseEntered(event -> this.setCursor(Cursor.MOVE));
+//
+//        this.setOnMousePressed(event -> {
+//            dragAnchor.setFromMouseEvent(event);
+//            event.consume();
+//        });
+//
+//        this.setOnMouseDragged(event -> {
+//            this.setX(this.getX() + event.getX() - dragAnchor.getX());
+//            this.setY(this.getY() + event.getY() - dragAnchor.getY());
+//            dragAnchor.setFromMouseEvent(event);
+//            event.consume();
+//        });
     }
 
     List<Node> getNodes() {
@@ -272,9 +277,8 @@ public class SelectionRectangle extends Rectangle {
         return true;
     }
 
-    public List<Double> getBoundingBox() {
+    public List<Double> getBoundingBoxCoordinates() {
         List<Double> boundingBoxData = new ArrayList<>();
-        // Wrong
         boundingBoxData.add(this.getX());
         boundingBoxData.add(this.getY());
         boundingBoxData.add(this.getX() + this.getWidth());
@@ -283,8 +287,25 @@ public class SelectionRectangle extends Rectangle {
         return boundingBoxData;
     }
 
+    public List<Double> getScaledLocalCoordinatesInSiblingImage(ImageView sibling){
+        Bounds localBounds = sibling.parentToLocal(this.getBoundsInParent());
+        Image image = sibling.getImage();
+        double scaleWidth = image.getWidth();
+        double scaleHeight = image.getHeight();
+        double topLeftX = Utils.clamp(localBounds.getMinX() * scaleWidth / localBounds.getWidth(), 0, scaleWidth);
+        double topLeftY = Utils.clamp(localBounds.getMinY() * scaleHeight / localBounds.getHeight(), 0, scaleHeight);
+        double bottomRightX = Utils.clamp(localBounds.getMaxX() * scaleWidth / localBounds.getWidth(), 0, scaleWidth);
+        double bottomRightY = Utils.clamp(localBounds.getMaxY() * scaleHeight / localBounds.getHeight(), 0, scaleHeight);
+
+        return Arrays.asList(topLeftX, topLeftY, bottomRightX, bottomRightY);
+    }
+
     // Testing
     public void showBBData(){
         System.out.println(Arrays.asList(getX(), getY(), getX() + getWidth(), getY() + getHeight()));
+    }
+
+    public DragAnchor getDragAnchor(){
+        return dragAnchor;
     }
 }

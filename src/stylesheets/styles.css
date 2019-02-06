@@ -1,6 +1,8 @@
+@import "nord.css"
+
 /* VARIABLE DEFINITIONS: Only these 4 variables have to be adjusted, the rest is copy-paste */
 * {
-    -fx-my-menu-color: #2e3440;                  /* Change according to your needs */
+    -fx-my-menu-color: -nord0;                  /* Change according to your needs */
     -fx-my-menu-color-highlighted: #434c5e;      /* Change according to your needs */
     -fx-my-menu-font-color: #d8dee9;             /* Change according to your needs */
     -fx-my-menu-font-color-highlighted: #d8dee9; /* Change according to your needs */
@@ -59,6 +61,7 @@
 /*** The item's label (not hovered / focused) ***/   
 .menu-item .label {
     -fx-text-fill: -fx-my-menu-font-color;
+    -fx-font-size: 12 pt;
 }
 
 /*** The item's label (disabled) ***/   
@@ -76,7 +79,10 @@
     -fx-text-fill: -fx-my-menu-font-color-highlighted;
 }
 
-
+.check-menu-item:checked
+{
+    -fx-mark-color: -nord4;
+}
 
 /* CONTEXT MENU */
 /*** The context menu that contains a menu's menu items ***/  
@@ -119,6 +125,10 @@
     -fx-background-color: #2e3440;
 }
 
+.settingsBox {
+    -fx-background-color: -nord0;
+}
+
 .separator {
     -fx-scale-y: 0.1;
     -fx-background-color: #434c5e;
@@ -131,4 +141,39 @@
 
 .mnemonic-underline {
     -fx-stroke: -fx-text-fill;
+}
+
+.color-picker {
+    -fx-color-label-visible: false;
+    -fx-color: -nord4;
+    -fx-background-color: transparent;
+}
+
+.color-picker .context-menu {
+    -fx-background-color: transparent;
+}
+
+.color-palette {
+    -fx-background-color: -nord4;
+}
+
+
+.slider .track {
+    -fx-control-inner-background: -fx-my-menu-font-color;
+    -fx-padding: 2;
+}
+
+
+.slider .thumb {
+    -fx-background-color: -nord3;
+    -fx-effect: none;
+}
+
+.slider .thumb:pressed {
+    -fx-background-color: -nord4;
+}
+
+.label {
+    -fx-text-fill: -nord4;
+    -fx-font-size: 16 pt;
 }
