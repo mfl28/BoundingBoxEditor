@@ -2,23 +2,31 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.IntegerBinding;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
-import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class Model {
     private ObservableList<File> imageFileList;
+    private ObservableList<BoundingBoxItem> boundingBoxItems;
     private IntegerProperty fileIndex;
     private IntegerBinding imageFileListSize;
     private BooleanBinding hasNextFile;
@@ -28,15 +36,17 @@ public class Model {
 
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
-    private static final DecimalFormat numberFormat = (DecimalFormat)NumberFormat.getNumberInstance(Locale.ENGLISH);
+    private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
 
-    public Model(){
+    public Model() {
         fileIndex = new SimpleIntegerProperty(0);
         boundingBoxData = FXCollections.observableMap(new LinkedHashMap<>());
+        // For testing put some entries into the list
+        boundingBoxItems = FXCollections.observableArrayList(new BoundingBoxItem());
         numberFormat.applyPattern("#0.0000");
     }
 
-    public void setImageFileList(Path path) throws Exception{
+    public void setImageFileList(Path path) throws Exception {
         imageFileList = FXCollections.observableArrayList(
                 Files.walk(path, MAX_DIRECTORY_DEPTH)
                         .filter(p -> Arrays.stream(imageExtensions).anyMatch(p.toString()::endsWith))
@@ -51,31 +61,35 @@ public class Model {
         currentFile = Bindings.valueAt(imageFileList, fileIndex);
     }
 
-    public Image getCurrentImage(){
+    public Image getCurrentImage() {
         return getImageFromFile(currentFile.get());
     }
 
-    public IntegerProperty fileIndexProperty(){
+    public IntegerProperty fileIndexProperty() {
         return fileIndex;
     }
 
-    public void incrementFileIndex(){
+    public ObservableList<BoundingBoxItem> getBoundingBoxItems() {
+        return boundingBoxItems;
+    }
+
+    public void incrementFileIndex() {
         fileIndex.set(fileIndex.get() + 1);
     }
 
-    public void decrementFileIndex(){
+    public void decrementFileIndex() {
         fileIndex.set(fileIndex.get() - 1);
     }
 
-    public IntegerBinding getFileListSizeBinding(){
+    public IntegerBinding getFileListSizeBinding() {
         return imageFileListSize;
     }
 
-    public BooleanBinding hasNextFileBinding(){
+    public BooleanBinding hasNextFileBinding() {
         return hasNextFile;
     }
 
-    public BooleanBinding hasPreviousFileBinding(){
+    public BooleanBinding hasPreviousFileBinding() {
         return hasPreviousFile;
     }
 
@@ -86,18 +100,18 @@ public class Model {
     void writeBoundingBoxDataToFile(File file) throws IOException {
         try (PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
             boundingBoxData.forEach((key, value) -> printWriter.println(key + ", " +
-                        value.stream().map(numberFormat::format).collect(Collectors.joining(", "))));
+                    value.stream().map(numberFormat::format).collect(Collectors.joining(", "))));
         }
     }
 
-    public String getCurrentImageFilePath(){
+    public String getCurrentImageFilePath() {
         String imagePath = getCurrentImage().getUrl()
                 .replace("/", "\\")
                 .replace("%20", " ");
         return imagePath.substring(imagePath.indexOf("\\") + 1);
     }
 
-    private Image getImageFromFile(File file){
+    private Image getImageFromFile(File file) {
         return new Image(file.toURI().toString());
     }
 }

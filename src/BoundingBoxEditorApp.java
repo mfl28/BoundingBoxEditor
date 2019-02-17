@@ -23,10 +23,10 @@ public class BoundingBoxEditorApp extends Application {
         launch(args);
     }
 
-    private Scene getScaledScene(Parent view){
+    private Scene getScaledScene(Parent view) {
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-        int width = (int)(INITIAL_WINDOW_SCALE * screenBounds.getWidth());
-        int height = (int)(INITIAL_WINDOW_SCALE * screenBounds.getHeight());
+        double width = INITIAL_WINDOW_SCALE * screenBounds.getWidth();
+        double height = INITIAL_WINDOW_SCALE * screenBounds.getHeight();
 
         return new Scene(view, width, height);
     }

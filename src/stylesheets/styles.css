@@ -7,6 +7,7 @@
     -fx-my-menu-font-color: #d8dee9;             /* Change according to your needs */
     -fx-my-menu-font-color-highlighted: #d8dee9; /* Change according to your needs */
     -my-background-color: #3b4252;
+    -default-selectionRectangle-color: #ffcc66;
 
 }
 
@@ -102,6 +103,7 @@
 .button,
 .button:focused,
 .button:armed {
+    -fx-text-fill: -nord4;
     -fx-background-color: transparent;
     -fx-background-insets: 0, 0, 0, 0, 0, 0, 0;
 }
@@ -114,6 +116,44 @@
 .button:pressed {
     -fx-background-color: #4c566a;
     -fx-background-insets: 0, 0, 0, 0, 0, 0, 0;
+}
+
+.delete-button {
+    -fx-padding: 0;
+    -fx-margin: 0;
+    -fx-max-width: 18px;
+    -fx-max-height: 18px;
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-pref-width: 18px;
+    -fx-pref-height: 18px;
+    -fx-background-color: transparent;
+}
+
+.delete-button .icon {
+    -fx-background-color: transparent;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-pref-width: 10px;
+    -fx-pref-height: 10px;
+    -fx-shape: "M46.57552,37.24219c-3.79795,0.001 -7.21662,2.30305
+    -8.64576,5.82185c-1.42914,3.5188 -0.58376,7.55267 2.13794,10.20158l58.73438,58.73438l
+    -58.73438,58.73438c-2.43822,2.34096 -3.42039,5.81715 -2.56772,9.08793c0.85267,3.27078 3.40694,5.82504
+    6.67771,6.67771c3.27078,0.85267 6.74697,-0.1295 9.08793,-2.56772l58.73438,-58.73438l58.73438,58.73438c2.34095,
+    2.43825 5.81716,3.42044 9.08795,2.56778c3.27079,-0.85266 5.82507,-3.40694 6.67774,-6.67774c0.85266,
+    -3.27079 -0.12953,-6.747 -2.56778,-9.08795l-58.73438,-58.73438l58.73438,-58.73438c2.76043,
+    -2.68325 3.59043,-6.78595 2.09006,-10.33119c-1.50037,-3.54524 -5.02332,-5.80573 -8.8713,
+    -5.69225c-2.42479,0.07225 -4.7262,1.08566 -6.41667,2.82552l-58.73438,58.73438l-58.73438,
+    -58.73438c-1.7572,-1.80631 -4.17009,-2.82537 -6.6901,-2.82552z";
+}
+
+.delete-button:hover {
+    -fx-background-color: radial-gradient(center 50% 50%, radius 50%, -nord1, transparent);
+}
+.delete-button:hover .icon {
+    -fx-background-color: -nord12;
 }
 
 .selectionRectangle{
@@ -144,13 +184,25 @@
 }
 
 .color-picker {
-    -fx-color-label-visible: false;
-    -fx-color: -nord4;
+    /*-fx-color-label-visible: false;*/
+    -fx-color: -nord0;
     -fx-background-color: transparent;
+}
+
+.color-picker .arrow-button .arrow {
+    -fx-background-color: -nord4;
 }
 
 .color-picker .context-menu {
     -fx-background-color: transparent;
+}
+
+.color-picker:hover {
+    -fx-background-color: -nord1;
+}
+
+.color-picker .color-picker-label .text {
+    -fx-fill: -nord4;
 }
 
 .color-palette {
@@ -176,4 +228,92 @@
 .label {
     -fx-text-fill: -nord4;
     -fx-font-size: 16 pt;
+}
+
+.side-panel {
+   -fx-background-color: -nord0;
+}
+
+.table-view {
+    -fx-background-color: transparent;
+    -fx-color: -nord0;
+    -fx-padding: 0 5px;
+}
+
+.table-view:focused{
+    -fx-background-color: transparent;
+}
+
+.table-view-input-controls {
+    -fx-padding: 0 5px;
+}
+
+.table-view > .virtual-flow > .scroll-bar:horizontal,
+.table-view > .virtual-flow > .scroll-bar:horizontal > .track,
+.table-view > .virtual-flow > .scroll-bar:horizontal > .track-background {
+    -fx-background-color: transparent;
+}
+
+.table-view .thumb {
+    -fx-color: -nord4;
+}
+
+.table-view .thumb:hover {
+    -fx-color: -nord11;
+}
+
+.table-view .table-cell{
+    -fx-text-fill: -nord4;
+}
+
+.table-row-cell{
+    -fx-background-color: -fx-table-cell-border-color, -nord1;
+    -fx-table-cell-border-color: transparent;
+ /* 0 */
+}
+
+.table-row-cell:selected .table-cell {
+    -fx-background-color: -nord3;
+    -fx-text-fill: -nord4;
+    /*-fx-border-color: -nord4 -nord4 -nord4 transparent;*/
+}
+
+.table-row-cell:selected .table-cell:selected {
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+    -fx-padding: 0;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: -nord2;
+}
+
+.table-row-cell:selected {
+    /*-fx-table-cell-border-color: -nord1;*/
+    /*-fx-border-insets: 0, 0 -1 1 0;*/
+    /*-fx-border-color: -nord4 -nord4 -nord4 -nord4;*/
+}
+
+
+
+.table-view > .virtual-flow > .scroll-bar > .increment-button,
+.table-view > .virtual-flow > .scroll-bar > .decrement-button {
+    -fx-opacity: 0;
+}
+
+.noheader .column-header-background {
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+}
+
+.text-field {
+    -fx-background-color: -nord3;
+    -fx-text-fill: -nord4;
+    -fx-background-radius: 0;
+    -fx-accent: -nord10;
+}
+
+.text-field-table-cell .text-field{
+    -fx-padding: 0;
 }

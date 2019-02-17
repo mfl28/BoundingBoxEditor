@@ -1,12 +1,16 @@
-import javafx.animation.FadeTransition;
-import javafx.animation.Interpolator;
-import javafx.geometry.*;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.util.Duration;
+import javafx.scene.paint.Color;
+import javafx.util.converter.DefaultStringConverter;
 
 public class View extends BorderPane {
     private final Controller controller;
@@ -20,6 +24,9 @@ public class View extends BorderPane {
     private SelectionRectangle selectionRectangle;
     private VBox topBox;
     private ToolBar settingsToolBar;
+    private Label brightnessLabel;
+    private ToolBar navBar;
+    private VBox selectionSidePanel;
 
     private MenuItem fileOpenFolderItem;
     private MenuItem viewFitWindowItem;
@@ -27,18 +34,22 @@ public class View extends BorderPane {
     //private MenuItem viewBoundingBoxColorItem;
     private MenuItem fileSaveItem;
 
-    private ColorPicker boundingBoxColorPicker;
-
     private DragAnchor mousePressed = new DragAnchor();
 
+    private TableView<BoundingBoxItem> boundingBoxItemTableView;
+    private TextField nameInput;
+    private ColorPicker boundingBoxColorPicker;
+    private Button addButton;
     // Maybe replace with enums
     private static final String NEXT_ICON_PATH = "icons/arrow_right.png";
     private static final String PREVIOUS_ICON_PATH = "icons/arrow_left.png";
     private static final String ZOOM_ICON_PATH = "icons/zoom.png";
     private static final String BRIGHTNESS_ICON_PATH = "icons/brightness.png";
+    private static final String DELETE_ICON_PATH = "icons/delete.png";
     private static final String TOP_BOX_STYLE = "topBox";
     private static final String SETTINGS_BOX_STYLE = "settingsBox";
     private static final String IMAGE_PANE_STYLE = "pane";
+    private static final String SIDE_PANEL_STYLE = "side-panel";
     private static final String FILE_MENU_TEXT = "_File";
     private static final String VIEW_MENU_TEXT = "_View";
     private static final String OPEN_FOLDER_TEXT = "_Open Folder...";
@@ -51,16 +62,18 @@ public class View extends BorderPane {
     private static final double IMAGE_PADDING = 30.0;
 
 
+
     public View(Controller controller) {
         this.controller = controller;
         imagePane = createImagePane();
         topBox = createTopBox();
         settingsToolBar = createSettingsBar();
-
+        selectionSidePanel = createSelectionSidePanel();
 
         this.setTop(topBox);
         this.setCenter(imagePane);
         this.setRight(settingsToolBar);
+        this.setLeft(selectionSidePanel);
         setActionsFromController();
         setInternalBindingsAndListeners();
     }
@@ -83,7 +96,9 @@ public class View extends BorderPane {
     private VBox createTopBox() {
         VBox topBox = new VBox();
 
-        topBox.getChildren().addAll(createMenuBar(), new Separator(), createToolBar());
+        navBar = createToolBar();
+
+        topBox.getChildren().addAll(createMenuBar(), new Separator(), navBar);
         topBox.getStyleClass().add(TOP_BOX_STYLE);
 
         return topBox;
@@ -127,10 +142,15 @@ public class View extends BorderPane {
 //        Label brightnessLabel = createIconLabel(BRIGHTNESS_ICON_PATH);
 
         nextButton = createIconButton(NEXT_ICON_PATH);
+        nextButton.setFocusTraversable(false);
+
         previousButton = createIconButton(PREVIOUS_ICON_PATH);
+        previousButton.setFocusTraversable(false);
+
 //        toolBar.getItems().addAll(zoomLabel, zoomSlider,
 //                leftSpace, previousButton, nextButton, rightSpace, brightnessLabel, brightnessSlider);
         toolBar.getItems().addAll(leftSpace, previousButton, nextButton, rightSpace);
+        toolBar.setVisible(false);
 
         return toolBar;
     }
@@ -159,7 +179,7 @@ public class View extends BorderPane {
         return label;
     }
 
-    private ToolBar createSettingsBar(){
+    private ToolBar createSettingsBar() {
         ToolBar settingsBar = new ToolBar();
         settingsBar.setOrientation(Orientation.VERTICAL);
         settingsBar.getStyleClass().add(SETTINGS_BOX_STYLE);
@@ -172,23 +192,106 @@ public class View extends BorderPane {
         zoomHBox.setSpacing(10);
 
         brightnessSlider = new Slider(-0.5, 0.5, 0);
-        Label brightnessLabel = createIconLabel(BRIGHTNESS_ICON_PATH);
+        brightnessLabel = createIconLabel(BRIGHTNESS_ICON_PATH);
 
         HBox brightnessHBox = new HBox(brightnessLabel, brightnessSlider);
         brightnessHBox.setPadding(new Insets(20, 0, 20, 0));
         brightnessHBox.setSpacing(10);
 
-        Label colorLabel = new Label("Bounding Box");
-        boundingBoxColorPicker = new ColorPicker();
-
-        HBox colorHBox = new HBox(colorLabel, boundingBoxColorPicker);
-        colorHBox.setPadding(new Insets(10, 0,10,0));
-        boundingBoxColorPicker.getStyleClass().add("button");
+//        Label colorLabel = new Label("Bounding Box");
+//        boundingBoxColorPicker = new ColorPicker();
+//
+//        HBox colorHBox = new HBox(colorLabel, boundingBoxColorPicker);
+//        colorHBox.setPadding(new Insets(10, 0, 10, 0));
+//        boundingBoxColorPicker.getStyleClass().add("button");
         //colorHBox.setSpacing(10);
 
-        settingsBar.getItems().addAll(new Separator(), imageSettings, zoomHBox, brightnessHBox, new Separator(), colorLabel, boundingBoxColorPicker);
+        settingsBar.getItems().addAll(new Separator(), imageSettings, zoomHBox, brightnessHBox, new Separator());
         settingsBar.setPadding(new Insets(0, 15, 0, 15));
         return settingsBar;
+    }
+
+    private VBox createSelectionSidePanel(){
+        VBox sidePanel = new VBox();
+
+        boundingBoxItemTableView = createBoundingBoxTableView();
+
+        nameInput = new TextField();
+        nameInput.setMaxWidth(100);
+
+        boundingBoxColorPicker = new ColorPicker();
+        boundingBoxColorPicker.setMaxWidth(50);
+        boundingBoxColorPicker.setMaxHeight(25);
+        //boundingBoxColorPicker.getStyleClass().add("split-button");
+
+        Pane leftSpace = new Pane();
+        Pane rightSpace = new Pane();
+
+        HBox.setHgrow(leftSpace, Priority.ALWAYS);
+        HBox.setHgrow(rightSpace, Priority.ALWAYS);
+
+        addButton = new Button("Add");
+        addButton.setFocusTraversable(false);
+        HBox addItemControls = new HBox(nameInput, leftSpace, boundingBoxColorPicker, rightSpace, addButton);
+        addItemControls.getStyleClass().add("table-view-input-controls");
+
+        sidePanel.getChildren().addAll(boundingBoxItemTableView, addItemControls);
+        sidePanel.setSpacing(5);
+
+
+        sidePanel.getStyleClass().add(SIDE_PANEL_STYLE);
+
+        return sidePanel;
+    }
+
+    private TableView<BoundingBoxItem> createBoundingBoxTableView(){
+        TableView<BoundingBoxItem> tableView = new TableView<>();
+        tableView.setEditable(true);
+
+        TableColumn<BoundingBoxItem, String> nameColumn = new TableColumn<>("Name");
+        nameColumn.setMinWidth(165);
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        nameColumn.setEditable(true);
+        nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+
+        TableColumn<BoundingBoxItem, Color> colorColumn = new TableColumn<>("Color");
+        colorColumn.setMinWidth(5);
+        colorColumn.setMaxWidth(5);
+        colorColumn.setCellFactory(factory -> new ColorTableCell());
+
+        TableColumn<BoundingBoxItem, BoundingBoxItem> deleteColumn = new TableColumn<>("Delete");
+        deleteColumn.setMinWidth(20);
+        deleteColumn.setMaxWidth(20);
+        deleteColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
+        deleteColumn.setCellFactory(value -> new TableCell<>() {
+            private final Button deleteButton = new Button();
+            private final Region deleteIcon = new Region();
+
+            @Override
+            protected void updateItem(BoundingBoxItem item, boolean empty){
+                super.updateItem(item, empty);
+                if(item == null){
+                    setGraphic(null);
+                    return;
+                }
+
+                setGraphic(deleteButton);
+                deleteButton.getStyleClass().add("delete-button");
+                deleteButton.setPickOnBounds(true);
+                deleteIcon.getStyleClass().add("icon");
+                deleteButton.setGraphic(deleteIcon);
+                deleteButton.setFocusTraversable(false);
+                deleteButton.setOnAction(event -> getTableView().getItems().remove(item));
+            }
+        });
+
+
+        tableView.getColumns().addAll(colorColumn, nameColumn, deleteColumn);
+        tableView.setMaxWidth(200);
+        tableView.setMaxHeight(300);
+        tableView.getStyleClass().add("noheader");
+
+        return tableView;
     }
 
 
@@ -239,7 +342,11 @@ public class View extends BorderPane {
         imageView.setFitHeight(Math.min(imageHeight, maxAllowedHeight));
     }
 
-    private void setActionsFromController(){
+    public Button getAddButton() {
+        return addButton;
+    }
+
+    private void setActionsFromController() {
         fileOpenFolderItem.setOnAction(controller);
         fileSaveItem.setOnAction(controller);
         viewFitWindowItem.setOnAction(controller);
@@ -247,28 +354,30 @@ public class View extends BorderPane {
         nextButton.setOnAction(controller);
         previousButton.setOnAction(controller);
 
+        addButton.setOnAction(controller);
+
         imageView.setOnMousePressed(controller::onMousePressed);
         imageView.setOnMouseDragged(controller::onMouseDragged);
 
-        selectionRectangle.setOnMouseEntered(controller::onSelectionRectangleMouseEntered);
-        selectionRectangle.setOnMousePressed(controller::onSelectionRectangleMousePressed);
-        selectionRectangle.setOnMouseDragged(controller::onSelectionRectangleMouseDragged);
+//        selectionRectangle.setOnMouseEntered(controller::onSelectionRectangleMouseEntered);
+//        selectionRectangle.setOnMousePressed(controller::onSelectionRectangleMousePressed);
+//        selectionRectangle.setOnMouseDragged(controller::onSelectionRectangleMouseDragged);
     }
 
-    private void setInternalBindingsAndListeners(){
+    private void setInternalBindingsAndListeners() {
         imagePane.widthProperty().addListener((value, oldValue, newValue) -> {
             double prefWidth = 0;
-            if(imageView.getImage() != null)
+            if (imageView.getImage() != null)
                 prefWidth = imageView.getImage().getWidth();
             imageView.setFitWidth(Math.min(prefWidth, newValue.doubleValue() - 2 * IMAGE_PADDING));
-                });
+        });
 
         imagePane.heightProperty().addListener((value, oldValue, newValue) -> {
             double prefHeight = 0;
-            if(imageView.getImage() != null)
+            if (imageView.getImage() != null)
                 prefHeight = imageView.getImage().getHeight();
             imageView.setFitHeight(Math.min(prefHeight, newValue.doubleValue() - 2 * IMAGE_PADDING));
-                });
+        });
 
         imageView.boundsInParentProperty().addListener((observable, oldValue, newValue) -> {
             selectionRectangle.setWidth(selectionRectangle.getWidth() * newValue.getWidth() / oldValue.getWidth());
@@ -284,7 +393,7 @@ public class View extends BorderPane {
 
         // not finished
         imagePane.setOnScroll(e -> {
-            if(e.isControlDown()) {
+            if (e.isControlDown()) {
                 double delta = e.getDeltaY();
 
                 double newFitWidth = Utils.clamp(imageView.getFitWidth() + delta,
@@ -298,13 +407,13 @@ public class View extends BorderPane {
         });
 
         imageView.imageProperty().addListener((value, oldValue, newValue) -> {
-                    selectionRectangle.setVisible(false);
-                    zoomSlider.setValue(1);
-                });
+            selectionRectangle.setVisible(false);
+            zoomSlider.setValue(1);
+        });
 
 
         zoomSlider.valueProperty().addListener((value, oldValue, newValue) -> {
-            double delta = (newValue.doubleValue() - oldValue.doubleValue())*500;
+            double delta = (newValue.doubleValue() - oldValue.doubleValue()) * 500;
 
             double newFitWidth = Utils.clamp(imageView.getFitWidth() + delta,
                     0.25 * imagePane.getWidth(), imagePane.getWidth() - 2 * IMAGE_PADDING);
@@ -315,11 +424,26 @@ public class View extends BorderPane {
             imageView.setFitHeight(newFitHeight);
         });
 
-        selectionRectangle.strokeProperty().bind(boundingBoxColorPicker.valueProperty());
+        // Reset brightnessSlider on Label doubleclick
+        brightnessLabel.setOnMouseClicked(event -> {
+            if(event.getClickCount() == 2){
+                brightnessSlider.setValue(0);
+            }
+        });
+
+        //selectionRectangle.strokeProperty().bind(boundingBoxColorPicker.valueProperty());
+        selectionRectangle.confineTo(imageView.boundsInParentProperty());
 
         // To remove settingsToolbar when it is not visible.
         settingsToolBar.managedProperty().bind(settingsToolBar.visibleProperty());
         settingsToolBar.visibleProperty().bind(viewShowSettingsItem.selectedProperty());
+
+        boundingBoxItemTableView.getSelectionModel().selectedItemProperty().addListener((value, oldValue, newValue) -> {
+            if(newValue != null){
+                selectionRectangle.setStroke(newValue.getColor());
+            }
+        });
+
     }
 
     public void setMousePressed(double x, double y) {
@@ -331,15 +455,52 @@ public class View extends BorderPane {
         return mousePressed.getX();
     }
 
+    public TableView<BoundingBoxItem> getBoundingBoxItemTableView() {
+        return boundingBoxItemTableView;
+    }
+
     public double getMousePressedY() {
         return mousePressed.getY();
     }
 
-    public void displayErrorAlert(String title, String header, String content){
+    public ToolBar getNavBar(){
+        return navBar;
+    }
+
+    public TextField getNameInput() {
+        return nameInput;
+    }
+
+    public ColorPicker getBoundingBoxColorPicker() {
+        return boundingBoxColorPicker;
+    }
+
+    public void displayErrorAlert(String title, String header, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(header);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    private class ColorTableCell extends TableCell<BoundingBoxItem, Color> {
+
+        @Override
+        protected void updateItem(Color item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || getTableRow() == null) {
+                setText(null);
+                setGraphic(null);
+                setStyle("-fx-background-color: transparent;");
+            } else {
+                BoundingBoxItem row = getTableRow().getItem();
+                //setText(item.toString());
+                if(row != null){
+                    setStyle("-fx-background-color: " +
+                            row.getColor().toString().replace("0x", "#") + ";");
+                }
+
+            }
+        }
     }
 }

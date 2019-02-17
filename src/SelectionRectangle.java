@@ -1,13 +1,14 @@
-import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.*;
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
-import jdk.jshell.execution.Util;
 
+import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,9 +21,14 @@ public class SelectionRectangle extends Rectangle {
 
     private DragAnchor dragAnchor = new DragAnchor();
 
+    private Property<Bounds> confinementBounds;
+    private BooleanProperty selected;
+
+
     SelectionRectangle() {
         super();
         this.getStyleClass().add("selectionRectangle");
+        selected = new SimpleBooleanProperty(true);
         setVisible(false);
         createResizeHandles();
         addMoveFunctionality();
@@ -37,19 +43,35 @@ public class SelectionRectangle extends Rectangle {
     }
 
     private void addMoveFunctionality() {
-//        this.setOnMouseEntered(event -> this.setCursor(Cursor.MOVE));
-//
-//        this.setOnMousePressed(event -> {
-//            dragAnchor.setFromMouseEvent(event);
-//            event.consume();
-//        });
-//
-//        this.setOnMouseDragged(event -> {
-//            this.setX(this.getX() + event.getX() - dragAnchor.getX());
-//            this.setY(this.getY() + event.getY() - dragAnchor.getY());
-//            dragAnchor.setFromMouseEvent(event);
-//            event.consume();
-//        });
+        this.setOnMouseEntered(event -> this.setCursor(Cursor.MOVE));
+
+        this.setOnMousePressed(event -> {
+            Point2D eventXY = new Point2D(event.getX(), event.getY());
+
+            dragAnchor.setFromPoint2D(eventXY.subtract(this.getX(), this.getY()));
+            event.consume();
+        });
+
+        this.setOnMouseDragged(event -> {
+            // add boolean "dragFromOutside" detector
+            Point2D eventXY = new Point2D(event.getX(), event.getY());
+
+//            if (!this.getBoundsInParent().contains(eventXY)) {
+//                dragAnchor.setFromPoint2D(new Point2D(0.5 * this.getWidth(),
+//                        0.5 * this.getHeight()));
+//                return;
+//            }
+
+            Point2D newXY = eventXY.subtract(dragAnchor.getX(), dragAnchor.getY());
+            Bounds regionBounds = confinementBounds.getValue();
+            Bounds moveBounds = new BoundingBox(regionBounds.getMinX(), regionBounds.getMinY(),
+                    regionBounds.getWidth() - this.getWidth(), regionBounds.getHeight() - this.getHeight());
+            Point2D newConfinedXY = Utils.clampWithinBounds(newXY, moveBounds);
+
+            this.setX(newConfinedXY.getX());
+            this.setY(newConfinedXY.getY());
+            event.consume();
+        });
     }
 
     List<Node> getNodes() {
@@ -68,7 +90,7 @@ public class SelectionRectangle extends Rectangle {
 
         private static final double SIDE_LENGTH = 8.0;
         private final CompassPoint compassPoint;
-        DragAnchor dragAnchor = new DragAnchor();
+        private DragAnchor dragAnchor = new DragAnchor();
 
         ResizeHandle(CompassPoint p) {
             super(SIDE_LENGTH, SIDE_LENGTH);
@@ -85,7 +107,7 @@ public class SelectionRectangle extends Rectangle {
             DoubleProperty rectangle_h = rectangle.heightProperty();
 
             fillProperty().bind(rectangle.strokeProperty());
-            visibleProperty().bind(rectangle.visibleProperty());
+            visibleProperty().bind(rectangle.selectedProperty());
 
             switch (compassPoint) {
                 case NW:
@@ -138,132 +160,128 @@ public class SelectionRectangle extends Rectangle {
             switch (compassPoint) {
                 case NW:
                     setOnMouseDragged(event -> {
-                        double offsetX = event.getX() - dragAnchor.getX();
-                        double offsetY = event.getY() - dragAnchor.getY();
-                        double newX = rectangle.getX() + offsetX;
-                        double newY = rectangle.getY() + offsetY;
-                        double newW = rectangle.getWidth() - offsetX;
-                        double newH = rectangle.getHeight() - offsetY;
+                        Bounds parentBounds = rectangle.confinementBounds.getValue();
+                        Bounds bounds = new BoundingBox(parentBounds.getMinX(), parentBounds.getMinY(),
+                                rectangle.getMaxX() - parentBounds.getMinX(),
+                                rectangle.getMaxY() - parentBounds.getMinY());
 
-                        if (newW >= 0) {
-                            rectangle.setX(newX);
-                            rectangle.setWidth(newW);
-                        }
+                        Point2D eventXY = new Point2D(event.getX(), event.getY());
+                        Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
 
-                        if (newH >= 0) {
-                            rectangle.setY(newY);
-                            rectangle.setHeight(newH);
-                        }
-                        dragAnchor.setFromMouseEvent(event);
+                        rectangle.setX(clampedEventXY.getX());
+                        rectangle.setY(clampedEventXY.getY());
+                        rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));
+                        rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMaxY()));
+
                         event.consume();
                     });
                     break;
                 case N:
                     setOnMouseDragged(event -> {
-                        double offsetY = event.getY() - dragAnchor.getY();
-                        double newY = rectangle.getY() + offsetY;
-                        double newH = rectangle.getHeight() - offsetY;
+                        Bounds parentBounds = rectangle.confinementBounds.getValue();
+                        Bounds bounds = new BoundingBox(rectangle.getX(), parentBounds.getMinY(),
+                                rectangle.getWidth(), rectangle.getMaxY() - parentBounds.getMinY());
 
-                        if (newH >= 0) {
-                            rectangle.setY(newY);
-                            rectangle.setHeight(newH);
-                        }
-                        dragAnchor.setFromMouseEvent(event);
+                        Point2D eventXY = new Point2D(event.getX(), event.getY());
+                        Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
+
+                        rectangle.setY(clampedEventXY.getY());
+                        rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMaxY()));
+
                         event.consume();
                     });
                     break;
                 case NE:
                     setOnMouseDragged(event -> {
-                        double offsetX = event.getX() - dragAnchor.getX();
-                        double offsetY = event.getY() - dragAnchor.getY();
-                        double newY = rectangle.getY() + offsetY;
-                        double newW = rectangle.getWidth() + offsetX;
-                        double newH = rectangle.getHeight() - offsetY;
+                        Bounds parentBounds = rectangle.confinementBounds.getValue();
+                        Bounds bounds = new BoundingBox(rectangle.getX(), parentBounds.getMinY(),
+                                parentBounds.getMaxX() - rectangle.getX(),
+                                rectangle.getMaxY() - parentBounds.getMinY());
 
-                        if (newW >= 0)
-                            rectangle.setWidth(newW);
+                        Point2D eventXY = new Point2D(event.getX(), event.getY());
+                        Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
 
-                        if (newH >= 0) {
-                            rectangle.setY(newY);
-                            rectangle.setHeight(newH);
-                        }
-                        dragAnchor.setFromMouseEvent(event);
+                        rectangle.setY(clampedEventXY.getY());
+                        rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
+                        rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMaxY()));
+
                         event.consume();
                     });
                     break;
                 case E:
                     setOnMouseDragged(event -> {
-                        double offsetX = event.getX() - dragAnchor.getX();
-                        double newW = rectangle.getWidth() + offsetX;
+                        Bounds parentBounds = rectangle.confinementBounds.getValue();
+                        Bounds bounds = new BoundingBox(rectangle.getX(), rectangle.getY(),
+                                parentBounds.getMaxX() - rectangle.getX(), rectangle.getHeight());
+                        Point2D eventXY = new Point2D(event.getX(), event.getY());
+                        Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
 
-                        if (newW >= 0)
-                            rectangle.setWidth(newW);
+                        rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
 
-                        dragAnchor.setFromMouseEvent(event);
                         event.consume();
                     });
                     break;
                 case SE:
                     setOnMouseDragged(event -> {
-                        double offsetX = event.getX() - dragAnchor.getX();
-                        double offsetY = event.getY() - dragAnchor.getY();
-                        double newW = rectangle.getWidth() + offsetX;
-                        double newH = rectangle.getHeight() + offsetY;
+                        Bounds parentBounds = rectangle.confinementBounds.getValue();
+                        Bounds bounds = new BoundingBox(rectangle.getX(), rectangle.getY(),
+                                parentBounds.getMaxX() - rectangle.getX(),
+                                parentBounds.getMaxY() - rectangle.getY());
 
-                        if (newW >= 0)
-                            rectangle.setWidth(newW);
+                        Point2D eventXY = new Point2D(event.getX(), event.getY());
+                        Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
 
-                        if (newH >= 0)
-                            rectangle.setHeight(newH);
+                        rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
+                        rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
 
-                        dragAnchor.setFromMouseEvent(event);
                         event.consume();
                     });
                     break;
                 case S:
                     setOnMouseDragged(event -> {
-                        double offsetY = event.getY() - dragAnchor.getY();
-                        double newH = rectangle.getHeight() + offsetY;
+                        Bounds parentBounds = rectangle.confinementBounds.getValue();
+                        Bounds bounds = new BoundingBox(rectangle.getX(), rectangle.getY(),
+                                rectangle.getWidth(),
+                                parentBounds.getMaxY() - rectangle.getY());
 
-                        if (newH >= 0)
-                            rectangle.setHeight(newH);
+                        Point2D eventXY = new Point2D(event.getX(), event.getY());
+                        Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
 
-                        dragAnchor.setFromMouseEvent(event);
+                        rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
+
                         event.consume();
                     });
                     break;
                 case SW:
                     setOnMouseDragged(event -> {
-                        double offsetX = event.getX() - dragAnchor.getX();
-                        double offsetY = event.getY() - dragAnchor.getY();
-                        double newX = rectangle.getX() + offsetX;
-                        double newW = rectangle.getWidth() - offsetX;
-                        double newH = rectangle.getHeight() + offsetY;
+                        Bounds parentBounds = rectangle.confinementBounds.getValue();
+                        Bounds bounds = new BoundingBox(parentBounds.getMinX(), rectangle.getY(),
+                                rectangle.getMaxX() - parentBounds.getMinX(),
+                                parentBounds.getMaxY() - rectangle.getY());
 
-                        if (newW >= 0) {
-                            rectangle.setX(newX);
-                            rectangle.setWidth(newW);
-                        }
+                        Point2D eventXY = new Point2D(event.getX(), event.getY());
+                        Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
 
-                        if (newH >= 0)
-                            rectangle.setHeight(newH);
+                        rectangle.setX(clampedEventXY.getX());
+                        rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));
+                        rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
 
-                        dragAnchor.setFromMouseEvent(event);
                         event.consume();
                     });
                     break;
                 case W:
                     setOnMouseDragged(event -> {
-                        double offsetX = event.getX() - dragAnchor.getX();
-                        double newX = rectangle.getX() + offsetX;
-                        double newW = rectangle.getWidth() - offsetX;
+                        Bounds parentBounds = rectangle.confinementBounds.getValue();
+                        Bounds bounds = new BoundingBox(parentBounds.getMinX(), rectangle.getY(),
+                                rectangle.getMaxX() - parentBounds.getMinX(),
+                                rectangle.getHeight());
 
-                        if (newW >= 0) {
-                            rectangle.setX(newX);
-                            rectangle.setWidth(newW);
-                        }
+                        Point2D eventXY = new Point2D(event.getX(), event.getY());
+                        Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
 
-                        dragAnchor.setFromMouseEvent(event);
+                        rectangle.setX(clampedEventXY.getX());
+                        rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));
+
                         event.consume();
                     });
                     break;
@@ -277,6 +295,14 @@ public class SelectionRectangle extends Rectangle {
         return true;
     }
 
+    private double getMaxX(){
+        return this.getX() + this.getWidth();
+    }
+
+    private double getMaxY(){
+        return this.getY() + this.getHeight();
+    }
+
     public List<Double> getBoundingBoxCoordinates() {
         List<Double> boundingBoxData = new ArrayList<>();
         boundingBoxData.add(this.getX());
@@ -287,7 +313,7 @@ public class SelectionRectangle extends Rectangle {
         return boundingBoxData;
     }
 
-    public List<Double> getScaledLocalCoordinatesInSiblingImage(ImageView sibling){
+    public List<Double> getScaledLocalCoordinatesInSiblingImage(ImageView sibling) {
         Bounds localBounds = sibling.parentToLocal(this.getBoundsInParent());
         Image image = sibling.getImage();
         double scaleWidth = image.getWidth();
@@ -300,12 +326,25 @@ public class SelectionRectangle extends Rectangle {
         return Arrays.asList(topLeftX, topLeftY, bottomRightX, bottomRightY);
     }
 
+    public void confineTo(ReadOnlyObjectProperty<Bounds> confineTo){
+        confinementBounds = new SimpleObjectProperty<>();
+        confinementBounds.bind(confineTo);
+    }
+
     // Testing
-    public void showBBData(){
+    public void showBBData() {
         System.out.println(Arrays.asList(getX(), getY(), getX() + getWidth(), getY() + getHeight()));
     }
 
-    public DragAnchor getDragAnchor(){
+    public void showConfinement(){
+        System.out.println(confinementBounds.getValue());
+    }
+
+    public DragAnchor getDragAnchor() {
         return dragAnchor;
+    }
+
+    public BooleanProperty selectedProperty(){
+        return selected;
     }
 }

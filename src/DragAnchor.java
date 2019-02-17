@@ -1,6 +1,7 @@
+import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
 
-public class DragAnchor{
+public class DragAnchor {
     private double x, y;
 
     public double getX() {
@@ -19,8 +20,13 @@ public class DragAnchor{
         this.y = y;
     }
 
-    public void setFromMouseEvent(MouseEvent event){
+    public void setFromMouseEvent(MouseEvent event) {
         x = event.getX();
         y = event.getY();
+    }
+
+    public void setFromPoint2D(Point2D point){
+        x = point.getX();
+        y = point.getY();
     }
 }
