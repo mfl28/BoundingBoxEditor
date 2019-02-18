@@ -5,15 +5,17 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.paint.Color;
 
 public class BoundingBoxItem {
-    private StringProperty name;
-    private ObjectProperty<Color> color;
+    private static final String DEFAULT_NAME = "Default";
 
-    public BoundingBoxItem(){
-        this.name = new SimpleStringProperty( "Default");
+    private final StringProperty name;
+    private final ObjectProperty<Color> color;
+
+    public BoundingBoxItem() {
+        this.name = new SimpleStringProperty(DEFAULT_NAME);
         this.color = new SimpleObjectProperty<>(Color.ORANGE);
     }
 
-    public BoundingBoxItem(String name, Color color){
+    public BoundingBoxItem(String name, Color color) {
         this.name = new SimpleStringProperty(name);
         this.color = new SimpleObjectProperty<>(color);
     }
@@ -34,11 +36,11 @@ public class BoundingBoxItem {
         this.color.set(color);
     }
 
-    StringProperty nameProperty(){
+    public StringProperty nameProperty() {
         return name;
     }
 
-    ObjectProperty<Color> colorProperty(){
+    public ObjectProperty<Color> colorProperty() {
         return color;
     }
 }

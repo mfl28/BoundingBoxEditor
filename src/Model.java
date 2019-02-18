@@ -8,7 +8,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -25,34 +24,40 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class Model {
+    private static final String BOUNDING_BOX_COORDINATES_PATTERN = "#0.0000";
+    private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
+    private static final int MAX_DIRECTORY_DEPTH = 1;
+    private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
+
     private ObservableList<File> imageFileList;
     private ObservableList<BoundingBoxItem> boundingBoxItems;
+    private ObservableMap<String, List<Double>> boundingBoxData;
     private IntegerProperty fileIndex;
     private IntegerBinding imageFileListSize;
     private BooleanBinding hasNextFile;
     private BooleanBinding hasPreviousFile;
     private ObjectBinding<File> currentFile;
-    private ObservableMap<String, List<Double>> boundingBoxData;
-
-    private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
-    private static final int MAX_DIRECTORY_DEPTH = 1;
-    private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
 
     public Model() {
         fileIndex = new SimpleIntegerProperty(0);
         boundingBoxData = FXCollections.observableMap(new LinkedHashMap<>());
-        // For testing put some entries into the list
+        // Put in default valued Bounding Box class.
         boundingBoxItems = FXCollections.observableArrayList(new BoundingBoxItem());
-        numberFormat.applyPattern("#0.0000");
+        numberFormat.applyPattern(BOUNDING_BOX_COORDINATES_PATTERN);
     }
 
-    public void setImageFileList(Path path) throws Exception {
+    public void setImageFileListFromPath(Path path) throws Exception {
         imageFileList = FXCollections.observableArrayList(
                 Files.walk(path, MAX_DIRECTORY_DEPTH)
                         .filter(p -> Arrays.stream(imageExtensions).anyMatch(p.toString()::endsWith))
                         .map(p -> new File(p.toString()))
                         .collect(Collectors.toList())
         );
+
+        if (imageFileList.isEmpty()) {
+            throw new NoValidImagesException(String.format("The path \"%s\" does not contain any valid images.",
+                    path.toString()));
+        }
 
         fileIndex.set(0);
         imageFileListSize = Bindings.size(imageFileList);
@@ -105,7 +110,7 @@ public class Model {
     }
 
     public String getCurrentImageFilePath() {
-        String imagePath = getCurrentImage().getUrl()
+        final String imagePath = getCurrentImage().getUrl()
                 .replace("/", "\\")
                 .replace("%20", " ");
         return imagePath.substring(imagePath.indexOf("\\") + 1);

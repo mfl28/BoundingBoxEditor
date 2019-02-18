@@ -1,12 +1,8 @@
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.geometry.Bounds;
+import javafx.event.ActionEvent;
 import javafx.geometry.Point2D;
-import javafx.scene.Cursor;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -16,12 +12,22 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class Controller implements EventHandler {
+public class Controller {
+    private static final String PROGRAM_NAME_EXTENSION = " - Bounding Box Editor";
+    private static final String DIRECTORY_CHOOSER_TITLE = "Choose an image folder";
+    private static final String OPEN_FOLDER_ERROR_TITLE = "Error while opening image folder";
+    private static final String OPEN_FOLDER_ERROR_HEADER = "The selected folder is not a valid image folder.";
+    private static final String SAVE_BOUNDING_BOX_DATA_TITLE = "Save bounding box data";
+    private static final String CSV_FILE_DESCRIPTION = "CSV file";
+    private static final String TXT_FILE_DESCRIPTION = "TXT file";
+    private static final String CSV_EXTENSION = "*.csv";
+    private static final String TXT_EXTENSION = "*.txt";
+    private static final String SAVE_BOUNDING_BOX_DATA_ERROR_TITLE = "Error while saving bounding box data";
+    private static final String SAVE_BOUNDING_BOX_DATA_ERROR_HEADER = "Could not save bounding box data into the specified file.";
+
     private final Stage stage;
     private final View view;
     private final Model model;
-
-    private static final String PROGRAM_NAME_EXTENSION = " - Bounding Box Editor";
 
     Controller(final Stage stage) {
         this.stage = stage;
@@ -30,38 +36,21 @@ public class Controller implements EventHandler {
         setModelListeners();
     }
 
-    @Override
-    public void handle(Event event) {
-        final Object source = event.getSource();
+    public void onRegisterOpenFolderAction(ActionEvent event) {
+        final DirectoryChooser directoryChooser = new DirectoryChooser();
 
-        if (source == view.getFileOpenFolderItem()) {
-            onRegisterOpenFolderAction();
-        } else if (source == view.getFileSaveItem()) {
-            onRegisterSaveAction();
-        } else if (source == view.getViewFitWindowItem()) {
-            System.out.println("Fit Window clicked!");
-        } else if (source == view.getNextButton()) {
-            onRegisterNextAction();
-        } else if (source == view.getPreviousButton()) {
-            onRegisterPreviousAction();
-        } else if (source == view.getAddButton()){
-            onRegisterAddBoundingBoxItemAction();
-        }
-    }
+        directoryChooser.setTitle(DIRECTORY_CHOOSER_TITLE);
 
-    public void onRegisterOpenFolderAction() {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("Choose an image folder");
-        File selectedDirectory = directoryChooser.showDialog(stage);
+        final File selectedDirectory = directoryChooser.showDialog(stage);
 
         if (selectedDirectory != null) {
             Path inputPath = Paths.get(selectedDirectory.getPath());
+
             try {
-                model.setImageFileList(inputPath);
+                model.setImageFileListFromPath(inputPath);
             } catch (Exception e) {
-                view.displayErrorAlert("Error while opening image folder",
-                        "The selected folder could not be opened.",
-                        "Please chose another folder.");
+                view.displayErrorAlert(OPEN_FOLDER_ERROR_TITLE, OPEN_FOLDER_ERROR_HEADER, e.getMessage());
+                return;
             }
 
             view.getPreviousButton().disableProperty().bind(model.hasPreviousFileBinding().not());
@@ -75,14 +64,15 @@ public class Controller implements EventHandler {
         }
     }
 
-    private void onRegisterSaveAction() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save bounding box data");
+    public void onRegisterSaveAction(ActionEvent event) {
+        final FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(SAVE_BOUNDING_BOX_DATA_TITLE);
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("CSV file", "*.csv"),
-                new FileChooser.ExtensionFilter("TXT file", "*.txt")
+                new FileChooser.ExtensionFilter(CSV_FILE_DESCRIPTION, CSV_EXTENSION),
+                new FileChooser.ExtensionFilter(TXT_FILE_DESCRIPTION, TXT_EXTENSION)
         );
-        File saveFile = fileChooser.showSaveDialog(stage);
+
+        final File saveFile = fileChooser.showSaveDialog(stage);
 
         if (saveFile != null) {
             if (view.getSelectionRectangle().isVisible()) {
@@ -93,60 +83,64 @@ public class Controller implements EventHandler {
                 model.writeBoundingBoxDataToFile(saveFile);
             } catch (IOException e) {
                 // Message text should wrap around.
-                view.displayErrorAlert("Error while saving bounding box data",
-                        "Could not save bounding box data.",
+                view.displayErrorAlert(SAVE_BOUNDING_BOX_DATA_ERROR_TITLE, SAVE_BOUNDING_BOX_DATA_ERROR_HEADER,
                         e.getMessage());
             }
         }
     }
 
-    private void onRegisterNextAction() {
+    public void onRegisterNextAction(ActionEvent event) {
         if (view.getSelectionRectangle().isVisible()) {
             saveCurrentBoundingBox();
         }
         model.incrementFileIndex();
     }
 
-    private void onRegisterPreviousAction() {
+    public void onRegisterPreviousAction(ActionEvent event) {
         if (view.getSelectionRectangle().isVisible()) {
             saveCurrentBoundingBox();
         }
         model.decrementFileIndex();
     }
 
-    private void saveCurrentBoundingBox() {
-        String currentFilename = Utils.filenameFromUrl(model.getCurrentImageFilePath());
-        model.getBoundingBoxData().put(currentFilename,
-                view.getSelectionRectangle().getScaledLocalCoordinatesInSiblingImage(view.getImageView()));
+    public void onRegisterFitWindowAction(ActionEvent event) {
+        System.out.println("Fit Window clicked!");
     }
 
-
     public void onMousePressed(MouseEvent event) {
-        double eventX = event.getX();
-        double eventY = event.getY();
-        Point2D parentCoordinates = view.getImageView().localToParent(eventX, eventY);
-        view.setMousePressed(eventX, eventY);
-        Rectangle rectangle = view.getSelectionRectangle();
-        rectangle.setX(parentCoordinates.getX());
-        rectangle.setY(parentCoordinates.getY());
-        rectangle.setWidth(0);
-        rectangle.setHeight(0);
+        final Point2D parentCoordinates = view.getImageView().localToParent(event.getX(), event.getY());
+        view.getMousePressed().setFromMouseEvent(event);
+
+        final SelectionRectangle rectangle = view.getSelectionRectangle();
+        rectangle.setXYWH(parentCoordinates.getX(), parentCoordinates.getY(), 0, 0);
         rectangle.setVisible(true);
     }
 
     public void onMouseDragged(MouseEvent event) {
-        ImageView imageView = view.getImageView();
-        Point2D eventXY = new Point2D(event.getX(), event.getY());
-        Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, imageView.getBoundsInLocal());
-        double mousePressedX = view.getMousePressedX();
-        double mousePressedY = view.getMousePressedY();
-        Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(),
-                mousePressedX), Math.min(clampedEventXY.getY(), mousePressedY));
-        Rectangle rectangle = view.getSelectionRectangle();
-        rectangle.setX(parentCoordinates.getX());
-        rectangle.setY(parentCoordinates.getY());
-        rectangle.setWidth(Math.abs(clampedEventXY.getX() - mousePressedX));
-        rectangle.setHeight(Math.abs(clampedEventXY.getY() - mousePressedY));
+        final ImageView imageView = view.getImageView();
+        final Point2D clampedEventXY = Utils.clampWithinBounds(event, imageView.getBoundsInLocal());
+        final DragAnchor mousePressed = view.getMousePressed();
+
+        final Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(),
+                mousePressed.getX()), Math.min(clampedEventXY.getY(), mousePressed.getY()));
+
+        view.getSelectionRectangle().setXYWH(parentCoordinates.getX(),
+                parentCoordinates.getY(),
+                Math.abs(clampedEventXY.getX() - mousePressed.getX()),
+                Math.abs(clampedEventXY.getY() - mousePressed.getY()));
+    }
+
+    public void onRegisterAddBoundingBoxItemAction(ActionEvent event) {
+        final String boundingBoxItemName = view.getNameInput().getText();
+        final Color boundingBoxItemColor = view.getBoundingBoxColorPicker().getValue();
+
+        model.getBoundingBoxItems().add(new BoundingBoxItem(boundingBoxItemName, boundingBoxItemColor));
+        view.getNameInput().clear();
+        view.getBoundingBoxColorPicker().setValue(Color.WHITE);
+    }
+
+    public View getView() {
+        return view;
     }
 
     private void setModelListeners() {
@@ -157,48 +151,9 @@ public class Controller implements EventHandler {
 
     }
 
-    public void onSelectionRectangleMouseEntered(MouseEvent event) {
-        SelectionRectangle rectangle = view.getSelectionRectangle();
-        rectangle.setCursor(Cursor.MOVE);
-    }
-
-    public void onSelectionRectangleMousePressed(MouseEvent event) {
-        SelectionRectangle rectangle = view.getSelectionRectangle();
-        rectangle.getDragAnchor().setFromMouseEvent(event);
-        event.consume();
-    }
-
-    public void onSelectionRectangleMouseDragged(MouseEvent event) {
-        SelectionRectangle rectangle = view.getSelectionRectangle();
-
-        // add boolean "dragFromOutside" detector
-        if (!rectangle.getBoundsInParent().contains(new Point2D(event.getX(), event.getY()))) {
-            rectangle.getDragAnchor().setFromMouseEvent(event);
-            return;
-        }
-
-        double newX = rectangle.getX() + event.getX() - rectangle.getDragAnchor().getX();
-        double newY = rectangle.getY() + event.getY() - rectangle.getDragAnchor().getY();
-        Bounds regionBounds = view.getImageView().getBoundsInParent();
-        double newConfinedX = Utils.clamp(newX, regionBounds.getMinX(), regionBounds.getMaxX() - rectangle.getWidth());
-        double newConfinedY = Utils.clamp(newY, regionBounds.getMinY(), regionBounds.getMaxY() - rectangle.getHeight());
-
-        rectangle.setX(newConfinedX);
-        rectangle.setY(newConfinedY);
-        rectangle.getDragAnchor().setFromMouseEvent(event);
-        event.consume();
-    }
-
-    public void onRegisterAddBoundingBoxItemAction(){
-        String boundingBoxItemName = view.getNameInput().getText();
-        Color boundingBoxItemColor = view.getBoundingBoxColorPicker().getValue();
-
-        model.getBoundingBoxItems().add(new BoundingBoxItem(boundingBoxItemName, boundingBoxItemColor));
-        view.getNameInput().clear();
-        view.getBoundingBoxColorPicker().setValue(Color.WHITE);
-    }
-
-    public View getView() {
-        return view;
+    private void saveCurrentBoundingBox() {
+        final String currentFilename = Utils.filenameFromUrl(model.getCurrentImageFilePath());
+        model.getBoundingBoxData().put(currentFilename,
+                view.getSelectionRectangle().getScaledLocalCoordinatesInSiblingImage(view.getImageView()));
     }
 }

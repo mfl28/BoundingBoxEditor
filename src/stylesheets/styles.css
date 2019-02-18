@@ -1,137 +1,147 @@
 @import "nord.css"
+/* Variable Definitions */
 
-/* VARIABLE DEFINITIONS: Only these 4 variables have to be adjusted, the rest is copy-paste */
 * {
-    -fx-my-menu-color: -nord0;                  /* Change according to your needs */
-    -fx-my-menu-color-highlighted: #434c5e;      /* Change according to your needs */
-    -fx-my-menu-font-color: #d8dee9;             /* Change according to your needs */
-    -fx-my-menu-font-color-highlighted: #d8dee9; /* Change according to your needs */
-    -my-background-color: #3b4252;
-    -default-selectionRectangle-color: #ffcc66;
-
+    /* Base colors */
+    -base-background-color: -nord0;
+    -base-background-light-color: -nord1;
+    -base-highlight-color: -nord2;
+    -base-highlight-light-color: -nord3;
+    -base-alt-highlight-color: -nord10;
+    -base-alt-highlight-light-color: -nord9;
+    -base-font-color: -nord4;
+    -base-font-highlight-color: -nord4;
+    -base-colorful-component-color: -nord11;
+    -base-alt-colorful-component-color: -nord12;
 }
 
 .root {
-    -fx-focus-color : transparent;
+    /* Disable default blue glow focus indicator */
+    -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
 }
 
-/* MENU BAR + Top-level MENU BUTTONS */
-/*** The menu bar itself ***/    
+/*** MENU ***/
+
+/* Menu-bar */
+
 .menu-bar {
-    -fx-background-color: -fx-my-menu-color;
-    -fx-padding: 0 0 0 0;
+    -fx-background-color: -base-background-color;
+    -fx-padding: 0;
 }
 
-/*** Top-level menu itself (not selected / hovered) ***/
-.menu-bar > .container > .menu-button {
-    -fx-background-color: -fx-my-menu-color;
+/* Menu-bar buttons */
+
+.menu-bar .menu-button {
+    -fx-background-color: -base-background-color;
 }
 
-/*** Top-level menu's label (not selected / hovered) ***/
-.menu-bar > .container > .menu-button > .label {
-    -fx-text-fill: -fx-my-menu-font-color;
+/* Menu-bar buttons (hovered, showing submenus) */
+
+.menu-bar .menu-button:hover, .menu-bar .menu-button:showing {
+    -fx-background-color: -base-alt-highlight-color;
+}
+
+/* Menu-bar button labels */
+
+.menu-bar .menu-button .label {
+    -fx-text-fill: -base-font-color;
     -fx-font-size: 12 pt;
 }
 
-/*** Top-level menu's label (disabled) ***/
-.menu-bar > .container > .menu-button > .label:disabled {
-    -fx-opacity: 1.0;
+/* Menu-bar button (hovered, showing submenus) labels */
+
+.menu-bar .menu-button:hover .label, .menu-bar .menu-button:showing .label {
+    -fx-text-fill: -base-font-highlight-color;
 }
 
-/*** Top-level menu itself (selected / hovered) ***/
-.menu-bar > .container > .menu-button:hover,
-.menu-bar > .container > .menu-button:focused,
-.menu-bar > .container > .menu-button:showing {
-    -fx-background-color: -fx-my-menu-color-highlighted;
-}
+/* Menu-items */
 
-/*** Top-level menu's label (selected / hovered) ***/
-.menu-bar > .container > .menu-button:hover > .label,
-.menu-bar > .container > .menu-button:focused > .label,
-.menu-bar > .container > .menu-button:showing > .label {
-    -fx-text-fill: -fx-my-menu-font-color-highlighted;
-}
-
-/* MENU ITEM (children of a MENU BUTTON) */
-/*** The item itself (not hovered / focused) ***/    
 .menu-item {
-    -fx-background-color: -fx-my-menu-color; 
+    -fx-background-color: -base-background-color;
 }
 
-/*** The item's label (not hovered / focused) ***/   
+/* Menu-items (focused, hovered) */
+
+.menu-item:focused, .menu-item:hovered {
+    -fx-background-color: -base-highlight-color;
+}
+
+/* Menu-items labels */
+
 .menu-item .label {
-    -fx-text-fill: -fx-my-menu-font-color;
+    -fx-text-fill: -base-font-color;
     -fx-font-size: 12 pt;
 }
 
-/*** The item's label (disabled) ***/   
-.menu-item .label:disabled {
-    -fx-opacity: 1.0;
-}    
+/* Menu-items (focused, hovered) labels */
 
-/*** The item itself (hovered / focused) ***/    
-.menu-item:focused, .menu-item:hovered {
-    -fx-background-color: -fx-my-menu-color-highlighted; 
-}
-
-/*** The item's label (hovered / focused) ***/  
 .menu-item:focused .label, .menu-item:hovered .label {
-    -fx-text-fill: -fx-my-menu-font-color-highlighted;
+    -fx-text-fill: -base-font-highlight-color;
 }
 
-.check-menu-item:checked
-{
-    -fx-mark-color: -nord4;
+/* Check-menu-items (checked) */
+
+.check-menu-item:checked {
+    -fx-mark-color: -base-font-color;
 }
 
-/* CONTEXT MENU */
-/*** The context menu that contains a menu's menu items ***/  
+/*** CONTEXT MENU ***/
+
+/* context menu */
+
 .context-menu {
-    -fx-background-color: -fx-my-menu-color;
-    -fx-padding: 0 0 0 0;
+    -fx-padding: 0;
 }
 
-.scroll-pane {
-   -fx-background-color: grey;
-}
+/*** BUTTONS - default button styling ***/
 
-.pane {
-    -fx-background-color: -my-background-color;
-}
+/* buttons (focused, armed) */
 
-.button,
-.button:focused,
-.button:armed {
-    -fx-text-fill: -nord4;
+.button, .button:focused, .button:armed {
     -fx-background-color: transparent;
-    -fx-background-insets: 0, 0, 0, 0, 0, 0, 0;
+    -fx-text-fill: -base-font-color;
+    -fx-background-insets: 0;
 }
+
+/* button (hovered) */
 
 .button:hover {
-    -fx-background-color: #434c5e;
-    -fx-background-insets: 0, 0, 0, 0, 0, 0, 0;
+    -fx-background-color: -base-highlight-color;
+    -fx-text-fill: -base-font-highlight-color;
+    -fx-background-insets: 0;
 }
 
+/* button (pressed) */
+
 .button:pressed {
-    -fx-background-color: #4c566a;
-    -fx-background-insets: 0, 0, 0, 0, 0, 0, 0;
+    -fx-background-color: -base-highlight-light-color;
+    -fx-text-fill: -base-font-highlight-color;
+    -fx-background-insets: 0;
 }
+
+/* delete button on BoundingBox Type selector items */
 
 .delete-button {
     -fx-padding: 0;
-    -fx-margin: 0;
     -fx-max-width: 18px;
     -fx-max-height: 18px;
     -fx-min-width: 18px;
     -fx-min-height: 18px;
     -fx-pref-width: 18px;
     -fx-pref-height: 18px;
-    -fx-background-color: transparent;
 }
 
+/* delete button (hovered) */
+
+.delete-button:hover {
+    -fx-background-color: radial-gradient(center 50% 50%, radius 50%, -base-background-light-color, transparent);
+}
+
+/* delete button icon */
+
 .delete-button .icon {
-    -fx-background-color: transparent;
+    -fx-background-color: -base-background-color;
     -fx-max-width: 10px;
     -fx-max-height: 10px;
     -fx-min-width: 10px;
@@ -139,143 +149,216 @@
     -fx-pref-width: 10px;
     -fx-pref-height: 10px;
     -fx-shape: "M46.57552,37.24219c-3.79795,0.001 -7.21662,2.30305
-    -8.64576,5.82185c-1.42914,3.5188 -0.58376,7.55267 2.13794,10.20158l58.73438,58.73438l
-    -58.73438,58.73438c-2.43822,2.34096 -3.42039,5.81715 -2.56772,9.08793c0.85267,3.27078 3.40694,5.82504
-    6.67771,6.67771c3.27078,0.85267 6.74697,-0.1295 9.08793,-2.56772l58.73438,-58.73438l58.73438,58.73438c2.34095,
-    2.43825 5.81716,3.42044 9.08795,2.56778c3.27079,-0.85266 5.82507,-3.40694 6.67774,-6.67774c0.85266,
-    -3.27079 -0.12953,-6.747 -2.56778,-9.08795l-58.73438,-58.73438l58.73438,-58.73438c2.76043,
-    -2.68325 3.59043,-6.78595 2.09006,-10.33119c-1.50037,-3.54524 -5.02332,-5.80573 -8.8713,
-    -5.69225c-2.42479,0.07225 -4.7262,1.08566 -6.41667,2.82552l-58.73438,58.73438l-58.73438,
-    -58.73438c-1.7572,-1.80631 -4.17009,-2.82537 -6.6901,-2.82552z";
+ -8.64576, 5.82185c-1.42914, 3.5188 -0.58376, 7.55267 2.13794, 10.20158l58.73438, 58.73438l -58.73438, 58.73438c-2.43822, 2.34096 -3.42039, 5.81715 -2.56772, 9.08793c0.85267, 3.27078 3.40694, 5.82504 6.67771, 6.67771c3.27078, 0.85267 6.74697, -0.1295 9.08793, -2.56772l58.73438, -58.73438l58.73438, 58.73438c2.34095, 2.43825 5.81716, 3.42044 9.08795, 2.56778c3.27079, -0.85266 5.82507, -3.40694 6.67774, -6.67774c0.85266, -3.27079 -0.12953, -6.747 -2.56778, -9.08795l-58.73438, -58.73438l58.73438, -58.73438c2.76043, -2.68325 3.59043, -6.78595 2.09006, -10.33119c-1.50037, -3.54524 -5.02332, -5.80573 -8.8713, -5.69225c-2.42479, 0.07225 -4.7262, 1.08566 -6.41667, 2.82552l-58.73438, 58.73438l-58.73438, -58.73438c-1.7572, -1.80631 -4.17009, -2.82537 -6.6901, -2.82552z";
+
 }
 
-.delete-button:hover {
-    -fx-background-color: radial-gradient(center 50% 50%, radius 50%, -nord1, transparent);
-}
+/* delete button (hovered) icon */
+
 .delete-button:hover .icon {
-    -fx-background-color: -nord12;
+    -fx-background-color: -base-alt-colorful-component-color;
 }
 
-.selectionRectangle{
-    -fx-stroke: #bf616a;
+/* selectionRectangle */
+
+.selectionRectangle {
     -fx-fill: transparent;
 }
 
+/* navigation bar */
+
 .topBox {
-    -fx-background-color: #2e3440;
+    -fx-background-color: -base-background-color;
 }
 
-.settingsBox {
-    -fx-background-color: -nord0;
+/* settings box (right side panel) */
+
+.settings-box {
+    -fx-background-color: -base-background-color;
+    -fx-padding: 0 15px;
 }
+
+/* separators */
 
 .separator {
     -fx-scale-y: 0.1;
-    -fx-background-color: #434c5e;
+    -fx-background-color: -base-background-light-color;
 }
+
+/* tool bar */
 
 .tool-bar {
-    -fx-background-color: -fx-my-menu-color;
-    /*-fx-padding: 4px;*/
+    -fx-background-color: -base-background-color;
 }
+
+/* underline mnemonic */
 
 .mnemonic-underline {
-    -fx-stroke: -fx-text-fill;
+    -fx-stroke: -base-font-color;
 }
 
+/* color-picker button */
+
 .color-picker {
-    /*-fx-color-label-visible: false;*/
-    -fx-color: -nord0;
+    -fx-color-label-visible: false;
+    -fx-color: transparent;
     -fx-background-color: transparent;
 }
 
-.color-picker .arrow-button .arrow {
-    -fx-background-color: -nord4;
+/* color-picker (hovered) */
+
+.color-picker:hover {
+    -fx-background-color: -base-highlight-color;
 }
+
+/* color-picker arrow */
+
+.color-picker .arrow-button .arrow {
+    -fx-background-color: -base-font-color;
+}
+
+/* color-picker context */
 
 .color-picker .context-menu {
     -fx-background-color: transparent;
 }
 
-.color-picker:hover {
-    -fx-background-color: -nord1;
-}
+/* color-picker text label */
 
 .color-picker .color-picker-label .text {
-    -fx-fill: -nord4;
+    -fx-fill: -base-font-color;
 }
+
+/* color palette */
 
 .color-palette {
-    -fx-background-color: -nord4;
+    -fx-background-color: -base-background-color;
 }
 
+.color-palette .text {
+    -fx-fill: -base-font-color;
+}
+
+.color-palette .text:hover {
+    -fx-fill: -base-alt-highlight-light-color;
+}
+
+/* custom color dialog window */
+
+.custom-color-dialog {
+    -fx-background-color: -base-background-color;
+    -fx-color: -base-background-light-color;
+}
+
+.custom-color-dialog .color-rect-pane .color-rect-border {
+    -fx-border-color: -base-background-color;
+}
+
+.custom-color-dialog .color-rect-pane .color-bar {
+    -fx-border-color: -base-background-color;
+}
+
+.custom-color-dialog>.color-rect-pane>.color-bar>#color-bar-indicator {
+    -fx-border-color: -base-font-color;
+}
+
+.custom-color-dialog .controls-pane .current-new-color-grid #current-new-color-border {
+    -fx-border-color: -base-highlight-color;
+}
+
+.custom-color-dialog .controls-pane .customcolor-controls-background {
+    -fx-background-color: -base-highlight-color, -base-background-light-color;
+}
+
+/* slider */
 
 .slider .track {
-    -fx-control-inner-background: -fx-my-menu-font-color;
+    -fx-control-inner-background: -base-font-color;
     -fx-padding: 2;
 }
 
-
 .slider .thumb {
-    -fx-background-color: -nord3;
+    -fx-background-color: -base-alt-highlight-color;
     -fx-effect: none;
 }
 
-.slider .thumb:pressed {
-    -fx-background-color: -nord4;
+.slider .thumb:hover {
+    -fx-background-color: -base-font-color;
 }
+
+.slider .thumb:pressed {
+    -fx-background-color: -base-font-color;
+}
+
+/* label */
 
 .label {
-    -fx-text-fill: -nord4;
-    -fx-font-size: 16 pt;
+    -fx-text-fill: -base-font-color;
+    -fx-font-size: 14 pt;
 }
 
+/* side-panel */
+
 .side-panel {
-   -fx-background-color: -nord0;
+    -fx-background-color: -base-background-color;
 }
+
+/* table-view */
 
 .table-view {
     -fx-background-color: transparent;
-    -fx-color: -nord0;
+    -fx-color: -base-background-color;
     -fx-padding: 0 5px;
 }
 
-.table-view:focused{
+.table-view:focused {
     -fx-background-color: transparent;
 }
 
-.table-view-input-controls {
-    -fx-padding: 0 5px;
-}
-
-.table-view > .virtual-flow > .scroll-bar:horizontal,
-.table-view > .virtual-flow > .scroll-bar:horizontal > .track,
-.table-view > .virtual-flow > .scroll-bar:horizontal > .track-background {
+.table-view .corner {
     -fx-background-color: transparent;
 }
 
-.table-view .thumb {
-    -fx-color: -nord4;
+/* table view scroll bars */
+
+.table-view .scroll-bar, .table-view .scroll-bar .track, .table-view .scroll-bar .track-background {
+    -fx-background-color: transparent;
+    -fx-effect: none;
 }
 
-.table-view .thumb:hover {
-    -fx-color: -nord11;
+.table-view .scroll-bar .thumb {
+    -fx-background-color: -base-font-color;
 }
 
-.table-view .table-cell{
-    -fx-text-fill: -nord4;
+.table-view .scroll-bar .thumb:hover {
+    -fx-background-color: -base-alt-highlight-color;
 }
 
-.table-row-cell{
-    -fx-background-color: -fx-table-cell-border-color, -nord1;
+.table-view .scroll-bar:vertical .decrement-button, .table-view .scroll-bar:vertical .increment-button {
+    -fx-padding: 0 1px;
+    -fx-opacity: 0;
+}
+
+.table-view .scroll-bar:horizontal .decrement-button, .table-view .scroll-bar:horizontal .increment-button {
+    -fx-padding: 1px 0;
+    -fx-opacity: 0;
+}
+
+/* table-view cells */
+
+.table-view .table-cell {
+    -fx-text-fill: -base-font-color;
+}
+
+.table-row-cell {
+    -fx-background-color: -base-background-color, -base-background-light-color;
     -fx-table-cell-border-color: transparent;
- /* 0 */
+    -fx-border-width: 0;
 }
 
 .table-row-cell:selected .table-cell {
-    -fx-background-color: -nord3;
-    -fx-text-fill: -nord4;
-    /*-fx-border-color: -nord4 -nord4 -nord4 transparent;*/
+    -fx-background-color: -base-highlight-light-color;
+    -fx-text-fill: -base-font-color;
 }
 
 .table-row-cell:selected .table-cell:selected {
@@ -285,35 +368,58 @@
 }
 
 .table-row-cell:hover {
-    -fx-background-color: -nord2;
+    -fx-background-color: -base-highlight-color;
 }
 
-.table-row-cell:selected {
-    /*-fx-table-cell-border-color: -nord1;*/
-    /*-fx-border-insets: 0, 0 -1 1 0;*/
-    /*-fx-border-color: -nord4 -nord4 -nord4 -nord4;*/
+.noheader-table-view {
+    -fx-max-width: 200px;
+    -fx-max-height: 300px;
 }
 
-
-
-.table-view > .virtual-flow > .scroll-bar > .increment-button,
-.table-view > .virtual-flow > .scroll-bar > .decrement-button {
-    -fx-opacity: 0;
-}
-
-.noheader .column-header-background {
+.noheader-table-view .column-header-background {
     -fx-max-height: 0;
     -fx-pref-height: 0;
     -fx-min-height: 0;
 }
 
-.text-field {
-    -fx-background-color: -nord3;
-    -fx-text-fill: -nord4;
-    -fx-background-radius: 0;
-    -fx-accent: -nord10;
+/* table input controls */
+
+.table-view-input-controls {
+    -fx-padding: 0 5px;
 }
 
-.text-field-table-cell .text-field{
+/* text fields */
+
+.text-field {
+    -fx-background-color: -base-highlight-light-color;
+    -fx-text-fill: -base-font-color;
+    -fx-background-radius: 0;
+    -fx-accent: -base-alt-highlight-color;
+}
+
+.text-field-table-cell .text-field {
     -fx-padding: 0;
+}
+
+.text-field-table-cell .color-picker {
+    -fx-padding: 0;
+}
+
+/* pane */
+
+.pane {
+    -fx-background-color: -base-background-light-color;
+}
+
+.settings-item-box {
+    -fx-padding: 20px 0;
+}
+
+.bounding-box-name-text-field {
+    -fx-max-width: 100px;
+}
+
+.bounding-box-color-picker {
+    -fx-max-width: 50px;
+    -fx-max-height: 25px;
 }
