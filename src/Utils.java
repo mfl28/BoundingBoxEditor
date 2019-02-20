@@ -1,6 +1,7 @@
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
 
 
 public class Utils {
@@ -21,5 +22,14 @@ public class Utils {
     public static String filenameFromUrl(String url) {
         return url.substring(Math.max(url.lastIndexOf("/"), url.lastIndexOf("\\")) + 1,
                 url.lastIndexOf("."));
+    }
+
+    // source: https://stackoverflow.com/questions/44331780/javafx-color-parsing
+    public static String rgbaFromColor(Color color) {
+        return String.format("rgba(%d, %d, %d, %f)",
+                (int) (255 * color.getRed()),
+                (int) (255 * color.getGreen()),
+                (int) (255 * color.getBlue()),
+                color.getOpacity());
     }
 }

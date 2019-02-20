@@ -436,3 +436,41 @@
     -fx-background-color: -base-background-light-color;
     -fx-text-fill: -base-font-color;
 }
+
+/* tree-view */
+
+.tree-cell > .tree-disclosure-node > .arrow,
+.tree-table-row-cell > .tree-disclosure-node > .arrow {
+    -fx-rotate: 0;
+    -fx-background-color: -base-font-color;
+}
+
+.tree-cell:expanded > .tree-disclosure-node > .arrow,
+.tree-table-row-cell:expanded > .tree-disclosure-node > .arrow {
+    -fx-rotate: 90;
+}
+
+.tree-view .scroll-bar,
+.tree-view .scroll-bar .track,
+.tree-view .scroll-bar .track-background {
+    -fx-background-color: transparent;
+    -fx-effect: none;
+}
+
+.tree-view .scroll-bar .thumb {
+    -fx-background-color: -base-font-color;
+}
+
+.tree-view .scroll-bar .thumb:hover {
+    -fx-background-color: -base-alt-highlight-color;
+}
+
+.tree-view .scroll-bar:vertical .decrement-button, .tree-view .scroll-bar:vertical .increment-button {
+    -fx-padding: 0 1px;
+    -fx-opacity: 0;
+}
+
+.tree-view .scroll-bar:horizontal .decrement-button, .tree-view .scroll-bar:horizontal .increment-button {
+    -fx-padding: 1px 0;
+    -fx-opacity: 0;
+}

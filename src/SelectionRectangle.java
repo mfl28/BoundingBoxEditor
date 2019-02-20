@@ -22,6 +22,7 @@ public class SelectionRectangle extends Rectangle {
     private final DragAnchor dragAnchor = new DragAnchor();
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
     private final Property<Bounds> confinementBounds = new SimpleObjectProperty<>();
+    private BoundingBoxItem boundingBoxItem = new BoundingBoxItem();
 
     public SelectionRectangle() {
         super();
@@ -30,6 +31,14 @@ public class SelectionRectangle extends Rectangle {
 
         resizeHandles = createResizeHandles();
         addMoveFunctionality();
+    }
+
+    public BoundingBoxItem getBoundingBoxItem() {
+        return boundingBoxItem;
+    }
+
+    public void setBoundingBoxItem(final BoundingBoxItem item) {
+        this.boundingBoxItem = item;
     }
 
     public List<Double> getScaledLocalCoordinatesInSiblingImage(ImageView sibling) {
@@ -49,8 +58,18 @@ public class SelectionRectangle extends Rectangle {
         return Arrays.asList(topLeftX, topLeftY, bottomRightX, bottomRightY);
     }
 
-    public void confineTo(ReadOnlyObjectProperty<Bounds> bounds) {
+    public void confineTo(final ReadOnlyObjectProperty<Bounds> bounds) {
         confinementBounds.bind(bounds);
+
+        bounds.addListener((observable, oldValue, newValue) -> {
+            this.setWidth(this.getWidth() * newValue.getWidth() / oldValue.getWidth());
+            this.setHeight(this.getHeight() * newValue.getHeight() / oldValue.getHeight());
+
+            this.setX(newValue.getMinX() + (this.getX()
+                    - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
+            this.setY(newValue.getMinY() + (this.getY()
+                    - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
+        });
     }
 
     public BooleanProperty selectedProperty() {

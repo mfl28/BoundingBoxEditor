@@ -1,5 +1,10 @@
+import javafx.beans.Observable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -8,6 +13,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class View extends BorderPane {
     private static final String NEXT_ICON_PATH = "icons/arrow_right.png";
@@ -73,6 +82,7 @@ public class View extends BorderPane {
     private final StackPane imagePane;
     private final DragAnchor mousePressed = new DragAnchor();
     private ImageView imageView;
+    private ObservableList<SelectionRectangle> selectionRectangleList = FXCollections.observableArrayList();
     private SelectionRectangle selectionRectangle;
 
     // Left
@@ -81,6 +91,7 @@ public class View extends BorderPane {
     private ColorPicker boundingBoxColorPicker;
     private Button addButton;
     private TreeView<String> boundingBoxItemTreeView;
+    private TreeItem<String> boundingBoxTreeViewRoot;
 
     //private final DoubleProperty zoomRatio = new SimpleDoubleProperty(0.5);
 
@@ -150,6 +161,10 @@ public class View extends BorderPane {
         return mousePressed;
     }
 
+    public List<SelectionRectangle> getSelectionRectangleList() {
+        return selectionRectangleList;
+    }
+
     private void setInitialImageViewSize() {
         final double imageWidth = imageView.getImage().getWidth();
         final double imageHeight = imageView.getImage().getHeight();
@@ -187,16 +202,6 @@ public class View extends BorderPane {
             if (imageView.getImage() != null)
                 prefHeight = imageView.getImage().getHeight();
             imageView.setFitHeight(Math.min(prefHeight, newValue.doubleValue() - 2 * IMAGE_PADDING));
-        });
-
-        imageView.boundsInParentProperty().addListener((observable, oldValue, newValue) -> {
-            selectionRectangle.setWidth(selectionRectangle.getWidth() * newValue.getWidth() / oldValue.getWidth());
-            selectionRectangle.setHeight(selectionRectangle.getHeight() * newValue.getHeight() / oldValue.getHeight());
-
-            selectionRectangle.setX(newValue.getMinX() + (selectionRectangle.getX()
-                    - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
-            selectionRectangle.setY(newValue.getMinY() + (selectionRectangle.getY()
-                    - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
         });
 
         final ColorAdjust colorAdjust = new ColorAdjust();
@@ -250,6 +255,8 @@ public class View extends BorderPane {
             }
         });
 
+        // when pressing enter after writing text, trigger creation of new BoundingBox class
+        nameInput.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
 
         selectionRectangle.confineTo(imageView.boundsInParentProperty());
 
@@ -260,6 +267,41 @@ public class View extends BorderPane {
         boundingBoxItemTableView.getSelectionModel().selectedItemProperty().addListener((value, oldValue, newValue) -> {
             if (newValue != null) {
                 selectionRectangle.setStroke(newValue.getColor());
+            }
+        });
+
+        selectionRectangleList.addListener((ListChangeListener<SelectionRectangle>) c -> {
+            while(c.next()){
+                if(c.wasAdded()){
+                    for(SelectionRectangle rect : c.getAddedSubList()){
+                        imagePane.getChildren().addAll(rect.getNodes());
+
+                        TreeItem<String> boundingBoxEntry = new TreeItem<>();
+                        boolean found = false;
+                        for(TreeItem<String> boundingBoxClassEntry : boundingBoxTreeViewRoot.getChildren()){
+                            if(boundingBoxClassEntry.getValue().contentEquals(rect.getBoundingBoxItem().getName())){
+                                int currentNumChildren = boundingBoxClassEntry.getChildren().size();
+                                boundingBoxEntry.setValue(boundingBoxClassEntry.getValue() + (currentNumChildren + 1));
+                                boundingBoxClassEntry.getChildren().add(boundingBoxEntry);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if(!found){
+                            TreeItem<String> boundingBoxClassEntry = new TreeItem<>(rect.getBoundingBoxItem().getName());
+                            boundingBoxTreeViewRoot.getChildren().add(boundingBoxClassEntry);
+                            boundingBoxEntry.setValue(rect.getBoundingBoxItem().getName() + 1);
+                            boundingBoxClassEntry.getChildren().add(boundingBoxEntry);
+                        }
+
+                    }
+                }
+
+                if(c.wasRemoved()){
+                    for(SelectionRectangle rect : c.getRemoved()){
+                        imagePane.getChildren().removeAll(rect.getNodes());
+                    }
+                }
             }
         });
 
@@ -369,7 +411,7 @@ public class View extends BorderPane {
         addButton = new Button(BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT);
         addButton.setFocusTraversable(false);
 
-        final HBox addItemControls = new HBox(nameInput, createHSpacer(), boundingBoxColorPicker,
+        final HBox addItemControls = new HBox(boundingBoxColorPicker, createHSpacer(), nameInput,
                 createHSpacer(), addButton);
         addItemControls.getStyleClass().add(BOUNDING_BOX_ITEM_CONTROLS_STYLE);
 
@@ -468,15 +510,10 @@ public class View extends BorderPane {
     private TreeView<String> createBoundingBoxTreeView(){
         final TreeView<String> treeView = new TreeView<>();
 
-        TreeItem<String> root = new TreeItem<>();
-        treeView.setRoot(root);
+        boundingBoxTreeViewRoot = new TreeItem<>();
+        treeView.setRoot(boundingBoxTreeViewRoot);
         treeView.setShowRoot(false);
         treeView.getStyleClass().add(BOUNDING_BOX_TREE_VIEW_STYLE);
-
-        TreeItem<String> testChild = new TreeItem<>("Hugo");
-        TreeItem<String> testClass = new TreeItem<>("Wal");
-        testClass.getChildren().add(testChild);
-        root.getChildren().add(testClass);
 
         return treeView;
     }
@@ -499,8 +536,7 @@ public class View extends BorderPane {
             } else {
                 final BoundingBoxItem row = getTableRow().getItem();
                 if (row != null) {
-                    setStyle("-fx-background-color: "
-                            + row.getColor().toString().replace("0x", "#") + ";");
+                    setStyle("-fx-background-color: " + Utils.rgbaFromColor(row.getColor()) + ";");
                 }
             }
         }

@@ -3,6 +3,8 @@ import javafx.geometry.Point2D;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -13,7 +15,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Controller {
-    private static final String PROGRAM_NAME_EXTENSION = " - Bounding Box Editor";
+    private static final String PROGRAM_NAME_EXTENSION = "Bounding Box Editor";
+    private static final String PROGRAM_NAME_EXTENSION_SEPARATOR = " - ";
     private static final String DIRECTORY_CHOOSER_TITLE = "Choose an image folder";
     private static final String OPEN_FOLDER_ERROR_TITLE = "Error while opening image folder";
     private static final String OPEN_FOLDER_ERROR_HEADER = "The selected folder is not a valid image folder.";
@@ -31,6 +34,7 @@ public class Controller {
 
     Controller(final Stage stage) {
         this.stage = stage;
+        stage.setTitle(PROGRAM_NAME_EXTENSION);
         this.view = new View(this);
         this.model = new Model();
         setModelListeners();
@@ -58,7 +62,7 @@ public class Controller {
             view.getNavBar().setVisible(true);
 
             view.setImageView(model.getCurrentImage());
-            stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION);
+            stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME_EXTENSION);
             view.getBoundingBoxItemTableView().setItems(model.getBoundingBoxItems());
             view.getBoundingBoxItemTableView().getSelectionModel().selectFirst();
         }
@@ -93,6 +97,7 @@ public class Controller {
         if (view.getSelectionRectangle().isVisible()) {
             saveCurrentBoundingBox();
         }
+        view.getSelectionRectangleList().clear();
         model.incrementFileIndex();
     }
 
@@ -100,6 +105,7 @@ public class Controller {
         if (view.getSelectionRectangle().isVisible()) {
             saveCurrentBoundingBox();
         }
+        view.getSelectionRectangleList().clear();
         model.decrementFileIndex();
     }
 
@@ -132,6 +138,23 @@ public class Controller {
 
     public void onMouseReleased(MouseEvent event) {
         // TO BE IMPLEMENTED
+        SelectionRectangle rectangle = view.getSelectionRectangle();
+        SelectionRectangle newRectangle = new SelectionRectangle();
+        newRectangle.setXYWH(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+        newRectangle.setVisible(true);
+        newRectangle.setStroke(rectangle.getStroke());
+        newRectangle.confineTo(view.getImageView().boundsInParentProperty());
+
+        BoundingBoxItem selectedBoundingBox = view.getBoundingBoxItemTableView().getSelectionModel().getSelectedItem();
+
+        if(selectedBoundingBox != null){
+            newRectangle.setBoundingBoxItem(selectedBoundingBox);
+        }
+
+        view.getSelectionRectangleList().add(newRectangle);
+        view.getSelectionRectangle().setVisible(false);
+
+        //System.out.println(view.getSelectionRectangleList());
     }
 
     public void onRegisterAddBoundingBoxItemAction(ActionEvent event) {
