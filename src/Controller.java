@@ -104,7 +104,7 @@ public class Controller {
     }
 
     public void onRegisterFitWindowAction(ActionEvent event) {
-        System.out.println("Fit Window clicked!");
+        // TO BE IMPLEMENTED
     }
 
     public void onMousePressed(MouseEvent event) {
@@ -128,6 +128,10 @@ public class Controller {
                 parentCoordinates.getY(),
                 Math.abs(clampedEventXY.getX() - mousePressed.getX()),
                 Math.abs(clampedEventXY.getY() - mousePressed.getY()));
+    }
+
+    public void onMouseReleased(MouseEvent event) {
+        // TO BE IMPLEMENTED
     }
 
     public void onRegisterAddBoundingBoxItemAction(ActionEvent event) {

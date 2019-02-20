@@ -1,4 +1,5 @@
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.geometry.Orientation;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -47,6 +48,9 @@ public class View extends BorderPane {
     private static final String TABLE_VIEW_DELETE_ICON_STYLE = "icon";
     private static final String TABLE_VIEW_STYLE = "noheader-table-view";
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
+    private static final String BOUNDING_BOX_TREE_VIEW_STYLE = "bounding-box-tree-view";
+    private static final String CLASS_SELECTOR_LABEL_TEXT = "Class Selector";
+    private static final String OBJECT_SELECTOR_LABEL_TEXT = "Object Selector";
 
     private final Controller controller;
 
@@ -76,6 +80,7 @@ public class View extends BorderPane {
     private TextField nameInput;
     private ColorPicker boundingBoxColorPicker;
     private Button addButton;
+    private TreeView<String> boundingBoxItemTreeView;
 
     //private final DoubleProperty zoomRatio = new SimpleDoubleProperty(0.5);
 
@@ -159,11 +164,14 @@ public class View extends BorderPane {
         fileOpenFolderItem.setOnAction(controller::onRegisterOpenFolderAction);
         fileSaveItem.setOnAction(controller::onRegisterSaveAction);
         viewFitWindowItem.setOnAction(controller::onRegisterFitWindowAction);
+
         nextButton.setOnAction(controller::onRegisterNextAction);
         previousButton.setOnAction(controller::onRegisterPreviousAction);
+
         addButton.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
         imageView.setOnMousePressed(controller::onMousePressed);
         imageView.setOnMouseDragged(controller::onMouseDragged);
+        imageView.setOnMouseReleased(controller::onMouseReleased);
     }
 
     private void setInternalBindingsAndListeners() {
@@ -348,6 +356,8 @@ public class View extends BorderPane {
     private VBox createSelectionPanel() {
         final VBox sidePanel = new VBox();
 
+        Label classSelectorLabel = new Label(CLASS_SELECTOR_LABEL_TEXT);
+
         boundingBoxItemTableView = createBoundingBoxTableView();
 
         nameInput = new TextField();
@@ -363,7 +373,16 @@ public class View extends BorderPane {
                 createHSpacer(), addButton);
         addItemControls.getStyleClass().add(BOUNDING_BOX_ITEM_CONTROLS_STYLE);
 
-        sidePanel.getChildren().addAll(boundingBoxItemTableView, addItemControls);
+        Label objectSelectorLabel = new Label(OBJECT_SELECTOR_LABEL_TEXT);
+        boundingBoxItemTreeView = createBoundingBoxTreeView();
+
+        sidePanel.getChildren().addAll(
+                classSelectorLabel,
+                boundingBoxItemTableView,
+                addItemControls,
+                new Separator(Orientation.HORIZONTAL),
+                objectSelectorLabel,
+                boundingBoxItemTreeView);
         sidePanel.setSpacing(SIDE_PANEL_SPACING);
 
         sidePanel.getStyleClass().add(SIDE_PANEL_STYLE);
@@ -444,6 +463,22 @@ public class View extends BorderPane {
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         return tableView;
+    }
+
+    private TreeView<String> createBoundingBoxTreeView(){
+        final TreeView<String> treeView = new TreeView<>();
+
+        TreeItem<String> root = new TreeItem<>();
+        treeView.setRoot(root);
+        treeView.setShowRoot(false);
+        treeView.getStyleClass().add(BOUNDING_BOX_TREE_VIEW_STYLE);
+
+        TreeItem<String> testChild = new TreeItem<>("Hugo");
+        TreeItem<String> testClass = new TreeItem<>("Wal");
+        testClass.getChildren().add(testChild);
+        root.getChildren().add(testClass);
+
+        return treeView;
     }
 
     private Pane createHSpacer() {

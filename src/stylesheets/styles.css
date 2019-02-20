@@ -301,6 +301,7 @@
 
 .side-panel {
     -fx-background-color: -base-background-color;
+    -fx-padding: 0 5px;
 }
 
 /* table-view */
@@ -308,7 +309,6 @@
 .table-view {
     -fx-background-color: transparent;
     -fx-color: -base-background-color;
-    -fx-padding: 0 5px;
 }
 
 .table-view:focused {
@@ -385,7 +385,7 @@
 /* table input controls */
 
 .table-view-input-controls {
-    -fx-padding: 0 5px;
+    /*-fx-padding: 0 5px;*/
 }
 
 /* text fields */
@@ -422,4 +422,17 @@
 .bounding-box-color-picker {
     -fx-max-width: 50px;
     -fx-max-height: 25px;
+}
+
+.bounding-box-tree-view {
+    -fx-max-width: 200px;
+    -fx-max-height: 300px;
+    -fx-background-insets: 0;
+    -fx-background-color: transparent;
+}
+
+
+.bounding-box-tree-view .tree-cell {
+    -fx-background-color: -base-background-light-color;
+    -fx-text-fill: -base-font-color;
 }
