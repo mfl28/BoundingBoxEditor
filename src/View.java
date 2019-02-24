@@ -1,10 +1,8 @@
-import javafx.beans.Observable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -14,8 +12,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.DirectoryChooser;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.List;
 
 public class View extends BorderPane {
@@ -58,19 +57,25 @@ public class View extends BorderPane {
     private static final String TABLE_VIEW_STYLE = "noheader-table-view";
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String BOUNDING_BOX_TREE_VIEW_STYLE = "bounding-box-tree-view";
-    private static final String CLASS_SELECTOR_LABEL_TEXT = "Class Selector";
-    private static final String OBJECT_SELECTOR_LABEL_TEXT = "Object Selector";
+    private static final String CLASS_SELECTOR_LABEL_TEXT = "Category Editor";
+    private static final String OBJECT_SELECTOR_LABEL_TEXT = "Explorer";
+    private static final String DIRECTORY_CHOOSER_TITLE = "Choose an image folder";
+    private static final String EXIT_TEXT = "E_xit";
+    private static final String BOTTOM_BAR_STYLE = "bottom-bar";
+    private static final String BOUNDING_BOX_CATEGORY_ITEM_ICON_STYLE = "bounding-box-category-item-icon";
 
     private final Controller controller;
 
     // Top
     private MenuItem fileOpenFolderItem;
     private MenuItem fileSaveItem;
+    private MenuItem fileExitItem;
     private MenuItem viewFitWindowItem;
     private CheckMenuItem viewShowSettingsItem;
     private ToolBar navBar;
     private Button nextButton;
     private Button previousButton;
+    private final DirectoryChooser directoryChooser = new DirectoryChooser();
 
     // Right
     private final VBox settingsPanel;
@@ -84,16 +89,16 @@ public class View extends BorderPane {
     private ImageView imageView;
     private ObservableList<SelectionRectangle> selectionRectangleList = FXCollections.observableArrayList();
     private SelectionRectangle selectionRectangle;
+    private final ProgressIndicator progressIndicator = new ProgressIndicator();
 
     // Left
-    private TableView<BoundingBoxItem> boundingBoxItemTableView;
+    private TableView<BoundingBoxCategory> boundingBoxItemTableView;
     private TextField nameInput;
     private ColorPicker boundingBoxColorPicker;
     private Button addButton;
     private TreeView<String> boundingBoxItemTreeView;
     private TreeItem<String> boundingBoxTreeViewRoot;
 
-    //private final DoubleProperty zoomRatio = new SimpleDoubleProperty(0.5);
 
     public View(Controller controller) {
         this.controller = controller;
@@ -104,6 +109,9 @@ public class View extends BorderPane {
         this.setCenter(imagePane);
         this.setRight(settingsPanel);
         this.setLeft(createSelectionPanel());
+        this.setBottom(createBottomBar());
+
+        progressIndicator.setVisible(false);
 
         setActionsFromController();
         setInternalBindingsAndListeners();
@@ -125,15 +133,23 @@ public class View extends BorderPane {
         return imageView;
     }
 
-    public void setImageView(Image image) {
+    public void setImageView(final Image image) {
+        // reset progress indicator animation
+        progressIndicator.setProgress(0);
+        progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+        progressIndicator.setVisible(true);
 
-        imageView.setImage(image);
-        imageView.setPreserveRatio(true);
-
-        setInitialImageViewSize();
+        image.progressProperty().addListener((value, oldValue, newValue) -> {
+            if (newValue.equals(1.0)) {
+                imageView.setImage(image);
+                imageView.setPreserveRatio(true);
+                setInitialImageViewSize();
+                progressIndicator.setVisible(false);
+            }
+        });
     }
 
-    public TableView<BoundingBoxItem> getBoundingBoxItemTableView() {
+    public TableView<BoundingBoxCategory> getBoundingBoxItemTableView() {
         return boundingBoxItemTableView;
     }
 
@@ -165,6 +181,10 @@ public class View extends BorderPane {
         return selectionRectangleList;
     }
 
+    public File getFileFromDirectoryChooser() {
+        return directoryChooser.showDialog(this.getScene().getWindow());
+    }
+
     private void setInitialImageViewSize() {
         final double imageWidth = imageView.getImage().getWidth();
         final double imageHeight = imageView.getImage().getHeight();
@@ -179,6 +199,7 @@ public class View extends BorderPane {
         fileOpenFolderItem.setOnAction(controller::onRegisterOpenFolderAction);
         fileSaveItem.setOnAction(controller::onRegisterSaveAction);
         viewFitWindowItem.setOnAction(controller::onRegisterFitWindowAction);
+        fileExitItem.setOnAction(controller::onRegisterExitAction);
 
         nextButton.setOnAction(controller::onRegisterNextAction);
         previousButton.setOnAction(controller::onRegisterPreviousAction);
@@ -271,15 +292,15 @@ public class View extends BorderPane {
         });
 
         selectionRectangleList.addListener((ListChangeListener<SelectionRectangle>) c -> {
-            while(c.next()){
-                if(c.wasAdded()){
-                    for(SelectionRectangle rect : c.getAddedSubList()){
+            while (c.next()) {
+                if (c.wasAdded()) {
+                    for (SelectionRectangle rect : c.getAddedSubList()) {
                         imagePane.getChildren().addAll(rect.getNodes());
+                        TreeItem<String> boundingBoxEntry = createTreeViewLeafEntry(rect);
 
-                        TreeItem<String> boundingBoxEntry = new TreeItem<>();
                         boolean found = false;
-                        for(TreeItem<String> boundingBoxClassEntry : boundingBoxTreeViewRoot.getChildren()){
-                            if(boundingBoxClassEntry.getValue().contentEquals(rect.getBoundingBoxItem().getName())){
+                        for (TreeItem<String> boundingBoxClassEntry : boundingBoxTreeViewRoot.getChildren()) {
+                            if (boundingBoxClassEntry.getValue().contentEquals(rect.getBoundingBoxCategory().getName())) {
                                 int currentNumChildren = boundingBoxClassEntry.getChildren().size();
                                 boundingBoxEntry.setValue(boundingBoxClassEntry.getValue() + (currentNumChildren + 1));
                                 boundingBoxClassEntry.getChildren().add(boundingBoxEntry);
@@ -287,19 +308,19 @@ public class View extends BorderPane {
                                 break;
                             }
                         }
-                        if(!found){
-                            TreeItem<String> boundingBoxClassEntry = new TreeItem<>(rect.getBoundingBoxItem().getName());
-                            boundingBoxTreeViewRoot.getChildren().add(boundingBoxClassEntry);
-                            boundingBoxEntry.setValue(rect.getBoundingBoxItem().getName() + 1);
+                        if (!found) {
+                            TreeItem<String> boundingBoxClassEntry = createTreeViewCategoryEntry(rect);
+                            boundingBoxEntry.setValue(rect.getBoundingBoxCategory().getName() + 1);
                             boundingBoxClassEntry.getChildren().add(boundingBoxEntry);
                         }
-
                     }
                 }
 
-                if(c.wasRemoved()){
-                    for(SelectionRectangle rect : c.getRemoved()){
-                        imagePane.getChildren().removeAll(rect.getNodes());
+                if (c.wasRemoved()) {
+                    c.getRemoved().forEach(selectionRectangle -> imagePane.getChildren().removeAll(selectionRectangle.getNodes()));
+                    //TODO Remove specific items (currently only the case of removing all entries is provided)
+                    if (selectionRectangleList.isEmpty()) {
+                        boundingBoxTreeViewRoot.getChildren().clear();
                     }
                 }
             }
@@ -338,7 +359,7 @@ public class View extends BorderPane {
         final StackPane imagePane = new StackPane();
         imagePane.getStyleClass().add(IMAGE_PANE_STYLE);
 
-        selectionRectangle = new SelectionRectangle();
+        selectionRectangle = new SelectionRectangle(controller);
         imageView = new ImageView();
         imageView.setSmooth(true);
         imageView.setCache(true);
@@ -347,6 +368,7 @@ public class View extends BorderPane {
 
         imagePane.getChildren().add(imageView);
         imagePane.getChildren().addAll(selectionRectangle.getNodes());
+        imagePane.getChildren().add(progressIndicator);
 
         return imagePane;
     }
@@ -369,13 +391,15 @@ public class View extends BorderPane {
         final Menu viewMenu = new Menu(VIEW_MENU_TEXT);
 
         fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT);
+        directoryChooser.setTitle(DIRECTORY_CHOOSER_TITLE);
+        fileExitItem = new MenuItem(EXIT_TEXT);
 
         viewFitWindowItem = new MenuItem(FIT_WINDOW_TEXT);
         viewShowSettingsItem = new CheckMenuItem(SHOW_SETTINGS_BAR_TEXT);
 
         fileSaveItem = new MenuItem(SAVE_TEXT);
 
-        fileMenu.getItems().addAll(fileOpenFolderItem, fileSaveItem);
+        fileMenu.getItems().addAll(fileOpenFolderItem, fileSaveItem, fileExitItem);
         viewMenu.getItems().addAll(viewFitWindowItem, viewShowSettingsItem);
 
         menuBar.getMenus().addAll(fileMenu, viewMenu);
@@ -457,21 +481,21 @@ public class View extends BorderPane {
         return label;
     }
 
-    private TableView<BoundingBoxItem> createBoundingBoxTableView() {
-        final TableView<BoundingBoxItem> tableView = new TableView<>();
+    private TableView<BoundingBoxCategory> createBoundingBoxTableView() {
+        final TableView<BoundingBoxCategory> tableView = new TableView<>();
         tableView.setEditable(true);
 
-        final TableColumn<BoundingBoxItem, String> nameColumn = new TableColumn<>();
+        final TableColumn<BoundingBoxCategory, String> nameColumn = new TableColumn<>();
         nameColumn.setCellValueFactory(new PropertyValueFactory<>(TABLE_NAME_COLUMN_FACTORY_NAME));
         nameColumn.setEditable(true);
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
 
-        final TableColumn<BoundingBoxItem, Color> colorColumn = new TableColumn<>();
+        final TableColumn<BoundingBoxCategory, Color> colorColumn = new TableColumn<>();
         colorColumn.setMinWidth(TABLE_VIEW_COLOR_COLUMN_WIDTH);
         colorColumn.setMaxWidth(TABLE_VIEW_COLOR_COLUMN_WIDTH);
         colorColumn.setCellFactory(factory -> new ColorTableCell());
 
-        final TableColumn<BoundingBoxItem, BoundingBoxItem> deleteColumn = new TableColumn<>();
+        final TableColumn<BoundingBoxCategory, BoundingBoxCategory> deleteColumn = new TableColumn<>();
         deleteColumn.setMinWidth(TABLE_VIEW_DELETE_COLUMN_WIDTH);
         deleteColumn.setMaxWidth(TABLE_VIEW_DELETE_COLUMN_WIDTH);
         deleteColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
@@ -480,7 +504,7 @@ public class View extends BorderPane {
             private final Region deleteIcon = new Region();
 
             @Override
-            protected void updateItem(BoundingBoxItem item, boolean empty) {
+            protected void updateItem(BoundingBoxCategory item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item == null) {
                     setGraphic(null);
@@ -507,8 +531,9 @@ public class View extends BorderPane {
         return tableView;
     }
 
-    private TreeView<String> createBoundingBoxTreeView(){
+    private TreeView<String> createBoundingBoxTreeView() {
         final TreeView<String> treeView = new TreeView<>();
+        VBox.setVgrow(treeView, Priority.ALWAYS);
 
         boundingBoxTreeViewRoot = new TreeItem<>();
         treeView.setRoot(boundingBoxTreeViewRoot);
@@ -518,13 +543,60 @@ public class View extends BorderPane {
         return treeView;
     }
 
+    private HBox createBottomBar() {
+        HBox bottomBar = new HBox(new Label("Bottom Bar Test Text"));
+        bottomBar.getStyleClass().add(BOTTOM_BAR_STYLE);
+        return bottomBar;
+    }
+
+    private TreeItem<String> createTreeViewLeafEntry(SelectionRectangle boundSelectionRectangle) {
+        final TreeItem<String> treeViewLeaf = new TreeItem<>();
+
+        final Rectangle rectangleIcon = new Rectangle(0, 0, 9, 9);
+        rectangleIcon.fillProperty().bind(boundSelectionRectangle.strokeProperty());
+        boundSelectionRectangle.visibleProperty().bind(rectangleIcon.opacityProperty().greaterThan(0.5));
+
+        rectangleIcon.setOnMousePressed(event ->
+                rectangleIcon.setOpacity(rectangleIcon.getOpacity() > 0.5 ? 0.3 : 1.0));
+
+        rectangleIcon.setOnMouseEntered(event ->
+                boundSelectionRectangle.setFill(Color.web(boundSelectionRectangle.getStroke().toString(), 0.4)));
+
+        rectangleIcon.setOnMouseExited(event -> boundSelectionRectangle.setFill(Color.TRANSPARENT));
+
+        treeViewLeaf.setGraphic(rectangleIcon);
+
+        return treeViewLeaf;
+    }
+
+    private TreeItem<String> createTreeViewCategoryEntry(SelectionRectangle boundSelectionRectangle) {
+        TreeItem<String> treeViewCategoryEntry = new TreeItem<>(boundSelectionRectangle.getBoundingBoxCategory().getName());
+        boundingBoxTreeViewRoot.getChildren().add(treeViewCategoryEntry);
+
+        Rectangle classEntryIcon = new Rectangle(0, 0, 10, 10);
+
+        classEntryIcon.fillProperty().bind(boundSelectionRectangle.strokeProperty());
+
+        classEntryIcon.setOnMousePressed(event -> {
+            for (TreeItem<String> boundingBoxItem : treeViewCategoryEntry.getChildren()) {
+                boundingBoxItem.getGraphic().setOpacity(classEntryIcon.getOpacity() > 0.5 ? 0.3 : 1.0);
+            }
+            classEntryIcon.setOpacity(classEntryIcon.getOpacity() > 0.5 ? 0.3 : 1.0);
+        });
+
+        treeViewCategoryEntry.setGraphic(classEntryIcon);
+
+        return treeViewCategoryEntry;
+    }
+
     private Pane createHSpacer() {
         final Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         return spacer;
     }
 
-    private class ColorTableCell extends TableCell<BoundingBoxItem, Color> {
+
+    private class ColorTableCell extends TableCell<BoundingBoxCategory, Color> {
 
         @Override
         protected void updateItem(Color item, boolean empty) {
@@ -534,7 +606,7 @@ public class View extends BorderPane {
                 setGraphic(null);
                 setStyle("-fx-background-color: transparent;");
             } else {
-                final BoundingBoxItem row = getTableRow().getItem();
+                final BoundingBoxCategory row = getTableRow().getItem();
                 if (row != null) {
                     setStyle("-fx-background-color: " + Utils.rgbaFromColor(row.getColor()) + ";");
                 }

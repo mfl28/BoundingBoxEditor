@@ -3,6 +3,8 @@ import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
+import java.util.Random;
+
 
 public class Utils {
     public static double clamp(double val, double min, double max) {
@@ -31,5 +33,9 @@ public class Utils {
                 (int) (255 * color.getGreen()),
                 (int) (255 * color.getBlue()),
                 color.getOpacity());
+    }
+
+    public static Color createRandomColor(Random random) {
+        return Color.rgb(random.nextInt(255), random.nextInt(255), random.nextInt(255));
     }
 }

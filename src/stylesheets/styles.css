@@ -426,7 +426,7 @@
 
 .bounding-box-tree-view {
     -fx-max-width: 200px;
-    -fx-max-height: 300px;
+    /*-fx-max-height: 300px;*/
     -fx-background-insets: 0;
     -fx-background-color: transparent;
 }
@@ -474,3 +474,30 @@
     -fx-padding: 1px 0;
     -fx-opacity: 0;
 }
+
+.tree-view .tree-cell {
+    -fx-padding: 0.1em 0;
+}
+
+.tree-view .tree-cell:hover {
+    -fx-background-color: -base-highlight-color;
+}
+
+.tree-view .tree-cell:selected{
+    -fx-background-color: -base-highlight-light-color;
+}
+
+/* progress indicator */
+
+.progress-indicator {
+    -fx-background-color: transparent;
+    -fx-accent: -base-font-color;
+}
+
+/* bottom bar */
+.bottom-bar {
+    -fx-background-color: -base-background-color;
+    -fx-padding: 5px;
+}
+
+

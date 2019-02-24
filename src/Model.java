@@ -17,10 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Model {
@@ -30,19 +27,19 @@ public class Model {
     private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
 
     private ObservableList<File> imageFileList;
-    private ObservableList<BoundingBoxItem> boundingBoxItems;
-    private ObservableMap<String, List<Double>> boundingBoxData;
-    private IntegerProperty fileIndex;
+    private ObservableList<BoundingBoxCategory> boundingBoxCategories = FXCollections.observableArrayList();
+    private ObservableMap<String, List<Double>> boundingBoxData = FXCollections.observableMap(new LinkedHashMap<>());
+    private IntegerProperty fileIndex = new SimpleIntegerProperty(0);
     private IntegerBinding imageFileListSize;
     private BooleanBinding hasNextFile;
     private BooleanBinding hasPreviousFile;
     private ObjectBinding<File> currentFile;
+    private HashSet<String> boundingBoxCategoryNames = new HashSet<>();
 
     public Model() {
-        fileIndex = new SimpleIntegerProperty(0);
-        boundingBoxData = FXCollections.observableMap(new LinkedHashMap<>());
-        // Put in default valued Bounding Box class.
-        boundingBoxItems = FXCollections.observableArrayList(new BoundingBoxItem());
+        BoundingBoxCategory defaultCategory = new BoundingBoxCategory();
+        boundingBoxCategories.add(defaultCategory);
+        boundingBoxCategoryNames.add(defaultCategory.getName());
         numberFormat.applyPattern(BOUNDING_BOX_COORDINATES_PATTERN);
     }
 
@@ -74,8 +71,8 @@ public class Model {
         return fileIndex;
     }
 
-    public ObservableList<BoundingBoxItem> getBoundingBoxItems() {
-        return boundingBoxItems;
+    public ObservableList<BoundingBoxCategory> getBoundingBoxCategories() {
+        return boundingBoxCategories;
     }
 
     public void incrementFileIndex() {
@@ -104,8 +101,9 @@ public class Model {
 
     void writeBoundingBoxDataToFile(File file) throws IOException {
         try (PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
-            boundingBoxData.forEach((key, value) -> printWriter.println(key + ", " +
-                    value.stream().map(numberFormat::format).collect(Collectors.joining(", "))));
+            new Thread(() ->
+                    boundingBoxData.forEach((key, value) -> printWriter.println(key + ", " +
+                            value.stream().map(numberFormat::format).collect(Collectors.joining(", ")))));
         }
     }
 
@@ -116,7 +114,11 @@ public class Model {
         return imagePath.substring(imagePath.indexOf("\\") + 1);
     }
 
+    public HashSet<String> getBoundingBoxCategoryNames() {
+        return boundingBoxCategoryNames;
+    }
+
     private Image getImageFromFile(File file) {
-        return new Image(file.toURI().toString());
+        return new Image(file.toURI().toString(), true);
     }
 }
