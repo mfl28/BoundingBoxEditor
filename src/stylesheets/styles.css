@@ -501,4 +501,13 @@
     -fx-padding: 5px;
 }
 
+/* context-menu menu-item */
+#delete-context-menu:hover {
+    -fx-background-color: -base-colorful-component-color;
+    -fx-accent: -base-background-color;
+}
+
+
+
+
 

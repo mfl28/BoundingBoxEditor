@@ -103,6 +103,7 @@ public class Controller {
         if (view.getSelectionRectangle().isVisible()) {
             saveCurrentBoundingBox();
         }
+        view.getBoundingBoxTreeViewRoot().getChildren().clear();
         view.getSelectionRectangleList().clear();
         model.incrementFileIndex();
     }
@@ -111,6 +112,7 @@ public class Controller {
         if (view.getSelectionRectangle().isVisible()) {
             saveCurrentBoundingBox();
         }
+        view.getBoundingBoxTreeViewRoot().getChildren().clear();
         view.getSelectionRectangleList().clear();
         model.decrementFileIndex();
     }
@@ -161,7 +163,7 @@ public class Controller {
             newRectangle.confineTo(view.getImageView().boundsInParentProperty());
 
             view.getSelectionRectangleList().add(newRectangle);
-            view.getSelectionRectangle().setVisible(false);
+            rectangle.setVisible(false);
         }
     }
 
@@ -169,12 +171,12 @@ public class Controller {
         final String boundingBoxItemName = view.getNameInput().getText();
 
         if (boundingBoxItemName.isEmpty()) {
-            view.displayErrorAlert("Category Input Error", "Please provide a category name.", "");
+            view.displayErrorAlert("Category Input Error", null, "Please provide a category name.");
             return;
         }
 
         if (model.getBoundingBoxCategoryNames().contains(boundingBoxItemName)) {
-            view.displayErrorAlert("Category Input Error", "The category \"" + boundingBoxItemName + "\" already exists.", "");
+            view.displayErrorAlert("Category Input Error", null, "The category \"" + boundingBoxItemName + "\" already exists.");
             return;
         }
 

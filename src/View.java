@@ -96,8 +96,8 @@ public class View extends BorderPane {
     private TextField nameInput;
     private ColorPicker boundingBoxColorPicker;
     private Button addButton;
-    private TreeView<String> boundingBoxItemTreeView;
-    private TreeItem<String> boundingBoxTreeViewRoot;
+    private TreeView<SelectionRectangle> boundingBoxItemTreeView;
+    private TreeItem<SelectionRectangle> boundingBoxTreeViewRoot;
 
 
     public View(Controller controller) {
@@ -183,6 +183,10 @@ public class View extends BorderPane {
 
     public File getFileFromDirectoryChooser() {
         return directoryChooser.showDialog(this.getScene().getWindow());
+    }
+
+    public TreeItem<SelectionRectangle> getBoundingBoxTreeViewRoot() {
+        return boundingBoxTreeViewRoot;
     }
 
     private void setInitialImageViewSize() {
@@ -293,39 +297,33 @@ public class View extends BorderPane {
 
         selectionRectangleList.addListener((ListChangeListener<SelectionRectangle>) c -> {
             while (c.next()) {
-                if (c.wasAdded()) {
-                    for (SelectionRectangle rect : c.getAddedSubList()) {
-                        imagePane.getChildren().addAll(rect.getNodes());
-                        TreeItem<String> boundingBoxEntry = createTreeViewLeafEntry(rect);
+                for (SelectionRectangle selectionRectangle : c.getAddedSubList()) {
+                    imagePane.getChildren().addAll(selectionRectangle.getNodes());
 
-                        boolean found = false;
-                        for (TreeItem<String> boundingBoxClassEntry : boundingBoxTreeViewRoot.getChildren()) {
-                            if (boundingBoxClassEntry.getValue().contentEquals(rect.getBoundingBoxCategory().getName())) {
-                                int currentNumChildren = boundingBoxClassEntry.getChildren().size();
-                                boundingBoxEntry.setValue(boundingBoxClassEntry.getValue() + (currentNumChildren + 1));
-                                boundingBoxClassEntry.getChildren().add(boundingBoxEntry);
-                                found = true;
-                                break;
-                            }
+                    SelectionRectangleTreeItem treeItem = new SelectionRectangleTreeItem(selectionRectangle);
+
+                    boolean found = false;
+                    for (TreeItem<SelectionRectangle> category : boundingBoxTreeViewRoot.getChildren()) {
+                        if (category.getValue().getBoundingBoxCategory().equals(selectionRectangle.getBoundingBoxCategory())) {
+                            treeItem.setId(category.getChildren().size() + 1);
+                            category.getChildren().add(treeItem);
+                            found = true;
+                            break;
                         }
-                        if (!found) {
-                            TreeItem<String> boundingBoxClassEntry = createTreeViewCategoryEntry(rect);
-                            boundingBoxEntry.setValue(rect.getBoundingBoxCategory().getName() + 1);
-                            boundingBoxClassEntry.getChildren().add(boundingBoxEntry);
-                        }
+                    }
+                    if (!found) {
+                        SelectionRectangleTreeItem category = new SelectionRectangleTreeItem(selectionRectangle);
+                        treeItem.setId(1);
+                        category.getChildren().add(treeItem);
+                        boundingBoxTreeViewRoot.getChildren().add(category);
                     }
                 }
 
-                if (c.wasRemoved()) {
-                    c.getRemoved().forEach(selectionRectangle -> imagePane.getChildren().removeAll(selectionRectangle.getNodes()));
-                    //TODO Remove specific items (currently only the case of removing all entries is provided)
-                    if (selectionRectangleList.isEmpty()) {
-                        boundingBoxTreeViewRoot.getChildren().clear();
-                    }
+                for (SelectionRectangle removedItem : c.getRemoved()) {
+                    imagePane.getChildren().removeAll(removedItem.getNodes());
                 }
             }
         });
-
     }
 
     private VBox createSettingsPanel() {
@@ -534,14 +532,81 @@ public class View extends BorderPane {
         return tableView;
     }
 
-    private TreeView<String> createBoundingBoxTreeView() {
-        final TreeView<String> treeView = new TreeView<>();
+    private TreeView<SelectionRectangle> createBoundingBoxTreeView() {
+        final TreeView<SelectionRectangle> treeView = new TreeView<>();
         VBox.setVgrow(treeView, Priority.ALWAYS);
 
         boundingBoxTreeViewRoot = new TreeItem<>();
         treeView.setRoot(boundingBoxTreeViewRoot);
         treeView.setShowRoot(false);
         treeView.getStyleClass().add(BOUNDING_BOX_TREE_VIEW_STYLE);
+
+        treeView.setCellFactory(tv -> {
+            SelectionRectangleTreeViewCell cell = new SelectionRectangleTreeViewCell();
+            final MenuItem deleteSelectionRectangle = new MenuItem("Delete");
+            final ContextMenu deleteMenu = new ContextMenu(deleteSelectionRectangle);
+
+            deleteSelectionRectangle.setId("delete-context-menu");
+
+
+            cell.emptyProperty().addListener((value, oldValue, newValue) -> {
+                if (!newValue) {
+                    cell.setContextMenu(deleteMenu);
+                } else {
+                    cell.setContextMenu(null);
+                }
+            });
+
+            deleteSelectionRectangle.setOnAction(event -> {
+                if (!cell.isEmpty()) {
+                    final TreeItem<SelectionRectangle> treeItem = cell.getTreeItem();
+
+                    treeItem.getChildren().forEach(child -> selectionRectangleList.remove(child.getValue()));
+                    treeItem.getChildren().clear();
+
+                    final var itemList = treeItem.getParent().getChildren();
+
+                    for (int i = itemList.indexOf(treeItem) + 1; i < itemList.size(); ++i) {
+                        SelectionRectangleTreeItem item = (SelectionRectangleTreeItem) itemList.get(i);
+                        item.setId(item.getId() - 1);
+                    }
+
+                    final TreeItem<SelectionRectangle> treeItemParent = treeItem.getParent();
+
+                    treeItemParent.getChildren().remove(treeItem);
+                    selectionRectangleList.remove(treeItem.getValue());
+
+                    if (treeItemParent.getChildren().isEmpty()) {
+                        boundingBoxTreeViewRoot.getChildren().remove(treeItemParent);
+                    }
+                }
+            });
+
+            cell.setOnMouseEntered(event -> {
+                if (!cell.isEmpty()) {
+                    final var childList = cell.getTreeItem().getChildren();
+
+                    if (!childList.isEmpty()) {
+                        childList.forEach(child -> child.getValue().setFill(Color.web(cell.getItem().getStroke().toString(), 0.4)));
+                    } else {
+                        cell.getItem().setFill(Color.web(cell.getItem().getStroke().toString(), 0.4));
+                    }
+                }
+            });
+            cell.setOnMouseExited(event -> {
+                if (!cell.isEmpty()) {
+                    final var childList = cell.getTreeItem().getChildren();
+
+                    if (!childList.isEmpty()) {
+                        childList.forEach(child -> child.getValue().setFill(Color.TRANSPARENT));
+                    } else {
+                        cell.getItem().setFill(Color.TRANSPARENT);
+                    }
+                }
+            });
+
+            return cell;
+        });
 
         return treeView;
     }
@@ -550,46 +615,6 @@ public class View extends BorderPane {
         HBox bottomBar = new HBox(new Label("Bottom Bar Test Text"));
         bottomBar.getStyleClass().add(BOTTOM_BAR_STYLE);
         return bottomBar;
-    }
-
-    private TreeItem<String> createTreeViewLeafEntry(SelectionRectangle boundSelectionRectangle) {
-        final TreeItem<String> treeViewLeaf = new TreeItem<>();
-
-        final Rectangle rectangleIcon = new Rectangle(0, 0, 9, 9);
-        rectangleIcon.fillProperty().bind(boundSelectionRectangle.strokeProperty());
-        boundSelectionRectangle.visibleProperty().bind(rectangleIcon.opacityProperty().greaterThan(0.5));
-
-        rectangleIcon.setOnMousePressed(event ->
-                rectangleIcon.setOpacity(rectangleIcon.getOpacity() > 0.5 ? 0.3 : 1.0));
-
-        rectangleIcon.setOnMouseEntered(event ->
-                boundSelectionRectangle.setFill(Color.web(boundSelectionRectangle.getStroke().toString(), 0.4)));
-
-        rectangleIcon.setOnMouseExited(event -> boundSelectionRectangle.setFill(Color.TRANSPARENT));
-
-        treeViewLeaf.setGraphic(rectangleIcon);
-
-        return treeViewLeaf;
-    }
-
-    private TreeItem<String> createTreeViewCategoryEntry(SelectionRectangle boundSelectionRectangle) {
-        TreeItem<String> treeViewCategoryEntry = new TreeItem<>(boundSelectionRectangle.getBoundingBoxCategory().getName());
-        boundingBoxTreeViewRoot.getChildren().add(treeViewCategoryEntry);
-
-        Rectangle classEntryIcon = new Rectangle(0, 0, 10, 10);
-
-        classEntryIcon.fillProperty().bind(boundSelectionRectangle.strokeProperty());
-
-        classEntryIcon.setOnMousePressed(event -> {
-            for (TreeItem<String> boundingBoxItem : treeViewCategoryEntry.getChildren()) {
-                boundingBoxItem.getGraphic().setOpacity(classEntryIcon.getOpacity() > 0.5 ? 0.3 : 1.0);
-            }
-            classEntryIcon.setOpacity(classEntryIcon.getOpacity() > 0.5 ? 0.3 : 1.0);
-        });
-
-        treeViewCategoryEntry.setGraphic(classEntryIcon);
-
-        return treeViewCategoryEntry;
     }
 
     private Pane createHSpacer() {
@@ -614,6 +639,70 @@ public class View extends BorderPane {
                     setStyle("-fx-background-color: " + Utils.rgbaFromColor(row.getColor()) + ";");
                 }
             }
+        }
+    }
+
+    private class SelectionRectangleTreeViewCell extends TreeCell<SelectionRectangle> {
+        final Rectangle classEntryIcon = new Rectangle();
+
+        @Override
+        protected void updateItem(SelectionRectangle selectionRectangle, boolean empty) {
+            super.updateItem(selectionRectangle, empty);
+            if (empty || selectionRectangle == null) {
+                setText(null);
+                setGraphic(null);
+                return;
+            }
+            SelectionRectangleTreeItem treeItem = (SelectionRectangleTreeItem) getTreeItem();
+
+            if (treeItem.getParent().equals(boundingBoxTreeViewRoot)) {
+                setText(selectionRectangle.getBoundingBoxCategory().getName());
+                setGraphic(classEntryIcon);
+
+                classEntryIcon.setX(0);
+                classEntryIcon.setY(0);
+                classEntryIcon.setWidth(10);
+                classEntryIcon.setHeight(10);
+
+                classEntryIcon.fillProperty().bind(selectionRectangle.strokeProperty());
+
+                classEntryIcon.setOnMousePressed(event -> {
+                    //FIXME: checkbox functionality -> add graphic to TreeItem
+//                    for (TreeItem<SelectionRectangle> boundingBoxItem : treeItem.getChildren()) {
+//                        boundingBoxItem.getGraphic().setOpacity(classEntryIcon.getOpacity() > 0.5 ? 0.3 : 1.0);
+//                    }
+                    classEntryIcon.setOpacity(classEntryIcon.getOpacity() > 0.5 ? 0.3 : 1.0);
+                });
+            } else {
+                setText(selectionRectangle.getBoundingBoxCategory().getName() + treeItem.getId());
+                setGraphic(classEntryIcon);
+
+                classEntryIcon.setX(0);
+                classEntryIcon.setY(0);
+                classEntryIcon.setWidth(9);
+                classEntryIcon.setHeight(9);
+
+                classEntryIcon.fillProperty().bind(selectionRectangle.strokeProperty());
+                selectionRectangle.visibleProperty().bind(classEntryIcon.opacityProperty().greaterThan(0.5));
+
+                classEntryIcon.setOnMousePressed(event -> classEntryIcon.setOpacity(classEntryIcon.getOpacity() > 0.5 ? 0.3 : 1.0));
+            }
+        }
+    }
+
+    private class SelectionRectangleTreeItem extends TreeItem<SelectionRectangle> {
+        private int id = 0;
+
+        public SelectionRectangleTreeItem(SelectionRectangle selectionRectangle) {
+            super(selectionRectangle);
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
         }
     }
 }
