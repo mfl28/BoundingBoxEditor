@@ -124,12 +124,12 @@
 
 .delete-button {
     -fx-padding: 0;
-    -fx-max-width: 18px;
+    /*-fx-max-width: 18px;
     -fx-max-height: 18px;
     -fx-min-width: 18px;
     -fx-min-height: 18px;
     -fx-pref-width: 18px;
-    -fx-pref-height: 18px;
+    -fx-pref-height: 18px;*/
 }
 
 /* delete button (hovered) */
@@ -302,6 +302,7 @@
 .side-panel {
     -fx-background-color: -base-background-color;
     -fx-padding: 0 5px;
+    -fx-pref-width: 260px;
 }
 
 /* table-view */
@@ -372,7 +373,7 @@
 }
 
 .noheader-table-view {
-    -fx-max-width: 200px;
+    /*-fx-max-width: 200px;*/
     -fx-max-height: 300px;
 }
 
@@ -416,7 +417,7 @@
 }
 
 .bounding-box-name-text-field {
-    -fx-max-width: 100px;
+    /*-fx-max-width: 100px;*/
 }
 
 .bounding-box-color-picker {
@@ -425,7 +426,7 @@
 }
 
 .bounding-box-tree-view {
-    -fx-max-width: 200px;
+    /*-fx-max-width: 200px;*/
     /*-fx-max-height: 300px;*/
     -fx-background-insets: 0;
     -fx-background-color: transparent;

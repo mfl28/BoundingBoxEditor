@@ -51,7 +51,7 @@ public class View extends BorderPane {
     private static final int SETTINGS_ITEM_SPACING = 10;
     private static final String TABLE_NAME_COLUMN_FACTORY_NAME = "name";
     private static final int TABLE_VIEW_COLOR_COLUMN_WIDTH = 5;
-    private static final int TABLE_VIEW_DELETE_COLUMN_WIDTH = 20;
+    private static final int TABLE_VIEW_DELETE_COLUMN_WIDTH = 19;
     private static final String TABLE_COLUMN_DELETE_BUTTON_STYLE = "delete-button";
     private static final String TABLE_VIEW_DELETE_ICON_STYLE = "icon";
     private static final String TABLE_VIEW_STYLE = "noheader-table-view";
@@ -359,7 +359,8 @@ public class View extends BorderPane {
         final StackPane imagePane = new StackPane();
         imagePane.getStyleClass().add(IMAGE_PANE_STYLE);
 
-        selectionRectangle = new SelectionRectangle(controller);
+        // The intermediary selectionRectangle, will be used to construct actual bounding boxes.
+        selectionRectangle = new SelectionRectangle(null);
         imageView = new ImageView();
         imageView.setSmooth(true);
         imageView.setCache(true);
@@ -489,6 +490,8 @@ public class View extends BorderPane {
         nameColumn.setCellValueFactory(new PropertyValueFactory<>(TABLE_NAME_COLUMN_FACTORY_NAME));
         nameColumn.setEditable(true);
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        //FIXME: Sometimes the horizontal scrollbar is shown even though theoretically the width is correct
+        //       TableView seems to add some padding/border by default.
 
         final TableColumn<BoundingBoxCategory, Color> colorColumn = new TableColumn<>();
         colorColumn.setMinWidth(TABLE_VIEW_COLOR_COLUMN_WIDTH);

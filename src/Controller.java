@@ -152,17 +152,13 @@ public class Controller {
         if (event.getButton().equals(MouseButton.PRIMARY) &&
                 !view.getBoundingBoxItemTableView().getSelectionModel().isEmpty()) {
             SelectionRectangle rectangle = view.getSelectionRectangle();
-            SelectionRectangle newRectangle = new SelectionRectangle(this);
+            BoundingBoxCategory selectedBoundingBox = view.getBoundingBoxItemTableView().getSelectionModel().getSelectedItem();
+
+            SelectionRectangle newRectangle = new SelectionRectangle(selectedBoundingBox);
             newRectangle.setXYWH(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
             newRectangle.setVisible(true);
             newRectangle.setStroke(rectangle.getStroke());
             newRectangle.confineTo(view.getImageView().boundsInParentProperty());
-
-            BoundingBoxCategory selectedBoundingBox = view.getBoundingBoxItemTableView().getSelectionModel().getSelectedItem();
-
-            if (selectedBoundingBox != null) {
-                newRectangle.setBoundingBoxCategory(selectedBoundingBox);
-            }
 
             view.getSelectionRectangleList().add(newRectangle);
             view.getSelectionRectangle().setVisible(false);
@@ -188,8 +184,13 @@ public class Controller {
         model.getBoundingBoxCategoryNames().add(boundingBoxItemName);
         view.getNameInput().clear();
 
-        view.getBoundingBoxItemTableView().getSelectionModel().selectLast();
+        final var selectionModel = view.getBoundingBoxItemTableView().getSelectionModel();
+
+        // auto select the created category
+        selectionModel.selectLast();
         view.getBoundingBoxColorPicker().setValue(Utils.createRandomColor(random));
+        // auto scroll to the created category (if it would otherwise be outside the viewport)
+        view.getBoundingBoxItemTableView().scrollTo(selectionModel.getSelectedIndex());
     }
 
     public void onRegisterExitAction(ActionEvent event) {

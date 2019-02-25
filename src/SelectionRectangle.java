@@ -24,13 +24,11 @@ public class SelectionRectangle extends Rectangle {
 
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
     private final Property<Bounds> confinementBounds = new SimpleObjectProperty<>();
-    private BoundingBoxCategory boundingBoxCategory = new BoundingBoxCategory();
-    private final Controller controller;
+    private BoundingBoxCategory boundingBoxCategory;
 
-    public SelectionRectangle(final Controller controller) {
-        super();
-        this.controller = controller;
+    public SelectionRectangle(BoundingBoxCategory category) {
         this.getStyleClass().add(SELECTION_RECTANGLE_STYLE);
+        boundingBoxCategory = category;
         setVisible(false);
 
         resizeHandles = createResizeHandles();
