@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
@@ -16,31 +17,33 @@ import java.util.List;
 public class SelectionRectangle extends Rectangle {
 
     private static final String SELECTION_RECTANGLE_STYLE = "selectionRectangle";
+    private static final double DEFAULT_FILL_OPACITY = 0.4;
 
     private enum CompassPoint {NW, N, NE, E, SE, S, SW, W}
 
-    private final List<ResizeHandle> resizeHandles;
+    private final List<ResizeHandle> resizeHandles = new ArrayList<>();
     private final DragAnchor dragAnchor = new DragAnchor();
 
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
     private final Property<Bounds> confinementBounds = new SimpleObjectProperty<>();
+    private static final SelectionRectangle nullSelectionRectangle = new SelectionRectangle();
     private BoundingBoxCategory boundingBoxCategory;
+
+    public static SelectionRectangle getDummy() {
+        return nullSelectionRectangle;
+    }
 
     public SelectionRectangle(BoundingBoxCategory category) {
         this.getStyleClass().add(SELECTION_RECTANGLE_STYLE);
         boundingBoxCategory = category;
         setVisible(false);
 
-        resizeHandles = createResizeHandles();
+        createResizeHandles();
         addMoveFunctionality();
     }
 
     public BoundingBoxCategory getBoundingBoxCategory() {
         return boundingBoxCategory;
-    }
-
-    public void setBoundingBoxCategory(final BoundingBoxCategory item) {
-        this.boundingBoxCategory = item;
     }
 
     public List<Double> getScaledLocalCoordinatesInSiblingImage(ImageView sibling) {
@@ -111,9 +114,16 @@ public class SelectionRectangle extends Rectangle {
         this.selected.set(selected);
     }
 
+    public void fillOpaque() {
+        setFill(Color.web(getStroke().toString(), DEFAULT_FILL_OPACITY));
+    }
+
     @Override
     public boolean isResizable() {
         return true;
+    }
+
+    private SelectionRectangle() {
     }
 
     private double getMaxX() {
@@ -124,14 +134,10 @@ public class SelectionRectangle extends Rectangle {
         return this.getY() + this.getHeight();
     }
 
-    private List<ResizeHandle> createResizeHandles() {
-        final List<ResizeHandle> resizeHandlesList = new ArrayList<>();
-
+    private void createResizeHandles() {
         for (CompassPoint compass_point : CompassPoint.values()) {
-            resizeHandlesList.add(new ResizeHandle(compass_point));
+            resizeHandles.add(new ResizeHandle(compass_point));
         }
-
-        return resizeHandlesList;
     }
 
     private void addMoveFunctionality() {

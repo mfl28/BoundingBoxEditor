@@ -3,6 +3,8 @@ import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.Point2D;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
@@ -19,6 +21,7 @@ import java.util.Random;
 /**
  * Responsible for event-handling between the model and view classes.
  */
+//TODO: should probably extend EventHandler
 public class Controller {
     private static final String PROGRAM_NAME_EXTENSION = "Bounding Box Editor";
     private static final String PROGRAM_NAME_EXTENSION_SEPARATOR = " - ";
@@ -45,6 +48,7 @@ public class Controller {
         this.stage = stage;
         stage.setTitle(PROGRAM_NAME_EXTENSION);
         setModelListeners();
+
     }
 
     public void onRegisterOpenFolderAction(ActionEvent event) {
@@ -100,6 +104,9 @@ public class Controller {
     }
 
     public void onRegisterNextAction(ActionEvent event) {
+        // cancel image loading when clicking next
+        // button while the image has not been loaded completely
+        view.getCurrentImage().cancel();
         if (view.getSelectionRectangle().isVisible()) {
             saveCurrentBoundingBox();
         }
@@ -109,6 +116,9 @@ public class Controller {
     }
 
     public void onRegisterPreviousAction(ActionEvent event) {
+        // cancel image loading when clicking previous
+        // button while the image has not been loaded completely
+        view.getCurrentImage().cancel();
         if (view.getSelectionRectangle().isVisible()) {
             saveCurrentBoundingBox();
         }
@@ -195,6 +205,22 @@ public class Controller {
         view.getBoundingBoxItemTableView().scrollTo(selectionModel.getSelectedIndex());
     }
 
+    public void handleSceneKeyPress(KeyEvent event) {
+        KeyCode keyCode = event.getCode();
+
+        if (keyCode.equals(KeyCode.D)) {
+            if (model.getImageFileList() != null && model.isHasNextFile()) {
+                onRegisterNextAction(new ActionEvent());
+            }
+        } else if (keyCode.equals(KeyCode.A)) {
+            if (model.getImageFileList() != null && model.isHasPreviousFile()) {
+                onRegisterPreviousAction(new ActionEvent());
+            }
+        } else if (event.isControlDown() && keyCode.equals(KeyCode.F)) {
+            view.getSearchField().requestFocus();
+        }
+    }
+
     public void onRegisterExitAction(ActionEvent event) {
         Platform.exit();
     }
@@ -217,6 +243,7 @@ public class Controller {
                         boundingBoxCategoryNames.remove(boundingBoxCategory.getName()));
             }
         });
+
     }
 
     private void saveCurrentBoundingBox() {

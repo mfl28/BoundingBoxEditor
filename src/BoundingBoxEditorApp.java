@@ -16,6 +16,7 @@ public class BoundingBoxEditorApp extends Application {
     public void start(Stage primaryStage) {
         final Controller controller = new Controller(primaryStage);
         final Scene scene = getScaledScene(controller.getView());
+        scene.setOnKeyPressed(controller::handleSceneKeyPress);
 
         scene.getStylesheets().add(STYLE_PATH);
         primaryStage.setScene(scene);

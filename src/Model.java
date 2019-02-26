@@ -99,11 +99,27 @@ public class Model {
         return boundingBoxData;
     }
 
+    public Boolean isHasNextFile() {
+        return hasNextFile.get();
+    }
+
+    public Boolean isHasPreviousFile() {
+        return hasPreviousFile.get();
+    }
+
+    public BooleanBinding hasPreviousFileProperty() {
+        return hasPreviousFile;
+    }
+
+    public BooleanBinding hasNextFileProperty() {
+        return hasNextFile;
+    }
+
     void writeBoundingBoxDataToFile(File file) throws IOException {
         try (PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
             new Thread(() ->
                     boundingBoxData.forEach((key, value) -> printWriter.println(key + ", " +
-                            value.stream().map(numberFormat::format).collect(Collectors.joining(", ")))));
+                            value.stream().map(numberFormat::format).collect(Collectors.joining(", "))))).start();
         }
     }
 
@@ -116,6 +132,10 @@ public class Model {
 
     public HashSet<String> getBoundingBoxCategoryNames() {
         return boundingBoxCategoryNames;
+    }
+
+    public ObservableList<File> getImageFileList() {
+        return imageFileList;
     }
 
     private Image getImageFromFile(File file) {
