@@ -1,6 +1,10 @@
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.geometry.Point2D;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -15,6 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Key;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -57,6 +64,7 @@ public class Controller {
 
         if (selectedDirectory != null) {
             // clear current selection rectangles when new folder is loaded
+            view.setSelectionRectangleListListener();
             view.getSelectionRectangleList().clear();
             final Path inputPath = Paths.get(selectedDirectory.getPath());
 
@@ -70,6 +78,12 @@ public class Controller {
             view.getPreviousButton().disableProperty().bind(model.hasPreviousFileBinding().not());
             view.getNextButton().disableProperty().bind(model.hasNextFileBinding().not());
             view.getNavBar().setVisible(true);
+
+            view.setImageSelectionRectangles(new ArrayList<>(Collections.nCopies(model.getFileListSizeBinding().get() , null)));
+
+            view.getImageSelectionRectangles().set(model.fileIndexProperty().get(), FXCollections.observableArrayList());
+            view.setSelectionRectangleList(view.getImageSelectionRectangles().get(model.fileIndexProperty().get()));
+            view.setSelectionRectangleListListener();
 
             view.setImageView(model.getCurrentImage());
             stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME_EXTENSION);
@@ -107,11 +121,8 @@ public class Controller {
         // cancel image loading when clicking next
         // button while the image has not been loaded completely
         view.getCurrentImage().cancel();
-        if (view.getSelectionRectangle().isVisible()) {
-            saveCurrentBoundingBox();
-        }
         view.getBoundingBoxTreeViewRoot().getChildren().clear();
-        view.getSelectionRectangleList().clear();
+        //view.getSelectionRectangleList().clear();
         model.incrementFileIndex();
     }
 
@@ -119,11 +130,8 @@ public class Controller {
         // cancel image loading when clicking previous
         // button while the image has not been loaded completely
         view.getCurrentImage().cancel();
-        if (view.getSelectionRectangle().isVisible()) {
-            saveCurrentBoundingBox();
-        }
         view.getBoundingBoxTreeViewRoot().getChildren().clear();
-        view.getSelectionRectangleList().clear();
+        //view.getSelectionRectangleList().clear();
         model.decrementFileIndex();
     }
 
@@ -233,6 +241,7 @@ public class Controller {
         model.fileIndexProperty().addListener((value, oldValue, newValue) -> {
             view.setImageView(model.getCurrentImage());
             stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION);
+            view.loadSelectionRectangleList(newValue.intValue());
         });
 
         // Synchronizes name hashset with bounding box category list when items are deleted.

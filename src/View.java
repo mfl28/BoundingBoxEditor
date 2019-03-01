@@ -92,6 +92,7 @@ public class View extends BorderPane {
     private final DragAnchor mousePressed = new DragAnchor();
     private ImageView imageView;
     private ObservableList<SelectionRectangle> selectionRectangleList = FXCollections.observableArrayList();
+    private List<ObservableList<SelectionRectangle>> imageSelectionRectangles;
     private SelectionRectangle selectionRectangle;
     private final ProgressIndicator progressIndicator = new ProgressIndicator();
     //FIXME: should be in model
@@ -144,6 +145,9 @@ public class View extends BorderPane {
         return currentImage;
     }
 
+    public MenuItem getFileOpenFolderItem() {
+        return fileOpenFolderItem;
+    }
 
     public void setImageView(final Image image) {
         // reset progress indicator animation
@@ -208,6 +212,18 @@ public class View extends BorderPane {
 
     public TextField getSearchField() {
         return searchField;
+    }
+
+    public List<ObservableList<SelectionRectangle>> getImageSelectionRectangles() {
+        return imageSelectionRectangles;
+    }
+
+    public void setImageSelectionRectangles(List<ObservableList<SelectionRectangle>> data){
+        imageSelectionRectangles = data;
+    }
+
+    public void setSelectionRectangleList(ObservableList<SelectionRectangle> selectionRectangleList) {
+        this.selectionRectangleList = selectionRectangleList;
     }
 
     private void setInitialImageViewSize() {
@@ -315,7 +331,9 @@ public class View extends BorderPane {
                 selectionRectangle.setStroke(newValue.getColor());
             }
         });
+    }
 
+    public void setSelectionRectangleListListener() {
         selectionRectangleList.addListener((ListChangeListener<SelectionRectangle>) c -> {
             while (c.next()) {
                 for (SelectionRectangle selectionRectangle : c.getAddedSubList()) {
@@ -345,6 +363,24 @@ public class View extends BorderPane {
                 }
             }
         });
+    }
+
+    public void loadSelectionRectangleList(int index){
+        if(imageSelectionRectangles.get(index) == null){
+            imageSelectionRectangles.set(index, FXCollections.observableArrayList());
+            selectionRectangleList.forEach(item -> imagePane.getChildren().removeAll(item.getNodes()));
+            selectionRectangleList = imageSelectionRectangles.get(index);
+            setSelectionRectangleListListener();
+        }
+        else {
+
+            selectionRectangleList.forEach(item -> imagePane.getChildren().removeAll(item.getNodes()));
+            selectionRectangleList = imageSelectionRectangles.get(index);
+            selectionRectangleList.forEach(item -> imagePane.getChildren().addAll(item.getNodes()));
+
+            // update selection rectangle in the scene grapH
+
+        }
     }
 
     private VBox createSettingsPanel() {

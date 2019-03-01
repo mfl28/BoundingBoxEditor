@@ -10,34 +10,27 @@ import javafx.stage.Stage;
  */
 public class BoundingBoxEditorApp extends Application {
     private static final double INITIAL_WINDOW_SCALE = 0.75;
-    private static final String STYLE_PATH = "stylesheets/styles.css";
+    private static final String STYLESHEET_PATH = "stylesheets/styles.css";
 
-    @Override
-    public void start(Stage primaryStage) {
-        final Controller controller = new Controller(primaryStage);
-        final Scene scene = getScaledScene(controller.getView());
-        scene.setOnKeyPressed(controller::handleSceneKeyPress);
-
-        scene.getStylesheets().add(STYLE_PATH);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-    }
-
-    /**
-     * From here the application is launched.
-     *
-     * @param args Command-line arguments.
-     */
     public static void main(String[] args) {
         launch(args);
     }
 
+    @Override
+    public void start(Stage primaryStage) {
+        final Controller controller = new Controller(primaryStage);
+        final Scene scene = createScaledSceneFromParent(controller.getView());
 
-    private Scene getScaledScene(Parent view) {
-        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-        double width = INITIAL_WINDOW_SCALE * screenBounds.getWidth();
-        double height = INITIAL_WINDOW_SCALE * screenBounds.getHeight();
+        scene.setOnKeyPressed(controller::handleSceneKeyPress);
+        scene.getStylesheets().add(STYLESHEET_PATH);
 
-        return new Scene(view, width, height);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private Scene createScaledSceneFromParent(final Parent parent) {
+        final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+        return new Scene(parent, INITIAL_WINDOW_SCALE * screenBounds.getWidth(),
+                INITIAL_WINDOW_SCALE * screenBounds.getHeight());
     }
 }

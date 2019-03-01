@@ -11,13 +11,14 @@ import javafx.scene.paint.Color;
 public class BoundingBoxCategory {
 
     private static final String DEFAULT_NAME = "Default";
+    private static final Color DEFAULT_COLOR = Color.RED;
 
     private final StringProperty name;
     private final ObjectProperty<Color> color;
 
     public BoundingBoxCategory() {
         this.name = new SimpleStringProperty(DEFAULT_NAME);
-        this.color = new SimpleObjectProperty<>(Color.ORANGE);
+        this.color = new SimpleObjectProperty<>(DEFAULT_COLOR);
     }
 
     /**
@@ -25,7 +26,7 @@ public class BoundingBoxCategory {
      * @param color The color of the visual representation of
      *              the bounding-box in the program.
      */
-    public BoundingBoxCategory(String name, Color color) {
+    public BoundingBoxCategory(final String name, final Color color) {
         this.name = new SimpleStringProperty(name);
         this.color = new SimpleObjectProperty<>(color);
     }
