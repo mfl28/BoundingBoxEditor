@@ -1,3 +1,5 @@
+package BoundingboxEditor;
+
 import java.nio.file.Path;
 import java.security.InvalidParameterException;
 

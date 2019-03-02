@@ -1,3 +1,5 @@
+package BoundingboxEditor;
+
 import java.nio.file.Path;
 
 public class ImageAnnotationsSaver {

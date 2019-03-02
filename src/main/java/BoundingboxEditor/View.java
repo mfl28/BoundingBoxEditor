@@ -1,3 +1,5 @@
+package BoundingboxEditor;
+
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -18,11 +20,12 @@ import javafx.stage.DirectoryChooser;
 import java.io.File;
 import java.util.List;
 
+
 public class View extends BorderPane {
-    private static final String NEXT_ICON_PATH = "icons/arrow_right.png";
-    private static final String PREVIOUS_ICON_PATH = "icons/arrow_left.png";
-    private static final String ZOOM_ICON_PATH = "icons/zoom.png";
-    private static final String BRIGHTNESS_ICON_PATH = "icons/brightness.png";
+    private static final String NEXT_ICON_PATH = "/icons/arrow_right.png";
+    private static final String PREVIOUS_ICON_PATH = "/icons/arrow_left.png";
+    private static final String ZOOM_ICON_PATH = "/icons/zoom.png";
+    private static final String BRIGHTNESS_ICON_PATH = "/icons/brightness.png";
     private static final String TOP_BOX_STYLE = "topBox";
     private static final String SETTINGS_BOX_STYLE = "settings-box";
     private static final String IMAGE_PANE_STYLE = "pane";
@@ -63,10 +66,8 @@ public class View extends BorderPane {
     private static final String DIRECTORY_CHOOSER_TITLE = "Choose an image folder";
     private static final String EXIT_TEXT = "E_xit";
     private static final String BOTTOM_BAR_STYLE = "bottom-bar";
-    private static final String BOUNDING_BOX_CATEGORY_ITEM_ICON_STYLE = "bounding-box-category-item-icon";
     private static final String DELETE_CONTEXT_MENU_STYLE = "delete-context-menu";
     private static final String DELETE_CONTEXT_MENU_TEXT = "Delete";
-    private static final String ICONS_SEARCH_ICON_PATH = "icons/search.png";
 
     private final Controller controller;
 
@@ -317,7 +318,7 @@ public class View extends BorderPane {
             }
         });
 
-        // when pressing enter after writing text, trigger creation of new BoundingBox class
+        // when pressing enter after writing text, trigger creation of new main.java.BoundingboxEditor.BoundingBox class
         nameInput.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
 
         selectionRectangle.confineTo(imageView.boundsInParentProperty());
@@ -547,7 +548,7 @@ public class View extends BorderPane {
 
     private Button createIconButton(String iconPath) {
         final Button button = new Button();
-        final ImageView iconView = new ImageView(getClass().getResource(iconPath).toString());
+        final ImageView iconView = new ImageView(getClass().getResource(iconPath).toExternalForm());
 
         iconView.setFitWidth(ICON_WIDTH);
         iconView.setFitHeight(ICON_HEIGHT);
@@ -560,7 +561,7 @@ public class View extends BorderPane {
 
     private Label createIconLabel(String iconPath) {
         final Label label = new Label();
-        final ImageView iconView = new ImageView(getClass().getResource(iconPath).toString());
+        final ImageView iconView = new ImageView(getClass().getResource(iconPath).toExternalForm());
 
         iconView.setFitWidth(ICON_WIDTH);
         iconView.setFitHeight(ICON_HEIGHT);
@@ -787,7 +788,7 @@ public class View extends BorderPane {
         private final BoundingBoxCategory boundingBoxCategory;
 
         public SelectionRectangleCategoryTreeItem(final BoundingBoxCategory category) {
-            //FIXME: Currently this is a workaround, because cells that are not associated with a SelectionRectangle
+            //FIXME: Currently this is a workaround, because cells that are not associated with a main.java.BoundingboxEditor.SelectionRectangle
             //       are considered empty, which leads to problems when deleting items.
             super(SelectionRectangle.getDummy());
             boundingBoxCategory = category;

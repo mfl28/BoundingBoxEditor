@@ -1,3 +1,5 @@
+package BoundingboxEditor;
+
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;

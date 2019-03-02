@@ -1,3 +1,5 @@
+package BoundingboxEditor;
+
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.IntegerBinding;

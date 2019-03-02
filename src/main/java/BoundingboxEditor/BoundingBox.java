@@ -1,3 +1,5 @@
+package BoundingboxEditor;
+
 public class BoundingBox {
     private final String categoryName;
     private final double xMin;
@@ -8,7 +10,7 @@ public class BoundingBox {
     // TODO: Optionally add attributes: pose (Front, back, right etc.), truncated(0 or 1), difficult(0 or 1)
     //       occluded (0 or 1)
 
-    public BoundingBox(final String categoryName, double xMin, double yMin, double xMax, double yMax){
+    public BoundingBox(final String categoryName, double xMin, double yMin, double xMax, double yMax) {
         this.categoryName = categoryName;
         this.xMin = xMin;
         this.yMin = yMin;
@@ -36,3 +38,5 @@ public class BoundingBox {
         return yMax;
     }
 }
+
+

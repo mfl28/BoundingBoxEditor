@@ -1,3 +1,5 @@
+package BoundingboxEditor;
+
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;

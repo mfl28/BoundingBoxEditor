@@ -1,3 +1,5 @@
+package BoundingboxEditor;
+
 public class NoValidImagesException extends Exception {
     public NoValidImagesException() {
     }

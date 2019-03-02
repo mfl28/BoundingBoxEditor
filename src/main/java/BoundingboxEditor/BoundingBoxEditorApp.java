@@ -1,3 +1,5 @@
+package BoundingboxEditor;
+
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -10,7 +12,7 @@ import javafx.stage.Stage;
  */
 public class BoundingBoxEditorApp extends Application {
     private static final double INITIAL_WINDOW_SCALE = 0.75;
-    private static final String STYLESHEET_PATH = "stylesheets/styles.css";
+    private static final String STYLESHEET_PATH = "/stylesheets/styles.css";
 
     public static void main(String[] args) {
         launch(args);
@@ -22,7 +24,7 @@ public class BoundingBoxEditorApp extends Application {
         final Scene scene = createScaledSceneFromParent(controller.getView());
 
         scene.setOnKeyPressed(controller::handleSceneKeyPress);
-        scene.getStylesheets().add(STYLESHEET_PATH);
+        scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
 
         primaryStage.setScene(scene);
         primaryStage.show();
