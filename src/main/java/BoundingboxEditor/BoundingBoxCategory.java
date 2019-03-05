@@ -88,15 +88,11 @@ public class BoundingBoxCategory {
             return true;
         }
 
-        if (other == null) {
-            return false;
-        }
-
         if (!(other instanceof BoundingBoxCategory)) {
             return false;
         }
 
-        BoundingBoxCategory otherCategory = (BoundingBoxCategory) other;
+        final BoundingBoxCategory otherCategory = (BoundingBoxCategory) other;
         return otherCategory.getName().equals(this.getName()) && otherCategory.getColor().equals(this.getColor());
     }
 }

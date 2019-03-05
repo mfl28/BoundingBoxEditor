@@ -11,6 +11,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -39,9 +40,10 @@ public class Controller {
     private static final String TXT_EXTENSION = "*.txt";
     private static final String SAVE_BOUNDING_BOX_DATA_ERROR_TITLE = "Error while saving bounding box data";
     private static final String SAVE_BOUNDING_BOX_DATA_ERROR_HEADER = "Could not save bounding box data into the specified file.";
+    private static final String DIRECTORY_CHOOSER_TITLE = "Choose an image folder";
 
     private final Stage stage;
-    private final View view = new View(this);
+    private final MainView view = new MainView(this);
     private final Model model = new Model();
 
     /**
@@ -49,45 +51,49 @@ public class Controller {
      */
     private final Random random = new Random();
 
-    Controller(final Stage stage) {
+    public Controller(final Stage stage) {
         this.stage = stage;
         stage.setTitle(PROGRAM_NAME_EXTENSION);
         setModelListeners();
-
     }
 
     public void onRegisterOpenFolderAction(ActionEvent event) {
+        final DirectoryChooser imageFolderChooser = new DirectoryChooser();
+        imageFolderChooser.setTitle(DIRECTORY_CHOOSER_TITLE);
 
-        final File selectedDirectory = view.getFileFromDirectoryChooser();
+        updateViewFromDirectory(imageFolderChooser.showDialog(stage));
+    }
 
-        if (selectedDirectory != null) {
-            // clear current selection rectangles when new folder is loaded
-            view.setSelectionRectangleListListener();
-            view.getSelectionRectangleList().clear();
-            final Path inputPath = Paths.get(selectedDirectory.getPath());
-
-            try {
-                model.setImageFileListFromPath(inputPath);
-            } catch (Exception e) {
-                view.displayErrorAlert(OPEN_FOLDER_ERROR_TITLE, OPEN_FOLDER_ERROR_HEADER, e.getMessage());
-                return;
-            }
-
-            view.getPreviousButton().disableProperty().bind(model.hasPreviousFileBinding().not());
-            view.getNextButton().disableProperty().bind(model.hasNextFileBinding().not());
-            view.getNavBar().setVisible(true);
-
-            view.setImageSelectionRectangles(new ArrayList<>(Collections.nCopies(model.getFileListSizeBinding().get() , null)));
-
-            view.getImageSelectionRectangles().set(model.fileIndexProperty().get(), FXCollections.observableArrayList());
-            view.setSelectionRectangleList(view.getImageSelectionRectangles().get(model.fileIndexProperty().get()));
-            view.setSelectionRectangleListListener();
-
-            view.setImageView(model.getCurrentImage());
-            stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME_EXTENSION);
-            view.getBoundingBoxItemTableView().setItems(model.getBoundingBoxCategories());
-            view.getBoundingBoxItemTableView().getSelectionModel().selectFirst();
+    void updateViewFromDirectory(final File selectedDirectory) {
+        if(selectedDirectory == null){
+            return;
         }
+        // clear current selection rectangles when new folder is loaded
+        view.setSelectionRectangleListListener();
+        view.getSelectionRectangleList().clear();
+        final Path inputPath = Paths.get(selectedDirectory.getPath());
+
+        try {
+            model.setImageFileListFromPath(inputPath);
+        } catch (Exception e) {
+            view.displayErrorAlert(OPEN_FOLDER_ERROR_TITLE, OPEN_FOLDER_ERROR_HEADER, e.getMessage());
+            return;
+        }
+
+        view.getPreviousButton().disableProperty().bind(model.hasPreviousFileBinding().not());
+        view.getNextButton().disableProperty().bind(model.hasNextFileBinding().not());
+        view.getNavigationBar().setVisible(true);
+
+        view.setImageSelectionRectangles(new ArrayList<>(Collections.nCopies(model.getFileListSizeBinding().get() , null)));
+
+        view.getImageSelectionRectangles().set(model.fileIndexProperty().get(), FXCollections.observableArrayList());
+        view.setSelectionRectangleList(view.getImageSelectionRectangles().get(model.fileIndexProperty().get()));
+        view.setSelectionRectangleListListener();
+
+        view.setImageView(model.getCurrentImage());
+        stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME_EXTENSION);
+        view.getBoundingBoxItemTableView().setItems(model.getBoundingBoxCategories());
+        view.getBoundingBoxItemTableView().getSelectionModel().selectFirst();
     }
 
     public void onRegisterSaveAction(ActionEvent event) {
@@ -155,7 +161,6 @@ public class Controller {
             final ImageView imageView = view.getImageView();
             final Point2D clampedEventXY = Utils.clampWithinBounds(event, imageView.getBoundsInLocal());
             final DragAnchor mousePressed = view.getMousePressed();
-
             final Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(),
                     mousePressed.getX()), Math.min(clampedEventXY.getY(), mousePressed.getY()));
 
@@ -171,12 +176,13 @@ public class Controller {
                 !view.getBoundingBoxItemTableView().getSelectionModel().isEmpty()) {
             SelectionRectangle rectangle = view.getSelectionRectangle();
             BoundingBoxCategory selectedBoundingBox = view.getBoundingBoxItemTableView().getSelectionModel().getSelectedItem();
-
             SelectionRectangle newRectangle = new SelectionRectangle(selectedBoundingBox);
             newRectangle.setXYWH(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
             newRectangle.setVisible(true);
             newRectangle.setStroke(rectangle.getStroke());
             newRectangle.confineTo(view.getImageView().boundsInParentProperty());
+
+
 
             view.getSelectionRectangleList().add(newRectangle);
             rectangle.setVisible(false);
@@ -231,7 +237,7 @@ public class Controller {
         Platform.exit();
     }
 
-    public View getView() {
+    public MainView getView() {
         return view;
     }
 

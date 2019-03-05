@@ -51,7 +51,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
 
         appendHeaderFromImageAnnotationDataElement(document, annotationElement, dataElement);
 
-        for(BoundingBox boundingBox : dataElement.getBoundingBoxes()){
+        for(BoundingBoxElement boundingBox : dataElement.getBoundingBoxes()){
             annotationElement.appendChild(createXmlElementFromBoundingBox(document, boundingBox));
         }
 
@@ -92,7 +92,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
     }
 
 
-    private Element createXmlElementFromBoundingBox(final Document document, final BoundingBox boundingBox){
+    private Element createXmlElementFromBoundingBox(final Document document, final BoundingBoxElement boundingBox){
         final Element object = document.createElement(BOUNDING_BOX_ENTRY_ELEMENT_NAME);
 
         final Element name = document.createElement(BOUNDING_BOX_CATEGORY_NAME);

@@ -2,7 +2,12 @@ package BoundingboxEditor;
 
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.control.Button;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
 
 import java.util.Random;
@@ -39,5 +44,24 @@ public class Utils {
 
     public static Color createRandomColor(Random random) {
         return Color.rgb(random.nextInt(255), random.nextInt(255), random.nextInt(255));
+    }
+
+    public static Button createIconButton(final String iconPath, double fitWidth, double fitHeight) {
+        final Button button = new Button();
+        final ImageView iconView = new ImageView(iconPath);
+
+        iconView.setFitWidth(fitWidth);
+        iconView.setFitHeight(fitHeight);
+        iconView.setPreserveRatio(true);
+        button.setGraphic(iconView);
+        button.setFocusTraversable(false);
+
+        return button;
+    }
+
+    public static Pane createHSpacer() {
+        final Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        return spacer;
     }
 }

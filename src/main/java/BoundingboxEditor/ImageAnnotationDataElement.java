@@ -8,9 +8,9 @@ public class ImageAnnotationDataElement {
     private final double imageWidth;
     private final double imageHeight;
     private final double imageDepth;
-    private final List<BoundingBox> boundingBoxes;
+    private final List<BoundingBoxElement> boundingBoxes;
 
-    public ImageAnnotationDataElement(final Path imagePath, double imageWidth, double imageHeight, double imageDepth, final List<BoundingBox> boundingBoxes) {
+    public ImageAnnotationDataElement(final Path imagePath, double imageWidth, double imageHeight, double imageDepth, final List<BoundingBoxElement> boundingBoxes) {
         this.imagePath = imagePath;
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
@@ -34,7 +34,7 @@ public class ImageAnnotationDataElement {
         return imageDepth;
     }
 
-    public List<BoundingBox> getBoundingBoxes() {
+    public List<BoundingBoxElement> getBoundingBoxes() {
         return boundingBoxes;
     }
 

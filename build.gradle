@@ -13,8 +13,12 @@ repositories {
 }
 
 dependencies {
-    testCompile("org.junit.jupiter:junit-jupiter-api:5.4.0")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.0")
+    // Junit (Unit testing)
+    testImplementation('org.junit.jupiter:junit-jupiter:5.4.0')
+    
+    // TestFX (UI testing)
+    testCompile('org.testfx:testfx-core:4.0.15-alpha')
+    testCompile('org.testfx:testfx-junit5:4.0.15-alpha')
 }
 
 javafx {
