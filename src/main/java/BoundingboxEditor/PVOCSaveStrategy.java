@@ -28,7 +28,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
     private static final String BOUNDING_BOX_SIZE_GROUP_NAME = "bndBox";
 
     @Override
-    public void save(final ImageAnnotationsDataset dataset, final Path path) throws Exception{
+    public void save(final ImageAnnotationsDataset dataset, final Path path) throws Exception {
         final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         final DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 
@@ -36,14 +36,14 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
         final Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
-        for(final ImageAnnotationDataElement dataElement : dataset){
+        for (final ImageAnnotationDataElement dataElement : dataset) {
             createXmlFileFromImageAnnotationDataElement(documentBuilder, transformer, dataElement);
         }
     }
 
     private void createXmlFileFromImageAnnotationDataElement(final DocumentBuilder documentBuilder,
                                                              final Transformer transformer,
-                                                             final ImageAnnotationDataElement dataElement) throws Exception{
+                                                             final ImageAnnotationDataElement dataElement) throws Exception {
         final Document document = documentBuilder.newDocument();
 
         final Element annotationElement = document.createElement(ROOT_ELEMENT_NAME);
@@ -51,7 +51,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
 
         appendHeaderFromImageAnnotationDataElement(document, annotationElement, dataElement);
 
-        for(BoundingBoxElement boundingBox : dataElement.getBoundingBoxes()){
+        for (BoundingBoxElement boundingBox : dataElement.getBoundingBoxes()) {
             annotationElement.appendChild(createXmlElementFromBoundingBox(document, boundingBox));
         }
 
@@ -63,7 +63,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
 
     }
 
-    private void appendHeaderFromImageAnnotationDataElement(final Document document, final Node root, final ImageAnnotationDataElement dataElement){
+    private void appendHeaderFromImageAnnotationDataElement(final Document document, final Node root, final ImageAnnotationDataElement dataElement) {
         final Element folderElement = document.createElement(FOLDER_ELEMENT_NAME);
         folderElement.appendChild(document.createTextNode(dataElement.getContainingFolderName()));
         root.appendChild(folderElement);
@@ -92,7 +92,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
     }
 
 
-    private Element createXmlElementFromBoundingBox(final Document document, final BoundingBoxElement boundingBox){
+    private Element createXmlElementFromBoundingBox(final Document document, final BoundingBoxElement boundingBox) {
         final Element object = document.createElement(BOUNDING_BOX_ENTRY_ELEMENT_NAME);
 
         final Element name = document.createElement(BOUNDING_BOX_CATEGORY_NAME);

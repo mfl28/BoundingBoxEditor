@@ -1,5 +1,6 @@
 package BoundingboxEditor;
 
 public interface View {
-    default void connectToController(final Controller controller) {}
+    default void connectToController(final Controller controller) {
+    }
 }

@@ -4,6 +4,9 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -22,6 +25,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.ApplicationTest;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
+import org.testfx.matcher.control.ListViewMatchers;
 import org.testfx.util.PointQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
@@ -77,11 +81,14 @@ public class ControllerTest extends ApplicationTest {
 
     @ParameterizedTest(name = "Waiting {0} milliseconds between clicks")
     @ValueSource(ints = {0, 1000})
-    void onClickThroughTestImages_WhenFolderLoaded_ShouldProperlySetButtonDisabledProperty(int waitMilliseconds, FxRobot robot){
+    void onClickThroughTestImages_WhenFolderLoaded_ShouldProperlySetButtonDisabledProperty(int waitMilliseconds, FxRobot robot) throws Exception{
         final String nextButtonId = "#" + TopPanelView.NEXT_BUTTON_ID;
         final String previousButtonId = "#" + TopPanelView.PREVIOUS_BUTTON_ID;
 
-        verifyThat("#image-pane", CoreMatchers.notNullValue());
+        ImageView imageView = controller.getView().getImageView();
+        verifyThat(imageView, CoreMatchers.notNullValue());
+
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, imageView.imageProperty().isNotNull());
 
         // forward
         verifyThat(nextButtonId, NodeMatchers.isEnabled());
@@ -136,6 +143,7 @@ public class ControllerTest extends ApplicationTest {
 
         verifyThat(imageFileName, CoreMatchers.equalTo("david-barajas-733625-unsplash.jpg"));
 
+        WaitForAsyncUtils.waitForFxEvents();
         Bounds testBound = imageView.localToScreen(imageView.getBoundsInLocal());
 
         Point2D startPoint = PointQueryUtils.atPositionFactors(testBound, new Point2D(0.4, 0.4));
@@ -149,7 +157,6 @@ public class ControllerTest extends ApplicationTest {
 
 
         robot.moveTo(startPoint).press(MouseButton.PRIMARY)
-                .moveTo(startPoint)
                 .moveTo(intermediatePoint1)
                 .moveTo(intermediatePoint2)
                 .moveTo(intermediatePoint3)
@@ -209,6 +216,59 @@ public class ControllerTest extends ApplicationTest {
         verifyThat(topModalStage, CoreMatchers.notNullValue());
         verifyThat(topModalStage.getTitle(), CoreMatchers.equalTo("Category Input Error"));
         verifyThat(controller.getView().getBoundingBoxItemTableView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
+    }
+
+    @Test
+    void onDeleteSelectionRectangleInExplorer_WhenFolderLoaded_ShouldRemoveSelectionRectangleFromStoredList(FxRobot robot) throws Exception{
+        ImageView imageView = controller.getView().getImageView();
+
+        verifyThat(imageView, CoreMatchers.notNullValue());
+
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, imageView.imageProperty().isNotNull());
+
+        WaitForAsyncUtils.waitForFxEvents();
+        Bounds testBound = imageView.localToScreen(imageView.getBoundsInLocal());
+
+        Point2D startPoint = PointQueryUtils.atPositionFactors(testBound, new Point2D(0.1, 0.1));
+
+        Point2D endPoint = PointQueryUtils.atPositionFactors(testBound, new Point2D(0.4, 0.4));
+
+        robot.moveTo(startPoint).press(MouseButton.PRIMARY)
+                .moveTo(endPoint)
+                .release(MouseButton.PRIMARY);
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        TreeView<SelectionRectangle> explorer = controller.getView().getProjectSidePanel().getExplorerView();
+
+        List<TreeItem<SelectionRectangle>> categoryList = explorer.getRoot().getChildren();
+
+        // One category item in treeview
+        verifyThat(categoryList.size(), CoreMatchers.equalTo(1));
+
+        verifyThat(controller.getView().getSelectionRectangleList().size(), CoreMatchers.equalTo(1));
+
+        List<TreeItem<SelectionRectangle>> leafList = categoryList.get(0).getChildren();
+
+        verifyThat(leafList.size(), CoreMatchers.equalTo(1));
+
+        verifyThat(leafList.get(0).getValue(), CoreMatchers.equalTo(controller.getView().getSelectionRectangleList().get(0)));
+
+        // Now delete the rectangle
+        // expand the only existing category
+        robot.clickOn(".tree-cell > .tree-disclosure-node > .arrow");
+        robot.sleep(1000);
+        robot.rightClickOn("Default1");
+        robot.sleep(1000);
+        robot.clickOn("Delete");
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // there should be no elements in the treeview (besides the hidden root)
+        verifyThat(categoryList.size(), CoreMatchers.equalTo(0));
+        // The selection rectangle list should be empty
+        verifyThat(controller.getView().getSelectionRectangleList().isEmpty(), CoreMatchers.equalTo(true));
+
     }
 
 

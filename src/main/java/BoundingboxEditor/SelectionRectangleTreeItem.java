@@ -4,8 +4,8 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.shape.Rectangle;
 
 class SelectionRectangleTreeItem extends TreeItem<SelectionRectangle> {
-    private int id = 0;
     private final Rectangle toggleVisibilityIcon = new Rectangle(0, 0, 9, 9);
+    private int id = 0;
 
     public SelectionRectangleTreeItem(SelectionRectangle selectionRectangle) {
         super(selectionRectangle);

@@ -20,21 +20,13 @@ public class SelectionRectangle extends Rectangle {
 
     private static final String SELECTION_RECTANGLE_STYLE = "selectionRectangle";
     private static final double DEFAULT_FILL_OPACITY = 0.4;
-
-    private enum CompassPoint {NW, N, NE, E, SE, S, SW, W}
-
+    private static final SelectionRectangle nullSelectionRectangle = new SelectionRectangle();
     private final List<ResizeHandle> resizeHandles = new ArrayList<>();
     private final DragAnchor dragAnchor = new DragAnchor();
 
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
     private final Property<Bounds> confinementBounds = new SimpleObjectProperty<>();
-    private static final SelectionRectangle nullSelectionRectangle = new SelectionRectangle();
     private BoundingBoxCategory boundingBoxCategory;
-
-    public static SelectionRectangle getDummy() {
-        return nullSelectionRectangle;
-    }
-
     public SelectionRectangle(BoundingBoxCategory category) {
         this.getStyleClass().add(SELECTION_RECTANGLE_STYLE);
         boundingBoxCategory = category;
@@ -42,6 +34,13 @@ public class SelectionRectangle extends Rectangle {
 
         createResizeHandles();
         addMoveFunctionality();
+    }
+
+    private SelectionRectangle() {
+    }
+
+    public static SelectionRectangle getDummy() {
+        return nullSelectionRectangle;
     }
 
     public BoundingBoxCategory getBoundingBoxCategory() {
@@ -125,9 +124,6 @@ public class SelectionRectangle extends Rectangle {
         return true;
     }
 
-    private SelectionRectangle() {
-    }
-
     private double getMaxX() {
         return this.getX() + this.getWidth();
     }
@@ -172,6 +168,8 @@ public class SelectionRectangle extends Rectangle {
             event.consume();
         });
     }
+
+    private enum CompassPoint {NW, N, NE, E, SE, S, SW, W}
 
     private class ResizeHandle extends Rectangle {
 

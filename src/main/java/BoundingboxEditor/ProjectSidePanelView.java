@@ -1,6 +1,5 @@
 package BoundingboxEditor;
 
-import javafx.geometry.Orientation;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -36,7 +35,7 @@ public class ProjectSidePanelView extends VBox implements View {
                 new Separator(),
                 new Label(OBJECT_SELECTOR_LABEL_TEXT),
                 explorerView
-                );
+        );
 
         setUpStyles();
         setUpInternalListeners();
@@ -86,7 +85,7 @@ public class ProjectSidePanelView extends VBox implements View {
         return categorySearchBox;
     }
 
-    private void setUpStyles(){
+    private void setUpStyles() {
         categoryInputField.getStyleClass().add(BOUNDING_BOX_NAME_TEXT_FIELD_STYLE);
         boundingBoxColorPicker.getStyleClass().add(BOUNDING_BOX_COLOR_PICKER_STYLE);
 
@@ -114,7 +113,7 @@ public class ProjectSidePanelView extends VBox implements View {
         }));
     }
 
-    private HBox createAddCategoryControllBox(){
+    private HBox createAddCategoryControllBox() {
         addButton.setFocusTraversable(false);
         // FIXME: for testing
         addButton.setId("add-button");

@@ -18,7 +18,7 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
     private static final String TABLE_VIEW_DELETE_ICON_STYLE = "icon";
     private static final String TABLE_VIEW_STYLE = "noheader-table-view";
 
-    BoundingBoxCategorySelectorView(){
+    BoundingBoxCategorySelectorView() {
         this.setEditable(true);
 
         this.getColumns().add(createColorColumn());
@@ -48,7 +48,7 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
         return nameColumn;
     }
 
-    private TableColumn<BoundingBoxCategory, BoundingBoxCategory> createDeleteColumn(){
+    private TableColumn<BoundingBoxCategory, BoundingBoxCategory> createDeleteColumn() {
         final TableColumn<BoundingBoxCategory, BoundingBoxCategory> deleteColumn = new TableColumn<>();
         deleteColumn.setMinWidth(TABLE_VIEW_DELETE_COLUMN_WIDTH);
         deleteColumn.setMaxWidth(TABLE_VIEW_DELETE_COLUMN_WIDTH);

@@ -38,11 +38,11 @@ public class ImageAnnotationDataElement {
         return boundingBoxes;
     }
 
-    public String getContainingFolderName(){
+    public String getContainingFolderName() {
         return imagePath.getParent().toString();
     }
 
-    public String getImageFileName(){
+    public String getImageFileName() {
         return imagePath.getFileName().toString();
     }
 }

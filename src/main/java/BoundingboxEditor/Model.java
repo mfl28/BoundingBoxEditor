@@ -117,14 +117,6 @@ public class Model {
         return hasNextFile;
     }
 
-    void writeBoundingBoxDataToFile(File file) throws IOException {
-        try (PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
-            new Thread(() ->
-                    boundingBoxData.forEach((key, value) -> printWriter.println(key + ", " +
-                            value.stream().map(numberFormat::format).collect(Collectors.joining(", "))))).start();
-        }
-    }
-
     public String getCurrentImageFilePath() {
         final String imagePath = getCurrentImage().getUrl()
                 .replace("/", "\\")
@@ -138,6 +130,14 @@ public class Model {
 
     public ObservableList<File> getImageFileList() {
         return imageFileList;
+    }
+
+    void writeBoundingBoxDataToFile(File file) throws IOException {
+        try (PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
+            new Thread(() ->
+                    boundingBoxData.forEach((key, value) -> printWriter.println(key + ", " +
+                            value.stream().map(numberFormat::format).collect(Collectors.joining(", "))))).start();
+        }
     }
 
     private Image getImageFromFile(File file) {

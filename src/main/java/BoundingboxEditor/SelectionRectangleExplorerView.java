@@ -1,9 +1,9 @@
 package BoundingboxEditor;
 
-import javafx.scene.control.*;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Rectangle;
 
 public class SelectionRectangleExplorerView extends TreeView<SelectionRectangle> implements View {
     private static final String BOUNDING_BOX_TREE_VIEW_STYLE = "bounding-box-tree-view";
@@ -13,7 +13,7 @@ public class SelectionRectangleExplorerView extends TreeView<SelectionRectangle>
     private final TreeItem<SelectionRectangle> root = new TreeItem<>();
 
 
-    SelectionRectangleExplorerView(){
+    SelectionRectangleExplorerView() {
         VBox.setVgrow(this, Priority.ALWAYS);
 
         this.setRoot(root);

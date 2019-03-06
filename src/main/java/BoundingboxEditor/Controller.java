@@ -12,7 +12,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -43,7 +42,7 @@ public class Controller {
     private static final String DIRECTORY_CHOOSER_TITLE = "Choose an image folder";
 
     private final Stage stage;
-    private final MainView view = new MainView(this);
+    private final MainView view = new MainView();
     private final Model model = new Model();
 
     /**
@@ -52,6 +51,7 @@ public class Controller {
     private final Random random = new Random();
 
     public Controller(final Stage stage) {
+        view.connectToController(this);
         this.stage = stage;
         stage.setTitle(PROGRAM_NAME_EXTENSION);
         setModelListeners();
@@ -64,55 +64,23 @@ public class Controller {
         updateViewFromDirectory(imageFolderChooser.showDialog(stage));
     }
 
-    void updateViewFromDirectory(final File selectedDirectory) {
-        if(selectedDirectory == null){
-            return;
-        }
-        // clear current selection rectangles when new folder is loaded
-        view.setSelectionRectangleListListener();
-        view.getSelectionRectangleList().clear();
-        final Path inputPath = Paths.get(selectedDirectory.getPath());
-
-        try {
-            model.setImageFileListFromPath(inputPath);
-        } catch (Exception e) {
-            view.displayErrorAlert(OPEN_FOLDER_ERROR_TITLE, OPEN_FOLDER_ERROR_HEADER, e.getMessage());
-            return;
-        }
-
-        view.getPreviousButton().disableProperty().bind(model.hasPreviousFileBinding().not());
-        view.getNextButton().disableProperty().bind(model.hasNextFileBinding().not());
-        view.getNavigationBar().setVisible(true);
-
-        view.setImageSelectionRectangles(new ArrayList<>(Collections.nCopies(model.getFileListSizeBinding().get() , null)));
-
-        view.getImageSelectionRectangles().set(model.fileIndexProperty().get(), FXCollections.observableArrayList());
-        view.setSelectionRectangleList(view.getImageSelectionRectangles().get(model.fileIndexProperty().get()));
-        view.setSelectionRectangleListListener();
-
-        view.setImageView(model.getCurrentImage());
-        stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME_EXTENSION);
-        view.getBoundingBoxItemTableView().setItems(model.getBoundingBoxCategories());
-        view.getBoundingBoxItemTableView().getSelectionModel().selectFirst();
-    }
-
     public void onRegisterSaveAction(ActionEvent event) {
-        final FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle(SAVE_BOUNDING_BOX_DATA_TITLE);
-        fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter(CSV_FILE_DESCRIPTION, CSV_EXTENSION),
-                new FileChooser.ExtensionFilter(TXT_FILE_DESCRIPTION, TXT_EXTENSION)
-        );
+        final DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle(SAVE_BOUNDING_BOX_DATA_TITLE);
+//        directoryChooser.getExtensionFilters().addAll(
+//                new FileChooser.ExtensionFilter(CSV_FILE_DESCRIPTION, CSV_EXTENSION),
+//                new FileChooser.ExtensionFilter(TXT_FILE_DESCRIPTION, TXT_EXTENSION)
+//        );
 
-        final File saveFile = fileChooser.showSaveDialog(stage);
+        final File saveDirectory = directoryChooser.showDialog(stage);
 
-        if (saveFile != null) {
+        if (saveDirectory != null) {
             if (view.getSelectionRectangle().isVisible()) {
                 saveCurrentBoundingBox();
             }
 
             try {
-                model.writeBoundingBoxDataToFile(saveFile);
+                model.writeBoundingBoxDataToFile(saveDirectory);
             } catch (IOException e) {
                 // Message text should wrap around.
                 view.displayErrorAlert(SAVE_BOUNDING_BOX_DATA_ERROR_TITLE, SAVE_BOUNDING_BOX_DATA_ERROR_HEADER,
@@ -183,7 +151,6 @@ public class Controller {
             newRectangle.confineTo(view.getImageView().boundsInParentProperty());
 
 
-
             view.getSelectionRectangleList().add(newRectangle);
             rectangle.setVisible(false);
         }
@@ -230,6 +197,8 @@ public class Controller {
             }
         } else if (event.isControlDown() && keyCode.equals(KeyCode.F)) {
             view.getCategorySearchField().requestFocus();
+        } else if (event.isControlDown() && keyCode.equals(KeyCode.B)) {
+            view.getCategoryInputField().requestFocus();
         }
     }
 
@@ -239,6 +208,38 @@ public class Controller {
 
     public MainView getView() {
         return view;
+    }
+
+    void updateViewFromDirectory(final File selectedDirectory) {
+        if (selectedDirectory == null) {
+            return;
+        }
+        // clear current selection rectangles when new folder is loaded
+        view.setSelectionRectangleListListener();
+        view.getSelectionRectangleList().clear();
+        final Path inputPath = Paths.get(selectedDirectory.getPath());
+
+        try {
+            model.setImageFileListFromPath(inputPath);
+        } catch (Exception e) {
+            view.displayErrorAlert(OPEN_FOLDER_ERROR_TITLE, OPEN_FOLDER_ERROR_HEADER, e.getMessage());
+            return;
+        }
+
+        view.getPreviousButton().disableProperty().bind(model.hasPreviousFileBinding().not());
+        view.getNextButton().disableProperty().bind(model.hasNextFileBinding().not());
+        view.getNavigationBar().setVisible(true);
+
+        view.setImageSelectionRectangles(new ArrayList<>(Collections.nCopies(model.getFileListSizeBinding().get(), null)));
+
+        view.getImageSelectionRectangles().set(model.fileIndexProperty().get(), FXCollections.observableArrayList());
+        view.setSelectionRectangleList(view.getImageSelectionRectangles().get(model.fileIndexProperty().get()));
+        view.setSelectionRectangleListListener();
+
+        view.setImageView(model.getCurrentImage());
+        stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME_EXTENSION);
+        view.getBoundingBoxItemTableView().setItems(model.getBoundingBoxCategories());
+        view.getBoundingBoxItemTableView().getSelectionModel().selectFirst();
     }
 
     private void setModelListeners() {
