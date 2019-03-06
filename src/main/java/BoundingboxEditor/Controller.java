@@ -190,7 +190,7 @@ public class Controller {
     }
 
     public void onRegisterAddBoundingBoxItemAction(ActionEvent event) {
-        final String boundingBoxItemName = view.getNameInput().getText();
+        final String boundingBoxItemName = view.getCategoryInputField().getText();
 
         if (boundingBoxItemName.isEmpty()) {
             view.displayErrorAlert("Category Input Error", null, "Please provide a category name.");
@@ -206,7 +206,7 @@ public class Controller {
 
         model.getBoundingBoxCategories().add(new BoundingBoxCategory(boundingBoxItemName, boundingBoxItemColor));
         model.getBoundingBoxCategoryNames().add(boundingBoxItemName);
-        view.getNameInput().clear();
+        view.getCategoryInputField().clear();
 
         final var selectionModel = view.getBoundingBoxItemTableView().getSelectionModel();
 
@@ -229,7 +229,7 @@ public class Controller {
                 onRegisterPreviousAction(new ActionEvent());
             }
         } else if (event.isControlDown() && keyCode.equals(KeyCode.F)) {
-            view.getSearchField().requestFocus();
+            view.getCategorySearchField().requestFocus();
         }
     }
 
