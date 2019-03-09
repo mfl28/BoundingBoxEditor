@@ -17,7 +17,7 @@ class CategoryTreeItem extends TreeItem<SelectionRectangle> {
         toggleVisibilityIcon.fillProperty().bind(category.colorProperty());
 
         toggleVisibilityIcon.setOnMousePressed(event -> {
-            for (TreeItem<SelectionRectangle> childItem : getChildren()) {
+            for(TreeItem<SelectionRectangle> childItem : getChildren()) {
                 childItem.getGraphic().setOpacity(toggleVisibilityIcon.getOpacity() > 0.5 ? 0.3 : 1.0);
             }
             toggleVisibilityIcon.setOpacity(toggleVisibilityIcon.getOpacity() > 0.5 ? 0.3 : 1.0);

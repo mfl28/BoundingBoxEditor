@@ -33,10 +33,6 @@ public class Controller {
     private static final String OPEN_FOLDER_ERROR_TITLE = "Error while opening image folder";
     private static final String OPEN_FOLDER_ERROR_HEADER = "The selected folder is not a valid image folder.";
     private static final String SAVE_BOUNDING_BOX_DATA_TITLE = "Save bounding box data";
-    private static final String CSV_FILE_DESCRIPTION = "CSV file";
-    private static final String TXT_FILE_DESCRIPTION = "TXT file";
-    private static final String CSV_EXTENSION = "*.csv";
-    private static final String TXT_EXTENSION = "*.txt";
     private static final String SAVE_BOUNDING_BOX_DATA_ERROR_TITLE = "Error while saving bounding box data";
     private static final String SAVE_BOUNDING_BOX_DATA_ERROR_HEADER = "Could not save bounding box data into the specified file.";
     private static final String DIRECTORY_CHOOSER_TITLE = "Choose an image folder";
@@ -61,27 +57,33 @@ public class Controller {
         final DirectoryChooser imageFolderChooser = new DirectoryChooser();
         imageFolderChooser.setTitle(DIRECTORY_CHOOSER_TITLE);
 
-        updateViewFromDirectory(imageFolderChooser.showDialog(stage));
+        final File imageFolder = imageFolderChooser.showDialog(stage);
+
+        if(imageFolder != null){
+            updateViewFromDirectory(imageFolder);
+        }
     }
 
     public void onRegisterSaveAction(ActionEvent event) {
+        if(view.getImageSelectionRectangles() == null || view.getImageSelectionRectangles().isEmpty()
+                || view.getImageSelectionRectangles().stream().anyMatch((item) -> item == null || item.isEmpty())){
+            view.displayErrorAlert("Save Error", null, "There are no Bounding Boxes to save.");
+            return;
+        }
+
         final DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle(SAVE_BOUNDING_BOX_DATA_TITLE);
-//        directoryChooser.getExtensionFilters().addAll(
-//                new FileChooser.ExtensionFilter(CSV_FILE_DESCRIPTION, CSV_EXTENSION),
-//                new FileChooser.ExtensionFilter(TXT_FILE_DESCRIPTION, TXT_EXTENSION)
-//        );
 
         final File saveDirectory = directoryChooser.showDialog(stage);
 
-        if (saveDirectory != null) {
-            if (view.getSelectionRectangle().isVisible()) {
+        if(saveDirectory != null) {
+            if(view.getSelectionRectangle().isVisible()) {
                 saveCurrentBoundingBox();
             }
 
             try {
                 model.writeBoundingBoxDataToFile(saveDirectory);
-            } catch (IOException e) {
+            } catch(IOException e) {
                 // Message text should wrap around.
                 view.displayErrorAlert(SAVE_BOUNDING_BOX_DATA_ERROR_TITLE, SAVE_BOUNDING_BOX_DATA_ERROR_HEADER,
                         e.getMessage());
@@ -112,7 +114,7 @@ public class Controller {
     }
 
     public void onMousePressed(MouseEvent event) {
-        if (event.getButton().equals(MouseButton.PRIMARY) &&
+        if(event.getButton().equals(MouseButton.PRIMARY) &&
                 !view.getBoundingBoxItemTableView().getSelectionModel().isEmpty()) {
             final Point2D parentCoordinates = view.getImageView().localToParent(event.getX(), event.getY());
             view.getMousePressed().setFromMouseEvent(event);
@@ -124,7 +126,7 @@ public class Controller {
     }
 
     public void onMouseDragged(MouseEvent event) {
-        if (event.getButton().equals(MouseButton.PRIMARY) &&
+        if(event.getButton().equals(MouseButton.PRIMARY) &&
                 !view.getBoundingBoxItemTableView().getSelectionModel().isEmpty()) {
             final ImageView imageView = view.getImageView();
             final Point2D clampedEventXY = Utils.clampWithinBounds(event, imageView.getBoundsInLocal());
@@ -140,7 +142,7 @@ public class Controller {
     }
 
     public void onMouseReleased(MouseEvent event) {
-        if (event.getButton().equals(MouseButton.PRIMARY) &&
+        if(event.getButton().equals(MouseButton.PRIMARY) &&
                 !view.getBoundingBoxItemTableView().getSelectionModel().isEmpty()) {
             SelectionRectangle rectangle = view.getSelectionRectangle();
             BoundingBoxCategory selectedBoundingBox = view.getBoundingBoxItemTableView().getSelectionModel().getSelectedItem();
@@ -150,7 +152,6 @@ public class Controller {
             newRectangle.setStroke(rectangle.getStroke());
             newRectangle.confineTo(view.getImageView().boundsInParentProperty());
 
-
             view.getSelectionRectangleList().add(newRectangle);
             rectangle.setVisible(false);
         }
@@ -159,12 +160,12 @@ public class Controller {
     public void onRegisterAddBoundingBoxItemAction(ActionEvent event) {
         final String boundingBoxItemName = view.getCategoryInputField().getText();
 
-        if (boundingBoxItemName.isEmpty()) {
+        if(boundingBoxItemName.isEmpty()) {
             view.displayErrorAlert("Category Input Error", null, "Please provide a category name.");
             return;
         }
 
-        if (model.getBoundingBoxCategoryNames().contains(boundingBoxItemName)) {
+        if(model.getBoundingBoxCategoryNames().contains(boundingBoxItemName)) {
             view.displayErrorAlert("Category Input Error", null, "The category \"" + boundingBoxItemName + "\" already exists.");
             return;
         }
@@ -187,17 +188,17 @@ public class Controller {
     public void handleSceneKeyPress(KeyEvent event) {
         KeyCode keyCode = event.getCode();
 
-        if (keyCode.equals(KeyCode.D)) {
-            if (model.getImageFileList() != null && model.isHasNextFile()) {
+        if(keyCode.equals(KeyCode.D)) {
+            if(model.getImageFileList() != null && model.isHasNextFile()) {
                 onRegisterNextAction(new ActionEvent());
             }
-        } else if (keyCode.equals(KeyCode.A)) {
-            if (model.getImageFileList() != null && model.isHasPreviousFile()) {
+        } else if(keyCode.equals(KeyCode.A)) {
+            if(model.getImageFileList() != null && model.isHasPreviousFile()) {
                 onRegisterPreviousAction(new ActionEvent());
             }
-        } else if (event.isControlDown() && keyCode.equals(KeyCode.F)) {
+        } else if(event.isControlDown() && keyCode.equals(KeyCode.F)) {
             view.getCategorySearchField().requestFocus();
-        } else if (event.isControlDown() && keyCode.equals(KeyCode.B)) {
+        } else if(event.isControlDown() && keyCode.equals(KeyCode.B)) {
             view.getCategoryInputField().requestFocus();
         }
     }
@@ -211,9 +212,6 @@ public class Controller {
     }
 
     void updateViewFromDirectory(final File selectedDirectory) {
-        if (selectedDirectory == null) {
-            return;
-        }
         // clear current selection rectangles when new folder is loaded
         view.setSelectionRectangleListListener();
         view.getSelectionRectangleList().clear();
@@ -221,7 +219,7 @@ public class Controller {
 
         try {
             model.setImageFileListFromPath(inputPath);
-        } catch (Exception e) {
+        } catch(Exception e) {
             view.displayErrorAlert(OPEN_FOLDER_ERROR_TITLE, OPEN_FOLDER_ERROR_HEADER, e.getMessage());
             return;
         }
@@ -229,8 +227,10 @@ public class Controller {
         view.getPreviousButton().disableProperty().bind(model.hasPreviousFileBinding().not());
         view.getNextButton().disableProperty().bind(model.hasNextFileBinding().not());
         view.getNavigationBar().setVisible(true);
+        view.getProjectSidePanel().setVisible(true);
+        view.getProjectSidePanel().setManaged(true);
 
-        view.setImageSelectionRectangles(new ArrayList<>(Collections.nCopies(model.getFileListSizeBinding().get(), null)));
+        view.getImagePaneView().resetSelectionRectangleDatabase(model.getFileListSizeBinding().get());
 
         view.getImageSelectionRectangles().set(model.fileIndexProperty().get(), FXCollections.observableArrayList());
         view.setSelectionRectangleList(view.getImageSelectionRectangles().get(model.fileIndexProperty().get()));
@@ -247,12 +247,14 @@ public class Controller {
             view.setImageView(model.getCurrentImage());
             stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION);
             view.loadSelectionRectangleList(newValue.intValue());
+            view.getBottomLabel().setText(Integer.toString(view.getImagePaneView().getChildren().size()));
         });
 
         // Synchronizes name hashset with bounding box category list when items are deleted.
+        // TODO: This should also work when changing names in existing categories,
         model.getBoundingBoxCategories().addListener((ListChangeListener<BoundingBoxCategory>) c -> {
             HashSet<String> boundingBoxCategoryNames = model.getBoundingBoxCategoryNames();
-            while (c.next()) {
+            while(c.next()) {
                 c.getRemoved().forEach(boundingBoxCategory ->
                         boundingBoxCategoryNames.remove(boundingBoxCategory.getName()));
             }

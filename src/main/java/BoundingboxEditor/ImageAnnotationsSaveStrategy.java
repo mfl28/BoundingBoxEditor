@@ -7,7 +7,7 @@ public interface ImageAnnotationsSaveStrategy {
     static ImageAnnotationsSaveStrategy createStrategy(final SaveStrategy saveStrategy) {
         ImageAnnotationsSaveStrategy strategy;
 
-        switch (saveStrategy) {
+        switch(saveStrategy) {
             case PASCAL_VOC:
                 strategy = new PVOCSaveStrategy();
                 break;

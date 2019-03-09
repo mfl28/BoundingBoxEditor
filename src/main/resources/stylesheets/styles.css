@@ -507,6 +507,18 @@
     -fx-accent: -base-background-color;
 }
 
+.toggle-button {
+    -fx-background-color: transparent;
+}
+
+.toggle-button:hover {
+    -fx-background-color: -base-highlight-color;
+}
+
+.toggle-button:selected {
+    -fx-background-color: -base-highlight-color;
+}
+
 
 
 

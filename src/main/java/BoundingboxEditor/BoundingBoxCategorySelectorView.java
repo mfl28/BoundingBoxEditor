@@ -62,13 +62,13 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
         @Override
         protected void updateItem(Color item, boolean empty) {
             super.updateItem(item, empty);
-            if (empty || getTableRow() == null) {
+            if(empty || getTableRow() == null) {
                 setText(null);
                 setGraphic(null);
                 setStyle("-fx-background-color: transparent;");
             } else {
                 final BoundingBoxCategory row = getTableRow().getItem();
-                if (row != null) {
+                if(row != null) {
                     setStyle("-fx-background-color: " + Utils.rgbaFromColor(row.getColor()) + ";");
                 }
             }
@@ -83,7 +83,7 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
         protected void updateItem(BoundingBoxCategory item, boolean empty) {
             super.updateItem(item, empty);
 
-            if (item == null) {
+            if(item == null) {
                 setGraphic(null);
                 return;
             }

@@ -5,8 +5,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 
 public class TopPanelView extends VBox implements View {
-    static final String NEXT_BUTTON_ID = "next-button";
-    static final String PREVIOUS_BUTTON_ID = "previous-button";
+    private static final String NEXT_BUTTON_ID = "next-button";
+    private static final String PREVIOUS_BUTTON_ID = "previous-button";
     private static final String TOP_PANEL_STYLE = "topBox";
     private static final String FILE_MENU_TEXT = "_File";
     private static final String VIEW_MENU_TEXT = "_View";

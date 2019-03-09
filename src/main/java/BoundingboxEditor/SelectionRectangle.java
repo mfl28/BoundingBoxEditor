@@ -27,6 +27,7 @@ public class SelectionRectangle extends Rectangle {
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
     private final Property<Bounds> confinementBounds = new SimpleObjectProperty<>();
     private BoundingBoxCategory boundingBoxCategory;
+
     public SelectionRectangle(BoundingBoxCategory category) {
         this.getStyleClass().add(SELECTION_RECTANGLE_STYLE);
         boundingBoxCategory = category;
@@ -91,7 +92,7 @@ public class SelectionRectangle extends Rectangle {
 
     public List<Node> getNodes() {
         this.setManaged(false);
-        for (Rectangle rect : resizeHandles)
+        for(Rectangle rect : resizeHandles)
             rect.setManaged(false);
 
         ArrayList<Node> nodeList = new ArrayList<>();
@@ -133,7 +134,7 @@ public class SelectionRectangle extends Rectangle {
     }
 
     private void createResizeHandles() {
-        for (CompassPoint compass_point : CompassPoint.values()) {
+        for(CompassPoint compass_point : CompassPoint.values()) {
             resizeHandles.add(new ResizeHandle(compass_point));
         }
     }
@@ -145,7 +146,7 @@ public class SelectionRectangle extends Rectangle {
         });
 
         this.setOnMousePressed(event -> {
-            if (event.getButton().equals(MouseButton.PRIMARY)) {
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 dragAnchor.setFromPoint2D(eventXY.subtract(this.getX(), this.getY()));
             }
@@ -153,7 +154,7 @@ public class SelectionRectangle extends Rectangle {
         });
 
         this.setOnMouseDragged(event -> {
-            if (event.getButton().equals(MouseButton.PRIMARY)) {
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 final Point2D newXY = eventXY.subtract(dragAnchor.getX(), dragAnchor.getY());
                 final Bounds regionBounds = confinementBounds.getValue();
@@ -194,7 +195,7 @@ public class SelectionRectangle extends Rectangle {
             fillProperty().bind(rectangle.strokeProperty());
             visibleProperty().bind(rectangle.selectedProperty().and(rectangle.visibleProperty()));
 
-            switch (compassPoint) {
+            switch(compassPoint) {
                 case NW:
                     xProperty().bind(rectangle_x.subtract(SIDE_LENGTH / 2));
                     yProperty().bind(rectangle_y.subtract(SIDE_LENGTH / 2));
@@ -236,7 +237,7 @@ public class SelectionRectangle extends Rectangle {
             });
 
             setOnMousePressed(event -> {
-                if (event.getButton().equals(MouseButton.PRIMARY)) {
+                if(event.getButton().equals(MouseButton.PRIMARY)) {
                     dragAnchor.setFromMouseEvent(event);
                 }
                 event.consume();
@@ -244,10 +245,10 @@ public class SelectionRectangle extends Rectangle {
 
             final SelectionRectangle rectangle = SelectionRectangle.this;
 
-            switch (compassPoint) {
+            switch(compassPoint) {
                 case NW:
                     setOnMouseDragged(event -> {
-                        if (event.getButton().equals(MouseButton.PRIMARY)) {
+                        if(event.getButton().equals(MouseButton.PRIMARY)) {
                             final Bounds parentBounds = rectangle.confinementBounds.getValue();
                             final Bounds bounds = new BoundingBox(parentBounds.getMinX(), parentBounds.getMinY(),
                                     rectangle.getMaxX() - parentBounds.getMinX(),
@@ -267,7 +268,7 @@ public class SelectionRectangle extends Rectangle {
                     break;
                 case N:
                     setOnMouseDragged(event -> {
-                        if (event.getButton().equals(MouseButton.PRIMARY)) {
+                        if(event.getButton().equals(MouseButton.PRIMARY)) {
                             final Bounds parentBounds = rectangle.confinementBounds.getValue();
                             final Bounds bounds = new BoundingBox(rectangle.getX(), parentBounds.getMinY(),
                                     rectangle.getWidth(), rectangle.getMaxY() - parentBounds.getMinY());
@@ -284,7 +285,7 @@ public class SelectionRectangle extends Rectangle {
                     break;
                 case NE:
                     setOnMouseDragged(event -> {
-                        if (event.getButton().equals(MouseButton.PRIMARY)) {
+                        if(event.getButton().equals(MouseButton.PRIMARY)) {
                             final Bounds parentBounds = rectangle.confinementBounds.getValue();
                             final Bounds bounds = new BoundingBox(rectangle.getX(), parentBounds.getMinY(),
                                     parentBounds.getMaxX() - rectangle.getX(),
@@ -303,7 +304,7 @@ public class SelectionRectangle extends Rectangle {
                     break;
                 case E:
                     setOnMouseDragged(event -> {
-                        if (event.getButton().equals(MouseButton.PRIMARY)) {
+                        if(event.getButton().equals(MouseButton.PRIMARY)) {
                             final Bounds parentBounds = rectangle.confinementBounds.getValue();
                             final Bounds bounds = new BoundingBox(rectangle.getX(), rectangle.getY(),
                                     parentBounds.getMaxX() - rectangle.getX(), rectangle.getHeight());
@@ -318,7 +319,7 @@ public class SelectionRectangle extends Rectangle {
                     break;
                 case SE:
                     setOnMouseDragged(event -> {
-                        if (event.getButton().equals(MouseButton.PRIMARY)) {
+                        if(event.getButton().equals(MouseButton.PRIMARY)) {
                             final Bounds parentBounds = rectangle.confinementBounds.getValue();
                             final Bounds bounds = new BoundingBox(rectangle.getX(), rectangle.getY(),
                                     parentBounds.getMaxX() - rectangle.getX(),
@@ -336,7 +337,7 @@ public class SelectionRectangle extends Rectangle {
                     break;
                 case S:
                     setOnMouseDragged(event -> {
-                        if (event.getButton().equals(MouseButton.PRIMARY)) {
+                        if(event.getButton().equals(MouseButton.PRIMARY)) {
                             final Bounds parentBounds = rectangle.confinementBounds.getValue();
                             final Bounds bounds = new BoundingBox(rectangle.getX(), rectangle.getY(),
                                     rectangle.getWidth(),
@@ -353,7 +354,7 @@ public class SelectionRectangle extends Rectangle {
                     break;
                 case SW:
                     setOnMouseDragged(event -> {
-                        if (event.getButton().equals(MouseButton.PRIMARY)) {
+                        if(event.getButton().equals(MouseButton.PRIMARY)) {
                             final Bounds parentBounds = rectangle.confinementBounds.getValue();
                             final Bounds bounds = new BoundingBox(parentBounds.getMinX(), rectangle.getY(),
                                     rectangle.getMaxX() - parentBounds.getMinX(),
@@ -372,7 +373,7 @@ public class SelectionRectangle extends Rectangle {
                     break;
                 case W:
                     setOnMouseDragged(event -> {
-                        if (event.getButton().equals(MouseButton.PRIMARY)) {
+                        if(event.getButton().equals(MouseButton.PRIMARY)) {
                             final Bounds parentBounds = rectangle.confinementBounds.getValue();
                             final Bounds bounds = new BoundingBox(parentBounds.getMinX(), rectangle.getY(),
                                     rectangle.getMaxX() - parentBounds.getMinX(),

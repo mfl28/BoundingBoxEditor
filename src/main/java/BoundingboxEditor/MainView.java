@@ -83,6 +83,10 @@ public class MainView extends BorderPane implements View {
         return projectSidePanel.getBoundingBoxColorPicker();
     }
 
+    public ImagePaneView getImagePaneView() {
+        return imagePaneView;
+    }
+
     public void displayErrorAlert(String title, String header, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
@@ -130,57 +134,59 @@ public class MainView extends BorderPane implements View {
         imagePaneView.connectToController(controller);
     }
 
+    public void setSelectionRectangleDatabaseListeners() {
+        imagePaneView.getImageSelectionRectangles().forEach(selectionRectangleList ->
+                selectionRectangleList.addListener((ListChangeListener<SelectionRectangle>) c -> {
+                    while(c.next()) {
+                        List<? extends SelectionRectangle> addedItemsList = c.getAddedSubList();
+
+                        imagePaneView.addSelectionRectanglesAsChildren(addedItemsList);
+                        projectSidePanel.getExplorerView().addTreeItemsFromSelectionRectangles(addedItemsList);
+
+                        imagePaneView.removeSelectionRectanglesFromChildren(c.getRemoved());
+                    }
+                }));
+    }
+
     public void setSelectionRectangleListListener() {
         imagePaneView.getSelectionRectangleList().addListener((ListChangeListener<SelectionRectangle>) c -> {
-            while (c.next()) {
-                for (SelectionRectangle selectionRectangle : c.getAddedSubList()) {
-                    imagePaneView.getChildren().addAll(selectionRectangle.getNodes());
+            while(c.next()) {
+                List<? extends SelectionRectangle> addedItemsList = c.getAddedSubList();
 
-                    SelectionRectangleTreeItem treeItem = new SelectionRectangleTreeItem(selectionRectangle);
+                imagePaneView.addSelectionRectanglesAsChildren(addedItemsList);
+                projectSidePanel.getExplorerView().addTreeItemsFromSelectionRectangles(addedItemsList);
 
-                    final List<TreeItem<SelectionRectangle>> categoryItems = projectSidePanel.getExplorerView().getRoot().getChildren();
-
-
-                    boolean found = false;
-                    for (TreeItem<SelectionRectangle> category : categoryItems) {
-                        if (((CategoryTreeItem) category).getBoundingBoxCategory().equals(selectionRectangle.getBoundingBoxCategory())) {
-                            treeItem.setId(category.getChildren().size() + 1);
-                            category.getChildren().add(treeItem);
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        CategoryTreeItem category = new CategoryTreeItem(selectionRectangle.getBoundingBoxCategory());
-                        treeItem.setId(1);
-                        category.getChildren().add(treeItem);
-                        categoryItems.add(category);
-                    }
-                }
-
-                for (SelectionRectangle removedItem : c.getRemoved()) {
-                    imagePaneView.getChildren().removeAll(removedItem.getNodes());
-                }
+                imagePaneView.removeSelectionRectanglesFromChildren(c.getRemoved());
             }
         });
     }
 
     public void loadSelectionRectangleList(int index) {
-        List<ObservableList<SelectionRectangle>> imageSelectionRectangles = imagePaneView.getImageSelectionRectangles();
-        List<SelectionRectangle> selectionRectangleList = imagePaneView.getSelectionRectangleList();
+        final List<ObservableList<SelectionRectangle>> selectionRectanglesDatabase = imagePaneView.getImageSelectionRectangles();
+        final List<SelectionRectangle> currentRectangles = imagePaneView.getSelectionRectangleList();
 
-        if (imageSelectionRectangles.get(index) == null) {
-            imageSelectionRectangles.set(index, FXCollections.observableArrayList());
-            selectionRectangleList.forEach(item -> imagePaneView.getChildren().removeAll(item.getNodes()));
-            imagePaneView.setSelectionRectangleList(imageSelectionRectangles.get(index));
+        final ObservableList<SelectionRectangle> loadedSelectionRectangles = selectionRectanglesDatabase.get(index);
+
+        // Remove rectangles of the previous image from the scene graph
+        imagePaneView.removeSelectionRectanglesFromChildren(currentRectangles);
+
+        if(loadedSelectionRectangles == null) {
+
+            // Create a new empty list of rectangles
+            final ObservableList<SelectionRectangle> newRectangles = FXCollections.observableArrayList();
+            selectionRectanglesDatabase.set(index, newRectangles);
+
+            // Set the newly created list as the current working list
+            imagePaneView.setSelectionRectangleList(newRectangles);
+
+            // Setup the listeners for add/remove functionality
             setSelectionRectangleListListener();
         } else {
-            selectionRectangleList.forEach(item -> imagePaneView.getChildren().removeAll(item.getNodes()));
-            imagePaneView.setSelectionRectangleList(imageSelectionRectangles.get(index));
-            imagePaneView.getSelectionRectangleList().forEach(item -> imagePaneView.getChildren().addAll(item.getNodes()));
-
-            // update selection rectangle in the scene grapH
-
+            // Set the loaded list as the current working list
+            imagePaneView.setSelectionRectangleList(loadedSelectionRectangles);
+            // Add the loaded rectangles to the scenegraph and the explorer tree
+            imagePaneView.addSelectionRectanglesAsChildren(loadedSelectionRectangles);
+            projectSidePanel.getExplorerView().addTreeItemsFromSelectionRectangles(loadedSelectionRectangles);
         }
     }
 
@@ -217,7 +223,7 @@ public class MainView extends BorderPane implements View {
 
         // Reset brightnessSlider on Label double-click
         settingsPanel.getBrightnessLabel().setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
+            if(event.getClickCount() == 2) {
                 settingsPanel.getBrightnessSlider().setValue(BRIGHTNESS_SLIDER_DEFAULT);
             }
         });
@@ -227,7 +233,7 @@ public class MainView extends BorderPane implements View {
         settingsPanel.visibleProperty().bind(topPanel.getViewShowSettingsItem().selectedProperty());
 
         projectSidePanel.getSelectorView().getSelectionModel().selectedItemProperty().addListener((value, oldValue, newValue) -> {
-            if (newValue != null) {
+            if(newValue != null) {
                 imagePaneView.getSelectionRectangle().setStroke(newValue.getColor());
             }
         });
@@ -239,7 +245,7 @@ public class MainView extends BorderPane implements View {
             SelectionRectangleTreeCell cell = new SelectionRectangleTreeCell();
 
             cell.getDeleteSelectionRectangleItem().setOnAction(event -> {
-                if (!cell.isEmpty()) {
+                if(!cell.isEmpty()) {
                     final TreeItem<SelectionRectangle> treeItem = cell.getTreeItem();
 
                     treeItem.getChildren().forEach(child -> imagePaneView.getSelectionRectangleList().remove(child.getValue()));
@@ -248,8 +254,8 @@ public class MainView extends BorderPane implements View {
                     final TreeItem<SelectionRectangle> treeItemParent = treeItem.getParent();
                     final var siblingList = treeItemParent.getChildren();
 
-                    if (treeItem instanceof SelectionRectangleTreeItem) {
-                        for (int i = siblingList.indexOf(treeItem) + 1; i < siblingList.size(); ++i) {
+                    if(treeItem instanceof SelectionRectangleTreeItem) {
+                        for(int i = siblingList.indexOf(treeItem) + 1; i < siblingList.size(); ++i) {
                             final SelectionRectangleTreeItem item = (SelectionRectangleTreeItem) siblingList.get(i);
                             item.setId(item.getId() - 1);
                         }
@@ -258,7 +264,7 @@ public class MainView extends BorderPane implements View {
                     siblingList.remove(treeItem);
                     imagePaneView.getSelectionRectangleList().remove(treeItem.getValue());
 
-                    if (siblingList.isEmpty()) {
+                    if(siblingList.isEmpty()) {
                         tv.getRoot().getChildren().remove(treeItemParent);
                     }
                 }

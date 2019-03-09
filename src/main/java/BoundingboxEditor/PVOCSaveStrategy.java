@@ -36,7 +36,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
         final Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
-        for (final ImageAnnotationDataElement dataElement : dataset) {
+        for(final ImageAnnotationDataElement dataElement : dataset) {
             createXmlFileFromImageAnnotationDataElement(documentBuilder, transformer, dataElement);
         }
     }
@@ -51,7 +51,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
 
         appendHeaderFromImageAnnotationDataElement(document, annotationElement, dataElement);
 
-        for (BoundingBoxElement boundingBox : dataElement.getBoundingBoxes()) {
+        for(BoundingBoxElement boundingBox : dataElement.getBoundingBoxes()) {
             annotationElement.appendChild(createXmlElementFromBoundingBox(document, boundingBox));
         }
 

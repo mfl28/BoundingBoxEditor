@@ -1,12 +1,18 @@
 package BoundingboxEditor;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.CacheHint;
+import javafx.scene.Group;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ImagePaneView extends StackPane implements View {
@@ -23,6 +29,7 @@ public class ImagePaneView extends StackPane implements View {
     private SelectionRectangle selectionRectangle = new SelectionRectangle(null);
     //FIXME: should be in model
     private Image currentImage;
+    private ObjectProperty<Image> currentImageObject = new SimpleObjectProperty<>();
 
     ImagePaneView() {
         this.getStyleClass().add(IMAGE_PANE_STYLE);
@@ -31,6 +38,7 @@ public class ImagePaneView extends StackPane implements View {
 
         imageView.setSmooth(true);
         imageView.setCache(true);
+        imageView.setCacheHint(CacheHint.SPEED);
         /* So that events are registered even on transparent image parts. */
         imageView.setPickOnBounds(true);
         imageView.setId("image-pane");
@@ -44,6 +52,14 @@ public class ImagePaneView extends StackPane implements View {
         setUpInternalListeners();
     }
 
+    public void removeSelectionRectanglesFromChildren(Iterable<? extends SelectionRectangle> selectionRectangles){
+        selectionRectangles.forEach(item -> this.getChildren().removeAll(item.getNodes()));
+    }
+
+    public void addSelectionRectanglesAsChildren(Iterable<? extends SelectionRectangle> selectionRectangles){
+        selectionRectangles.forEach(item -> this.getChildren().addAll(item.getNodes()));
+    }
+
     public DragAnchor getMousePressed() {
         return mousePressed;
     }
@@ -54,19 +70,24 @@ public class ImagePaneView extends StackPane implements View {
 
     public void setImageView(final Image image) {
         // reset progress indicator animation
-        currentImage = image;
+        currentImageObject.set(image);
+        //currentImage = image;
         progressIndicator.setProgress(0);
         progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
         progressIndicator.setVisible(true);
 
-        image.progressProperty().addListener((value, oldValue, newValue) -> {
-            if (newValue.equals(1.0)) {
+        currentImageObject.getValue().progressProperty().addListener((value, oldValue, newValue) -> {
+            if(newValue.equals(1.0)) {
                 imageView.setImage(image);
                 imageView.setPreserveRatio(true);
                 setInitialImageViewSize();
                 progressIndicator.setVisible(false);
             }
         });
+    }
+
+    public void resetSelectionRectangleDatabase(int numItems){
+        imageSelectionRectangles = new ArrayList<>(Collections.nCopies(numItems, null));
     }
 
     public ObservableList<SelectionRectangle> getSelectionRectangleList() {
@@ -94,7 +115,11 @@ public class ImagePaneView extends StackPane implements View {
     }
 
     public Image getCurrentImage() {
-        return currentImage;
+        return currentImageObject.get();
+    }
+
+    public ObjectProperty<Image> imageObjectProperty(){
+        return currentImageObject;
     }
 
     @Override
@@ -117,20 +142,20 @@ public class ImagePaneView extends StackPane implements View {
     private void setUpInternalListeners() {
         this.widthProperty().addListener((value, oldValue, newValue) -> {
             double prefWidth = 0;
-            if (imageView.getImage() != null)
+            if(imageView.getImage() != null)
                 prefWidth = imageView.getImage().getWidth();
             imageView.setFitWidth(Math.min(prefWidth, newValue.doubleValue() - 2 * IMAGE_PADDING));
         });
 
         this.heightProperty().addListener((value, oldValue, newValue) -> {
             double prefHeight = 0;
-            if (imageView.getImage() != null)
+            if(imageView.getImage() != null)
                 prefHeight = imageView.getImage().getHeight();
             imageView.setFitHeight(Math.min(prefHeight, newValue.doubleValue() - 2 * IMAGE_PADDING));
         });
 
         this.setOnScroll(event -> {
-            if (event.isControlDown()) {
+            if(event.isControlDown()) {
                 final Image image = imageView.getImage();
                 final double delta = event.getDeltaY();
 

@@ -84,11 +84,11 @@ public class BoundingBoxCategory {
 
     @Override
     public boolean equals(Object other) {
-        if (this == other) {
+        if(this == other) {
             return true;
         }
 
-        if (!(other instanceof BoundingBoxCategory)) {
+        if(!(other instanceof BoundingBoxCategory)) {
             return false;
         }
 

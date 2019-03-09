@@ -4,6 +4,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -13,7 +14,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,20 +25,28 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.ApplicationTest;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
-import org.testfx.matcher.control.ListViewMatchers;
 import org.testfx.util.PointQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 
+import java.awt.*;
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
 @ExtendWith(ApplicationExtension.class)
 public class ControllerTest extends ApplicationTest {
+    private static final double WINDOW_WIDTH = 1500;
+    private static final double WINDOW_HEIGHT = 900;
+
     private Controller controller;
+    private MainView mainView;
 
 
     @BeforeAll
@@ -59,7 +67,8 @@ public class ControllerTest extends ApplicationTest {
     @Start
     void onStart(Stage stage) {
         controller = new Controller(stage);
-        final Scene scene = new Scene(controller.getView(), 1500, 900);
+        mainView = controller.getView();
+        final Scene scene = new Scene(mainView, WINDOW_WIDTH, WINDOW_HEIGHT);
         scene.getStylesheets().add(getClass().getResource("/stylesheets/styles.css").toExternalForm());
         // Add TestImages programmatically, as System Dialogue Windows (such as Directory Chooser Dialogue) cannot be interacted with in a consistent way.
         controller.updateViewFromDirectory(new File(getClass().getResource("/TestImages").toString().replace("file:", "")));
@@ -69,132 +78,109 @@ public class ControllerTest extends ApplicationTest {
 
 
     @Test
-    void onAddButtonClicked_WhenNoCategorynameEntered_ShouldShowErrorDialogue(FxRobot robot) {
-        //when
-        robot.clickOn("#add-button");
+    void onAddButtonClicked_WhenNoCategoryNameEntered_ShouldShowErrorDialogue(FxRobot robot) {
+        robot.clickOn(mainView.getProjectSidePanel().getAddButton());
+        final Stage topModalStage = getTopModalStage(robot);
 
-        Stage topModalStage = getTopModalStage(robot);
-        //then
         verifyThat(topModalStage, CoreMatchers.notNullValue());
         verifyThat(topModalStage.getTitle(), CoreMatchers.equalTo("Category Input Error"));
     }
 
     @ParameterizedTest(name = "Waiting {0} milliseconds between clicks")
-    @ValueSource(ints = {0, 1000})
-    void onClickThroughTestImages_WhenFolderLoaded_ShouldProperlySetButtonDisabledProperty(int waitMilliseconds, FxRobot robot) throws Exception{
-        final String nextButtonId = "#" + TopPanelView.NEXT_BUTTON_ID;
-        final String previousButtonId = "#" + TopPanelView.PREVIOUS_BUTTON_ID;
+    @ValueSource(ints = {0 /*, 1000*/})
+    void onClickThroughImages_WhenEndsReached_ShouldProperlySetButtonDisabledProperty(int waitMilliseconds, FxRobot robot) throws Exception{
+        waitUntilCurrentImageIsLoaded();
 
-        ImageView imageView = controller.getView().getImageView();
-        verifyThat(imageView, CoreMatchers.notNullValue());
-
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, imageView.imageProperty().isNotNull());
-
+        final Button nextButton = mainView.getNextButton();
+        final Button previousButton = mainView.getPreviousButton();
         // forward
-        verifyThat(nextButtonId, NodeMatchers.isEnabled());
-        verifyThat(previousButtonId, NodeMatchers.isDisabled());
+        verifyThat(nextButton, NodeMatchers.isEnabled());
+        verifyThat(previousButton, NodeMatchers.isDisabled());
 
         for(int i = 0; i != 3; ++i){
-            robot.clickOn(nextButtonId).sleep(waitMilliseconds);
+            robot.clickOn(nextButton).sleep(waitMilliseconds);
 
-            verifyThat(nextButtonId, NodeMatchers.isEnabled());
-            verifyThat(previousButtonId, NodeMatchers.isEnabled());
+            verifyThat(nextButton, NodeMatchers.isEnabled());
+            verifyThat(previousButton, NodeMatchers.isEnabled());
         }
 
-        robot.clickOn(nextButtonId).sleep(waitMilliseconds);
+        robot.clickOn(nextButton).sleep(waitMilliseconds);
 
-        verifyThat(nextButtonId, NodeMatchers.isDisabled());
-        verifyThat(previousButtonId, NodeMatchers.isEnabled());
+        verifyThat(nextButton, NodeMatchers.isDisabled());
+        verifyThat(previousButton, NodeMatchers.isEnabled());
         // end forward
 
         // backward
         for(int i = 0; i != 3; ++i){
-            robot.clickOn(previousButtonId).sleep(waitMilliseconds);
+            robot.clickOn(previousButton).sleep(waitMilliseconds);
 
-            verifyThat(nextButtonId, NodeMatchers.isEnabled());
-            verifyThat(previousButtonId, NodeMatchers.isEnabled());
+            verifyThat(nextButton, NodeMatchers.isEnabled());
+            verifyThat(previousButton, NodeMatchers.isEnabled());
         }
 
-        robot.clickOn(previousButtonId).sleep(waitMilliseconds);
+        robot.clickOn(previousButton).sleep(waitMilliseconds);
 
-        verifyThat(nextButtonId, NodeMatchers.isEnabled());
-        verifyThat(previousButtonId, NodeMatchers.isDisabled());
+        verifyThat(nextButton, NodeMatchers.isEnabled());
+        verifyThat(previousButton, NodeMatchers.isDisabled());
         // end backward
     }
 
     @Test
     void onOpenFolderClicked_WhenNoFolderLoaded_ShouldLoadSelectedFolder(FxRobot robot) throws Exception{
-        verifyThat("#image-pane", CoreMatchers.notNullValue());
+        waitUntilCurrentImageIsLoaded();
 
-        ImageView imageView = controller.getView().getImageView();
+        robot.clickOn(mainView.getNextButton());
 
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, imageView.imageProperty().isNotNull());
+        waitUntilCurrentImageIsLoaded();
 
-        Image image = imageView.getImage();
-
-        verifyThat(image, CoreMatchers.notNullValue());
-
-        robot.clickOn("#next-button");
-
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, imageView.imageProperty().isNotEqualTo(image));
-
-        String imagePath = imageView.getImage().getUrl();
-        String imageFileName = imagePath.substring(imagePath.lastIndexOf("/") + 1);
+        final String imagePath = mainView.getCurrentImage().getUrl();
+        final String imageFileName = imagePath.substring(imagePath.lastIndexOf("/") + 1);
 
         verifyThat(imageFileName, CoreMatchers.equalTo("david-barajas-733625-unsplash.jpg"));
 
         WaitForAsyncUtils.waitForFxEvents();
-        Bounds testBound = imageView.localToScreen(imageView.getBoundsInLocal());
 
-        Point2D startPoint = PointQueryUtils.atPositionFactors(testBound, new Point2D(0.4, 0.4));
-        Point2D intermediatePoint1 = PointQueryUtils.atPositionFactors(testBound, new Point2D(0.8, 0.7));
-        Point2D intermediatePoint2 = PointQueryUtils.atPositionFactors(testBound, new Point2D(0.1, 0.8));
-        Point2D intermediatePoint3 = PointQueryUtils.atPositionFactors(testBound, new Point2D(0.1, 0.1));
-        Point2D endPoint = PointQueryUtils.atPositionFactors(testBound, new Point2D(0.8, 0.1));
+        final Point2D startPoint = getScreenPointFromImageViewRatios(0.4,0.4);
+        final Point2D intermediatePoint1 = getScreenPointFromImageViewRatios(0.8,0.7);
+        final Point2D intermediatePoint2 = getScreenPointFromImageViewRatios(0.1,0.8);
+        final Point2D intermediatePoint3 = getScreenPointFromImageViewRatios(0.1,0.1);
+        final Point2D endPoint = getScreenPointFromImageViewRatios(0.8,0.1);
 
-        Bounds expectedBounds = new BoundingBox(startPoint.getX(), endPoint.getY(),
-                Math.abs(endPoint.getX() - startPoint.getX()), Math.abs(endPoint.getY() - startPoint.getY()));
+        final Bounds expectedBounds = new BoundingBox(startPoint.getX(), endPoint.getY(),
+                Math.abs(endPoint.getX() - startPoint.getX()),
+                Math.abs(endPoint.getY() - startPoint.getY()));
 
-
-        robot.moveTo(startPoint).press(MouseButton.PRIMARY)
-                .moveTo(intermediatePoint1)
-                .moveTo(intermediatePoint2)
-                .moveTo(intermediatePoint3)
-                .moveTo(endPoint)
-                .release(MouseButton.PRIMARY);
+        robot.moveTo(startPoint)
+             .press(MouseButton.PRIMARY)
+             .moveTo(intermediatePoint1)
+             .moveTo(intermediatePoint2)
+             .moveTo(intermediatePoint3)
+             .moveTo(endPoint)
+             .release(MouseButton.PRIMARY);
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        // There should be exactly one rectangle in the list.
-        verifyThat(controller.getView().getSelectionRectangleList().size(), CoreMatchers.equalTo(1));
+        // There should now be exactly one rectangle in the list.
+        verifyThat(mainView.getSelectionRectangleList().size(), CoreMatchers.equalTo(1));
 
-        SelectionRectangle selectionRectangle = controller.getView().getSelectionRectangleList().get(0);
+        final SelectionRectangle selectionRectangle = mainView.getSelectionRectangleList().get(0);
+        // The selectionRectangle's category should be the same as the currently selected category in the category selector.
+        verifyThat(selectionRectangle.getBoundingBoxCategory(), CoreMatchers.equalTo(mainView.getBoundingBoxItemTableView().getSelectionModel().getSelectedItem()));
 
-        verifyThat(selectionRectangle.getBoundingBoxCategory(), CoreMatchers.equalTo(controller.getView().getBoundingBoxItemTableView().getSelectionModel().getSelectedItem()));
+        final Bounds selectionRectangleBounds = selectionRectangle.localToScreen(selectionRectangle.getBoundsInLocal());
 
-        Bounds selectionRectangleBounds = selectionRectangle.localToScreen(selectionRectangle.getBoundsInLocal());
-
-        verifyThat(selectionRectangle, CoreMatchers.notNullValue());
-
-        // very crude tests
+        // Very crude tests for coordinate equality with expected values
         verifyThat(pixelApproximatelyEqual(selectionRectangle.getWidth(), expectedBounds.getWidth()), CoreMatchers.is(true));
         verifyThat(pixelApproximatelyEqual(selectionRectangle.getHeight(), expectedBounds.getHeight()), CoreMatchers.is(true));
 
         verifyThat(pixelApproximatelyEqual(selectionRectangleBounds.getMinX(), expectedBounds.getMinX()), CoreMatchers.is(true));
         verifyThat(pixelApproximatelyEqual(selectionRectangleBounds.getMinY(), expectedBounds.getMinY()), CoreMatchers.is(true));
-
-
-        // verify that the rectangle exits in the treeview
     }
 
     @Test
     void onAddNewBoundingBoxCategory_WhenFolderLoaded_ShouldDisplayAndSelectCategoryInTableView(FxRobot robot){
-        robot.clickOn(".bounding-box-name-text-field");
-
-        String testName = "Dummy";
-        robot.write(testName);
-        robot.clickOn("#add-button");
-
+        final String testName = "Dummy";
+        enterNewCategory(robot, testName);
         verifyThat(controller.getView().getBoundingBoxItemTableView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
     }
 
@@ -220,35 +206,20 @@ public class ControllerTest extends ApplicationTest {
 
     @Test
     void onDeleteSelectionRectangleInExplorer_WhenFolderLoaded_ShouldRemoveSelectionRectangleFromStoredList(FxRobot robot) throws Exception{
-        ImageView imageView = controller.getView().getImageView();
-
-        verifyThat(imageView, CoreMatchers.notNullValue());
-
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, imageView.imageProperty().isNotNull());
-
+        waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
-        Bounds testBound = imageView.localToScreen(imageView.getBoundsInLocal());
 
-        Point2D startPoint = PointQueryUtils.atPositionFactors(testBound, new Point2D(0.1, 0.1));
-
-        Point2D endPoint = PointQueryUtils.atPositionFactors(testBound, new Point2D(0.4, 0.4));
-
-        robot.moveTo(startPoint).press(MouseButton.PRIMARY)
-                .moveTo(endPoint)
-                .release(MouseButton.PRIMARY);
+        drawSelectionRectangleOnImageView(robot, new Point2D(0.1,0.1), new Point2D(0.4,0.4));
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        TreeView<SelectionRectangle> explorer = controller.getView().getProjectSidePanel().getExplorerView();
-
-        List<TreeItem<SelectionRectangle>> categoryList = explorer.getRoot().getChildren();
-
+        final List<TreeItem<SelectionRectangle>> categoryList = mainView.getProjectSidePanel().getExplorerView().getRoot().getChildren();
         // One category item in treeview
         verifyThat(categoryList.size(), CoreMatchers.equalTo(1));
 
         verifyThat(controller.getView().getSelectionRectangleList().size(), CoreMatchers.equalTo(1));
 
-        List<TreeItem<SelectionRectangle>> leafList = categoryList.get(0).getChildren();
+        final List<TreeItem<SelectionRectangle>> leafList = categoryList.get(0).getChildren();
 
         verifyThat(leafList.size(), CoreMatchers.equalTo(1));
 
@@ -256,11 +227,11 @@ public class ControllerTest extends ApplicationTest {
 
         // Now delete the rectangle
         // expand the only existing category
-        robot.clickOn(".tree-cell > .tree-disclosure-node > .arrow");
-        robot.sleep(1000);
-        robot.rightClickOn("Default1");
-        robot.sleep(1000);
-        robot.clickOn("Delete");
+        robot.clickOn(".tree-cell .arrow")
+                .sleep(1000)
+                .rightClickOn("Default1")
+                .sleep(1000)
+                .clickOn("Delete");
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -268,7 +239,76 @@ public class ControllerTest extends ApplicationTest {
         verifyThat(categoryList.size(), CoreMatchers.equalTo(0));
         // The selection rectangle list should be empty
         verifyThat(controller.getView().getSelectionRectangleList().isEmpty(), CoreMatchers.equalTo(true));
+    }
 
+    @Test
+    void onClickingThroughImages_WhenSelectionRectanglesCreated_ShouldCorrectlyLoadExistingSelectionRectangles(FxRobot robot) throws Exception{
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        enterNewCategory(robot, "Cat1");
+        drawSelectionRectangleOnImageView(robot, new Point2D(0.1,0.1), new Point2D(0.4,0.4));
+
+        final List<SelectionRectangle> startChildRectangles = mainView.getImagePaneView().getChildren().stream()
+                .filter(item -> item instanceof SelectionRectangle)
+                .map(item -> (SelectionRectangle) item)
+                .filter(item -> item.getBoundingBoxCategory() != null)
+                .collect(Collectors.toList());
+
+        verifyThat(startChildRectangles.size(), CoreMatchers.equalTo(1));
+
+        final SelectionRectangle expectedRectangle = startChildRectangles.get(0);
+
+        robot.clickOn(mainView.getNextButton());
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        enterNewCategory(robot, "Cat2");
+        drawSelectionRectangleOnImageView(robot, new Point2D(0.1,0.1), new Point2D(0.4,0.4));
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.clickOn(mainView.getNextButton());
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        enterNewCategory(robot, "Cat3");
+        drawSelectionRectangleOnImageView(robot, new Point2D(0.1,0.1), new Point2D(0.4,0.4));
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Button previousButton = mainView.getPreviousButton();
+        robot.clickOn(previousButton)
+                .clickOn(previousButton);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final List<TreeItem<SelectionRectangle>> categoryList = mainView.getProjectSidePanel().getExplorerView().getRoot().getChildren();
+        // One category item in treeview
+        verifyThat(categoryList.size(), CoreMatchers.equalTo(1));
+
+        verifyThat(controller.getView().getSelectionRectangleList().size(), CoreMatchers.equalTo(1));
+
+        final List<TreeItem<SelectionRectangle>> leafList = categoryList.get(0).getChildren();
+
+        verifyThat(leafList.size(), CoreMatchers.equalTo(1));
+
+        verifyThat(leafList.get(0).getValue().getBoundingBoxCategory().getName(), CoreMatchers.equalTo("Cat1"));
+
+        verifyThat(mainView.getSelectionRectangleList().size(), CoreMatchers.equalTo(1));
+        verifyThat(mainView.getSelectionRectangleList().get(0).getBoundingBoxCategory().getName(), CoreMatchers.equalTo("Cat1"));
+
+        final List<SelectionRectangle> childRectangles = mainView.getImagePaneView().getChildren().stream()
+                .filter(item -> item instanceof SelectionRectangle)
+                .map(item -> (SelectionRectangle) item)
+                .filter(item -> item.getBoundingBoxCategory() != null)
+                .collect(Collectors.toList());
+
+        verifyThat(childRectangles.size(),CoreMatchers.equalTo(1));
+
+        final SelectionRectangle actualRectangle = childRectangles.get(0);
+
+        verifyThat(actualRectangle, CoreMatchers.equalTo(expectedRectangle));
+        verifyThat(actualRectangle, NodeMatchers.isVisible());
     }
 
 
@@ -283,13 +323,49 @@ public class ControllerTest extends ApplicationTest {
     private Stage getTopModalStage(FxRobot robot) {
         // Get a list of windows but ordered from top[0] to bottom[n] ones.
         // It is needed to get the first found modal window.
-        final List<Window> allWindows = robot.listWindows();
-
-        return (Stage) allWindows
+        return (Stage) robot.listWindows()
                 .stream()
                 .filter(window -> window instanceof Stage)
                 .filter(window -> ((Stage) window).getModality() == Modality.APPLICATION_MODAL)
                 .findFirst()
                 .orElse(null);
+    }
+
+    private void waitUntilCurrentImageIsLoaded() throws TimeoutException {
+        final Image image = mainView.getCurrentImage();
+
+        WaitForAsyncUtils.waitForFxEvents();
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> image != null);
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, image.progressProperty().isEqualTo(1));
+    }
+
+    private Point2D getScreenPointFromImageViewRatios(double xRatio, double yRatio){
+        final ImageView imageView = mainView.getImageView();
+        final Bounds imageViewScreenBounds = imageView.localToScreen(imageView.getBoundsInLocal());
+
+        return PointQueryUtils.atPositionFactors(imageViewScreenBounds, new Point2D(xRatio, yRatio));
+    }
+
+    private Point2D getScreenPointFromImageViewRatios(Point2D ratios){
+        final ImageView imageView = mainView.getImageView();
+        final Bounds imageViewScreenBounds = imageView.localToScreen(imageView.getBoundsInLocal());
+
+        return PointQueryUtils.atPositionFactors(imageViewScreenBounds, ratios);
+    }
+
+    private void drawSelectionRectangleOnImageView(FxRobot robot, Point2D startPointRatios, Point2D endPointRatios){
+        Point2D startPoint = getScreenPointFromImageViewRatios(startPointRatios);
+        Point2D endPoint = getScreenPointFromImageViewRatios(endPointRatios);
+
+        robot.moveTo(startPoint)
+                .press(MouseButton.PRIMARY)
+                .moveTo(endPoint)
+                .release(MouseButton.PRIMARY);
+    }
+
+    private void enterNewCategory(FxRobot robot, String categoryName){
+        robot.clickOn(mainView.getProjectSidePanel().getCategoryInputField())
+                .write(categoryName)
+                .clickOn(mainView.getProjectSidePanel().getAddButton());
     }
 }

@@ -31,7 +31,7 @@ class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
     protected void updateItem(SelectionRectangle newSelectionRectangle, boolean empty) {
         super.updateItem(newSelectionRectangle, empty);
 
-        if (empty || newSelectionRectangle == null) {
+        if(empty || newSelectionRectangle == null) {
             this.textProperty().unbind();
             this.setText(null);
             this.setGraphic(null);
@@ -42,10 +42,10 @@ class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
 
         setGraphic(treeItem.getGraphic());
 
-        if (!textProperty().isBound()) {
-            if (treeItem instanceof CategoryTreeItem) {
+        if(!textProperty().isBound()) {
+            if(treeItem instanceof CategoryTreeItem) {
                 textProperty().bind(((CategoryTreeItem) treeItem).getBoundingBoxCategory().nameProperty());
-            } else if (treeItem instanceof SelectionRectangleTreeItem) {
+            } else if(treeItem instanceof SelectionRectangleTreeItem) {
                 textProperty().bind(newSelectionRectangle.getBoundingBoxCategory().nameProperty().concat(((SelectionRectangleTreeItem) treeItem).getId()));
             }
         }
@@ -54,10 +54,10 @@ class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
 
     private void setUpInternalListeners() {
         this.setOnMouseEntered(event -> {
-            if (!this.isEmpty()) {
+            if(!this.isEmpty()) {
                 final List<TreeItem<SelectionRectangle>> childList = this.getTreeItem().getChildren();
 
-                if (!childList.isEmpty()) {
+                if(!childList.isEmpty()) {
                     childList.forEach(child -> child.getValue().fillOpaque());
                 } else {
                     this.getItem().fillOpaque();
@@ -66,10 +66,10 @@ class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
         });
 
         this.setOnMouseExited(event -> {
-            if (!this.isEmpty()) {
+            if(!this.isEmpty()) {
                 final List<TreeItem<SelectionRectangle>> childList = this.getTreeItem().getChildren();
 
-                if (!childList.isEmpty()) {
+                if(!childList.isEmpty()) {
                     childList.forEach(child -> child.getValue().setFill(Color.TRANSPARENT));
                 } else {
                     this.getItem().setFill(Color.TRANSPARENT);

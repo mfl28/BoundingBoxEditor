@@ -53,7 +53,7 @@ public class Model {
                         .collect(Collectors.toList())
         );
 
-        if (imageFileList.isEmpty()) {
+        if(imageFileList.isEmpty()) {
             throw new NoValidImagesException(String.format("The path \"%s\" does not contain any valid images.",
                     path.toString()));
         }
@@ -133,7 +133,7 @@ public class Model {
     }
 
     void writeBoundingBoxDataToFile(File file) throws IOException {
-        try (PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
+        try(PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
             new Thread(() ->
                     boundingBoxData.forEach((key, value) -> printWriter.println(key + ", " +
                             value.stream().map(numberFormat::format).collect(Collectors.joining(", "))))).start();
