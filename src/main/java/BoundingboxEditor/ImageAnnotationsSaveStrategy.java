@@ -2,6 +2,9 @@ package BoundingboxEditor;
 
 import java.nio.file.Path;
 import java.security.InvalidParameterException;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 
 public interface ImageAnnotationsSaveStrategy {
     static ImageAnnotationsSaveStrategy createStrategy(final SaveStrategy saveStrategy) {
@@ -21,7 +24,7 @@ public interface ImageAnnotationsSaveStrategy {
         return strategy;
     }
 
-    void save(final ImageAnnotationsDataset dataset, final Path savePath) throws Exception;
+    void save(final Collection<ImageAnnotationDataElement> dataset, final Path savePath) throws Exception;
 
     enum SaveStrategy {PASCAL_VOC, SIMPLE_SAVE}
 }

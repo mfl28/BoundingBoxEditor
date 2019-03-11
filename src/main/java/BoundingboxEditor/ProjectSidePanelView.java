@@ -1,5 +1,6 @@
 package BoundingboxEditor;
 
+import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -27,6 +28,9 @@ public class ProjectSidePanelView extends VBox implements View {
     private static final double ICON_HEIGHT = 20.0;
     private static final String HIDE_ICON_PATH = "/icons/hide.png";
     private static final String SHOW_ICON_PATH = "/icons/show.png";
+    private static final String EXPAND_ICON_PATH = "/icons/expand.png";
+    private static final String COLLAPSE_ICON_PATH = "/icons/collapse.png";
+    private static final String CATEGORY_INPUT_FIELD_PROMPT_TEXT = "Category Name";
 
     private final BoundingBoxCategorySelectorView selectorView = new BoundingBoxCategorySelectorView();
 
@@ -36,11 +40,15 @@ public class ProjectSidePanelView extends VBox implements View {
     private final Button addButton = new Button(BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT);
     private final SelectionRectangleExplorerView explorerView = new SelectionRectangleExplorerView();
     private final ToggleButton visibilityToggle = Utils.createToggleIconButton(getClass().getResource(HIDE_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
+    private final ToggleButton expansionToggle = Utils.createToggleIconButton(getClass().getResource(COLLAPSE_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
     private final ImageView hideImageView = new ImageView(new Image(getClass().getResource(HIDE_ICON_PATH).toExternalForm()));
     private final ImageView showImageView = new ImageView(new Image(getClass().getResource(SHOW_ICON_PATH).toExternalForm()));
+    private final ImageView expandImageView = new ImageView(new Image(getClass().getResource(EXPAND_ICON_PATH).toExternalForm()));
+    private final ImageView collapseImageView = new ImageView(new Image(getClass().getResource(COLLAPSE_ICON_PATH).toExternalForm()));
 
     ProjectSidePanelView() {
         this.getChildren().addAll(
+                new Separator(),
                 new Label(CLASS_SELECTOR_LABEL_TEXT),
                 createCategorySearchBox(),
                 selectorView,
@@ -48,12 +56,16 @@ public class ProjectSidePanelView extends VBox implements View {
                 new Separator(),
                 new Label(OBJECT_SELECTOR_LABEL_TEXT),
                 explorerView,
-                new HBox(visibilityToggle)
+                new HBox(visibilityToggle, expansionToggle)
         );
         showImageView.setFitWidth(ICON_WIDTH);
         showImageView.setFitHeight(ICON_HEIGHT);
         hideImageView.setFitHeight(ICON_HEIGHT);
         hideImageView.setFitWidth(ICON_WIDTH);
+        expandImageView.setFitWidth(ICON_WIDTH);
+        expandImageView.setFitHeight(ICON_HEIGHT);
+        collapseImageView.setFitHeight(ICON_HEIGHT);
+        collapseImageView.setFitWidth(ICON_WIDTH);
         setUpStyles();
         setUpInternalListeners();
         this.setVisible(false);
@@ -147,6 +159,18 @@ public class ProjectSidePanelView extends VBox implements View {
                         });
                     });
         }));
+
+        // FIXME: Flickers when changing between images that contain bounding box annotations
+        visibilityToggle.disableProperty().bind(explorerView.getRoot().leafProperty());
+
+        expansionToggle.disableProperty().bind(explorerView.getRoot().leafProperty());
+
+        expansionToggle.selectedProperty().addListener(((observable, oldValue, newValue) -> {
+            if(!explorerView.getRoot().isLeaf()){
+                expansionToggle.setGraphic(newValue ? expandImageView : collapseImageView);
+            }
+            explorerView.getRoot().getChildren().forEach(child -> child.setExpanded(newValue));
+        }));
     }
 
     private HBox createAddCategoryControllBox() {
@@ -156,6 +180,7 @@ public class ProjectSidePanelView extends VBox implements View {
 
         final HBox addItemControls = new HBox(boundingBoxColorPicker, Utils.createHSpacer(), categoryInputField,
                 Utils.createHSpacer(), addButton);
+        categoryInputField.setPromptText(CATEGORY_INPUT_FIELD_PROMPT_TEXT);
         addItemControls.getStyleClass().add(BOUNDING_BOX_ITEM_CONTROLS_STYLE);
 
         return addItemControls;

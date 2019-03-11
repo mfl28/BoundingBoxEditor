@@ -86,9 +86,8 @@ public class ControllerTest extends ApplicationTest {
         verifyThat(topModalStage.getTitle(), CoreMatchers.equalTo("Category Input Error"));
     }
 
-    @ParameterizedTest(name = "Waiting {0} milliseconds between clicks")
-    @ValueSource(ints = {0 /*, 1000*/})
-    void onClickThroughImages_WhenEndsReached_ShouldProperlySetButtonDisabledProperty(int waitMilliseconds, FxRobot robot) throws Exception{
+    @Test
+    void onClickThroughImages_WhenEndsReached_ShouldProperlySetButtonDisabledProperty(FxRobot robot) throws Exception{
         waitUntilCurrentImageIsLoaded();
 
         final Button nextButton = mainView.getNextButton();
@@ -98,13 +97,17 @@ public class ControllerTest extends ApplicationTest {
         verifyThat(previousButton, NodeMatchers.isDisabled());
 
         for(int i = 0; i != 3; ++i){
-            robot.clickOn(nextButton).sleep(waitMilliseconds);
+            robot.clickOn(nextButton);
+
+            waitUntilCurrentImageIsLoaded();
 
             verifyThat(nextButton, NodeMatchers.isEnabled());
             verifyThat(previousButton, NodeMatchers.isEnabled());
         }
 
-        robot.clickOn(nextButton).sleep(waitMilliseconds);
+        robot.clickOn(nextButton);
+
+        waitUntilCurrentImageIsLoaded();
 
         verifyThat(nextButton, NodeMatchers.isDisabled());
         verifyThat(previousButton, NodeMatchers.isEnabled());
@@ -112,14 +115,16 @@ public class ControllerTest extends ApplicationTest {
 
         // backward
         for(int i = 0; i != 3; ++i){
-            robot.clickOn(previousButton).sleep(waitMilliseconds);
+            robot.clickOn(previousButton);
 
+            waitUntilCurrentImageIsLoaded();
             verifyThat(nextButton, NodeMatchers.isEnabled());
             verifyThat(previousButton, NodeMatchers.isEnabled());
         }
 
-        robot.clickOn(previousButton).sleep(waitMilliseconds);
+        robot.clickOn(previousButton);
 
+        waitUntilCurrentImageIsLoaded();
         verifyThat(nextButton, NodeMatchers.isEnabled());
         verifyThat(previousButton, NodeMatchers.isDisabled());
         // end backward
@@ -278,8 +283,11 @@ public class ControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         final Button previousButton = mainView.getPreviousButton();
-        robot.clickOn(previousButton)
-                .clickOn(previousButton);
+        robot.clickOn(previousButton);
+        waitUntilCurrentImageIsLoaded();
+
+        robot.clickOn(previousButton);
+        waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
         final List<TreeItem<SelectionRectangle>> categoryList = mainView.getProjectSidePanel().getExplorerView().getRoot().getChildren();
@@ -309,6 +317,12 @@ public class ControllerTest extends ApplicationTest {
 
         verifyThat(actualRectangle, CoreMatchers.equalTo(expectedRectangle));
         verifyThat(actualRectangle, NodeMatchers.isVisible());
+
+        // Check if rectangle is fully loaded
+        verifyThat(actualRectangle.getX(), CoreMatchers.not(Double.NaN));
+        verifyThat(actualRectangle.getY(), CoreMatchers.not(Double.NaN));
+        verifyThat(actualRectangle.getWidth(), CoreMatchers.not(Double.NaN));
+        verifyThat(actualRectangle.getHeight(), CoreMatchers.not(Double.NaN));
     }
 
 

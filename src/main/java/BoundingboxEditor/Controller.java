@@ -1,10 +1,16 @@
 package BoundingboxEditor;
 
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.geometry.Point2D;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -15,12 +21,11 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -59,15 +64,15 @@ public class Controller {
 
         final File imageFolder = imageFolderChooser.showDialog(stage);
 
-        if(imageFolder != null){
+        if(imageFolder != null) {
             updateViewFromDirectory(imageFolder);
         }
     }
 
     public void onRegisterSaveAction(ActionEvent event) {
         if(view.getImageSelectionRectangles() == null || view.getImageSelectionRectangles().isEmpty()
-                || view.getImageSelectionRectangles().stream().anyMatch((item) -> item == null || item.isEmpty())){
-            view.displayErrorAlert("Save Error", null, "There are no Bounding Boxes to save.");
+                || view.getImageSelectionRectangles().stream().allMatch((item) -> item == null || item.isEmpty())) {
+            view.displayErrorAlert("Save Error", null, "There are no bounding-box annotations to save.");
             return;
         }
 
@@ -77,36 +82,56 @@ public class Controller {
         final File saveDirectory = directoryChooser.showDialog(stage);
 
         if(saveDirectory != null) {
-            if(view.getSelectionRectangle().isVisible()) {
-                saveCurrentBoundingBox();
-            }
+            Service<Void> saveService = new Service<>() {
+                @Override
+                protected Task<Void> createTask() {
+                    return new Task<>() {
+                        @Override
+                        protected Void call() throws Exception {
+                            final List<ImageAnnotationDataElement> imageAnnotations = createImageAnnotations();
+                            final ImageAnnotationsSaver saver = new ImageAnnotationsSaver(ImageAnnotationsSaveStrategy.SaveStrategy.PASCAL_VOC);
+                            // https://stackoverflow.com/questions/34357005/javafx-task-update-progress-from-a-method
+                            saver.save(imageAnnotations, Paths.get(saveDirectory.getPath()));
+                            return null;
+                        }
+                    };
+                }
+            };
 
-            try {
-                model.writeBoundingBoxDataToFile(saveDirectory);
-            } catch(IOException e) {
+            try{
+                saveService.start();
+            }catch(Exception e) {
                 // Message text should wrap around.
                 view.displayErrorAlert(SAVE_BOUNDING_BOX_DATA_ERROR_TITLE, SAVE_BOUNDING_BOX_DATA_ERROR_HEADER,
                         e.getMessage());
             }
+
+            saveService.setOnSucceeded(event1 -> {
+                System.out.println("Successfully Saved");
+                view.getBottomLabel().setText("Saved Successfully");
+            });
         }
     }
 
     public void onRegisterNextAction(ActionEvent event) {
         // cancel image loading when clicking next
         // button while the image has not been loaded completely
-        view.getCurrentImage().cancel();
-        view.getBoundingBoxTreeViewRoot().getChildren().clear();
-        //view.getSelectionRectangleList().clear();
-        model.incrementFileIndex();
+        if(!view.getImagePaneView().getProgressIndicator().isVisible()) {
+            view.getBoundingBoxTreeViewRoot().getChildren().clear();
+            //view.getSelectionRectangleList().clear();
+            model.incrementFileIndex();
+        }
+
     }
 
     public void onRegisterPreviousAction(ActionEvent event) {
         // cancel image loading when clicking previous
         // button while the image has not been loaded completely
-        view.getCurrentImage().cancel();
-        view.getBoundingBoxTreeViewRoot().getChildren().clear();
-        //view.getSelectionRectangleList().clear();
-        model.decrementFileIndex();
+        if(!view.getImagePaneView().getProgressIndicator().isVisible()) {
+            view.getBoundingBoxTreeViewRoot().getChildren().clear();
+            //view.getSelectionRectangleList().clear();
+            model.decrementFileIndex();
+        }
     }
 
     public void onRegisterFitWindowAction(ActionEvent event) {
@@ -146,7 +171,8 @@ public class Controller {
                 !view.getBoundingBoxItemTableView().getSelectionModel().isEmpty()) {
             SelectionRectangle rectangle = view.getSelectionRectangle();
             BoundingBoxCategory selectedBoundingBox = view.getBoundingBoxItemTableView().getSelectionModel().getSelectedItem();
-            SelectionRectangle newRectangle = new SelectionRectangle(selectedBoundingBox);
+            ImageMetaData imageMetaData = ImageMetaData.fromImage(view.getCurrentImage());
+            SelectionRectangle newRectangle = new SelectionRectangle(selectedBoundingBox, imageMetaData);
             newRectangle.setXYWH(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
             newRectangle.setVisible(true);
             newRectangle.setStroke(rectangle.getStroke());
@@ -211,6 +237,36 @@ public class Controller {
         return view;
     }
 
+    public void loadSelectionRectangleList() {
+        Image newImage = view.getCurrentImage();
+        newImage.progressProperty().removeListener(this::fullProgressListener);
+        newImage.progressProperty().addListener(this::fullProgressListener);
+    }
+
+    public void fullProgressListener(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+        if(newValue.doubleValue() == 1.0) {
+            view.getImagePaneView().removeSelectionRectanglesFromChildren(view.getSelectionRectangleList());
+            final ObservableList<SelectionRectangle> loadedSelectionRectangles = view.getImageSelectionRectangles().get(model.fileIndexProperty().get());
+            if(loadedSelectionRectangles == null) {
+                // Create a new empty list of rectangles
+                final ObservableList<SelectionRectangle> newRectangles = FXCollections.observableArrayList();
+                view.getImageSelectionRectangles().set(model.fileIndexProperty().get(), newRectangles);
+
+                // Set the newly created list as the current working list
+                view.setSelectionRectangleList(newRectangles);
+
+                // Setup the listeners for add/remove functionality
+                view.setSelectionRectangleListListener();
+            } else {
+                // Set the loaded list as the current working list
+                view.getImagePaneView().addSelectionRectanglesAsChildren(loadedSelectionRectangles);
+                view.setSelectionRectangleList(loadedSelectionRectangles);
+                // Add the loaded rectangles to the scenegraph and the explorer tree
+                view.getProjectSidePanel().getExplorerView().addTreeItemsFromSelectionRectangles(loadedSelectionRectangles);
+            }
+        }
+    }
+
     void updateViewFromDirectory(final File selectedDirectory) {
         // clear current selection rectangles when new folder is loaded
         view.setSelectionRectangleListListener();
@@ -230,7 +286,7 @@ public class Controller {
         view.getProjectSidePanel().setVisible(true);
         view.getProjectSidePanel().setManaged(true);
 
-        view.getImagePaneView().resetSelectionRectangleDatabase(model.getFileListSizeBinding().get());
+        view.getImagePaneView().resetSelectionRectangleDatabase(model.fileListSizeProperty().get());
 
         view.getImageSelectionRectangles().set(model.fileIndexProperty().get(), FXCollections.observableArrayList());
         view.setSelectionRectangleList(view.getImageSelectionRectangles().get(model.fileIndexProperty().get()));
@@ -245,10 +301,17 @@ public class Controller {
     private void setModelListeners() {
         model.fileIndexProperty().addListener((value, oldValue, newValue) -> {
             view.setImageView(model.getCurrentImage());
-            stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION);
-            view.loadSelectionRectangleList(newValue.intValue());
-            view.getBottomLabel().setText(Integer.toString(view.getImagePaneView().getChildren().size()));
+            stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME_EXTENSION);
+            loadSelectionRectangleList();
+            view.getBottomLabel().setText(model.getCurrentImageFilePath());
         });
+
+        view.getTopPanel()
+                .getIndexLabel()
+                .textProperty()
+                .bind(model.fileIndexProperty().add(1).asString()
+                        .concat(" | ")
+                        .concat(model.fileListSizeProperty().asString()));
 
         // Synchronizes name hashset with bounding box category list when items are deleted.
         // TODO: This should also work when changing names in existing categories,
@@ -262,9 +325,15 @@ public class Controller {
 
     }
 
-    private void saveCurrentBoundingBox() {
-        final String currentFilename = Utils.filenameFromUrl(model.getCurrentImageFilePath());
-        model.getBoundingBoxData().put(currentFilename,
-                view.getSelectionRectangle().getScaledLocalCoordinatesInSiblingImage(view.getImageView()));
+    private List<ImageAnnotationDataElement> createImageAnnotations(){
+        final List<ImageAnnotationDataElement> imageAnnotations = new ArrayList<>();
+
+        view.getImageSelectionRectangles().forEach(imageSelectionRectangles -> {
+            if(imageSelectionRectangles != null) {
+                imageAnnotations.add(ImageAnnotationDataElement.fromSelectionRectangles(imageSelectionRectangles));
+            }
+        });
+
+        return imageAnnotations;
     }
 }

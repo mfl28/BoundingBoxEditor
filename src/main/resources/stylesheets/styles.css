@@ -163,6 +163,7 @@
 
 .selectionRectangle {
     -fx-fill: transparent;
+    -fx-stroke-width: 2px;
 }
 
 /* navigation bar */
@@ -417,7 +418,6 @@
 }
 
 .bounding-box-name-text-field {
-    /*-fx-max-width: 100px;*/
 }
 
 .bounding-box-color-picker {
@@ -426,8 +426,6 @@
 }
 
 .bounding-box-tree-view {
-    /*-fx-max-width: 200px;*/
-    /*-fx-max-height: 300px;*/
     -fx-background-insets: 0;
     -fx-background-color: transparent;
 }
@@ -512,10 +510,6 @@
 }
 
 .toggle-button:hover {
-    -fx-background-color: -base-highlight-color;
-}
-
-.toggle-button:selected {
     -fx-background-color: -base-highlight-color;
 }
 

@@ -1,37 +1,50 @@
 package BoundingboxEditor;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class ImageAnnotationDataElement {
-    private final Path imagePath;
-    private final double imageWidth;
-    private final double imageHeight;
-    private final double imageDepth;
+    private final ImageMetaData imageMetaData;
     private final List<BoundingBoxElement> boundingBoxes;
 
-    public ImageAnnotationDataElement(final Path imagePath, double imageWidth, double imageHeight, double imageDepth, final List<BoundingBoxElement> boundingBoxes) {
-        this.imagePath = imagePath;
-        this.imageWidth = imageWidth;
-        this.imageHeight = imageHeight;
-        this.imageDepth = imageDepth;
+    public static ImageAnnotationDataElement fromSelectionRectangles(final Collection<SelectionRectangle> selectionRectangles){
+        if(selectionRectangles.isEmpty()) {
+            return null;
+        }
+
+        final List<BoundingBoxElement> boundingBoxElements = new ArrayList<>(selectionRectangles.size());
+
+        for(SelectionRectangle item : selectionRectangles){
+            boundingBoxElements.add(BoundingBoxElement.fromSelectionRectangle(item));
+        }
+
+        return new ImageAnnotationDataElement(selectionRectangles.iterator().next().getImageMetaData(), boundingBoxElements);
+
+    }
+
+    private ImageAnnotationDataElement(final ImageMetaData imageMetaData, final List<BoundingBoxElement> boundingBoxes) {
+        this.imageMetaData = imageMetaData;
         this.boundingBoxes = boundingBoxes;
     }
 
     public Path getImagePath() {
-        return imagePath;
+        return Paths.get(imageMetaData.getFilePath().replace("file:/C:", ""));
     }
 
     public double getImageWidth() {
-        return imageWidth;
+        return imageMetaData.getImageWidth();
     }
 
     public double getImageHeight() {
-        return imageHeight;
+        return imageMetaData.getImageHeight();
     }
 
     public double getImageDepth() {
-        return imageDepth;
+        return imageMetaData.getImageDepth();
     }
 
     public List<BoundingBoxElement> getBoundingBoxes() {
@@ -39,10 +52,10 @@ public class ImageAnnotationDataElement {
     }
 
     public String getContainingFolderName() {
-        return imagePath.getParent().toString();
+        return getImagePath().getParent().toString();
     }
 
     public String getImageFileName() {
-        return imagePath.getFileName().toString();
+        return getImagePath().getFileName().toString();
     }
 }

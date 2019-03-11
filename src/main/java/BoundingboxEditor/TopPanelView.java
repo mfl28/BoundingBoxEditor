@@ -26,6 +26,7 @@ public class TopPanelView extends VBox implements View {
     private final MenuItem viewFitWindowItem = new MenuItem(FIT_WINDOW_TEXT);
     private final CheckMenuItem viewShowSettingsItem = new CheckMenuItem(SHOW_SETTINGS_BAR_TEXT);
     private final Button nextButton = Utils.createIconButton(getClass().getResource(NEXT_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
+    private final Label indexLabel = new Label();
     private final Button previousButton = Utils.createIconButton(getClass().getResource(PREVIOUS_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
     private final ToolBar navigationBar = createNavigationBar();
 
@@ -57,6 +58,10 @@ public class TopPanelView extends VBox implements View {
         return viewShowSettingsItem;
     }
 
+    public Label getIndexLabel() {
+        return indexLabel;
+    }
+
     @Override
     public void connectToController(final Controller controller) {
         fileOpenFolderItem.setOnAction(controller::onRegisterOpenFolderAction);
@@ -83,7 +88,7 @@ public class TopPanelView extends VBox implements View {
 
     private ToolBar createNavigationBar() {
         final ToolBar toolBar = new ToolBar();
-        toolBar.getItems().addAll(Utils.createHSpacer(), previousButton, nextButton, Utils.createHSpacer());
+        toolBar.getItems().addAll(Utils.createHSpacer(), previousButton, indexLabel, nextButton, Utils.createHSpacer());
         toolBar.setVisible(false);
         //FIXME: offset for image controlls, should probably be dynamic
         toolBar.setPadding(new Insets(0, 0, 0, 260));

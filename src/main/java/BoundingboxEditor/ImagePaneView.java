@@ -26,7 +26,7 @@ public class ImagePaneView extends StackPane implements View {
     private ImageView imageView = new ImageView();
     private ObservableList<SelectionRectangle> selectionRectangleList = FXCollections.observableArrayList();
     private List<ObservableList<SelectionRectangle>> imageSelectionRectangles;
-    private SelectionRectangle selectionRectangle = new SelectionRectangle(null);
+    private SelectionRectangle selectionRectangle = new SelectionRectangle(null, null);
     //FIXME: should be in model
     private Image currentImage;
     private ObjectProperty<Image> currentImageObject = new SimpleObjectProperty<>();

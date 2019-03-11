@@ -1,14 +1,13 @@
 package BoundingboxEditor;
 
+import com.sun.javafx.iio.ImageMetadata;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.IntegerBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import javafx.scene.image.Image;
 
 import java.io.File;
@@ -28,11 +27,12 @@ public class Model {
     private static final int MAX_DIRECTORY_DEPTH = 1;
     private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
 
-    private ObservableList<File> imageFileList;
+    private ObservableList<File> imageFileList = FXCollections.observableArrayList();
     private ObservableList<BoundingBoxCategory> boundingBoxCategories = FXCollections.observableArrayList();
-    private ObservableMap<String, List<Double>> boundingBoxData = FXCollections.observableMap(new LinkedHashMap<>());
+    private final ObservableList<ImageAnnotationDataElement> imageAnnotations = FXCollections.observableArrayList();
+    private final ObservableList<ImageMetaData> imageMetaData = FXCollections.observableArrayList();
     private IntegerProperty fileIndex = new SimpleIntegerProperty(0);
-    private IntegerBinding imageFileListSize;
+    private IntegerProperty imageFileListSize = new SimpleIntegerProperty(0);
     private BooleanBinding hasNextFile;
     private BooleanBinding hasPreviousFile;
     private ObjectBinding<File> currentFile;
@@ -59,7 +59,7 @@ public class Model {
         }
 
         fileIndex.set(0);
-        imageFileListSize = Bindings.size(imageFileList);
+        imageFileListSize.bind(Bindings.size(imageFileList));
         hasNextFile = fileIndex.lessThan(imageFileListSize.subtract(1));
         hasPreviousFile = fileIndex.greaterThan(0);
         currentFile = Bindings.valueAt(imageFileList, fileIndex);
@@ -85,7 +85,7 @@ public class Model {
         fileIndex.set(fileIndex.get() - 1);
     }
 
-    public IntegerBinding getFileListSizeBinding() {
+    public IntegerProperty fileListSizeProperty() {
         return imageFileListSize;
     }
 
@@ -95,10 +95,6 @@ public class Model {
 
     public BooleanBinding hasPreviousFileBinding() {
         return hasPreviousFile;
-    }
-
-    public ObservableMap<String, List<Double>> getBoundingBoxData() {
-        return boundingBoxData;
     }
 
     public Boolean isHasNextFile() {
@@ -132,12 +128,8 @@ public class Model {
         return imageFileList;
     }
 
-    void writeBoundingBoxDataToFile(File file) throws IOException {
-        try(PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
-            new Thread(() ->
-                    boundingBoxData.forEach((key, value) -> printWriter.println(key + ", " +
-                            value.stream().map(numberFormat::format).collect(Collectors.joining(", "))))).start();
-        }
+    public ObservableList<ImageAnnotationDataElement> getImageAnnotations() {
+        return imageAnnotations;
     }
 
     private Image getImageFromFile(File file) {

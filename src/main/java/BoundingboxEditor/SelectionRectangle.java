@@ -5,6 +5,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -27,9 +28,12 @@ public class SelectionRectangle extends Rectangle {
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
     private final Property<Bounds> confinementBounds = new SimpleObjectProperty<>();
     private BoundingBoxCategory boundingBoxCategory;
+    private ImageMetaData imageMetaData;
 
-    public SelectionRectangle(BoundingBoxCategory category) {
+
+    public SelectionRectangle(BoundingBoxCategory category, ImageMetaData imageMetaData) {
         this.getStyleClass().add(SELECTION_RECTANGLE_STYLE);
+        this.imageMetaData = imageMetaData;
         boundingBoxCategory = category;
         setVisible(false);
 
@@ -48,21 +52,27 @@ public class SelectionRectangle extends Rectangle {
         return boundingBoxCategory;
     }
 
-    public List<Double> getScaledLocalCoordinatesInSiblingImage(ImageView sibling) {
-        final Bounds localBounds = sibling.parentToLocal(this.getBoundsInParent());
-        final Image image = sibling.getImage();
-        double scaleWidth = image.getWidth();
-        double scaleHeight = image.getHeight();
-        double topLeftX = Utils.clamp(localBounds.getMinX() * scaleWidth / localBounds.getWidth(),
-                0, scaleWidth);
-        double topLeftY = Utils.clamp(localBounds.getMinY() * scaleHeight / localBounds.getHeight(),
-                0, scaleHeight);
-        double bottomRightX = Utils.clamp(localBounds.getMaxX() * scaleWidth / localBounds.getWidth(),
-                0, scaleWidth);
-        double bottomRightY = Utils.clamp(localBounds.getMaxY() * scaleHeight / localBounds.getHeight(),
-                0, scaleHeight);
+    public void setImageMetaData(ImageMetaData imageMetaData) {
+        this.imageMetaData = imageMetaData;
+    }
 
-        return Arrays.asList(topLeftX, topLeftY, bottomRightX, bottomRightY);
+    public ImageMetaData getImageMetaData() {
+        return imageMetaData;
+    }
+
+    public Bounds getImageRelativeBounds(){
+        final Bounds imageViewBounds = confinementBounds.getValue();
+        final Bounds selectionRectangleBounds = this.getBoundsInParent();
+
+        double imageWidth = imageMetaData.getImageWidth();
+        double imageHeight = imageMetaData.getImageHeight();
+
+        double xMinRelative = selectionRectangleBounds.getMinX() * imageWidth / imageViewBounds.getWidth();
+        double yMinRelative = selectionRectangleBounds.getMinY() * imageHeight / imageViewBounds.getHeight();
+        double widthRelative = selectionRectangleBounds.getWidth() * imageWidth / imageViewBounds.getWidth();
+        double heightRelative = selectionRectangleBounds.getHeight() * imageHeight / imageViewBounds.getHeight();
+
+        return new BoundingBox(xMinRelative, yMinRelative, widthRelative, heightRelative);
     }
 
     public void confineTo(final ReadOnlyObjectProperty<Bounds> bounds) {
@@ -88,6 +98,13 @@ public class SelectionRectangle extends Rectangle {
         this.setY(y);
         this.setWidth(w);
         this.setHeight(h);
+    }
+
+    public Group asUnManagedGroup(){
+        // TODO: Maybe cache this
+        final Group group = new Group(this.getNodes());
+        group.setManaged(false);
+        return group;
     }
 
     public List<Node> getNodes() {
