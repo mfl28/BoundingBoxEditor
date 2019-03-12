@@ -1,12 +1,13 @@
 package BoundingboxEditor;
 
+import javafx.event.EventType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.paint.Color;
 
-import java.util.List;
+import java.awt.event.MouseEvent;
 
 class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
     private static final String DELETE_CONTEXT_MENU_STYLE = "delete-context-menu";
@@ -30,9 +31,9 @@ class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
     @Override
     protected void updateItem(SelectionRectangle newSelectionRectangle, boolean empty) {
         super.updateItem(newSelectionRectangle, empty);
+        this.textProperty().unbind();
 
         if(empty || newSelectionRectangle == null) {
-            this.textProperty().unbind();
             this.setText(null);
             this.setGraphic(null);
             this.setContextMenu(null);
@@ -42,13 +43,14 @@ class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
         this.setContextMenu(contextMenu);
         final TreeItem<SelectionRectangle> treeItem = getTreeItem();
 
-        setGraphic(treeItem.getGraphic());
+        this.setGraphic(treeItem.getGraphic());
 
         if(!textProperty().isBound()) {
             if(treeItem instanceof CategoryTreeItem) {
                 textProperty().bind(((CategoryTreeItem) treeItem).getBoundingBoxCategory().nameProperty());
             } else if(treeItem instanceof SelectionRectangleTreeItem) {
-                textProperty().bind(newSelectionRectangle.getBoundingBoxCategory().nameProperty().concat(((SelectionRectangleTreeItem) treeItem).getId()));
+                SelectionRectangleTreeItem selectionRectangleTreeItem = (SelectionRectangleTreeItem) treeItem;
+                textProperty().bind(selectionRectangleTreeItem.getValue().getBoundingBoxCategory().nameProperty().concat(selectionRectangleTreeItem.getId()));
             }
         }
 
@@ -59,10 +61,9 @@ class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
             if(!this.isEmpty()) {
                 final TreeItem<SelectionRectangle> treeItem = this.getTreeItem();
 
-                if(treeItem instanceof SelectionRectangleTreeItem){
+                if(treeItem instanceof SelectionRectangleTreeItem) {
                     treeItem.getValue().fillOpaque();
-                }
-                else {
+                } else {
                     treeItem.getChildren().forEach(child -> child.getValue().fillOpaque());
                 }
             }
@@ -72,10 +73,9 @@ class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
             if(!this.isEmpty()) {
                 final TreeItem<SelectionRectangle> treeItem = this.getTreeItem();
 
-                if(treeItem instanceof SelectionRectangleTreeItem){
+                if(treeItem instanceof SelectionRectangleTreeItem) {
                     treeItem.getValue().setFill(Color.TRANSPARENT);
-                }
-                else {
+                } else {
                     treeItem.getChildren().forEach(child -> child.getValue().setFill(Color.TRANSPARENT));
                 }
             }

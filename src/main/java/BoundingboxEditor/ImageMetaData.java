@@ -1,11 +1,6 @@
 package BoundingboxEditor;
 
-import com.sun.javafx.iio.ImageMetadata;
 import javafx.scene.image.Image;
-
-import javax.imageio.ImageReader;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class ImageMetaData {
     private String filePath;
@@ -13,15 +8,15 @@ public class ImageMetaData {
     private double imageHeight;
     private double imageDepth;
 
-    public static ImageMetaData fromImage(final Image image){
-        return new ImageMetaData(image.getUrl(), image.getWidth(), image.getHeight(), 0);
-    }
-
     private ImageMetaData(String filePath, double imageWidth, double imageHeight, double imageDepth) {
         this.filePath = filePath;
         this.imageHeight = imageHeight;
         this.imageWidth = imageWidth;
         this.imageDepth = imageDepth;
+    }
+
+    public static ImageMetaData fromImage(final Image image) {
+        return new ImageMetaData(image.getUrl(), image.getWidth(), image.getHeight(), 0);
     }
 
     public double getImageWidth() {

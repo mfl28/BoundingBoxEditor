@@ -513,7 +513,40 @@
     -fx-background-color: -base-highlight-color;
 }
 
+.image-explorer-side-panel{
+    -fx-background-color: -base-background-color;
+    -fx-pref-width: 300px;
+}
 
+.list-view{
+    -fx-background-color: transparent;
+    -fx-color: -base-background-color;
+}
 
+.list-view:focused {
+    -fx-background-color: transparent;
+}
 
+.list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -base-font-color;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+}
+
+.list-view .list-cell:empty {
+    -fx-opacity: 0;
+}
+
+.list-view .list-cell:selected,
+.list-view .list-cell:selected {
+    -fx-background-color: -base-colorful-component-color;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+}
+
+.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:focused{
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+}
 

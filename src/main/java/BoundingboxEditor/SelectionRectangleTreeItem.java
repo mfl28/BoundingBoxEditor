@@ -11,8 +11,8 @@ class SelectionRectangleTreeItem extends TreeItem<SelectionRectangle> {
         super(selectionRectangle);
         setGraphic(toggleVisibilityIcon);
 
-        toggleVisibilityIcon.fillProperty().bind(selectionRectangle.getBoundingBoxCategory().colorProperty());
-        toggleVisibilityIcon.opacityProperty().greaterThan(0.5).addListener(((observable, oldValue, newValue) -> selectionRectangle.setVisible(newValue)));
+        toggleVisibilityIcon.fillProperty().bind(this.getValue().getBoundingBoxCategory().colorProperty());
+        toggleVisibilityIcon.opacityProperty().addListener(((observable, oldValue, newValue) -> this.getValue().setVisible(newValue.doubleValue() > 0.5)));
 
         toggleVisibilityIcon.setOnMousePressed(event -> toggleVisibilityIcon.setOpacity(toggleVisibilityIcon.getOpacity() > 0.5 ? 0.3 : 1.0));
     }
@@ -24,4 +24,5 @@ class SelectionRectangleTreeItem extends TreeItem<SelectionRectangle> {
     public void setId(int id) {
         this.id = id;
     }
+
 }

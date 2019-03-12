@@ -13,10 +13,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.Collection;
-import java.util.function.BiConsumer;
 
 public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
 
@@ -68,7 +66,6 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
 
         String fileName = dataElement.getImageFileName();
         String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf("."));
-        System.out.println(fileNameWithoutExtension);
 
         File outputFile = new File(path.toString().concat("\\").concat(fileNameWithoutExtension).concat(XML_FILE_EXTENSION));
 

@@ -9,7 +9,6 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.geometry.Point2D;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -98,16 +97,15 @@ public class Controller {
                 }
             };
 
-            try{
+            try {
                 saveService.start();
-            }catch(Exception e) {
+            } catch(Exception e) {
                 // Message text should wrap around.
                 view.displayErrorAlert(SAVE_BOUNDING_BOX_DATA_ERROR_TITLE, SAVE_BOUNDING_BOX_DATA_ERROR_HEADER,
                         e.getMessage());
             }
 
             saveService.setOnSucceeded(event1 -> {
-                System.out.println("Successfully Saved");
                 view.getBottomLabel().setText("Saved Successfully");
             });
         }
@@ -245,7 +243,10 @@ public class Controller {
 
     public void fullProgressListener(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
         if(newValue.doubleValue() == 1.0) {
+            // reset visibility status to visible
+            view.getSelectionRectangleList().forEach(item -> item.setVisible(true));
             view.getImagePaneView().removeSelectionRectanglesFromChildren(view.getSelectionRectangleList());
+            view.getProjectSidePanel().getExplorerView().getRoot().getChildren().clear();
             final ObservableList<SelectionRectangle> loadedSelectionRectangles = view.getImageSelectionRectangles().get(model.fileIndexProperty().get());
             if(loadedSelectionRectangles == null) {
                 // Create a new empty list of rectangles
@@ -296,6 +297,8 @@ public class Controller {
         stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME_EXTENSION);
         view.getBoundingBoxItemTableView().setItems(model.getBoundingBoxCategories());
         view.getBoundingBoxItemTableView().getSelectionModel().selectFirst();
+
+        view.getImageExplorerPanel().setImageGalleryItems(model.getImageFileList());
     }
 
     private void setModelListeners() {
@@ -304,6 +307,7 @@ public class Controller {
             stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME_EXTENSION);
             loadSelectionRectangleList();
             view.getBottomLabel().setText(model.getCurrentImageFilePath());
+            view.getImageExplorerPanel().getImageGallery().getSelectionModel().select(newValue.intValue());
         });
 
         view.getTopPanel()
@@ -323,9 +327,12 @@ public class Controller {
             }
         });
 
+        view.getImageExplorerPanel().getImageGallery().getSelectionModel().selectedIndexProperty().addListener(((observable, oldValue, newValue) ->
+                model.fileIndexProperty().set(newValue.intValue())));
+
     }
 
-    private List<ImageAnnotationDataElement> createImageAnnotations(){
+    private List<ImageAnnotationDataElement> createImageAnnotations() {
         final List<ImageAnnotationDataElement> imageAnnotations = new ArrayList<>();
 
         view.getImageSelectionRectangles().forEach(imageSelectionRectangles -> {
@@ -336,4 +343,5 @@ public class Controller {
 
         return imageAnnotations;
     }
+
 }

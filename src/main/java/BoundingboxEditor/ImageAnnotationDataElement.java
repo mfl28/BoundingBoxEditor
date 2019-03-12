@@ -4,31 +4,30 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 public class ImageAnnotationDataElement {
     private final ImageMetaData imageMetaData;
     private final List<BoundingBoxElement> boundingBoxes;
 
-    public static ImageAnnotationDataElement fromSelectionRectangles(final Collection<SelectionRectangle> selectionRectangles){
+    private ImageAnnotationDataElement(final ImageMetaData imageMetaData, final List<BoundingBoxElement> boundingBoxes) {
+        this.imageMetaData = imageMetaData;
+        this.boundingBoxes = boundingBoxes;
+    }
+
+    public static ImageAnnotationDataElement fromSelectionRectangles(final Collection<SelectionRectangle> selectionRectangles) {
         if(selectionRectangles.isEmpty()) {
             return null;
         }
 
         final List<BoundingBoxElement> boundingBoxElements = new ArrayList<>(selectionRectangles.size());
 
-        for(SelectionRectangle item : selectionRectangles){
+        for(SelectionRectangle item : selectionRectangles) {
             boundingBoxElements.add(BoundingBoxElement.fromSelectionRectangle(item));
         }
 
         return new ImageAnnotationDataElement(selectionRectangles.iterator().next().getImageMetaData(), boundingBoxElements);
 
-    }
-
-    private ImageAnnotationDataElement(final ImageMetaData imageMetaData, final List<BoundingBoxElement> boundingBoxes) {
-        this.imageMetaData = imageMetaData;
-        this.boundingBoxes = boundingBoxes;
     }
 
     public Path getImagePath() {

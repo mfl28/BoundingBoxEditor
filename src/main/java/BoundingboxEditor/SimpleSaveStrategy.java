@@ -2,7 +2,6 @@ package BoundingboxEditor;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.function.BiConsumer;
 
 public class SimpleSaveStrategy implements ImageAnnotationsSaveStrategy {
     @Override

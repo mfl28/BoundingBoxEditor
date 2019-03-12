@@ -1,13 +1,11 @@
 package BoundingboxEditor;
 
-import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import jdk.jshell.execution.Util;
 
 import java.util.Random;
 
@@ -149,15 +147,15 @@ public class ProjectSidePanelView extends VBox implements View {
 
         visibilityToggle.selectedProperty().addListener(((observable, oldValue, newValue) -> {
             // TODO: SHould reset appropriately
-                    if(!explorerView.getRoot().getChildren().isEmpty()){
-                        visibilityToggle.setGraphic(newValue ? hideImageView : showImageView);
-                    }
-                    explorerView.getRoot().getChildren().forEach((child) -> {
-                        child.getGraphic().setOpacity(newValue ? 0.3 : 1.0);
-                        child.getChildren().forEach((leaf) -> {
-                            leaf.getGraphic().setOpacity(newValue ? 0.3 : 1.0);
-                        });
-                    });
+            if(!explorerView.getRoot().getChildren().isEmpty()) {
+                visibilityToggle.setGraphic(newValue ? hideImageView : showImageView);
+            }
+            explorerView.getRoot().getChildren().forEach((child) -> {
+                child.getGraphic().setOpacity(newValue ? 0.3 : 1.0);
+                child.getChildren().forEach((leaf) -> {
+                    leaf.getGraphic().setOpacity(newValue ? 0.3 : 1.0);
+                });
+            });
         }));
 
         // FIXME: Flickers when changing between images that contain bounding box annotations
@@ -166,7 +164,7 @@ public class ProjectSidePanelView extends VBox implements View {
         expansionToggle.disableProperty().bind(explorerView.getRoot().leafProperty());
 
         expansionToggle.selectedProperty().addListener(((observable, oldValue, newValue) -> {
-            if(!explorerView.getRoot().isLeaf()){
+            if(!explorerView.getRoot().isLeaf()) {
                 expansionToggle.setGraphic(newValue ? expandImageView : collapseImageView);
             }
             explorerView.getRoot().getChildren().forEach(child -> child.setExpanded(newValue));

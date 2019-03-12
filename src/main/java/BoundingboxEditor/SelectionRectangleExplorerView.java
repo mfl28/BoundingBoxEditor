@@ -5,7 +5,6 @@ import javafx.scene.control.TreeView;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-import java.util.Collection;
 import java.util.List;
 
 public class SelectionRectangleExplorerView extends TreeView<SelectionRectangle> implements View {
@@ -22,8 +21,8 @@ public class SelectionRectangleExplorerView extends TreeView<SelectionRectangle>
         this.getStyleClass().add(BOUNDING_BOX_TREE_VIEW_STYLE);
     }
 
-    public void addTreeItemsFromSelectionRectangles(Iterable<? extends SelectionRectangle> selectionRectangles){
-        for(SelectionRectangle selectionRectangle : selectionRectangles){
+    public void addTreeItemsFromSelectionRectangles(Iterable<? extends SelectionRectangle> selectionRectangles) {
+        for(SelectionRectangle selectionRectangle : selectionRectangles) {
             SelectionRectangleTreeItem treeItem = new SelectionRectangleTreeItem(selectionRectangle);
 
             final List<TreeItem<SelectionRectangle>> categoryItems = root.getChildren();

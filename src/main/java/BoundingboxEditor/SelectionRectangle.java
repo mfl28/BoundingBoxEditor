@@ -7,8 +7,6 @@ import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -52,15 +50,15 @@ public class SelectionRectangle extends Rectangle {
         return boundingBoxCategory;
     }
 
-    public void setImageMetaData(ImageMetaData imageMetaData) {
-        this.imageMetaData = imageMetaData;
-    }
-
     public ImageMetaData getImageMetaData() {
         return imageMetaData;
     }
 
-    public Bounds getImageRelativeBounds(){
+    public void setImageMetaData(ImageMetaData imageMetaData) {
+        this.imageMetaData = imageMetaData;
+    }
+
+    public Bounds getImageRelativeBounds() {
         final Bounds imageViewBounds = confinementBounds.getValue();
         final Bounds selectionRectangleBounds = this.getBoundsInParent();
 
@@ -100,7 +98,7 @@ public class SelectionRectangle extends Rectangle {
         this.setHeight(h);
     }
 
-    public Group asUnManagedGroup(){
+    public Group asUnManagedGroup() {
         // TODO: Maybe cache this
         final Group group = new Group(this.getNodes());
         group.setManaged(false);
@@ -117,16 +115,6 @@ public class SelectionRectangle extends Rectangle {
         nodeList.addAll(resizeHandles);
 
         return nodeList;
-    }
-
-    // Testing
-    public void showBBData() {
-        System.out.println(Arrays.asList(getX(), getY(), getX() + getWidth(), getY() + getHeight()));
-    }
-
-    // Testing
-    public void showConfinement() {
-        System.out.println(confinementBounds.getValue());
     }
 
     public void setSelected(boolean selected) {

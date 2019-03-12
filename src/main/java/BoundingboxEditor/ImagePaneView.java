@@ -5,7 +5,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.CacheHint;
-import javafx.scene.Group;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -52,11 +51,11 @@ public class ImagePaneView extends StackPane implements View {
         setUpInternalListeners();
     }
 
-    public void removeSelectionRectanglesFromChildren(Iterable<? extends SelectionRectangle> selectionRectangles){
+    public void removeSelectionRectanglesFromChildren(Iterable<? extends SelectionRectangle> selectionRectangles) {
         selectionRectangles.forEach(item -> this.getChildren().removeAll(item.getNodes()));
     }
 
-    public void addSelectionRectanglesAsChildren(Iterable<? extends SelectionRectangle> selectionRectangles){
+    public void addSelectionRectanglesAsChildren(Iterable<? extends SelectionRectangle> selectionRectangles) {
         selectionRectangles.forEach(item -> this.getChildren().addAll(item.getNodes()));
     }
 
@@ -86,7 +85,7 @@ public class ImagePaneView extends StackPane implements View {
         });
     }
 
-    public void resetSelectionRectangleDatabase(int numItems){
+    public void resetSelectionRectangleDatabase(int numItems) {
         imageSelectionRectangles = new ArrayList<>(Collections.nCopies(numItems, null));
     }
 
@@ -118,7 +117,7 @@ public class ImagePaneView extends StackPane implements View {
         return currentImageObject.get();
     }
 
-    public ObjectProperty<Image> imageObjectProperty(){
+    public ObjectProperty<Image> imageObjectProperty() {
         return currentImageObject;
     }
 

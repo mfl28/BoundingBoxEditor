@@ -14,7 +14,7 @@ class CategoryTreeItem extends TreeItem<SelectionRectangle> {
         boundingBoxCategory = category;
         setGraphic(toggleVisibilityIcon);
 
-        toggleVisibilityIcon.fillProperty().bind(category.colorProperty());
+        toggleVisibilityIcon.fillProperty().bind(boundingBoxCategory.colorProperty());
 
         toggleVisibilityIcon.setOnMousePressed(event -> {
             for(TreeItem<SelectionRectangle> childItem : getChildren()) {

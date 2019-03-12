@@ -1,6 +1,5 @@
 package BoundingboxEditor;
 
-import com.sun.javafx.iio.ImageMetadata;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -11,14 +10,13 @@ import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class Model {
@@ -26,11 +24,10 @@ public class Model {
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
     private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
-
-    private ObservableList<File> imageFileList = FXCollections.observableArrayList();
-    private ObservableList<BoundingBoxCategory> boundingBoxCategories = FXCollections.observableArrayList();
     private final ObservableList<ImageAnnotationDataElement> imageAnnotations = FXCollections.observableArrayList();
     private final ObservableList<ImageMetaData> imageMetaData = FXCollections.observableArrayList();
+    private ObservableList<File> imageFileList = FXCollections.observableArrayList();
+    private ObservableList<BoundingBoxCategory> boundingBoxCategories = FXCollections.observableArrayList();
     private IntegerProperty fileIndex = new SimpleIntegerProperty(0);
     private IntegerProperty imageFileListSize = new SimpleIntegerProperty(0);
     private BooleanBinding hasNextFile;

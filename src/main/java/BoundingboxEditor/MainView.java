@@ -19,7 +19,8 @@ public class MainView extends BorderPane implements View {
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
 
     private final TopPanelView topPanel = new TopPanelView();
-    private final SettingsPanelView settingsPanel = new SettingsPanelView();
+    //private final SettingsPanelView settingsPanel = new SettingsPanelView();
+    private final ImageExplorerPanelView imageExplorerPanel = new ImageExplorerPanelView();
     private final ImagePaneView imagePaneView = new ImagePaneView();
     private final ProjectSidePanelView projectSidePanel = new ProjectSidePanelView();
     private final StatusPanelView statusPanel = new StatusPanelView();
@@ -27,7 +28,8 @@ public class MainView extends BorderPane implements View {
     public MainView() {
         this.setTop(topPanel);
         this.setCenter(imagePaneView);
-        this.setRight(settingsPanel);
+        //this.setRight(settingsPanel);
+        this.setRight(imageExplorerPanel);
         this.setLeft(projectSidePanel);
         this.setBottom(statusPanel);
 
@@ -127,6 +129,10 @@ public class MainView extends BorderPane implements View {
         imagePaneView.setImageSelectionRectangles(data);
     }
 
+    public ImageExplorerPanelView getImageExplorerPanel() {
+        return imageExplorerPanel;
+    }
+
     @Override
     public void connectToController(final Controller controller) {
         topPanel.connectToController(controller);
@@ -191,46 +197,46 @@ public class MainView extends BorderPane implements View {
     }
 
     private void setInternalBindingsAndListeners() {
+//
+//        final ColorAdjust colorAdjust = new ColorAdjust();
+//        colorAdjust.brightnessProperty().bind(settingsPanel.getBrightnessSlider().valueProperty());
+//        // FIXME: Throws exception when slider is used in case of no loaded image
+//        imagePaneView.getImageView().setEffect(colorAdjust);
+//
+//        // Make selection rectangle invisible and reset zoom-slider when the image changes.
+//        imagePaneView.getImageView().imageProperty().addListener((value, oldValue, newValue) -> {
+//            imagePaneView.getSelectionRectangle().setVisible(false);
+//            settingsPanel.getZoomSlider().setValue(ZOOM_SLIDER_DEFAULT);
+//        });
 
-        final ColorAdjust colorAdjust = new ColorAdjust();
-        colorAdjust.brightnessProperty().bind(settingsPanel.getBrightnessSlider().valueProperty());
-        // FIXME: Throws exception when slider is used in case of no loaded image
-        imagePaneView.getImageView().setEffect(colorAdjust);
 
-        // Make selection rectangle invisible and reset zoom-slider when the image changes.
-        imagePaneView.getImageView().imageProperty().addListener((value, oldValue, newValue) -> {
-            imagePaneView.getSelectionRectangle().setVisible(false);
-            settingsPanel.getZoomSlider().setValue(ZOOM_SLIDER_DEFAULT);
-        });
-
-
-        // no finished
-        settingsPanel.getZoomSlider().valueProperty().addListener((value, oldValue, newValue) -> {
-            final ImageView imageView = imagePaneView.getImageView();
-            final Image image = imageView.getImage();
-            final double delta = (newValue.doubleValue() - oldValue.doubleValue()) * 500;
-
-            final double newFitWidth = Utils.clamp(imageView.getFitWidth() + delta,
-                    Math.min(ZOOM_MIN_WINDOW_RATIO * imagePaneView.getWidth(), image.getWidth()),
-                    imagePaneView.getWidth() - 2 * IMAGE_PADDING);
-            final double newFitHeight = Utils.clamp(imageView.getFitHeight() + delta,
-                    Math.min(ZOOM_MIN_WINDOW_RATIO * imagePaneView.getHeight(), image.getHeight()),
-                    imagePaneView.getHeight() - 2 * IMAGE_PADDING);
-
-            imageView.setFitWidth(newFitWidth);
-            imageView.setFitHeight(newFitHeight);
-        });
-
-        // Reset brightnessSlider on Label double-click
-        settingsPanel.getBrightnessLabel().setOnMouseClicked(event -> {
-            if(event.getClickCount() == 2) {
-                settingsPanel.getBrightnessSlider().setValue(BRIGHTNESS_SLIDER_DEFAULT);
-            }
-        });
-
-        // To remove settingsToolbar when it is not visible.
-        settingsPanel.managedProperty().bind(settingsPanel.visibleProperty());
-        settingsPanel.visibleProperty().bind(topPanel.getViewShowSettingsItem().selectedProperty());
+//        // no finished
+//        settingsPanel.getZoomSlider().valueProperty().addListener((value, oldValue, newValue) -> {
+//            final ImageView imageView = imagePaneView.getImageView();
+//            final Image image = imageView.getImage();
+//            final double delta = (newValue.doubleValue() - oldValue.doubleValue()) * 500;
+//
+//            final double newFitWidth = Utils.clamp(imageView.getFitWidth() + delta,
+//                    Math.min(ZOOM_MIN_WINDOW_RATIO * imagePaneView.getWidth(), image.getWidth()),
+//                    imagePaneView.getWidth() - 2 * IMAGE_PADDING);
+//            final double newFitHeight = Utils.clamp(imageView.getFitHeight() + delta,
+//                    Math.min(ZOOM_MIN_WINDOW_RATIO * imagePaneView.getHeight(), image.getHeight()),
+//                    imagePaneView.getHeight() - 2 * IMAGE_PADDING);
+//
+//            imageView.setFitWidth(newFitWidth);
+//            imageView.setFitHeight(newFitHeight);
+//        });
+//
+//        // Reset brightnessSlider on Label double-click
+//        settingsPanel.getBrightnessLabel().setOnMouseClicked(event -> {
+//            if(event.getClickCount() == 2) {
+//                settingsPanel.getBrightnessSlider().setValue(BRIGHTNESS_SLIDER_DEFAULT);
+//            }
+//        });
+//
+//        // To remove settingsToolbar when it is not visible.
+//        settingsPanel.managedProperty().bind(settingsPanel.visibleProperty());
+//        settingsPanel.visibleProperty().bind(topPanel.getViewShowSettingsItem().selectedProperty());
 
         projectSidePanel.getSelectorView().getSelectionModel().selectedItemProperty().addListener((value, oldValue, newValue) -> {
             if(newValue != null) {

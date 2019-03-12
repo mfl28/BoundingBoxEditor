@@ -3,8 +3,6 @@ package BoundingboxEditor;
 import java.nio.file.Path;
 import java.security.InvalidParameterException;
 import java.util.Collection;
-import java.util.Optional;
-import java.util.function.BiConsumer;
 
 public interface ImageAnnotationsSaveStrategy {
     static ImageAnnotationsSaveStrategy createStrategy(final SaveStrategy saveStrategy) {
