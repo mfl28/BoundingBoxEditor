@@ -1,13 +1,10 @@
 package BoundingboxEditor;
 
-import javafx.event.EventType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.paint.Color;
-
-import java.awt.event.MouseEvent;
 
 class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
     private static final String DELETE_CONTEXT_MENU_STYLE = "delete-context-menu";

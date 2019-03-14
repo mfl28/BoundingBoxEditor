@@ -6,6 +6,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.paint.Color;
 
+import java.util.Objects;
+
 
 /**
  * A class representing the category (e.g. "Car", "Bus" etc.) of a bounding-box.
@@ -94,5 +96,10 @@ public class BoundingBoxCategory {
 
         final BoundingBoxCategory otherCategory = (BoundingBoxCategory) other;
         return otherCategory.getName().equals(this.getName()) && otherCategory.getColor().equals(this.getColor());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name.get(), color.get());
     }
 }

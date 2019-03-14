@@ -27,6 +27,7 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
 
         this.getStyleClass().add(TABLE_VIEW_STYLE);
         this.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        this.setFocusTraversable(false);
     }
 
     private TableColumn<BoundingBoxCategory, Color> createColorColumn() {
@@ -57,7 +58,7 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
         return deleteColumn;
     }
 
-    private class ColorTableCell extends TableCell<BoundingBoxCategory, Color> {
+    private static class ColorTableCell extends TableCell<BoundingBoxCategory, Color> {
 
         @Override
         protected void updateItem(Color item, boolean empty) {
@@ -75,9 +76,8 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
         }
     }
 
-    private class DeleteTableCell extends TableCell<BoundingBoxCategory, BoundingBoxCategory> {
-        private final Button deleteButton = new Button();
-        private final Region deleteIcon = new Region();
+    private static class DeleteTableCell extends TableCell<BoundingBoxCategory, BoundingBoxCategory> {
+        private final Button deleteButton = createDeleteButton();
 
         @Override
         protected void updateItem(BoundingBoxCategory item, boolean empty) {
@@ -89,13 +89,20 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
             }
 
             setGraphic(deleteButton);
+            deleteButton.setOnAction(event -> getTableView().getItems().remove(item));
+        }
 
+        private Button createDeleteButton() {
+            final Button deleteButton = new Button();
             deleteButton.getStyleClass().add(TABLE_COLUMN_DELETE_BUTTON_STYLE);
+            deleteButton.setFocusTraversable(false);
             deleteButton.setPickOnBounds(true);
+
+            final Region deleteIcon = new Region();
             deleteIcon.getStyleClass().add(TABLE_VIEW_DELETE_ICON_STYLE);
             deleteButton.setGraphic(deleteIcon);
-            deleteButton.setFocusTraversable(false);
-            deleteButton.setOnAction(event -> getTableView().getItems().remove(item));
+
+            return deleteButton;
         }
     }
 }

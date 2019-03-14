@@ -12,6 +12,7 @@ public class ImageAnnotationsSaver {
 
 
     public void save(final Collection<ImageAnnotationDataElement> dataset, final Path saveFolderPath) throws Exception {
+        //FIXME: Sometimes no save files are created.
         saveStrategy.save(dataset, saveFolderPath);
     }
 }

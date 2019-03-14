@@ -147,15 +147,13 @@ public class ProjectSidePanelView extends VBox implements View {
 
         visibilityToggle.selectedProperty().addListener(((observable, oldValue, newValue) -> {
             // TODO: SHould reset appropriately
-            if(!explorerView.getRoot().getChildren().isEmpty()) {
+            if(!explorerView.getRoot().isLeaf()) {
                 visibilityToggle.setGraphic(newValue ? hideImageView : showImageView);
             }
-            explorerView.getRoot().getChildren().forEach((child) -> {
-                child.getGraphic().setOpacity(newValue ? 0.3 : 1.0);
-                child.getChildren().forEach((leaf) -> {
-                    leaf.getGraphic().setOpacity(newValue ? 0.3 : 1.0);
-                });
-            });
+
+            explorerView.getRoot().getChildren().stream()
+                    .map(childItem -> (CategoryTreeItem) childItem)
+                    .forEach(childItem -> childItem.setIconToggledOn(!newValue));
         }));
 
         // FIXME: Flickers when changing between images that contain bounding box annotations

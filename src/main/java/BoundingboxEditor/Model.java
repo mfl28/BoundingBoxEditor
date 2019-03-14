@@ -25,7 +25,6 @@ public class Model {
     private static final int MAX_DIRECTORY_DEPTH = 1;
     private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
     private final ObservableList<ImageAnnotationDataElement> imageAnnotations = FXCollections.observableArrayList();
-    private final ObservableList<ImageMetaData> imageMetaData = FXCollections.observableArrayList();
     private ObservableList<File> imageFileList = FXCollections.observableArrayList();
     private ObservableList<BoundingBoxCategory> boundingBoxCategories = FXCollections.observableArrayList();
     private IntegerProperty fileIndex = new SimpleIntegerProperty(0);

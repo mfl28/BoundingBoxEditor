@@ -5,9 +5,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -15,10 +13,10 @@ import javafx.scene.input.MouseButton;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.hamcrest.CoreMatchers;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.testfx.api.FxRobot;
 import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationExtension;
@@ -28,14 +26,10 @@ import org.testfx.matcher.base.NodeMatchers;
 import org.testfx.util.PointQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
-
-import java.awt.*;
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import static org.testfx.api.FxAssert.verifyThat;
@@ -87,7 +81,7 @@ public class ControllerTest extends ApplicationTest {
     }
 
     @Test
-    void onClickThroughImages_WhenEndsReached_ShouldProperlySetButtonDisabledProperty(FxRobot robot) throws Exception{
+    void onClickThroughImages_WhenEndsReached_ShouldProperlySetButtonDisabledProperty(FxRobot robot) throws Exception {
         waitUntilCurrentImageIsLoaded();
 
         final Button nextButton = mainView.getNextButton();
@@ -96,7 +90,7 @@ public class ControllerTest extends ApplicationTest {
         verifyThat(nextButton, NodeMatchers.isEnabled());
         verifyThat(previousButton, NodeMatchers.isDisabled());
 
-        for(int i = 0; i != 3; ++i){
+        for(int i = 0; i != 3; ++i) {
             robot.clickOn(nextButton);
 
             waitUntilCurrentImageIsLoaded();
@@ -114,7 +108,7 @@ public class ControllerTest extends ApplicationTest {
         // end forward
 
         // backward
-        for(int i = 0; i != 3; ++i){
+        for(int i = 0; i != 3; ++i) {
             robot.clickOn(previousButton);
 
             waitUntilCurrentImageIsLoaded();
@@ -131,7 +125,7 @@ public class ControllerTest extends ApplicationTest {
     }
 
     @Test
-    void onOpenFolderClicked_WhenNoFolderLoaded_ShouldLoadSelectedFolder(FxRobot robot) throws Exception{
+    void onOpenFolderClicked_WhenNoFolderLoaded_ShouldLoadSelectedFolder(FxRobot robot) throws Exception {
         waitUntilCurrentImageIsLoaded();
 
         robot.clickOn(mainView.getNextButton());
@@ -145,23 +139,23 @@ public class ControllerTest extends ApplicationTest {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        final Point2D startPoint = getScreenPointFromImageViewRatios(0.4,0.4);
-        final Point2D intermediatePoint1 = getScreenPointFromImageViewRatios(0.8,0.7);
-        final Point2D intermediatePoint2 = getScreenPointFromImageViewRatios(0.1,0.8);
-        final Point2D intermediatePoint3 = getScreenPointFromImageViewRatios(0.1,0.1);
-        final Point2D endPoint = getScreenPointFromImageViewRatios(0.8,0.1);
+        final Point2D startPoint = getScreenPointFromImageViewRatios(0.4, 0.4);
+        final Point2D intermediatePoint1 = getScreenPointFromImageViewRatios(0.8, 0.7);
+        final Point2D intermediatePoint2 = getScreenPointFromImageViewRatios(0.1, 0.8);
+        final Point2D intermediatePoint3 = getScreenPointFromImageViewRatios(0.1, 0.1);
+        final Point2D endPoint = getScreenPointFromImageViewRatios(0.8, 0.1);
 
         final Bounds expectedBounds = new BoundingBox(startPoint.getX(), endPoint.getY(),
                 Math.abs(endPoint.getX() - startPoint.getX()),
                 Math.abs(endPoint.getY() - startPoint.getY()));
 
         robot.moveTo(startPoint)
-             .press(MouseButton.PRIMARY)
-             .moveTo(intermediatePoint1)
-             .moveTo(intermediatePoint2)
-             .moveTo(intermediatePoint3)
-             .moveTo(endPoint)
-             .release(MouseButton.PRIMARY);
+                .press(MouseButton.PRIMARY)
+                .moveTo(intermediatePoint1)
+                .moveTo(intermediatePoint2)
+                .moveTo(intermediatePoint3)
+                .moveTo(endPoint)
+                .release(MouseButton.PRIMARY);
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -183,14 +177,14 @@ public class ControllerTest extends ApplicationTest {
     }
 
     @Test
-    void onAddNewBoundingBoxCategory_WhenFolderLoaded_ShouldDisplayAndSelectCategoryInTableView(FxRobot robot){
+    void onAddNewBoundingBoxCategory_WhenFolderLoaded_ShouldDisplayAndSelectCategoryInTableView(FxRobot robot) {
         final String testName = "Dummy";
         enterNewCategory(robot, testName);
         verifyThat(controller.getView().getBoundingBoxItemTableView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
     }
 
     @Test
-    void onAddNewBoundingBoxCategory_WhenCategoryAlreadyExitsInTableView_ShouldDisplayErrorDialogue(FxRobot robot){
+    void onAddNewBoundingBoxCategory_WhenCategoryAlreadyExitsInTableView_ShouldDisplayErrorDialogue(FxRobot robot) {
         robot.clickOn(".bounding-box-name-text-field");
 
         String testName = "Dummy";
@@ -210,11 +204,11 @@ public class ControllerTest extends ApplicationTest {
     }
 
     @Test
-    void onDeleteSelectionRectangleInExplorer_WhenFolderLoaded_ShouldRemoveSelectionRectangleFromStoredList(FxRobot robot) throws Exception{
+    void onDeleteSelectionRectangleInExplorer_WhenFolderLoaded_ShouldRemoveSelectionRectangleFromStoredList(FxRobot robot) throws Exception {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
-        drawSelectionRectangleOnImageView(robot, new Point2D(0.1,0.1), new Point2D(0.4,0.4));
+        drawSelectionRectangleOnImageView(robot, new Point2D(0.1, 0.1), new Point2D(0.4, 0.4));
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -247,12 +241,12 @@ public class ControllerTest extends ApplicationTest {
     }
 
     @Test
-    void onClickingThroughImages_WhenSelectionRectanglesCreated_ShouldCorrectlyLoadExistingSelectionRectangles(FxRobot robot) throws Exception{
+    void onClickingThroughImages_WhenSelectionRectanglesCreated_ShouldCorrectlyLoadExistingSelectionRectangles(FxRobot robot) throws Exception {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
         enterNewCategory(robot, "Cat1");
-        drawSelectionRectangleOnImageView(robot, new Point2D(0.1,0.1), new Point2D(0.4,0.4));
+        drawSelectionRectangleOnImageView(robot, new Point2D(0.1, 0.1), new Point2D(0.4, 0.4));
 
         final List<SelectionRectangle> startChildRectangles = mainView.getImagePaneView().getChildren().stream()
                 .filter(item -> item instanceof SelectionRectangle)
@@ -269,7 +263,7 @@ public class ControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         enterNewCategory(robot, "Cat2");
-        drawSelectionRectangleOnImageView(robot, new Point2D(0.1,0.1), new Point2D(0.4,0.4));
+        drawSelectionRectangleOnImageView(robot, new Point2D(0.1, 0.1), new Point2D(0.4, 0.4));
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -278,7 +272,7 @@ public class ControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         enterNewCategory(robot, "Cat3");
-        drawSelectionRectangleOnImageView(robot, new Point2D(0.1,0.1), new Point2D(0.4,0.4));
+        drawSelectionRectangleOnImageView(robot, new Point2D(0.1, 0.1), new Point2D(0.4, 0.4));
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -311,7 +305,7 @@ public class ControllerTest extends ApplicationTest {
                 .filter(item -> item.getBoundingBoxCategory() != null)
                 .collect(Collectors.toList());
 
-        verifyThat(childRectangles.size(),CoreMatchers.equalTo(1));
+        verifyThat(childRectangles.size(), CoreMatchers.equalTo(1));
 
         final SelectionRectangle actualRectangle = childRectangles.get(0);
 
@@ -326,7 +320,7 @@ public class ControllerTest extends ApplicationTest {
     }
 
 
-    private boolean pixelApproximatelyEqual(double first, double second){
+    private boolean pixelApproximatelyEqual(double first, double second) {
         // Due to discrepancies between testfx awt/glass robot mouse positioning and the reported
         // coordinates of javafx mouse-events we'll use a crude equality check.
         return Math.abs(first - second) <= 2.0;
@@ -353,21 +347,21 @@ public class ControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, image.progressProperty().isEqualTo(1));
     }
 
-    private Point2D getScreenPointFromImageViewRatios(double xRatio, double yRatio){
+    private Point2D getScreenPointFromImageViewRatios(double xRatio, double yRatio) {
         final ImageView imageView = mainView.getImageView();
         final Bounds imageViewScreenBounds = imageView.localToScreen(imageView.getBoundsInLocal());
 
         return PointQueryUtils.atPositionFactors(imageViewScreenBounds, new Point2D(xRatio, yRatio));
     }
 
-    private Point2D getScreenPointFromImageViewRatios(Point2D ratios){
+    private Point2D getScreenPointFromImageViewRatios(Point2D ratios) {
         final ImageView imageView = mainView.getImageView();
         final Bounds imageViewScreenBounds = imageView.localToScreen(imageView.getBoundsInLocal());
 
         return PointQueryUtils.atPositionFactors(imageViewScreenBounds, ratios);
     }
 
-    private void drawSelectionRectangleOnImageView(FxRobot robot, Point2D startPointRatios, Point2D endPointRatios){
+    private void drawSelectionRectangleOnImageView(FxRobot robot, Point2D startPointRatios, Point2D endPointRatios) {
         Point2D startPoint = getScreenPointFromImageViewRatios(startPointRatios);
         Point2D endPoint = getScreenPointFromImageViewRatios(endPointRatios);
 
@@ -377,7 +371,7 @@ public class ControllerTest extends ApplicationTest {
                 .release(MouseButton.PRIMARY);
     }
 
-    private void enterNewCategory(FxRobot robot, String categoryName){
+    private void enterNewCategory(FxRobot robot, String categoryName) {
         robot.clickOn(mainView.getProjectSidePanel().getCategoryInputField())
                 .write(categoryName)
                 .clickOn(mainView.getProjectSidePanel().getAddButton());

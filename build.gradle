@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.7'
+    id "com.github.spotbugs" version "1.7.0"
 }
 
 version '1.0-SNAPSHOT'

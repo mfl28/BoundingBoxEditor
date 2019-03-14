@@ -27,7 +27,6 @@ public class ImagePaneView extends StackPane implements View {
     private List<ObservableList<SelectionRectangle>> imageSelectionRectangles;
     private SelectionRectangle selectionRectangle = new SelectionRectangle(null, null);
     //FIXME: should be in model
-    private Image currentImage;
     private ObjectProperty<Image> currentImageObject = new SimpleObjectProperty<>();
 
     ImagePaneView() {
@@ -68,6 +67,7 @@ public class ImagePaneView extends StackPane implements View {
     }
 
     public void setImageView(final Image image) {
+        // FIXME: Image loading does not keep up (ie the wrong image is loaded) when using  pressed up/down keys to quickly iterate through images in image gallery.
         // reset progress indicator animation
         currentImageObject.set(image);
         //currentImage = image;

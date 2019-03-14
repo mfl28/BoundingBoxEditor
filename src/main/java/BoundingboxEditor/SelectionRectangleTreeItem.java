@@ -1,20 +1,17 @@
 package BoundingboxEditor;
 
 import javafx.scene.control.TreeItem;
-import javafx.scene.shape.Rectangle;
 
 class SelectionRectangleTreeItem extends TreeItem<SelectionRectangle> {
-    private final Rectangle toggleVisibilityIcon = new Rectangle(0, 0, 9, 9);
+    private static final double TOGGLE_ICON_SIDE_LENGTH = 9.0;
+    private final ToggleRectangleIcon toggleIcon = new ToggleRectangleIcon(TOGGLE_ICON_SIDE_LENGTH, TOGGLE_ICON_SIDE_LENGTH);
     private int id = 0;
 
     public SelectionRectangleTreeItem(SelectionRectangle selectionRectangle) {
         super(selectionRectangle);
-        setGraphic(toggleVisibilityIcon);
-
-        toggleVisibilityIcon.fillProperty().bind(this.getValue().getBoundingBoxCategory().colorProperty());
-        toggleVisibilityIcon.opacityProperty().addListener(((observable, oldValue, newValue) -> this.getValue().setVisible(newValue.doubleValue() > 0.5)));
-
-        toggleVisibilityIcon.setOnMousePressed(event -> toggleVisibilityIcon.setOpacity(toggleVisibilityIcon.getOpacity() > 0.5 ? 0.3 : 1.0));
+        // TODO: CategoryItem needs to be updated (currently toggling category items in treeview does not make rectangles invisible)
+        setGraphic(toggleIcon);
+        setUpInternalListeners();
     }
 
     public int getId() {
@@ -25,4 +22,16 @@ class SelectionRectangleTreeItem extends TreeItem<SelectionRectangle> {
         this.id = id;
     }
 
+    public boolean isIconToggledOn() {
+        return toggleIcon.isToggledOn();
+    }
+
+    public void setIconToggledOn(boolean toggled) {
+        toggleIcon.setToggledOn(toggled);
+    }
+
+    private void setUpInternalListeners() {
+        toggleIcon.fillProperty().bind(getValue().getBoundingBoxCategory().colorProperty());
+        toggleIcon.toggledOnProperty().addListener(((observable, oldValue, newValue) -> getValue().setVisible(newValue)));
+    }
 }

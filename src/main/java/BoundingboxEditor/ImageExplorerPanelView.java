@@ -8,12 +8,12 @@ import java.io.File;
 public class ImageExplorerPanelView extends VBox implements View {
     private final ImageGalleryView imageGallery = new ImageGalleryView();
 
-    ImageExplorerPanelView(){
+    ImageExplorerPanelView() {
         this.getChildren().add(imageGallery);
         this.getStyleClass().add("image-explorer-side-panel");
     }
 
-    public void setImageGalleryItems(ObservableList<File> imageFiles){
+    public void setImageGalleryItems(ObservableList<File> imageFiles) {
         imageGallery.setItems(imageFiles);
     }
 

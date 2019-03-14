@@ -89,7 +89,6 @@ public class Controller {
                         protected Void call() throws Exception {
                             final List<ImageAnnotationDataElement> imageAnnotations = createImageAnnotations();
                             final ImageAnnotationsSaver saver = new ImageAnnotationsSaver(ImageAnnotationsSaveStrategy.SaveStrategy.PASCAL_VOC);
-                            // https://stackoverflow.com/questions/34357005/javafx-task-update-progress-from-a-method
                             saver.save(imageAnnotations, Paths.get(saveDirectory.getPath()));
                             return null;
                         }
@@ -299,6 +298,7 @@ public class Controller {
         view.getBoundingBoxItemTableView().getSelectionModel().selectFirst();
 
         view.getImageExplorerPanel().setImageGalleryItems(model.getImageFileList());
+        view.getImageExplorerPanel().getImageGallery().getSelectionModel().selectFirst();
     }
 
     private void setModelListeners() {
@@ -327,8 +327,12 @@ public class Controller {
             }
         });
 
-        view.getImageExplorerPanel().getImageGallery().getSelectionModel().selectedIndexProperty().addListener(((observable, oldValue, newValue) ->
-                model.fileIndexProperty().set(newValue.intValue())));
+        view.getImageExplorerPanel().getImageGallery().getSelectionModel().selectedIndexProperty().addListener(((observable, oldValue, newValue) -> {
+            if(newValue.intValue() != -1) {
+                model.fileIndexProperty().set(newValue.intValue());
+            }
+
+        }));
 
     }
 
@@ -336,7 +340,7 @@ public class Controller {
         final List<ImageAnnotationDataElement> imageAnnotations = new ArrayList<>();
 
         view.getImageSelectionRectangles().forEach(imageSelectionRectangles -> {
-            if(imageSelectionRectangles != null) {
+            if(imageSelectionRectangles != null && !imageSelectionRectangles.isEmpty()) {
                 imageAnnotations.add(ImageAnnotationDataElement.fromSelectionRectangles(imageSelectionRectangles));
             }
         });

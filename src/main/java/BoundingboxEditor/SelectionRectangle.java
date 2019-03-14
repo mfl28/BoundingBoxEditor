@@ -5,14 +5,12 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class SelectionRectangle extends Rectangle {
@@ -96,13 +94,6 @@ public class SelectionRectangle extends Rectangle {
         this.setY(y);
         this.setWidth(w);
         this.setHeight(h);
-    }
-
-    public Group asUnManagedGroup() {
-        // TODO: Maybe cache this
-        final Group group = new Group(this.getNodes());
-        group.setManaged(false);
-        return group;
     }
 
     public List<Node> getNodes() {
