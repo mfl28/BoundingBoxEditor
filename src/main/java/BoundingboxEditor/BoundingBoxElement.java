@@ -1,5 +1,6 @@
 package BoundingboxEditor;
 
+import BoundingboxEditor.views.SelectionRectangle;
 import javafx.geometry.Bounds;
 
 public class BoundingBoxElement {

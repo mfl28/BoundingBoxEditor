@@ -1,5 +1,9 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
+import BoundingboxEditor.BoundingBoxCategory;
+import BoundingboxEditor.DragAnchor;
+import BoundingboxEditor.ImageMetaData;
+import BoundingboxEditor.Utils;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;

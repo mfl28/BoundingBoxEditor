@@ -13,6 +13,8 @@
     -base-font-highlight-color: -nord4;
     -base-colorful-component-color: -nord11;
     -base-alt-colorful-component-color: -nord12;
+
+    -base-separator-line-color: derive(-base-background-color, -15%);
 }
 
 .root {
@@ -166,9 +168,8 @@
     -fx-stroke-width: 2px;
 }
 
-/* navigation bar */
-
-.topBox {
+/* Top panel (includes the menu-bar) */
+.top-panel {
     -fx-background-color: -base-background-color;
 }
 
@@ -181,9 +182,9 @@
 
 /* separators */
 
-.separator {
-    -fx-scale-y: 0.1;
-    -fx-background-color: -base-background-light-color;
+.separator .line{
+    -fx-border-width: 1px;
+    -fx-border-color: -base-separator-line-color;
 }
 
 /* tool bar */
@@ -305,6 +306,7 @@
     -fx-background-color: -base-background-color;
     -fx-padding: 3px 5px 0 5px;
     -fx-pref-width: 260px;
+    -fx-min-width: 260px;
 }
 
 /* table-view */
@@ -439,6 +441,10 @@
 
 /* tree-view */
 
+.tree-view {
+    -fx-background-color: -base-background-light-color;
+}
+
 .tree-cell > .tree-disclosure-node > .arrow,
 .tree-table-row-cell > .tree-disclosure-node > .arrow {
     -fx-rotate: 0;
@@ -487,6 +493,10 @@
     -fx-background-color: -base-highlight-light-color;
 }
 
+.tree-view .tree-cell:empty {
+    -fx-background-color: transparent;
+}
+
 /* progress indicator */
 
 .progress-indicator {
@@ -495,7 +505,7 @@
 }
 
 /* bottom bar */
-.bottom-bar {
+.status-panel {
     -fx-background-color: -base-background-color;
     -fx-padding: 5px;
 }
@@ -518,6 +528,7 @@
     -fx-background-color: -base-background-color;
     -fx-padding: 2px 0 0 0;
     -fx-pref-width: 300px;
+    -fx-min-width: 300px;
 }
 
 .list-view{
@@ -550,5 +561,18 @@
 .list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:focused{
     -fx-background-insets: 0;
     -fx-border-width: 0;
+}
+
+/* split-pane */
+.split-pane {
+    -fx-background-color: -base-background-light-color;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.split-pane:horizontal > .split-pane-divider {
+   -fx-background-color: -base-separator-line-color;
+   -fx-background-insets: 0;
+   -fx-padding: 1px;
 }
 

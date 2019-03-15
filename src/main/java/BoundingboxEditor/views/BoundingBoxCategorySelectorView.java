@@ -1,5 +1,8 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
+import BoundingboxEditor.BoundingBoxCategory;
+import BoundingboxEditor.Utils;
+import BoundingboxEditor.views.View;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;

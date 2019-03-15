@@ -1,4 +1,4 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;

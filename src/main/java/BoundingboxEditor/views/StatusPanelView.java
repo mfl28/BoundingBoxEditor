@@ -1,10 +1,11 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 
-public class StatusPanelView extends HBox implements View {
-    private static final String BOTTOM_BAR_STYLE = "bottom-bar";
+class StatusPanelView extends HBox implements View {
+    private static final String BOTTOM_BAR_STYLE = "status-panel";
+
     private final Label bottomLabel = new Label();
 
     StatusPanelView() {
@@ -12,7 +13,7 @@ public class StatusPanelView extends HBox implements View {
         this.getStyleClass().add(BOTTOM_BAR_STYLE);
     }
 
-    public Label getBottomLabel() {
+    Label getBottomLabel() {
         return bottomLabel;
     }
 }

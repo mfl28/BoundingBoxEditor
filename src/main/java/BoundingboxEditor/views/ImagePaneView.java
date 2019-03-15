@@ -1,5 +1,8 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
+import BoundingboxEditor.Controller;
+import BoundingboxEditor.DragAnchor;
+import BoundingboxEditor.Utils;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;

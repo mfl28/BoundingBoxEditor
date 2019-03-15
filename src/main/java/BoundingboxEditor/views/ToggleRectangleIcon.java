@@ -1,10 +1,10 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.shape.Rectangle;
 
-public class ToggleRectangleIcon extends Rectangle {
+class ToggleRectangleIcon extends Rectangle {
     private static final double TOGGLED_ON_OPACITY = 1.0;
     private static final double TOGGLED_OFF_OPACITY = 0.3;
 
@@ -12,18 +12,19 @@ public class ToggleRectangleIcon extends Rectangle {
 
     ToggleRectangleIcon(double width, double height) {
         super(0, 0, width, height);
+
         setUpInternalListeners();
     }
 
-    public BooleanProperty toggledOnProperty() {
+    BooleanProperty toggledOnProperty() {
         return toggledOn;
     }
 
-    public boolean isToggledOn() {
+    boolean isToggledOn() {
         return toggledOn.get();
     }
 
-    public void setToggledOn(boolean toggledOn) {
+    void setToggledOn(boolean toggledOn) {
         this.toggledOn.set(toggledOn);
     }
 

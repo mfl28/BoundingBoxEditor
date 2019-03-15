@@ -1,5 +1,7 @@
 package BoundingboxEditor;
 
+import BoundingboxEditor.views.MainView;
+import BoundingboxEditor.views.SelectionRectangle;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -288,6 +290,7 @@ public class Controller {
         view.getProjectSidePanel().setManaged(true);
         view.getImageExplorerPanel().setVisible(true);
         view.getImageExplorerPanel().setManaged(true);
+        view.getWorkspace().setVisible(true);
 
         view.getImagePaneView().resetSelectionRectangleDatabase(model.fileListSizeProperty().get());
 

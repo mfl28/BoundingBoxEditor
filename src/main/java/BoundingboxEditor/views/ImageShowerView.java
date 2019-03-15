@@ -1,5 +1,6 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
+import BoundingboxEditor.Controller;
 import javafx.scene.layout.BorderPane;
 
 public class ImageShowerView extends BorderPane implements View {

@@ -1,5 +1,7 @@
 package BoundingboxEditor;
 
+import BoundingboxEditor.views.MainView;
+import BoundingboxEditor.views.SelectionRectangle;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -323,7 +325,7 @@ public class ControllerTest extends ApplicationTest {
     private boolean pixelApproximatelyEqual(double first, double second) {
         // Due to discrepancies between testfx awt/glass robot mouse positioning and the reported
         // coordinates of javafx mouse-events we'll use a crude equality check.
-        return Math.abs(first - second) <= 2.0;
+        return Math.abs(first - second) <= 3.0;
     }
 
 

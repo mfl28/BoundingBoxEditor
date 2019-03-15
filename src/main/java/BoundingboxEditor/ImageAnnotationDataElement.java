@@ -1,5 +1,7 @@
 package BoundingboxEditor;
 
+import BoundingboxEditor.views.SelectionRectangle;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;

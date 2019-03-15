@@ -1,5 +1,7 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
+import BoundingboxEditor.Controller;
+import BoundingboxEditor.Utils;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;

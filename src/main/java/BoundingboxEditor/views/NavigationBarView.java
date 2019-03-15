@@ -1,11 +1,12 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
-import javafx.geometry.Insets;
+import BoundingboxEditor.Controller;
+import BoundingboxEditor.Utils;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToolBar;
 
-class NavigationBarView extends ToolBar implements View {
+public class NavigationBarView extends ToolBar implements View {
     private static final String NEXT_ICON_PATH = "/icons/arrow_right.png";
     private static final String PREVIOUS_ICON_PATH = "/icons/arrow_left.png";
     private static final String NEXT_BUTTON_ID = "next-button";

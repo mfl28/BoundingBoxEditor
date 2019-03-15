@@ -1,4 +1,4 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;

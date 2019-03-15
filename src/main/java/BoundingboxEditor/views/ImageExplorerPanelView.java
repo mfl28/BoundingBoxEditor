@@ -1,4 +1,4 @@
-package BoundingboxEditor;
+package BoundingboxEditor.views;
 
 import javafx.collections.ObservableList;
 import javafx.scene.control.Label;
