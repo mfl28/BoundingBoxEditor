@@ -20,8 +20,7 @@ class NavigationBarView extends ToolBar implements View {
     NavigationBarView() {
         getItems().addAll(Utils.createHSpacer(), previousButton, indexLabel, nextButton, Utils.createHSpacer());
         setVisible(false);
-        //FIXME: offset for image controlls, should probably be dynamic
-        setPadding(new Insets(0, 0, 0, 260));
+        setManaged(false);
 
         nextButton.setId(NEXT_BUTTON_ID);
         previousButton.setId(PREVIOUS_BUTTON_ID);

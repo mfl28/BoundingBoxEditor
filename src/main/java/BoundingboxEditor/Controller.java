@@ -283,8 +283,11 @@ public class Controller {
         view.getPreviousButton().disableProperty().bind(model.hasPreviousFileBinding().not());
         view.getNextButton().disableProperty().bind(model.hasNextFileBinding().not());
         view.getNavigationBar().setVisible(true);
+        view.getNavigationBar().setManaged(true);
         view.getProjectSidePanel().setVisible(true);
         view.getProjectSidePanel().setManaged(true);
+        view.getImageExplorerPanel().setVisible(true);
+        view.getImageExplorerPanel().setManaged(true);
 
         view.getImagePaneView().resetSelectionRectangleDatabase(model.fileListSizeProperty().get());
 
@@ -310,7 +313,7 @@ public class Controller {
             view.getImageExplorerPanel().getImageGallery().getSelectionModel().select(newValue.intValue());
         });
 
-        view.getTopPanel()
+        view.getImageShower().getNavigationBar()
                 .getIndexLabel()
                 .textProperty()
                 .bind(model.fileIndexProperty().add(1).asString()

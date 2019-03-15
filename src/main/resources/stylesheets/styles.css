@@ -190,6 +190,7 @@
 
 .tool-bar {
     -fx-background-color: -base-background-color;
+    -fx-padding: 0;
 }
 
 /* underline mnemonic */
@@ -302,7 +303,7 @@
 
 .side-panel {
     -fx-background-color: -base-background-color;
-    -fx-padding: 0 5px;
+    -fx-padding: 3px 5px 0 5px;
     -fx-pref-width: 260px;
 }
 
@@ -515,6 +516,7 @@
 
 .image-explorer-side-panel{
     -fx-background-color: -base-background-color;
+    -fx-padding: 2px 0 0 0;
     -fx-pref-width: 300px;
 }
 

@@ -45,8 +45,7 @@ public class ProjectSidePanelView extends VBox implements View {
     private final ImageView collapseImageView = new ImageView(new Image(getClass().getResource(COLLAPSE_ICON_PATH).toExternalForm()));
 
     ProjectSidePanelView() {
-        this.getChildren().addAll(
-                new Separator(),
+        getChildren().addAll(
                 new Label(CLASS_SELECTOR_LABEL_TEXT),
                 createCategorySearchBox(),
                 selectorView,
@@ -66,8 +65,8 @@ public class ProjectSidePanelView extends VBox implements View {
         collapseImageView.setFitWidth(ICON_WIDTH);
         setUpStyles();
         setUpInternalListeners();
-        this.setVisible(false);
-        this.setManaged(false);
+        setVisible(false);
+        setManaged(false);
     }
 
     public BoundingBoxCategorySelectorView getSelectorView() {
