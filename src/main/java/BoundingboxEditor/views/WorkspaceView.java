@@ -16,6 +16,7 @@ public class WorkspaceView extends SplitPane implements View {
 
         SplitPane.setResizableWithParent(projectSidePanel, false);
         SplitPane.setResizableWithParent(imageExplorer, false);
+        SplitPane.setResizableWithParent(imageShower, true);
         setDividerPositions(DEFAULT_FIRST_DIVIDER_RATIO, DEFAULT_SECOND_DIVIDER_RATIO);
         setVisible(false);
 

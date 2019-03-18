@@ -11,10 +11,10 @@ import java.io.File;
 
 public class ImageGalleryView extends ListView<File> implements View {
 
-    public ImageGalleryView() {
+    ImageGalleryView() {
         VBox.setVgrow(this, Priority.ALWAYS);
 
-        this.setCellFactory(listView -> new ImageGalleryCell());
+        setCellFactory(listView -> new ImageGalleryCell());
     }
 
     private static class ImageGalleryCell extends ListCell<File> {

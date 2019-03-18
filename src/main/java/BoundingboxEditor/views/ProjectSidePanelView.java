@@ -1,7 +1,7 @@
 package BoundingboxEditor.views;
 
+import BoundingboxEditor.ColorUtils;
 import BoundingboxEditor.Controller;
-import BoundingboxEditor.Utils;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -39,8 +39,8 @@ public class ProjectSidePanelView extends VBox implements View {
     private final ColorPicker boundingBoxColorPicker = new ColorPicker();
     private final Button addButton = new Button(BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT);
     private final SelectionRectangleExplorerView explorerView = new SelectionRectangleExplorerView();
-    private final ToggleButton visibilityToggle = Utils.createToggleIconButton(getClass().getResource(HIDE_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
-    private final ToggleButton expansionToggle = Utils.createToggleIconButton(getClass().getResource(COLLAPSE_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
+    private final ToggleButton visibilityToggle = UiUtils.createToggleIconButton(getClass().getResource(HIDE_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
+    private final ToggleButton expansionToggle = UiUtils.createToggleIconButton(getClass().getResource(COLLAPSE_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
     private final ImageView hideImageView = new ImageView(new Image(getClass().getResource(HIDE_ICON_PATH).toExternalForm()));
     private final ImageView showImageView = new ImageView(new Image(getClass().getResource(SHOW_ICON_PATH).toExternalForm()));
     private final ImageView expandImageView = new ImageView(new Image(getClass().getResource(EXPAND_ICON_PATH).toExternalForm()));
@@ -51,7 +51,7 @@ public class ProjectSidePanelView extends VBox implements View {
                 new Label(CLASS_SELECTOR_LABEL_TEXT),
                 createCategorySearchBox(),
                 selectorView,
-                createAddCategoryControllBox(),
+                createAddCategoryControlBox(),
                 new Separator(),
                 new Label(OBJECT_SELECTOR_LABEL_TEXT),
                 explorerView,
@@ -71,20 +71,8 @@ public class ProjectSidePanelView extends VBox implements View {
         setManaged(false);
     }
 
-    public BoundingBoxCategorySelectorView getSelectorView() {
-        return selectorView;
-    }
-
     public TextField getCategoryInputField() {
         return categoryInputField;
-    }
-
-    public TextField getCategorySearchField() {
-        return categorySearchField;
-    }
-
-    public ColorPicker getBoundingBoxColorPicker() {
-        return boundingBoxColorPicker;
     }
 
     public Button getAddButton() {
@@ -95,14 +83,22 @@ public class ProjectSidePanelView extends VBox implements View {
         return explorerView;
     }
 
-    public ToggleButton getVisibilityToggle() {
-        return visibilityToggle;
-    }
-
     @Override
     public void connectToController(Controller controller) {
         addButton.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
         categoryInputField.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
+    }
+
+    BoundingBoxCategorySelectorView getSelectorView() {
+        return selectorView;
+    }
+
+    TextField getCategorySearchField() {
+        return categorySearchField;
+    }
+
+    ColorPicker getBoundingBoxColorPicker() {
+        return boundingBoxColorPicker;
     }
 
     private HBox createCategorySearchBox() {
@@ -111,7 +107,7 @@ public class ProjectSidePanelView extends VBox implements View {
         categorySearchField.setPromptText(SEARCH_CATEGORY_PROMPT_TEXT);
         categorySearchField.setFocusTraversable(false);
 
-        //FIXME: fix the textfield context menu style
+        //FIXME: fix the text-field context menu style
         final HBox categorySearchBox = new HBox();
         categorySearchBox.getChildren().addAll(categorySearchField);
         categorySearchBox.setSpacing(CATEGORY_SEARCH_BOX_SPACING);
@@ -122,10 +118,9 @@ public class ProjectSidePanelView extends VBox implements View {
     private void setUpStyles() {
         categoryInputField.getStyleClass().add(BOUNDING_BOX_NAME_TEXT_FIELD_STYLE);
         boundingBoxColorPicker.getStyleClass().add(BOUNDING_BOX_COLOR_PICKER_STYLE);
-        boundingBoxColorPicker.setValue(Utils.createRandomColor(new Random()));
+        boundingBoxColorPicker.setValue(ColorUtils.createRandomColor(new Random()));
         this.setSpacing(SIDE_PANEL_SPACING);
         this.getStyleClass().add(SIDE_PANEL_STYLE);
-
     }
 
 
@@ -147,7 +142,7 @@ public class ProjectSidePanelView extends VBox implements View {
         }));
 
         visibilityToggle.selectedProperty().addListener(((observable, oldValue, newValue) -> {
-            // TODO: SHould reset appropriately
+            // TODO: should reset appropriately
             if(!explorerView.getRoot().isLeaf()) {
                 visibilityToggle.setGraphic(newValue ? hideImageView : showImageView);
             }
@@ -170,13 +165,12 @@ public class ProjectSidePanelView extends VBox implements View {
         }));
     }
 
-    private HBox createAddCategoryControllBox() {
+    private HBox createAddCategoryControlBox() {
         addButton.setFocusTraversable(false);
         // FIXME: for testing
         addButton.setId("add-button");
 
-        final HBox addItemControls = new HBox(boundingBoxColorPicker, Utils.createHSpacer(), categoryInputField,
-                Utils.createHSpacer(), addButton);
+        final HBox addItemControls = new HBox(boundingBoxColorPicker, UiUtils.createHSpacer(), categoryInputField, UiUtils.createHSpacer(), addButton);
         categoryInputField.setPromptText(CATEGORY_INPUT_FIELD_PROMPT_TEXT);
         addItemControls.getStyleClass().add(BOUNDING_BOX_ITEM_CONTROLS_STYLE);
 

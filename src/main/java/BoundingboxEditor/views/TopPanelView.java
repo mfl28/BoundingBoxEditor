@@ -1,6 +1,7 @@
 package BoundingboxEditor.views;
 
 import BoundingboxEditor.Controller;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.VBox;
 
@@ -23,5 +24,13 @@ class TopPanelView extends VBox implements View {
 
     Separator getSeparator() {
         return separator;
+    }
+
+    CheckMenuItem getShowImageExplorerMenuItem(){
+        return menuBar.getShowImageExplorerMenuItem();
+    }
+
+    CheckMenuItem getViewFitWindowItem(){
+        return menuBar.getViewFitWindowItem();
     }
 }

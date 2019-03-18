@@ -2,12 +2,12 @@ package BoundingboxEditor.views;
 
 import BoundingboxEditor.Controller;
 import BoundingboxEditor.DragAnchor;
-import BoundingboxEditor.Utils;
+import BoundingboxEditor.MathUtils;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.CacheHint;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -31,6 +31,7 @@ public class ImagePaneView extends StackPane implements View {
     private SelectionRectangle selectionRectangle = new SelectionRectangle(null, null);
     //FIXME: should be in model
     private ObjectProperty<Image> currentImageObject = new SimpleObjectProperty<>();
+    private SimpleBooleanProperty fitToWindow = new SimpleBooleanProperty(true);
 
     ImagePaneView() {
         this.getStyleClass().add(IMAGE_PANE_STYLE);
@@ -39,7 +40,6 @@ public class ImagePaneView extends StackPane implements View {
 
         imageView.setSmooth(true);
         imageView.setCache(true);
-        imageView.setCacheHint(CacheHint.SPEED);
         /* So that events are registered even on transparent image parts. */
         imageView.setPickOnBounds(true);
         imageView.setId("image-pane");
@@ -61,15 +61,42 @@ public class ImagePaneView extends StackPane implements View {
         selectionRectangles.forEach(item -> this.getChildren().addAll(item.getNodes()));
     }
 
-    public DragAnchor getMousePressed() {
+    public void resetSelectionRectangleDatabase(int numItems) {
+        imageSelectionRectangles = new ArrayList<>(Collections.nCopies(numItems, null));
+    }
+
+    public ProgressIndicator getProgressIndicator() {
+        return progressIndicator;
+    }
+
+    @Override
+    public void connectToController(Controller controller) {
+        imageView.setOnMousePressed(controller::onMousePressed);
+        imageView.setOnMouseDragged(controller::onMouseDragged);
+        imageView.setOnMouseReleased(controller::onMouseReleased);
+    }
+
+    public boolean isFitToWindow() {
+        return fitToWindow.get();
+    }
+
+    public void setFitToWindow(boolean fitToWindow) {
+        this.fitToWindow.set(fitToWindow);
+    }
+
+    public SimpleBooleanProperty fitToWindowProperty() {
+        return fitToWindow;
+    }
+
+    DragAnchor getMousePressed() {
         return mousePressed;
     }
 
-    public ImageView getImageView() {
+    ImageView getImageView() {
         return imageView;
     }
 
-    public void setImageView(final Image image) {
+    void setImageView(final Image image) {
         // FIXME: Image loading does not keep up (ie the wrong image is loaded) when using  pressed up/down keys to quickly iterate through images in image gallery.
         // reset progress indicator animation
         currentImageObject.set(image);
@@ -82,56 +109,49 @@ public class ImagePaneView extends StackPane implements View {
             if(newValue.equals(1.0)) {
                 imageView.setImage(image);
                 imageView.setPreserveRatio(true);
-                setInitialImageViewSize();
+
+                // FIXME: Error when maximizing and then resizing window.
+                if(isFitToWindow()){
+                    fitToWindow();
+                }
+                else{
+                    setInitialImageViewSize();
+                }
+
                 progressIndicator.setVisible(false);
             }
         });
     }
 
-    public void resetSelectionRectangleDatabase(int numItems) {
-        imageSelectionRectangles = new ArrayList<>(Collections.nCopies(numItems, null));
-    }
-
-    public ObservableList<SelectionRectangle> getSelectionRectangleList() {
+    ObservableList<SelectionRectangle> getSelectionRectangleList() {
         return selectionRectangleList;
     }
 
-    public void setSelectionRectangleList(ObservableList<SelectionRectangle> selectionRectangleList) {
+    void setSelectionRectangleList(ObservableList<SelectionRectangle> selectionRectangleList) {
         this.selectionRectangleList = selectionRectangleList;
     }
 
-    public List<ObservableList<SelectionRectangle>> getImageSelectionRectangles() {
+    List<ObservableList<SelectionRectangle>> getImageSelectionRectangles() {
         return imageSelectionRectangles;
     }
 
-    public void setImageSelectionRectangles(List<ObservableList<SelectionRectangle>> imageSelectionRectangles) {
-        this.imageSelectionRectangles = imageSelectionRectangles;
-    }
-
-    public SelectionRectangle getSelectionRectangle() {
+    SelectionRectangle getSelectionRectangle() {
         return selectionRectangle;
     }
 
-    public ProgressIndicator getProgressIndicator() {
-        return progressIndicator;
-    }
-
-    public Image getCurrentImage() {
+    Image getCurrentImage() {
         return currentImageObject.get();
     }
 
-    public ObjectProperty<Image> imageObjectProperty() {
-        return currentImageObject;
+    void fitToWindow(){
+        final double maxAllowedWidth = this.getWidth() - 2 * IMAGE_PADDING;
+        final double maxAllowedHeight = this.getHeight() - 2 * IMAGE_PADDING;
+
+        imageView.setFitWidth(maxAllowedWidth);
+        imageView.setFitHeight(maxAllowedHeight);
     }
 
-    @Override
-    public void connectToController(Controller controller) {
-        imageView.setOnMousePressed(controller::onMousePressed);
-        imageView.setOnMouseDragged(controller::onMouseDragged);
-        imageView.setOnMouseReleased(controller::onMouseReleased);
-    }
-
-    private void setInitialImageViewSize() {
+    void setInitialImageViewSize() {
         final double imageWidth = imageView.getImage().getWidth();
         final double imageHeight = imageView.getImage().getHeight();
         final double maxAllowedWidth = this.getWidth() - 2 * IMAGE_PADDING;
@@ -143,17 +163,29 @@ public class ImagePaneView extends StackPane implements View {
 
     private void setUpInternalListeners() {
         this.widthProperty().addListener((value, oldValue, newValue) -> {
-            double prefWidth = 0;
-            if(imageView.getImage() != null)
-                prefWidth = imageView.getImage().getWidth();
-            imageView.setFitWidth(Math.min(prefWidth, newValue.doubleValue() - 2 * IMAGE_PADDING));
+            if(!isFitToWindow()) {
+                double prefWidth = 0;
+                if(imageView.getImage() != null) {
+                    prefWidth = imageView.getImage().getWidth();
+                }
+                imageView.setFitWidth(Math.min(prefWidth, newValue.doubleValue() - 2 * IMAGE_PADDING));
+            } else {
+                imageView.setFitWidth(newValue.doubleValue() - 2 * IMAGE_PADDING);
+            }
+
         });
 
         this.heightProperty().addListener((value, oldValue, newValue) -> {
-            double prefHeight = 0;
-            if(imageView.getImage() != null)
-                prefHeight = imageView.getImage().getHeight();
-            imageView.setFitHeight(Math.min(prefHeight, newValue.doubleValue() - 2 * IMAGE_PADDING));
+            if(!isFitToWindow()) {
+                double prefHeight = 0;
+                if(imageView.getImage() != null) {
+                    prefHeight = imageView.getImage().getHeight();
+                }
+                imageView.setFitHeight(Math.min(prefHeight, newValue.doubleValue() - 2 * IMAGE_PADDING));
+            } else {
+                imageView.setFitHeight(newValue.doubleValue() - 2 * IMAGE_PADDING);
+            }
+
         });
 
         this.setOnScroll(event -> {
@@ -161,10 +193,10 @@ public class ImagePaneView extends StackPane implements View {
                 final Image image = imageView.getImage();
                 final double delta = event.getDeltaY();
 
-                final double newFitWidth = Utils.clamp(imageView.getFitWidth() + delta,
+                final double newFitWidth = MathUtils.clamp(imageView.getFitWidth() + delta,
                         Math.min(ZOOM_MIN_WINDOW_RATIO * this.getWidth(), image.getWidth()),
                         this.getWidth() - 2 * IMAGE_PADDING);
-                final double newFitHeight = Utils.clamp(imageView.getFitHeight() + delta,
+                final double newFitHeight = MathUtils.clamp(imageView.getFitHeight() + delta,
                         Math.min(ZOOM_MIN_WINDOW_RATIO * this.getHeight(), image.getHeight()),
                         this.getHeight() - 2 * IMAGE_PADDING);
 

@@ -94,6 +94,7 @@
 
 .context-menu {
     -fx-padding: 0;
+    -fx-background-color: -base-background-color;
 }
 
 /*** BUTTONS - default button styling ***/
@@ -185,6 +186,13 @@
 .separator .line{
     -fx-border-width: 1px;
     -fx-border-color: -base-separator-line-color;
+}
+
+/* For SeparatorMenuItems */
+.context-menu .separator:horizontal .line {
+    -fx-border-color: -base-background-light-color;
+    -fx-border-width: 1px;
+    -fx-border-insets: 0;
 }
 
 /* tool bar */
@@ -575,4 +583,6 @@
    -fx-background-insets: 0;
    -fx-padding: 1px;
 }
+
+
 

@@ -8,6 +8,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -25,7 +26,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
     private static final String IMAGE_SIZE_ELEMENT_NAME = "size";
     private static final String IMAGE_WIDTH_ELEMENT_NAME = "width";
     private static final String IMAGE_HEIGHT_ELEMENT_NAME = "height";
-    private static final String IMAGE_DEPTH_ELEMENT_NAME = "depth";
+    //private static final String IMAGE_DEPTH_ELEMENT_NAME = "depth";
     private static final String BOUNDING_BOX_ENTRY_ELEMENT_NAME = "object";
     private static final String BOUNDING_BOX_CATEGORY_NAME = "name";
     private static final String BOUNDING_BOX_SIZE_GROUP_NAME = "bndBox";
@@ -34,7 +35,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
     private static final String XML_FILE_EXTENSION = ".xml";
 
     @Override
-    public void save(final Collection<ImageAnnotationDataElement> dataset, final Path path) throws Exception {
+    public void save(final Collection<ImageAnnotationDataElement> dataSet, final Path path) throws Exception {
         final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         final DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 
@@ -42,7 +43,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
         final Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
-        for(final ImageAnnotationDataElement dataElement : dataset) {
+        for(final ImageAnnotationDataElement dataElement : dataSet) {
             createXmlFileFromImageAnnotationDataElement(documentBuilder, transformer, dataElement, path);
         }
     }
@@ -50,7 +51,7 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
     private void createXmlFileFromImageAnnotationDataElement(final DocumentBuilder documentBuilder,
                                                              final Transformer transformer,
                                                              final ImageAnnotationDataElement dataElement,
-                                                             final Path path) throws Exception {
+                                                             final Path path) throws TransformerException {
         final Document document = documentBuilder.newDocument();
 
         final Element annotationElement = document.createElement(ROOT_ELEMENT_NAME);
@@ -65,14 +66,13 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
         DOMSource domSource = new DOMSource(document);
 
         String fileName = dataElement.getImageFileName();
-        String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf("."));
+        String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf('.'));
 
         File outputFile = new File(path.toString().concat("\\").concat(fileNameWithoutExtension).concat(XML_FILE_EXTENSION));
 
         StreamResult streamResult = new StreamResult(outputFile);
 
         transformer.transform(domSource, streamResult);
-
     }
 
     private void appendHeaderFromImageAnnotationDataElement(final Document document, final Node root, final ImageAnnotationDataElement dataElement) {

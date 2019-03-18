@@ -24,10 +24,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Responsible for event-handling between the model and view classes.
@@ -153,7 +150,7 @@ public class Controller {
         if(event.getButton().equals(MouseButton.PRIMARY) &&
                 !view.getBoundingBoxItemTableView().getSelectionModel().isEmpty()) {
             final ImageView imageView = view.getImageView();
-            final Point2D clampedEventXY = Utils.clampWithinBounds(event, imageView.getBoundsInLocal());
+            final Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
             final DragAnchor mousePressed = view.getMousePressed();
             final Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(),
                     mousePressed.getX()), Math.min(clampedEventXY.getY(), mousePressed.getY()));
@@ -205,7 +202,7 @@ public class Controller {
 
         // auto select the created category
         selectionModel.selectLast();
-        view.getBoundingBoxColorPicker().setValue(Utils.createRandomColor(random));
+        view.getBoundingBoxColorPicker().setValue(ColorUtils.createRandomColor(random));
         // auto scroll to the created category (if it would otherwise be outside the viewport)
         view.getBoundingBoxItemTableView().scrollTo(selectionModel.getSelectedIndex());
     }
@@ -289,7 +286,6 @@ public class Controller {
         view.getProjectSidePanel().setVisible(true);
         view.getProjectSidePanel().setManaged(true);
         view.getImageExplorerPanel().setVisible(true);
-        view.getImageExplorerPanel().setManaged(true);
         view.getWorkspace().setVisible(true);
 
         view.getImagePaneView().resetSelectionRectangleDatabase(model.fileListSizeProperty().get());
@@ -326,7 +322,7 @@ public class Controller {
         // Synchronizes name hashset with bounding box category list when items are deleted.
         // TODO: This should also work when changing names in existing categories,
         model.getBoundingBoxCategories().addListener((ListChangeListener<BoundingBoxCategory>) c -> {
-            HashSet<String> boundingBoxCategoryNames = model.getBoundingBoxCategoryNames();
+            Set<String> boundingBoxCategoryNames = model.getBoundingBoxCategoryNames();
             while(c.next()) {
                 c.getRemoved().forEach(boundingBoxCategory ->
                         boundingBoxCategoryNames.remove(boundingBoxCategory.getName()));

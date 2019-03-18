@@ -7,9 +7,11 @@ public class ImageShowerView extends BorderPane implements View {
     private final NavigationBarView navigationBar = new NavigationBarView();
     private final ImagePaneView imagePane = new ImagePaneView();
 
-    ImageShowerView(){
+    ImageShowerView() {
         setTop(navigationBar);
         setCenter(imagePane);
+
+        imagePane.setMinSize(0,0);
     }
 
 
@@ -17,13 +19,13 @@ public class ImageShowerView extends BorderPane implements View {
         return navigationBar;
     }
 
-    public ImagePaneView getImagePane() {
-        return imagePane;
-    }
-
     @Override
     public void connectToController(Controller controller) {
         navigationBar.connectToController(controller);
         imagePane.connectToController(controller);
+    }
+
+    ImagePaneView getImagePane() {
+        return imagePane;
     }
 }

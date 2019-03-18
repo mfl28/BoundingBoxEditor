@@ -10,6 +10,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -17,14 +18,14 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-public class Model {
+class Model {
     private static final String BOUNDING_BOX_COORDINATES_PATTERN = "#0.0000";
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
     private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
-    private final ObservableList<ImageAnnotationDataElement> imageAnnotations = FXCollections.observableArrayList();
     private ObservableList<File> imageFileList = FXCollections.observableArrayList();
     private ObservableList<BoundingBoxCategory> boundingBoxCategories = FXCollections.observableArrayList();
     private IntegerProperty fileIndex = new SimpleIntegerProperty(0);
@@ -32,16 +33,16 @@ public class Model {
     private BooleanBinding hasNextFile;
     private BooleanBinding hasPreviousFile;
     private ObjectBinding<File> currentFile;
-    private HashSet<String> boundingBoxCategoryNames = new HashSet<>();
+    private Set<String> boundingBoxCategoryNames = new HashSet<>();
 
-    public Model() {
+    Model() {
         BoundingBoxCategory defaultCategory = new BoundingBoxCategory();
         boundingBoxCategories.add(defaultCategory);
         boundingBoxCategoryNames.add(defaultCategory.getName());
         numberFormat.applyPattern(BOUNDING_BOX_COORDINATES_PATTERN);
     }
 
-    public void setImageFileListFromPath(Path path) throws Exception {
+    void setImageFileListFromPath(Path path) throws IOException, NoValidImagesException {
         imageFileList = FXCollections.observableArrayList(
                 Files.walk(path, MAX_DIRECTORY_DEPTH)
                         .filter(p -> Arrays.stream(imageExtensions).anyMatch(p.toString()::endsWith))
@@ -61,71 +62,59 @@ public class Model {
         currentFile = Bindings.valueAt(imageFileList, fileIndex);
     }
 
-    public Image getCurrentImage() {
+    Image getCurrentImage() {
         return getImageFromFile(currentFile.get());
     }
 
-    public IntegerProperty fileIndexProperty() {
+    IntegerProperty fileIndexProperty() {
         return fileIndex;
     }
 
-    public ObservableList<BoundingBoxCategory> getBoundingBoxCategories() {
+    ObservableList<BoundingBoxCategory> getBoundingBoxCategories() {
         return boundingBoxCategories;
     }
 
-    public void incrementFileIndex() {
+    void incrementFileIndex() {
         fileIndex.set(fileIndex.get() + 1);
     }
 
-    public void decrementFileIndex() {
+    void decrementFileIndex() {
         fileIndex.set(fileIndex.get() - 1);
     }
 
-    public IntegerProperty fileListSizeProperty() {
+    IntegerProperty fileListSizeProperty() {
         return imageFileListSize;
     }
 
-    public BooleanBinding hasNextFileBinding() {
+    BooleanBinding hasNextFileBinding() {
         return hasNextFile;
     }
 
-    public BooleanBinding hasPreviousFileBinding() {
+    BooleanBinding hasPreviousFileBinding() {
         return hasPreviousFile;
     }
 
-    public Boolean isHasNextFile() {
+    Boolean isHasNextFile() {
         return hasNextFile.get();
     }
 
-    public Boolean isHasPreviousFile() {
+    Boolean isHasPreviousFile() {
         return hasPreviousFile.get();
     }
 
-    public BooleanBinding hasPreviousFileProperty() {
-        return hasPreviousFile;
-    }
-
-    public BooleanBinding hasNextFileProperty() {
-        return hasNextFile;
-    }
-
-    public String getCurrentImageFilePath() {
+    String getCurrentImageFilePath() {
         final String imagePath = getCurrentImage().getUrl()
                 .replace("/", "\\")
                 .replace("%20", " ");
-        return imagePath.substring(imagePath.indexOf("\\") + 1);
+        return imagePath.substring(imagePath.indexOf('\\') + 1);
     }
 
-    public HashSet<String> getBoundingBoxCategoryNames() {
+    Set<String> getBoundingBoxCategoryNames() {
         return boundingBoxCategoryNames;
     }
 
-    public ObservableList<File> getImageFileList() {
+    ObservableList<File> getImageFileList() {
         return imageFileList;
-    }
-
-    public ObservableList<ImageAnnotationDataElement> getImageAnnotations() {
-        return imageAnnotations;
     }
 
     private Image getImageFromFile(File file) {

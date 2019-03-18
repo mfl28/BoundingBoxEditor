@@ -17,7 +17,7 @@ public class ImageAnnotationDataElement {
         this.boundingBoxes = boundingBoxes;
     }
 
-    public static ImageAnnotationDataElement fromSelectionRectangles(final Collection<SelectionRectangle> selectionRectangles) {
+    static ImageAnnotationDataElement fromSelectionRectangles(final Collection<SelectionRectangle> selectionRectangles) {
         if(selectionRectangles.isEmpty()) {
             return null;
         }
@@ -32,15 +32,15 @@ public class ImageAnnotationDataElement {
 
     }
 
-    public Path getImagePath() {
+    Path getImagePath() {
         return Paths.get(imageMetaData.getFilePath().replace("file:/C:", ""));
     }
 
-    public double getImageWidth() {
+    double getImageWidth() {
         return imageMetaData.getImageWidth();
     }
 
-    public double getImageHeight() {
+    double getImageHeight() {
         return imageMetaData.getImageHeight();
     }
 
@@ -48,15 +48,15 @@ public class ImageAnnotationDataElement {
         return imageMetaData.getImageDepth();
     }
 
-    public List<BoundingBoxElement> getBoundingBoxes() {
+    List<BoundingBoxElement> getBoundingBoxes() {
         return boundingBoxes;
     }
 
-    public String getContainingFolderName() {
+    String getContainingFolderName() {
         return getImagePath().getParent().toString();
     }
 
-    public String getImageFileName() {
+    String getImageFileName() {
         return getImagePath().getFileName().toString();
     }
 }

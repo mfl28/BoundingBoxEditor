@@ -16,13 +16,7 @@ class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
         deleteSelectionRectangleItem.setId(DELETE_CONTEXT_MENU_STYLE);
         contextMenu.getItems().add(deleteSelectionRectangleItem);
 
-        //this.emptyProperty().addListener((value, oldValue, newValue) -> this.setContextMenu(newValue ? null : contextMenu));
-
         setUpInternalListeners();
-    }
-
-    public MenuItem getDeleteSelectionRectangleItem() {
-        return deleteSelectionRectangleItem;
     }
 
     @Override
@@ -51,6 +45,10 @@ class SelectionRectangleTreeCell extends TreeCell<SelectionRectangle> {
             }
         }
 
+    }
+
+    MenuItem getDeleteSelectionRectangleItem() {
+        return deleteSelectionRectangleItem;
     }
 
     private void setUpInternalListeners() {

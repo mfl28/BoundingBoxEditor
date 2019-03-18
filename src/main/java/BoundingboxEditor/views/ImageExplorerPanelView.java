@@ -15,7 +15,8 @@ public class ImageExplorerPanelView extends VBox implements View {
         this.getStyleClass().add("image-explorer-side-panel");
         this.setSpacing(SIDE_PANEL_SPACING);
         this.setVisible(false);
-        this.setManaged(false);
+
+        setUpInternalListeners();
     }
 
     public void setImageGalleryItems(ObservableList<File> imageFiles) {
@@ -24,5 +25,9 @@ public class ImageExplorerPanelView extends VBox implements View {
 
     public ImageGalleryView getImageGallery() {
         return imageGallery;
+    }
+
+    private void setUpInternalListeners(){
+        managedProperty().bind(visibleProperty());
     }
 }

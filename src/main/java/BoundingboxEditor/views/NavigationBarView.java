@@ -1,7 +1,6 @@
 package BoundingboxEditor.views;
 
 import BoundingboxEditor.Controller;
-import BoundingboxEditor.Utils;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToolBar;
@@ -14,12 +13,12 @@ public class NavigationBarView extends ToolBar implements View {
     private static final double ICON_WIDTH = 20.0;
     private static final double ICON_HEIGHT = 20.0;
 
-    private final Button nextButton = Utils.createIconButton(getClass().getResource(NEXT_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
+    private final Button nextButton = UiUtils.createIconButton(getClass().getResource(NEXT_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
     private final Label indexLabel = new Label();
-    private final Button previousButton = Utils.createIconButton(getClass().getResource(PREVIOUS_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
+    private final Button previousButton = UiUtils.createIconButton(getClass().getResource(PREVIOUS_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
 
     NavigationBarView() {
-        getItems().addAll(Utils.createHSpacer(), previousButton, indexLabel, nextButton, Utils.createHSpacer());
+        getItems().addAll(UiUtils.createHSpacer(), previousButton, indexLabel, nextButton, UiUtils.createHSpacer());
         setVisible(false);
         setManaged(false);
 
@@ -33,15 +32,15 @@ public class NavigationBarView extends ToolBar implements View {
         previousButton.setOnAction(controller::onRegisterPreviousAction);
     }
 
-    public Button getNextButton() {
-        return nextButton;
-    }
-
     public Label getIndexLabel() {
         return indexLabel;
     }
 
-    public Button getPreviousButton() {
+    Button getNextButton() {
+        return nextButton;
+    }
+
+    Button getPreviousButton() {
         return previousButton;
     }
 }

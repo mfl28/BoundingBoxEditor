@@ -15,7 +15,7 @@ class SelectionRectangleTreeItem extends TreeItem<SelectionRectangle> {
         setUpInternalListeners();
     }
 
-    public boolean isIconToggledOn() {
+    boolean isIconToggledOn() {
         return toggleIcon.isToggledOn();
     }
 
@@ -38,8 +38,7 @@ class SelectionRectangleTreeItem extends TreeItem<SelectionRectangle> {
 
             if(newValue) {
                 ((CategoryTreeItem) getParent()).incrementNumToggledOnChildren();
-            }
-            else {
+            } else {
                 ((CategoryTreeItem) getParent()).decrementNumToggledOnChildren();
             }
         }));

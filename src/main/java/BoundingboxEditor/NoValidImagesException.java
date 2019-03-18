@@ -1,10 +1,7 @@
 package BoundingboxEditor;
 
-public class NoValidImagesException extends Exception {
-    public NoValidImagesException() {
-    }
-
-    public NoValidImagesException(String message) {
+class NoValidImagesException extends RuntimeException {
+    NoValidImagesException(String message) {
         super(message);
     }
 }

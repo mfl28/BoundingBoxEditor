@@ -3,8 +3,11 @@ package BoundingboxEditor.views;
 import BoundingboxEditor.BoundingBoxCategory;
 import BoundingboxEditor.DragAnchor;
 import BoundingboxEditor.ImageMetaData;
-import BoundingboxEditor.Utils;
-import javafx.beans.property.*;
+import BoundingboxEditor.MathUtils;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.Property;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -25,7 +28,6 @@ public class SelectionRectangle extends Rectangle {
     private final List<ResizeHandle> resizeHandles = new ArrayList<>();
     private final DragAnchor dragAnchor = new DragAnchor();
 
-    private final BooleanProperty selected = new SimpleBooleanProperty(true);
     private final Property<Bounds> confinementBounds = new SimpleObjectProperty<>();
     private BoundingBoxCategory boundingBoxCategory;
     private ImageMetaData imageMetaData;
@@ -44,20 +46,12 @@ public class SelectionRectangle extends Rectangle {
     private SelectionRectangle() {
     }
 
-    public static SelectionRectangle getDummy() {
-        return nullSelectionRectangle;
-    }
-
     public BoundingBoxCategory getBoundingBoxCategory() {
         return boundingBoxCategory;
     }
 
     public ImageMetaData getImageMetaData() {
         return imageMetaData;
-    }
-
-    public void setImageMetaData(ImageMetaData imageMetaData) {
-        this.imageMetaData = imageMetaData;
     }
 
     public Bounds getImageRelativeBounds() {
@@ -89,10 +83,6 @@ public class SelectionRectangle extends Rectangle {
         });
     }
 
-    public BooleanProperty selectedProperty() {
-        return selected;
-    }
-
     public void setXYWH(double x, double y, double w, double h) {
         this.setX(x);
         this.setY(y);
@@ -100,10 +90,20 @@ public class SelectionRectangle extends Rectangle {
         this.setHeight(h);
     }
 
-    public List<Node> getNodes() {
+    @Override
+    public boolean isResizable() {
+        return true;
+    }
+
+    static SelectionRectangle getDummy() {
+        return nullSelectionRectangle;
+    }
+
+    List<Node> getNodes() {
         this.setManaged(false);
-        for(Rectangle rect : resizeHandles)
+        for(Rectangle rect : resizeHandles) {
             rect.setManaged(false);
+        }
 
         ArrayList<Node> nodeList = new ArrayList<>();
         nodeList.add(this);
@@ -112,17 +112,8 @@ public class SelectionRectangle extends Rectangle {
         return nodeList;
     }
 
-    public void setSelected(boolean selected) {
-        this.selected.set(selected);
-    }
-
-    public void fillOpaque() {
+    void fillOpaque() {
         setFill(Color.web(getStroke().toString(), DEFAULT_FILL_OPACITY));
-    }
-
-    @Override
-    public boolean isResizable() {
-        return true;
     }
 
     private double getMaxX() {
@@ -161,7 +152,7 @@ public class SelectionRectangle extends Rectangle {
                 final Bounds moveBounds = new BoundingBox(regionBounds.getMinX(), regionBounds.getMinY(),
                         regionBounds.getWidth() - this.getWidth(),
                         regionBounds.getHeight() - this.getHeight());
-                final Point2D newConfinedXY = Utils.clampWithinBounds(newXY, moveBounds);
+                final Point2D newConfinedXY = MathUtils.clampWithinBounds(newXY, moveBounds);
 
                 this.setX(newConfinedXY.getX());
                 this.setY(newConfinedXY.getY());
@@ -193,7 +184,7 @@ public class SelectionRectangle extends Rectangle {
             final DoubleProperty rectangle_h = rectangle.heightProperty();
 
             fillProperty().bind(rectangle.strokeProperty());
-            visibleProperty().bind(rectangle.selectedProperty().and(rectangle.visibleProperty()));
+            visibleProperty().bind(rectangle.visibleProperty());
 
             switch(compassPoint) {
                 case NW:
@@ -255,7 +246,7 @@ public class SelectionRectangle extends Rectangle {
                                     rectangle.getMaxY() - parentBounds.getMinY());
 
                             final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
+                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
 
                             rectangle.setX(clampedEventXY.getX());
                             rectangle.setY(clampedEventXY.getY());
@@ -274,7 +265,7 @@ public class SelectionRectangle extends Rectangle {
                                     rectangle.getWidth(), rectangle.getMaxY() - parentBounds.getMinY());
 
                             final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
+                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
 
                             rectangle.setY(clampedEventXY.getY());
                             rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMaxY()));
@@ -292,7 +283,7 @@ public class SelectionRectangle extends Rectangle {
                                     rectangle.getMaxY() - parentBounds.getMinY());
 
                             final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
+                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
 
                             rectangle.setY(clampedEventXY.getY());
                             rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
@@ -309,7 +300,7 @@ public class SelectionRectangle extends Rectangle {
                             final Bounds bounds = new BoundingBox(rectangle.getX(), rectangle.getY(),
                                     parentBounds.getMaxX() - rectangle.getX(), rectangle.getHeight());
                             final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
+                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
 
                             rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
                         }
@@ -326,7 +317,7 @@ public class SelectionRectangle extends Rectangle {
                                     parentBounds.getMaxY() - rectangle.getY());
 
                             final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
+                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
 
                             rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
                             rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
@@ -344,7 +335,7 @@ public class SelectionRectangle extends Rectangle {
                                     parentBounds.getMaxY() - rectangle.getY());
 
                             final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
+                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
 
                             rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
                         }
@@ -361,7 +352,7 @@ public class SelectionRectangle extends Rectangle {
                                     parentBounds.getMaxY() - rectangle.getY());
 
                             final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
+                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
 
                             rectangle.setX(clampedEventXY.getX());
                             rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));
@@ -380,7 +371,7 @@ public class SelectionRectangle extends Rectangle {
                                     rectangle.getHeight());
 
                             final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = Utils.clampWithinBounds(eventXY, bounds);
+                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
 
                             rectangle.setX(clampedEventXY.getX());
                             rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));

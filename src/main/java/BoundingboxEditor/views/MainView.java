@@ -1,7 +1,8 @@
 package BoundingboxEditor.views;
 
-import BoundingboxEditor.*;
-import javafx.collections.FXCollections;
+import BoundingboxEditor.BoundingBoxCategory;
+import BoundingboxEditor.Controller;
+import BoundingboxEditor.DragAnchor;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
@@ -13,19 +14,14 @@ import java.util.List;
 
 public class MainView extends BorderPane implements View {
 
-    private static final double IMAGE_PADDING = 30.0;
-    private static final int ZOOM_SLIDER_DEFAULT = 1;
-    private static final int BRIGHTNESS_SLIDER_DEFAULT = 0;
-    private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
+//    private static final double IMAGE_PADDING = 30.0;
+//    private static final int ZOOM_SLIDER_DEFAULT = 1;
+//    private static final int BRIGHTNESS_SLIDER_DEFAULT = 0;
+//    private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
 
     private final TopPanelView topPanel = new TopPanelView();
-    //private final SettingsPanelView settingsPanel = new SettingsPanelView();
-//    private final ImageExplorerPanelView imageExplorerPanel = new ImageExplorerPanelView();
-//    //private final ImagePaneView imagePaneView = new ImagePaneView();
-//    private final ImageShowerView imageShower = new ImageShowerView();
-//    private final ProjectSidePanelView projectSidePanel = new ProjectSidePanelView();
-    private final StatusPanelView statusPanel = new StatusPanelView();
     private final WorkspaceView workspace = new WorkspaceView();
+    private final StatusPanelView statusPanel = new StatusPanelView();
 
     public MainView() {
         this.setTop(topPanel);
@@ -38,10 +34,6 @@ public class MainView extends BorderPane implements View {
 
         setInternalBindingsAndListeners();
         setExplorerCellFactory();
-    }
-
-    public TopPanelView getTopPanel() {
-        return topPanel;
     }
 
     public ProjectSidePanelView getProjectSidePanel() {
@@ -132,10 +124,6 @@ public class MainView extends BorderPane implements View {
         return workspace.getImageShower().getImagePane().getImageSelectionRectangles();
     }
 
-    public void setImageSelectionRectangles(List<ObservableList<SelectionRectangle>> data) {
-        workspace.getImageShower().getImagePane().setImageSelectionRectangles(data);
-    }
-
     public ImageExplorerPanelView getImageExplorerPanel() {
         return workspace.getImageExplorer();
     }
@@ -144,20 +132,6 @@ public class MainView extends BorderPane implements View {
     public void connectToController(final Controller controller) {
         topPanel.connectToController(controller);
         workspace.connectToController(controller);
-    }
-
-    public void setSelectionRectangleDatabaseListeners() {
-        getImageShower().getImagePane().getImageSelectionRectangles().forEach(selectionRectangleList ->
-                selectionRectangleList.addListener((ListChangeListener<SelectionRectangle>) c -> {
-                    while(c.next()) {
-                        List<? extends SelectionRectangle> addedItemsList = c.getAddedSubList();
-
-                        getImageShower().getImagePane().addSelectionRectanglesAsChildren(addedItemsList);
-                        getProjectSidePanel().getExplorerView().addTreeItemsFromSelectionRectangles(addedItemsList);
-
-                        getImageShower().getImagePane().removeSelectionRectanglesFromChildren(c.getRemoved());
-                    }
-                }));
     }
 
     public void setSelectionRectangleListListener() {
@@ -171,35 +145,6 @@ public class MainView extends BorderPane implements View {
                 getImageShower().getImagePane().removeSelectionRectanglesFromChildren(c.getRemoved());
             }
         });
-    }
-
-    public void loadSelectionRectangleList(int index) {
-        final List<ObservableList<SelectionRectangle>> selectionRectanglesDatabase = getImageShower().getImagePane().getImageSelectionRectangles();
-        final List<SelectionRectangle> currentRectangles = getImageShower().getImagePane().getSelectionRectangleList();
-
-        final ObservableList<SelectionRectangle> loadedSelectionRectangles = selectionRectanglesDatabase.get(index);
-
-        // Remove rectangles of the previous image from the scene graph
-        getImageShower().getImagePane().removeSelectionRectanglesFromChildren(currentRectangles);
-
-        if(loadedSelectionRectangles == null) {
-
-            // Create a new empty list of rectangles
-            final ObservableList<SelectionRectangle> newRectangles = FXCollections.observableArrayList();
-            selectionRectanglesDatabase.set(index, newRectangles);
-
-            // Set the newly created list as the current working list
-            getImageShower().getImagePane().setSelectionRectangleList(newRectangles);
-
-            // Setup the listeners for add/remove functionality
-            setSelectionRectangleListListener();
-        } else {
-            // Set the loaded list as the current working list
-            getImageShower().getImagePane().setSelectionRectangleList(loadedSelectionRectangles);
-            // Add the loaded rectangles to the scenegraph and the explorer tree
-            getImageShower().getImagePane().addSelectionRectanglesAsChildren(loadedSelectionRectangles);
-            getProjectSidePanel().getExplorerView().addTreeItemsFromSelectionRectangles(loadedSelectionRectangles);
-        }
     }
 
     public WorkspaceView getWorkspace() {
@@ -255,6 +200,26 @@ public class MainView extends BorderPane implements View {
         });
 
         topPanel.getSeparator().visibleProperty().bind(getNavigationBar().visibleProperty());
+
+        // TODO: should only listen when folder is loaded.
+        topPanel.getShowImageExplorerMenuItem().selectedProperty().addListener(((observable, oldValue, newValue) -> {
+            getImageExplorerPanel().setVisible(newValue);
+            if(!newValue){
+                getWorkspace().setDividerPosition(1, 1.0);
+            }
+        }));
+
+        // TODO: Should be permanent -> switch between two different listeners
+        topPanel.getViewFitWindowItem().selectedProperty().addListener(((observable, oldValue, newValue) -> {
+            if(newValue){
+                getImageShower().getImagePane().setFitToWindow(true);
+                getImageShower().getImagePane().fitToWindow();
+            }
+            else{
+                getImageShower().getImagePane().setFitToWindow(false);
+                getImageShower().getImagePane().setInitialImageViewSize();
+            }
+        }));
     }
 
     private void setExplorerCellFactory() {

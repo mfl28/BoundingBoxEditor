@@ -15,7 +15,7 @@ public class ImageMetaData {
         this.imageDepth = imageDepth;
     }
 
-    public static ImageMetaData fromImage(final Image image) {
+    static ImageMetaData fromImage(final Image image) {
         return new ImageMetaData(image.getUrl(), image.getWidth(), image.getHeight(), 0);
     }
 
@@ -23,31 +23,16 @@ public class ImageMetaData {
         return imageWidth;
     }
 
-    public void setImageWidth(double imageWidth) {
-        this.imageWidth = imageWidth;
-    }
-
     public double getImageHeight() {
         return imageHeight;
     }
 
-    public void setImageHeight(double imageHeight) {
-        this.imageHeight = imageHeight;
-    }
 
     public double getImageDepth() {
         return imageDepth;
     }
 
-    public void setImageDepth(double imageDepth) {
-        this.imageDepth = imageDepth;
-    }
-
-    public String getFilePath() {
+    String getFilePath() {
         return filePath;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
     }
 }

@@ -1,8 +1,6 @@
 package BoundingboxEditor.views;
 
 import BoundingboxEditor.BoundingBoxCategory;
-import BoundingboxEditor.Utils;
-import BoundingboxEditor.views.View;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
@@ -13,7 +11,7 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 
-public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> implements View {
+class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> implements View {
     private static final String TABLE_NAME_COLUMN_FACTORY_NAME = "name";
     private static final int TABLE_VIEW_COLOR_COLUMN_WIDTH = 5;
     private static final int TABLE_VIEW_DELETE_COLUMN_WIDTH = 19;
@@ -61,6 +59,9 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
         return deleteColumn;
     }
 
+
+
+
     private static class ColorTableCell extends TableCell<BoundingBoxCategory, Color> {
 
         @Override
@@ -73,9 +74,18 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
             } else {
                 final BoundingBoxCategory row = getTableRow().getItem();
                 if(row != null) {
-                    setStyle("-fx-background-color: " + Utils.rgbaFromColor(row.getColor()) + ";");
+                    setStyle("-fx-background-color: " + rgbaFromColor(row.getColor()) + ";");
                 }
             }
+        }
+
+        // Source: https://stackoverflow.com/questions/44331780/javafx-color-parsing
+        private String rgbaFromColor(Color color) {
+            return String.format("rgba(%d, %d, %d, %f)",
+                    (int) (255 * color.getRed()),
+                    (int) (255 * color.getGreen()),
+                    (int) (255 * color.getBlue()),
+                    color.getOpacity());
         }
     }
 
