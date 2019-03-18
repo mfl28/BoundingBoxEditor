@@ -2,7 +2,7 @@ package BoundingboxEditor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import BoundingboxEditor.BoundingBoxElement;
+import BoundingboxEditor.model.io.BoundingBoxElement;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

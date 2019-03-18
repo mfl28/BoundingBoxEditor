@@ -1,7 +1,8 @@
 package BoundingboxEditor;
 
-import BoundingboxEditor.views.MainView;
-import BoundingboxEditor.views.SelectionRectangle;
+import BoundingboxEditor.controller.Controller;
+import BoundingboxEditor.ui.MainView;
+import BoundingboxEditor.ui.SelectionRectangle;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;

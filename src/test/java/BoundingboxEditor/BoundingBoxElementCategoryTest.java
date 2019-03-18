@@ -1,7 +1,7 @@
 package BoundingboxEditor;
 
-import BoundingboxEditor.BoundingBoxElement;
-import BoundingboxEditor.BoundingBoxCategory;
+import BoundingboxEditor.model.io.BoundingBoxElement;
+import BoundingboxEditor.model.BoundingBoxCategory;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
 
