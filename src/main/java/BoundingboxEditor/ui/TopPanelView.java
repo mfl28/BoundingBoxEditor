@@ -6,7 +6,6 @@ import javafx.scene.control.Separator;
 import javafx.scene.layout.VBox;
 
 class TopPanelView extends VBox implements View {
-
     private static final String TOP_PANEL_STYLE = "top-panel";
 
     private final MenuBarView menuBar = new MenuBarView();
@@ -27,7 +26,7 @@ class TopPanelView extends VBox implements View {
     }
 
     CheckMenuItem getShowImageExplorerMenuItem() {
-        return menuBar.getShowImageExplorerMenuItem();
+        return menuBar.getViewShowImageExplorerItem();
     }
 
     CheckMenuItem getViewFitWindowItem() {

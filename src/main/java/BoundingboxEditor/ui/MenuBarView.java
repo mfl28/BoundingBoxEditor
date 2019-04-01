@@ -9,18 +9,21 @@ class MenuBarView extends MenuBar implements View {
     private static final String OPEN_FOLDER_TEXT = "_Open Folder...";
     private static final String SAVE_TEXT = "_Save...";
     private static final String FIT_WINDOW_TEXT = "_Fit Window";
-    private static final String SHOW_IMAGE_EXPLORER = "Image Explorer";
+    private static final String SHOW_IMAGE_EXPLORER = "_Image Explorer";
     private static final String EXIT_TEXT = "E_xit";
+    private static final String MAIN_MENU_BAR_ID = "main-menu-bar";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT);
     private final MenuItem fileSaveItem = new MenuItem(SAVE_TEXT);
+    private final MenuItem fileImportAnnotationsItem = new MenuItem("Import Annotations...");
     private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT);
     private final CheckMenuItem viewFitWindowItem = new CheckMenuItem(FIT_WINDOW_TEXT);
-    private final CheckMenuItem showImageExplorer = new CheckMenuItem(SHOW_IMAGE_EXPLORER);
+    private final CheckMenuItem viewShowImageExplorerItem = new CheckMenuItem(SHOW_IMAGE_EXPLORER);
 
     MenuBarView() {
         getMenus().addAll(createFileMenu(), createViewMenu());
-        showImageExplorer.setSelected(true);
+        setId(MAIN_MENU_BAR_ID);
+        viewShowImageExplorerItem.setSelected(true);
         viewFitWindowItem.setSelected(true);
     }
 
@@ -28,12 +31,12 @@ class MenuBarView extends MenuBar implements View {
     public void connectToController(final Controller controller) {
         fileOpenFolderItem.setOnAction(action -> controller.onRegisterOpenFolderAction());
         fileSaveItem.setOnAction(action -> controller.onRegisterSaveAction());
-        viewFitWindowItem.setOnAction(action -> controller.onRegisterFitWindowAction());
+        fileImportAnnotationsItem.setOnAction(action -> controller.onRegisterImportAnnotationsAction());
         fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
     }
 
-    CheckMenuItem getShowImageExplorerMenuItem() {
-        return showImageExplorer;
+    CheckMenuItem getViewShowImageExplorerItem() {
+        return viewShowImageExplorerItem;
     }
 
     CheckMenuItem getViewFitWindowItem() {
@@ -42,15 +45,13 @@ class MenuBarView extends MenuBar implements View {
 
     private Menu createFileMenu() {
         Menu fileMenu = new Menu(FILE_MENU_TEXT);
-        fileMenu.getItems().addAll(fileOpenFolderItem, fileSaveItem, fileExitItem);
+        fileMenu.getItems().addAll(fileOpenFolderItem, fileSaveItem, fileImportAnnotationsItem, fileExitItem);
         return fileMenu;
     }
 
     private Menu createViewMenu() {
         Menu viewMenu = new Menu(VIEW_MENU_TEXT);
-        SeparatorMenuItem separatorMenuItem = new SeparatorMenuItem();
-        separatorMenuItem.setContent(new Separator());
-        viewMenu.getItems().addAll(viewFitWindowItem, separatorMenuItem, showImageExplorer);
+        viewMenu.getItems().addAll(viewFitWindowItem, new SeparatorMenuItem(), viewShowImageExplorerItem);
         return viewMenu;
     }
 }

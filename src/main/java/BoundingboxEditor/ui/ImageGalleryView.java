@@ -10,6 +10,8 @@ import javafx.scene.layout.VBox;
 import java.io.File;
 
 public class ImageGalleryView extends ListView<File> implements View {
+    private static final double REQUESTED_IMAGE_WIDTH = 150;
+    private static final double REQUESTED_IMAGE_HEIGHT = 150;
 
     ImageGalleryView() {
         VBox.setVgrow(this, Priority.ALWAYS);
@@ -26,20 +28,22 @@ public class ImageGalleryView extends ListView<File> implements View {
 
             if(empty || item == null) {
                 imageView.setImage(null);
-                this.setGraphic(null);
-                this.setText(null);
+                setGraphic(null);
+                setText(null);
             } else {
-                if(imageView.getImage() != null && !this.isSelected()) {
-                    imageView.getImage().cancel();
+                Image currentImage = imageView.getImage();
+
+                if(currentImage != null && !isSelected()) {
+                    currentImage.cancel();
                 }
 
-                if(imageView.getImage() == null || (!imageView.getImage().getUrl().equals(item.toURI().toString()))) {
-                    Image image = new Image(item.toURI().toString(), 150, 150, true, false, true);
-                    imageView.setImage(image);
-                    this.setGraphic(imageView);
+                if(currentImage == null || !currentImage.getUrl().equals(item.toURI().toString())) {
+                    imageView.setImage(new Image(item.toURI().toString(), REQUESTED_IMAGE_WIDTH, REQUESTED_IMAGE_HEIGHT,
+                            true, false, true));
+                    setGraphic(imageView);
                 }
 
-                this.setText(item.getName());
+                setText(item.getName());
             }
         }
     }

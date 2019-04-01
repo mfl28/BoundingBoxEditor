@@ -4,17 +4,13 @@ import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.utils.ColorUtils;
 import BoundingboxEditor.utils.UiUtils;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.util.Random;
 
-
 public class ProjectSidePanelView extends VBox implements View {
-
     private static final String CLASS_SELECTOR_LABEL_TEXT = "Category Editor";
     private static final String SEARCH_CATEGORY_PROMPT_TEXT = "Search Category";
     private static final String BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT = "Add";
@@ -25,81 +21,77 @@ public class ProjectSidePanelView extends VBox implements View {
     private static final String OBJECT_SELECTOR_LABEL_TEXT = "Explorer";
     private static final int CATEGORY_SEARCH_BOX_SPACING = 10;
     private static final int SIDE_PANEL_SPACING = 5;
-    private static final double ICON_WIDTH = 20.0;
-    private static final double ICON_HEIGHT = 20.0;
     private static final String HIDE_ICON_PATH = "/icons/hide.png";
     private static final String SHOW_ICON_PATH = "/icons/show.png";
     private static final String EXPAND_ICON_PATH = "/icons/expand.png";
     private static final String COLLAPSE_ICON_PATH = "/icons/collapse.png";
     private static final String CATEGORY_INPUT_FIELD_PROMPT_TEXT = "Category Name";
+    private static final String PROJECT_SIDE_PANEL_ID = "project-side-panel";
+    private static final String CATEGORY_INPUT_FIELD_ID = "category-input-field";
+    private static final String ADD_BUTTON_ID = "add-button";
 
-    private final BoundingBoxCategorySelectorView selectorView = new BoundingBoxCategorySelectorView();
 
-    private final TextField categoryInputField = new TextField();
     private final TextField categorySearchField = new TextField();
-    private final ColorPicker boundingBoxColorPicker = new ColorPicker();
-    private final Button addButton = new Button(BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT);
-    private final SelectionRectangleExplorerView explorerView = new SelectionRectangleExplorerView();
-    private final ToggleButton visibilityToggle = UiUtils.createToggleIconButton(getClass().getResource(HIDE_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
-    private final ToggleButton expansionToggle = UiUtils.createToggleIconButton(getClass().getResource(COLLAPSE_ICON_PATH).toExternalForm(), ICON_WIDTH, ICON_HEIGHT);
-    private final ImageView hideImageView = new ImageView(new Image(getClass().getResource(HIDE_ICON_PATH).toExternalForm()));
-    private final ImageView showImageView = new ImageView(new Image(getClass().getResource(SHOW_ICON_PATH).toExternalForm()));
-    private final ImageView expandImageView = new ImageView(new Image(getClass().getResource(EXPAND_ICON_PATH).toExternalForm()));
-    private final ImageView collapseImageView = new ImageView(new Image(getClass().getResource(COLLAPSE_ICON_PATH).toExternalForm()));
+    private final BoundingBoxCategorySelectorView categorySelector = new BoundingBoxCategorySelectorView();
+    private final ColorPicker categoryColorPicker = new ColorPicker();
+    private final TextField categoryNameTextField = new TextField();
+    private final Button addCategoryButton = new Button(BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT);
+
+    private final BoundingBoxExplorerView boundingBoxExplorer = new BoundingBoxExplorerView();
+    private final ToggleButton visibilityToggle = new ToggleIconButton(SHOW_ICON_PATH, HIDE_ICON_PATH);
+    private final ToggleButton expansionToggle = new ToggleIconButton(EXPAND_ICON_PATH, COLLAPSE_ICON_PATH);
 
     ProjectSidePanelView() {
         getChildren().addAll(
                 new Label(CLASS_SELECTOR_LABEL_TEXT),
                 createCategorySearchBox(),
-                selectorView,
+                categorySelector,
                 createAddCategoryControlBox(),
                 new Separator(),
                 new Label(OBJECT_SELECTOR_LABEL_TEXT),
-                explorerView,
-                new HBox(visibilityToggle, expansionToggle)
+                boundingBoxExplorer,
+                createBoundingBoxExplorerControlBox()
         );
-        showImageView.setFitWidth(ICON_WIDTH);
-        showImageView.setFitHeight(ICON_HEIGHT);
-        hideImageView.setFitHeight(ICON_HEIGHT);
-        hideImageView.setFitWidth(ICON_WIDTH);
-        expandImageView.setFitWidth(ICON_WIDTH);
-        expandImageView.setFitHeight(ICON_HEIGHT);
-        collapseImageView.setFitHeight(ICON_HEIGHT);
-        collapseImageView.setFitWidth(ICON_WIDTH);
+
         setUpStyles();
+        setUpIds();
         setUpInternalListeners();
-        setVisible(false);
-        setManaged(false);
     }
 
-    public TextField getCategoryInputField() {
-        return categoryInputField;
+    public TextField getCategoryNameTextField() {
+        return categoryNameTextField;
     }
 
-    public Button getAddButton() {
-        return addButton;
+    public Button getAddCategoryButton() {
+        return addCategoryButton;
     }
 
-    public SelectionRectangleExplorerView getExplorerView() {
-        return explorerView;
+    public BoundingBoxExplorerView getBoundingBoxExplorer() {
+        return boundingBoxExplorer;
     }
 
     @Override
     public void connectToController(Controller controller) {
-        addButton.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
-        categoryInputField.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
+        addCategoryButton.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
+        categorySelector.connectToController(controller);
+        categoryNameTextField.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
     }
 
-    BoundingBoxCategorySelectorView getSelectorView() {
-        return selectorView;
+    @Override
+    public void reset() {
+        boundingBoxExplorer.reset();
+    }
+
+    BoundingBoxCategorySelectorView getCategorySelector() {
+        return categorySelector;
     }
 
     TextField getCategorySearchField() {
         return categorySearchField;
     }
 
-    ColorPicker getBoundingBoxColorPicker() {
-        return boundingBoxColorPicker;
+    ColorPicker getCategoryColorPicker() {
+        return categoryColorPicker;
     }
 
     private HBox createCategorySearchBox() {
@@ -108,33 +100,56 @@ public class ProjectSidePanelView extends VBox implements View {
         categorySearchField.setPromptText(SEARCH_CATEGORY_PROMPT_TEXT);
         categorySearchField.setFocusTraversable(false);
 
-        //FIXME: fix the text-field context menu style
-        final HBox categorySearchBox = new HBox();
-        categorySearchBox.getChildren().addAll(categorySearchField);
+        HBox categorySearchBox = new HBox(categorySearchField);
         categorySearchBox.setSpacing(CATEGORY_SEARCH_BOX_SPACING);
 
         return categorySearchBox;
     }
 
+    private HBox createAddCategoryControlBox() {
+        addCategoryButton.setFocusTraversable(false);
+
+        HBox addItemControls = new HBox(categoryColorPicker, UiUtils.createHSpacer(),
+                categoryNameTextField, UiUtils.createHSpacer(), addCategoryButton);
+        categoryNameTextField.setPromptText(CATEGORY_INPUT_FIELD_PROMPT_TEXT);
+        addItemControls.getStyleClass().add(BOUNDING_BOX_ITEM_CONTROLS_STYLE);
+
+        return addItemControls;
+    }
+
+    private HBox createBoundingBoxExplorerControlBox() {
+        return new HBox(visibilityToggle, expansionToggle);
+    }
+
     private void setUpStyles() {
-        categoryInputField.getStyleClass().add(BOUNDING_BOX_NAME_TEXT_FIELD_STYLE);
-        boundingBoxColorPicker.getStyleClass().add(BOUNDING_BOX_COLOR_PICKER_STYLE);
-        boundingBoxColorPicker.setValue(ColorUtils.createRandomColor(new Random()));
-        this.setSpacing(SIDE_PANEL_SPACING);
-        this.getStyleClass().add(SIDE_PANEL_STYLE);
+        categoryNameTextField.getStyleClass().add(BOUNDING_BOX_NAME_TEXT_FIELD_STYLE);
+        categoryColorPicker.getStyleClass().add(BOUNDING_BOX_COLOR_PICKER_STYLE);
+        categoryColorPicker.setValue(ColorUtils.createRandomColor(new Random()));
+        setSpacing(SIDE_PANEL_SPACING);
+        getStyleClass().add(SIDE_PANEL_STYLE);
+    }
+
+    private void setUpIds() {
+        setId(PROJECT_SIDE_PANEL_ID);
+        categoryNameTextField.setId(CATEGORY_INPUT_FIELD_ID);
+        addCategoryButton.setId(ADD_BUTTON_ID);
     }
 
 
     private void setUpInternalListeners() {
-        // Source: https://stackoverflow.com/questions/40398905/search-tableview-list-in-javafx
-        categorySearchField.textProperty().addListener(((observable, oldValue, newValue) ->
-                selectorView.getItems().stream()
-                        .filter(item -> item.getName().equals(newValue))
+        managedProperty().bind(visibleProperty());
+
+        categorySearchField.textProperty().addListener(((observable, oldValue, newValue) -> {
+            if(newValue != null) {
+                categorySelector.getItems().stream()
+                        .filter(item -> item.getName().startsWith(newValue))
                         .findAny()
                         .ifPresent(item -> {
-                            selectorView.getSelectionModel().select(item);
-                            selectorView.scrollTo(item);
-                        })));
+                            categorySelector.getSelectionModel().select(item);
+                            categorySelector.scrollTo(item);
+                        });
+            }
+        }));
 
         categorySearchField.focusedProperty().addListener(((observable, oldValue, newValue) -> {
             if(!newValue) {
@@ -142,39 +157,20 @@ public class ProjectSidePanelView extends VBox implements View {
             }
         }));
 
-        visibilityToggle.selectedProperty().addListener(((observable, oldValue, newValue) -> {
-            // TODO: should reset appropriately
-            if(!explorerView.getRoot().isLeaf()) {
-                visibilityToggle.setGraphic(newValue ? hideImageView : showImageView);
-            }
-
-            explorerView.getRoot().getChildren().stream()
-                    .map(childItem -> (CategoryTreeItem) childItem)
-                    .forEach(childItem -> childItem.setIconToggledOn(!newValue));
-        }));
+        // TODO: should reset appropriately
+        visibilityToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
+                boundingBoxExplorer.getRoot().getChildren().stream()
+                        .map(childItem -> (CategoryTreeItem) childItem)
+                        .forEach(childItem -> childItem.setIconToggledOn(!newValue))
+        ));
 
         // FIXME: Flickers when changing between images that contain bounding box annotations
-        visibilityToggle.disableProperty().bind(explorerView.getRoot().leafProperty());
+        //  (actually normal because of image loading in between)
+        visibilityToggle.disableProperty().bind(boundingBoxExplorer.getRoot().leafProperty());
+        expansionToggle.disableProperty().bind(boundingBoxExplorer.getRoot().leafProperty());
 
-        expansionToggle.disableProperty().bind(explorerView.getRoot().leafProperty());
-
-        expansionToggle.selectedProperty().addListener(((observable, oldValue, newValue) -> {
-            if(!explorerView.getRoot().isLeaf()) {
-                expansionToggle.setGraphic(newValue ? expandImageView : collapseImageView);
-            }
-            explorerView.getRoot().getChildren().forEach(child -> child.setExpanded(newValue));
-        }));
-    }
-
-    private HBox createAddCategoryControlBox() {
-        addButton.setFocusTraversable(false);
-        // FIXME: for testing
-        addButton.setId("add-button");
-
-        final HBox addItemControls = new HBox(boundingBoxColorPicker, UiUtils.createHSpacer(), categoryInputField, UiUtils.createHSpacer(), addButton);
-        categoryInputField.setPromptText(CATEGORY_INPUT_FIELD_PROMPT_TEXT);
-        addItemControls.getStyleClass().add(BOUNDING_BOX_ITEM_CONTROLS_STYLE);
-
-        return addItemControls;
+        expansionToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
+                boundingBoxExplorer.getRoot().getChildren().forEach(child -> child.setExpanded(newValue))
+        ));
     }
 }

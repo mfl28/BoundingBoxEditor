@@ -26,21 +26,24 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
     private static final String IMAGE_SIZE_ELEMENT_NAME = "size";
     private static final String IMAGE_WIDTH_ELEMENT_NAME = "width";
     private static final String IMAGE_HEIGHT_ELEMENT_NAME = "height";
-    //private static final String IMAGE_DEPTH_ELEMENT_NAME = "depth";
     private static final String BOUNDING_BOX_ENTRY_ELEMENT_NAME = "object";
     private static final String BOUNDING_BOX_CATEGORY_NAME = "name";
     private static final String BOUNDING_BOX_SIZE_GROUP_NAME = "bndBox";
 
-    private static final DecimalFormat floatingpointFormat = new DecimalFormat("#.##");
-    private static final String XML_FILE_EXTENSION = ".xml";
+    private static final DecimalFormat floatingPointFormat = new DecimalFormat("#.##");
+    private static final String FILE_EXTENSION = ".xml";
+    private static final String XMIN_TAG = "xmin";
+    private static final String XMAX_TAG = "xmax";
+    private static final String YMIN_TAG = "ymin";
+    private static final String YMAX_TAG = "ymax";
+    private static final String FILENAME_ANNOTATION_EXTENSION = "_A";
 
     @Override
     public void save(final Collection<ImageAnnotationDataElement> dataSet, final Path path) throws Exception {
         final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         final DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 
-        final TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        final Transformer transformer = transformerFactory.newTransformer();
+        final Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
         for(final ImageAnnotationDataElement dataElement : dataSet) {
@@ -68,7 +71,10 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
         String fileName = dataElement.getImageFileName();
         String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf('.'));
 
-        File outputFile = new File(path.toString().concat("\\").concat(fileNameWithoutExtension).concat(XML_FILE_EXTENSION));
+        File outputFile = new File(path.toString().concat("\\")
+                .concat(fileNameWithoutExtension)
+                .concat(FILENAME_ANNOTATION_EXTENSION)
+                .concat(FILE_EXTENSION));
 
         StreamResult streamResult = new StreamResult(outputFile);
 
@@ -76,61 +82,42 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
     }
 
     private void appendHeaderFromImageAnnotationDataElement(final Document document, final Node root, final ImageAnnotationDataElement dataElement) {
-        final Element folderElement = document.createElement(FOLDER_ELEMENT_NAME);
-        folderElement.appendChild(document.createTextNode(dataElement.getContainingFolderName()));
-        root.appendChild(folderElement);
-
-        final Element fileNameElement = document.createElement(FILENAME_ELEMENT_NAME);
-        fileNameElement.appendChild(document.createTextNode(dataElement.getImageFileName()));
-        root.appendChild(fileNameElement);
-
-        final Element pathElement = document.createElement(PATH_ELEMENT_NAME);
-        pathElement.appendChild(document.createTextNode(dataElement.getImagePath().toString()));
-        root.appendChild(pathElement);
+        root.appendChild(createStringValueElement(document, FOLDER_ELEMENT_NAME, dataElement.getContainingFolderName()));
+        root.appendChild(createStringValueElement(document, FILENAME_ELEMENT_NAME, dataElement.getImageFileName()));
+        root.appendChild(createStringValueElement(document, PATH_ELEMENT_NAME, dataElement.getImagePath().toString()));
 
         final Element sizeElement = document.createElement(IMAGE_SIZE_ELEMENT_NAME);
         root.appendChild(sizeElement);
 
-        final Element widthElement = document.createElement(IMAGE_WIDTH_ELEMENT_NAME);
-        widthElement.appendChild(document.createTextNode(Double.valueOf(floatingpointFormat.format(dataElement.getImageWidth())).toString()));
-        sizeElement.appendChild(widthElement);
-
-        final Element heightElement = document.createElement(IMAGE_HEIGHT_ELEMENT_NAME);
-        heightElement.appendChild(document.createTextNode(Double.valueOf(floatingpointFormat.format(dataElement.getImageHeight())).toString()));
-        sizeElement.appendChild(heightElement);
-
-//        final Element depthElement = document.createElement(IMAGE_DEPTH_ELEMENT_NAME);
-//        depthElement.appendChild(document.createTextNode(Double.valueOf(floatingpointFormat.format(dataElement.getImageDepth())).toString()));
-//        sizeElement.appendChild(depthElement);
+        sizeElement.appendChild(createDoubleValueElement(document, IMAGE_WIDTH_ELEMENT_NAME, dataElement.getImageWidth()));
+        sizeElement.appendChild(createDoubleValueElement(document, IMAGE_HEIGHT_ELEMENT_NAME, dataElement.getImageHeight()));
     }
 
 
     private Element createXmlElementFromBoundingBox(final Document document, final BoundingBoxElement boundingBox) {
         final Element object = document.createElement(BOUNDING_BOX_ENTRY_ELEMENT_NAME);
-
-        final Element name = document.createElement(BOUNDING_BOX_CATEGORY_NAME);
-        name.appendChild(document.createTextNode(boundingBox.getCategoryName()));
-        object.appendChild(name);
+        object.appendChild(createStringValueElement(document, BOUNDING_BOX_CATEGORY_NAME, boundingBox.getCategoryName()));
 
         final Element bndBox = document.createElement(BOUNDING_BOX_SIZE_GROUP_NAME);
         object.appendChild(bndBox);
 
-        final Element xmin = document.createElement("xmin");
-        xmin.appendChild(document.createTextNode(Double.valueOf(floatingpointFormat.format(boundingBox.getxMin())).toString()));
-        bndBox.appendChild(xmin);
-
-        final Element xmax = document.createElement("xmax");
-        xmax.appendChild(document.createTextNode(Double.valueOf(floatingpointFormat.format(boundingBox.getxMax())).toString()));
-        bndBox.appendChild(xmax);
-
-        final Element ymin = document.createElement("ymin");
-        ymin.appendChild(document.createTextNode(Double.valueOf(floatingpointFormat.format(boundingBox.getyMin())).toString()));
-        bndBox.appendChild(ymin);
-
-        final Element ymax = document.createElement("ymax");
-        ymax.appendChild(document.createTextNode(Double.valueOf(floatingpointFormat.format(boundingBox.getyMax())).toString()));
-        bndBox.appendChild(ymax);
+        bndBox.appendChild(createDoubleValueElement(document, XMIN_TAG, boundingBox.getxMin()));
+        bndBox.appendChild(createDoubleValueElement(document, XMAX_TAG, boundingBox.getxMax()));
+        bndBox.appendChild(createDoubleValueElement(document, YMIN_TAG, boundingBox.getyMin()));
+        bndBox.appendChild(createDoubleValueElement(document, YMAX_TAG, boundingBox.getyMax()));
 
         return object;
+    }
+
+    private Element createDoubleValueElement(Document document, String tagName, double value) {
+        Element element = document.createElement(tagName);
+        element.appendChild(document.createTextNode(Double.valueOf(floatingPointFormat.format(value)).toString()));
+        return element;
+    }
+
+    private Element createStringValueElement(Document document, String tagName, String value) {
+        Element element = document.createElement(tagName);
+        element.appendChild(document.createTextNode(value));
+        return element;
     }
 }

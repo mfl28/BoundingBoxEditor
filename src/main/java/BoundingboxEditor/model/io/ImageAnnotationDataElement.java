@@ -1,7 +1,7 @@
 package BoundingboxEditor.model.io;
 
 import BoundingboxEditor.model.ImageMetaData;
-import BoundingboxEditor.ui.SelectionRectangle;
+import BoundingboxEditor.ui.BoundingBoxView;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,28 +13,24 @@ public class ImageAnnotationDataElement {
     private final ImageMetaData imageMetaData;
     private final List<BoundingBoxElement> boundingBoxes;
 
-    private ImageAnnotationDataElement(final ImageMetaData imageMetaData, final List<BoundingBoxElement> boundingBoxes) {
+    ImageAnnotationDataElement(final ImageMetaData imageMetaData, final List<BoundingBoxElement> boundingBoxes) {
         this.imageMetaData = imageMetaData;
         this.boundingBoxes = boundingBoxes;
     }
 
-    public static ImageAnnotationDataElement fromSelectionRectangles(final Collection<SelectionRectangle> selectionRectangles) {
-        if(selectionRectangles.isEmpty()) {
+    public static ImageAnnotationDataElement fromBoundingBoxes(final Collection<BoundingBoxView> boundingBoxViews) {
+        if(boundingBoxViews.isEmpty()) {
             return null;
         }
 
-        final List<BoundingBoxElement> boundingBoxElements = new ArrayList<>(selectionRectangles.size());
+        final List<BoundingBoxElement> boundingBoxElements = new ArrayList<>(boundingBoxViews.size());
 
-        for(SelectionRectangle item : selectionRectangles) {
+        for(BoundingBoxView item : boundingBoxViews) {
             boundingBoxElements.add(BoundingBoxElement.fromSelectionRectangle(item));
         }
 
-        return new ImageAnnotationDataElement(selectionRectangles.iterator().next().getImageMetaData(), boundingBoxElements);
+        return new ImageAnnotationDataElement(boundingBoxViews.iterator().next().getImageMetaData(), boundingBoxElements);
 
-    }
-
-    public double getImageDepth() {
-        return imageMetaData.getImageDepth();
     }
 
     Path getImagePath() {

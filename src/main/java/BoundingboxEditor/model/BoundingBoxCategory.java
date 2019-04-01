@@ -13,17 +13,8 @@ import java.util.Objects;
  * A class representing the category (e.g. "Car", "Bus" etc.) of a bounding-box.
  */
 public class BoundingBoxCategory {
-
-    private static final String DEFAULT_NAME = "Default";
-    private static final Color DEFAULT_COLOR = Color.RED;
-
     private final StringProperty name;
     private final ObjectProperty<Color> color;
-
-    public BoundingBoxCategory() {
-        this.name = new SimpleStringProperty(DEFAULT_NAME);
-        this.color = new SimpleObjectProperty<>(DEFAULT_COLOR);
-    }
 
     /**
      * @param name  The name of the bounding-box category.
@@ -34,7 +25,6 @@ public class BoundingBoxCategory {
         this.name = new SimpleStringProperty(name);
         this.color = new SimpleObjectProperty<>(color);
     }
-
 
     /**
      * @return The name of this bounding-box category.

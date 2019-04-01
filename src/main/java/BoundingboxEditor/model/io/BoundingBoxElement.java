@@ -1,6 +1,6 @@
 package BoundingboxEditor.model.io;
 
-import BoundingboxEditor.ui.SelectionRectangle;
+import BoundingboxEditor.ui.BoundingBoxView;
 import javafx.geometry.Bounds;
 
 public class BoundingBoxElement {
@@ -29,8 +29,8 @@ public class BoundingBoxElement {
         this.yMax = rectangleBounds.getMaxY();
     }
 
-    public static BoundingBoxElement fromSelectionRectangle(final SelectionRectangle selectionRectangle) {
-        return new BoundingBoxElement(selectionRectangle.getBoundingBoxCategory().getName(), selectionRectangle.getImageRelativeBounds());
+    public static BoundingBoxElement fromSelectionRectangle(final BoundingBoxView boundingBoxView) {
+        return new BoundingBoxElement(boundingBoxView.getBoundingBoxCategory().getName(), boundingBoxView.getImageRelativeBounds());
     }
 
     public String getCategoryName() {

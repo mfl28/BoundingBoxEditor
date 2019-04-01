@@ -1,34 +1,47 @@
 package BoundingboxEditor.ui;
 
+import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.model.BoundingBoxCategory;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 
 class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> implements View {
     private static final String TABLE_NAME_COLUMN_FACTORY_NAME = "name";
     private static final int TABLE_VIEW_COLOR_COLUMN_WIDTH = 5;
     private static final int TABLE_VIEW_DELETE_COLUMN_WIDTH = 19;
-    private static final String TABLE_COLUMN_DELETE_BUTTON_STYLE = "delete-button";
-    private static final String TABLE_VIEW_DELETE_ICON_STYLE = "icon";
     private static final String TABLE_VIEW_STYLE = "noheader-table-view";
+    private static final String PLACEHOLDER_TEXT = "No categories";
+    private static final String BOUNDING_BOX_CATEGORY_SELECTOR_ID = "category-selector";
+
+    private final TableColumn<BoundingBoxCategory, BoundingBoxCategory> deleteColumn = createDeleteColumn();
+    private final TableColumn<BoundingBoxCategory, String> nameColumn = createNameColumn();
 
     BoundingBoxCategorySelectorView() {
-        this.setEditable(true);
+        getColumns().add(createColorColumn());
+        getColumns().add(nameColumn);
+        getColumns().add(deleteColumn);
 
-        this.getColumns().add(createColorColumn());
-        this.getColumns().add(createNameColumn());
-        this.getColumns().add(createDeleteColumn());
+        getStyleClass().add(TABLE_VIEW_STYLE);
+        setEditable(true);
+        setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        setFocusTraversable(false);
+        setPlaceholder(new Label(PLACEHOLDER_TEXT));
+        setId(BOUNDING_BOX_CATEGORY_SELECTOR_ID);
+    }
 
-        this.getStyleClass().add(TABLE_VIEW_STYLE);
-        this.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        this.setFocusTraversable(false);
+    @Override
+    public void connectToController(Controller controller) {
+        nameColumn.setOnEditCommit(controller::onSelectorCellEditEvent);
+    }
+
+    TableColumn<BoundingBoxCategory, BoundingBoxCategory> getDeleteColumn() {
+        return deleteColumn;
     }
 
     private TableColumn<BoundingBoxCategory, Color> createColorColumn() {
@@ -36,6 +49,7 @@ class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> imp
         colorColumn.setMinWidth(TABLE_VIEW_COLOR_COLUMN_WIDTH);
         colorColumn.setMaxWidth(TABLE_VIEW_COLOR_COLUMN_WIDTH);
         colorColumn.setCellFactory(factory -> new ColorTableCell());
+        colorColumn.setSortable(false);
         return colorColumn;
     }
 
@@ -43,7 +57,6 @@ class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> imp
         //FIXME: Sometimes the horizontal scrollbar is shown even though theoretically the width is correct
         //       TableView seems to add some padding/border by default.
         final TableColumn<BoundingBoxCategory, String> nameColumn = new TableColumn<>();
-        // TODO: maybe get the name of the "name" variable from BoundingBoxCategory (by reflection?)
         nameColumn.setCellValueFactory(new PropertyValueFactory<>(TABLE_NAME_COLUMN_FACTORY_NAME));
         nameColumn.setEditable(true);
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -55,13 +68,11 @@ class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> imp
         deleteColumn.setMinWidth(TABLE_VIEW_DELETE_COLUMN_WIDTH);
         deleteColumn.setMaxWidth(TABLE_VIEW_DELETE_COLUMN_WIDTH);
         deleteColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
-        deleteColumn.setCellFactory(value -> new DeleteTableCell());
+        deleteColumn.setSortable(false);
         return deleteColumn;
     }
 
-
     private static class ColorTableCell extends TableCell<BoundingBoxCategory, Color> {
-
         @Override
         protected void updateItem(Color item, boolean empty) {
             super.updateItem(item, empty);
@@ -77,7 +88,6 @@ class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> imp
             }
         }
 
-        // Source: https://stackoverflow.com/questions/44331780/javafx-color-parsing
         private String rgbaFromColor(Color color) {
             return String.format("rgba(%d, %d, %d, %f)",
                     (int) (255 * color.getRed()),
@@ -87,33 +97,4 @@ class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> imp
         }
     }
 
-    private static class DeleteTableCell extends TableCell<BoundingBoxCategory, BoundingBoxCategory> {
-        private final Button deleteButton = createDeleteButton();
-
-        @Override
-        protected void updateItem(BoundingBoxCategory item, boolean empty) {
-            super.updateItem(item, empty);
-
-            if(item == null) {
-                setGraphic(null);
-                return;
-            }
-
-            setGraphic(deleteButton);
-            deleteButton.setOnAction(event -> getTableView().getItems().remove(item));
-        }
-
-        private Button createDeleteButton() {
-            final Button deleteButton = new Button();
-            deleteButton.getStyleClass().add(TABLE_COLUMN_DELETE_BUTTON_STYLE);
-            deleteButton.setFocusTraversable(false);
-            deleteButton.setPickOnBounds(true);
-
-            final Region deleteIcon = new Region();
-            deleteIcon.getStyleClass().add(TABLE_VIEW_DELETE_ICON_STYLE);
-            deleteButton.setGraphic(deleteIcon);
-
-            return deleteButton;
-        }
-    }
 }

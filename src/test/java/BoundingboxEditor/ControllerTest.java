@@ -1,8 +1,8 @@
 package BoundingboxEditor;
 
 import BoundingboxEditor.controller.Controller;
+import BoundingboxEditor.ui.BoundingBoxView;
 import BoundingboxEditor.ui.MainView;
-import BoundingboxEditor.ui.SelectionRectangle;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -76,7 +76,7 @@ public class ControllerTest extends ApplicationTest {
 
     @Test
     void onAddButtonClicked_WhenNoCategoryNameEntered_ShouldShowErrorDialogue(FxRobot robot) {
-        robot.clickOn(mainView.getProjectSidePanel().getAddButton());
+        robot.clickOn(mainView.getProjectSidePanel().getAddCategoryButton());
         final Stage topModalStage = getTopModalStage(robot);
 
         verifyThat(topModalStage, CoreMatchers.notNullValue());
@@ -163,17 +163,17 @@ public class ControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         // There should now be exactly one rectangle in the list.
-        verifyThat(mainView.getSelectionRectangleList().size(), CoreMatchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
 
-        final SelectionRectangle selectionRectangle = mainView.getSelectionRectangleList().get(0);
-        // The selectionRectangle's category should be the same as the currently selected category in the category selector.
-        verifyThat(selectionRectangle.getBoundingBoxCategory(), CoreMatchers.equalTo(mainView.getBoundingBoxItemTableView().getSelectionModel().getSelectedItem()));
+        final BoundingBoxView boundingBoxView = mainView.getCurrentBoundingBoxes().get(0);
+        // The boundingBoxView's category should be the same as the currently selected category in the category selector.
+        verifyThat(boundingBoxView.getBoundingBoxCategory(), CoreMatchers.equalTo(mainView.getBoundingBoxItemTableView().getSelectionModel().getSelectedItem()));
 
-        final Bounds selectionRectangleBounds = selectionRectangle.localToScreen(selectionRectangle.getBoundsInLocal());
+        final Bounds selectionRectangleBounds = boundingBoxView.localToScreen(boundingBoxView.getBoundsInLocal());
 
         // Very crude tests for coordinate equality with expected values
-        verifyThat(pixelApproximatelyEqual(selectionRectangle.getWidth(), expectedBounds.getWidth()), CoreMatchers.is(true));
-        verifyThat(pixelApproximatelyEqual(selectionRectangle.getHeight(), expectedBounds.getHeight()), CoreMatchers.is(true));
+        verifyThat(pixelApproximatelyEqual(boundingBoxView.getWidth(), expectedBounds.getWidth()), CoreMatchers.is(true));
+        verifyThat(pixelApproximatelyEqual(boundingBoxView.getHeight(), expectedBounds.getHeight()), CoreMatchers.is(true));
 
         verifyThat(pixelApproximatelyEqual(selectionRectangleBounds.getMinX(), expectedBounds.getMinX()), CoreMatchers.is(true));
         verifyThat(pixelApproximatelyEqual(selectionRectangleBounds.getMinY(), expectedBounds.getMinY()), CoreMatchers.is(true));
@@ -215,17 +215,17 @@ public class ControllerTest extends ApplicationTest {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        final List<TreeItem<SelectionRectangle>> categoryList = mainView.getProjectSidePanel().getExplorerView().getRoot().getChildren();
+        final List<TreeItem<BoundingBoxView>> categoryList = mainView.getProjectSidePanel().getBoundingBoxExplorer().getRoot().getChildren();
         // One category item in treeview
         verifyThat(categoryList.size(), CoreMatchers.equalTo(1));
 
-        verifyThat(controller.getView().getSelectionRectangleList().size(), CoreMatchers.equalTo(1));
+        verifyThat(controller.getView().getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
 
-        final List<TreeItem<SelectionRectangle>> leafList = categoryList.get(0).getChildren();
+        final List<TreeItem<BoundingBoxView>> leafList = categoryList.get(0).getChildren();
 
         verifyThat(leafList.size(), CoreMatchers.equalTo(1));
 
-        verifyThat(leafList.get(0).getValue(), CoreMatchers.equalTo(controller.getView().getSelectionRectangleList().get(0)));
+        verifyThat(leafList.get(0).getValue(), CoreMatchers.equalTo(controller.getView().getCurrentBoundingBoxes().get(0)));
 
         // Now delete the rectangle
         // expand the only existing category
@@ -240,7 +240,7 @@ public class ControllerTest extends ApplicationTest {
         // there should be no elements in the treeview (besides the hidden root)
         verifyThat(categoryList.size(), CoreMatchers.equalTo(0));
         // The selection rectangle list should be empty
-        verifyThat(controller.getView().getSelectionRectangleList().isEmpty(), CoreMatchers.equalTo(true));
+        verifyThat(controller.getView().getCurrentBoundingBoxes().isEmpty(), CoreMatchers.equalTo(true));
     }
 
     @Test
@@ -251,15 +251,15 @@ public class ControllerTest extends ApplicationTest {
         enterNewCategory(robot, "Cat1");
         drawSelectionRectangleOnImageView(robot, new Point2D(0.1, 0.1), new Point2D(0.4, 0.4));
 
-        final List<SelectionRectangle> startChildRectangles = mainView.getImagePaneView().getChildren().stream()
-                .filter(item -> item instanceof SelectionRectangle)
-                .map(item -> (SelectionRectangle) item)
+        final List<BoundingBoxView> startChildRectangles = mainView.getImagePaneView().getChildren().stream()
+                .filter(item -> item instanceof BoundingBoxView)
+                .map(item -> (BoundingBoxView) item)
                 .filter(item -> item.getBoundingBoxCategory() != null)
                 .collect(Collectors.toList());
 
         verifyThat(startChildRectangles.size(), CoreMatchers.equalTo(1));
 
-        final SelectionRectangle expectedRectangle = startChildRectangles.get(0);
+        final BoundingBoxView expectedRectangle = startChildRectangles.get(0);
 
         robot.clickOn(mainView.getNextButton());
         waitUntilCurrentImageIsLoaded();
@@ -287,30 +287,30 @@ public class ControllerTest extends ApplicationTest {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
-        final List<TreeItem<SelectionRectangle>> categoryList = mainView.getProjectSidePanel().getExplorerView().getRoot().getChildren();
+        final List<TreeItem<BoundingBoxView>> categoryList = mainView.getProjectSidePanel().getBoundingBoxExplorer().getRoot().getChildren();
         // One category item in treeview
         verifyThat(categoryList.size(), CoreMatchers.equalTo(1));
 
-        verifyThat(controller.getView().getSelectionRectangleList().size(), CoreMatchers.equalTo(1));
+        verifyThat(controller.getView().getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
 
-        final List<TreeItem<SelectionRectangle>> leafList = categoryList.get(0).getChildren();
+        final List<TreeItem<BoundingBoxView>> leafList = categoryList.get(0).getChildren();
 
         verifyThat(leafList.size(), CoreMatchers.equalTo(1));
 
         verifyThat(leafList.get(0).getValue().getBoundingBoxCategory().getName(), CoreMatchers.equalTo("Cat1"));
 
-        verifyThat(mainView.getSelectionRectangleList().size(), CoreMatchers.equalTo(1));
-        verifyThat(mainView.getSelectionRectangleList().get(0).getBoundingBoxCategory().getName(), CoreMatchers.equalTo("Cat1"));
+        verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingBoxes().get(0).getBoundingBoxCategory().getName(), CoreMatchers.equalTo("Cat1"));
 
-        final List<SelectionRectangle> childRectangles = mainView.getImagePaneView().getChildren().stream()
-                .filter(item -> item instanceof SelectionRectangle)
-                .map(item -> (SelectionRectangle) item)
+        final List<BoundingBoxView> childRectangles = mainView.getImagePaneView().getChildren().stream()
+                .filter(item -> item instanceof BoundingBoxView)
+                .map(item -> (BoundingBoxView) item)
                 .filter(item -> item.getBoundingBoxCategory() != null)
                 .collect(Collectors.toList());
 
         verifyThat(childRectangles.size(), CoreMatchers.equalTo(1));
 
-        final SelectionRectangle actualRectangle = childRectangles.get(0);
+        final BoundingBoxView actualRectangle = childRectangles.get(0);
 
         verifyThat(actualRectangle, CoreMatchers.equalTo(expectedRectangle));
         verifyThat(actualRectangle, NodeMatchers.isVisible());
@@ -375,8 +375,8 @@ public class ControllerTest extends ApplicationTest {
     }
 
     private void enterNewCategory(FxRobot robot, String categoryName) {
-        robot.clickOn(mainView.getProjectSidePanel().getCategoryInputField())
+        robot.clickOn(mainView.getProjectSidePanel().getCategoryNameTextField())
                 .write(categoryName)
-                .clickOn(mainView.getProjectSidePanel().getAddButton());
+                .clickOn(mainView.getProjectSidePanel().getAddCategoryButton());
     }
 }

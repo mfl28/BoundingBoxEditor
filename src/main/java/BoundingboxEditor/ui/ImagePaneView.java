@@ -5,63 +5,57 @@ import BoundingboxEditor.utils.MathUtils;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Group;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Collection;
 
 public class ImagePaneView extends StackPane implements View {
-
-    private static final double IMAGE_PADDING = 30.0;
+    private static final double IMAGE_PADDING = 10.0;
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String IMAGE_PANE_STYLE = "pane";
+    private static final String IMAGE_VIEW_ID = "image-pane";
 
-    private final DragAnchor mousePressed = new DragAnchor();
+    private final ImageView imageView = new ImageView();
+    private final ColorAdjust colorAdjust = new ColorAdjust();
+    private final DragAnchor dragAnchor = new DragAnchor();
     private final ProgressIndicator progressIndicator = new ProgressIndicator();
-    private ImageView imageView = new ImageView();
-    private ObservableList<SelectionRectangle> selectionRectangleList = FXCollections.observableArrayList();
-    private List<ObservableList<SelectionRectangle>> imageSelectionRectangles;
-    private SelectionRectangle selectionRectangle = new SelectionRectangle(null, null);
-    //FIXME: should be in model
-    private ObjectProperty<Image> currentImageObject = new SimpleObjectProperty<>();
-    private SimpleBooleanProperty fitToWindow = new SimpleBooleanProperty(true);
+    private final ObjectProperty<Image> currentImageObject = new SimpleObjectProperty<>();
+    private final SimpleBooleanProperty maximizeImageView = new SimpleBooleanProperty(true);
+    private final Group boundingBoxGroup = new Group();
+
+    private BoundingBoxView initializerBoundingBox = new BoundingBoxView(null, null);
+    private BoundingBoxViewDatabase boundingBoxDataBase;
 
     ImagePaneView() {
-        this.getStyleClass().add(IMAGE_PANE_STYLE);
+        getChildren().addAll(imageView, initializerBoundingBox.getNodeGroup(), boundingBoxGroup, progressIndicator);
+        getStyleClass().add(IMAGE_PANE_STYLE);
 
-        // The intermediary selectionRectangle, will be used to construct actual bounding boxes.
-
-        imageView.setSmooth(true);
-        imageView.setCache(true);
-        /* So that events are registered even on transparent image parts. */
-        imageView.setPickOnBounds(true);
-        imageView.setId("image-pane");
-
-        this.getChildren().add(imageView);
-        this.getChildren().addAll(selectionRectangle.getNodes());
-        this.getChildren().add(progressIndicator);
-
+        boundingBoxGroup.setManaged(false);
         progressIndicator.setVisible(false);
 
+        initializerBoundingBox.confineTo(imageView.boundsInParentProperty());
+
+        setUpImageView();
         setUpInternalListeners();
     }
 
-    public void removeSelectionRectanglesFromChildren(Iterable<? extends SelectionRectangle> selectionRectangles) {
-        selectionRectangles.forEach(item -> this.getChildren().removeAll(item.getNodes()));
+    public void addBoundingBoxesToView(Collection<? extends BoundingBoxView> selectionRectangles) {
+        selectionRectangles.forEach(item -> boundingBoxGroup.getChildren().addAll(item.getNodeGroup()));
     }
 
-    public void addSelectionRectanglesAsChildren(Iterable<? extends SelectionRectangle> selectionRectangles) {
-        selectionRectangles.forEach(item -> this.getChildren().addAll(item.getNodes()));
+    public void removeAllBoundingBoxesFromView() {
+        boundingBoxGroup.getChildren().clear();
     }
 
-    public void resetSelectionRectangleDatabase(int numItems) {
-        imageSelectionRectangles = new ArrayList<>(Collections.nCopies(numItems, null));
+    public void resetSelectionRectangleDatabase(int size) {
+        removeAllBoundingBoxesFromView();
+        boundingBoxDataBase = new BoundingBoxViewDatabase(size);
     }
 
     public ProgressIndicator getProgressIndicator() {
@@ -75,134 +69,133 @@ public class ImagePaneView extends StackPane implements View {
         imageView.setOnMouseReleased(controller::onMouseReleased);
     }
 
-    public boolean isFitToWindow() {
-        return fitToWindow.get();
+    public BoundingBoxViewDatabase getBoundingBoxDataBase() {
+        return boundingBoxDataBase;
     }
 
-    public void setFitToWindow(boolean fitToWindow) {
-        this.fitToWindow.set(fitToWindow);
+    public ObservableList<BoundingBoxView> getCurrentBoundingBoxes() {
+        return boundingBoxDataBase.getCurrentBoundingBoxes();
     }
 
-    public SimpleBooleanProperty fitToWindowProperty() {
-        return fitToWindow;
+    void removeBoundingBoxesFromView(Collection<? extends BoundingBoxView> boundingBoxes) {
+        boundingBoxes.forEach(item -> boundingBoxGroup.getChildren().removeAll(item.getNodeGroup()));
     }
 
-    DragAnchor getMousePressed() {
-        return mousePressed;
+    ColorAdjust getColorAdjust() {
+        return colorAdjust;
+    }
+
+    DragAnchor getDragAnchor() {
+        return dragAnchor;
     }
 
     ImageView getImageView() {
         return imageView;
     }
 
-    void setImageView(final Image image) {
+    void updateImage(final Image image) {
         // FIXME: Image loading does not keep up (ie the wrong image is loaded) when using  pressed up/down keys to quickly iterate through images in image gallery.
-        // reset progress indicator animation
         currentImageObject.set(image);
-        //currentImage = image;
-        progressIndicator.setProgress(0);
-        progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+
+        resetProgressIndicatorAnimation();
         progressIndicator.setVisible(true);
 
         currentImageObject.getValue().progressProperty().addListener((value, oldValue, newValue) -> {
             if(newValue.equals(1.0)) {
-                imageView.setImage(image);
-                imageView.setPreserveRatio(true);
-
-                // FIXME: Error when maximizing and then resizing window.
-                if(isFitToWindow()) {
-                    fitToWindow();
-                } else {
-                    setInitialImageViewSize();
-                }
-
+                imageView.setImage(currentImageObject.getValue());
                 progressIndicator.setVisible(false);
+
+                if(getMaximizeImageView()) {
+                    setImageViewToMaxAllowedSize();
+                } else {
+                    setImageViewToPreferOriginalImageSize();
+                }
             }
         });
     }
 
-    ObservableList<SelectionRectangle> getSelectionRectangleList() {
-        return selectionRectangleList;
-    }
-
-    void setSelectionRectangleList(ObservableList<SelectionRectangle> selectionRectangleList) {
-        this.selectionRectangleList = selectionRectangleList;
-    }
-
-    List<ObservableList<SelectionRectangle>> getImageSelectionRectangles() {
-        return imageSelectionRectangles;
-    }
-
-    SelectionRectangle getSelectionRectangle() {
-        return selectionRectangle;
+    BoundingBoxView getInitializerBoundingBox() {
+        return initializerBoundingBox;
     }
 
     Image getCurrentImage() {
         return currentImageObject.get();
     }
 
-    void fitToWindow() {
-        final double maxAllowedWidth = this.getWidth() - 2 * IMAGE_PADDING;
-        final double maxAllowedHeight = this.getHeight() - 2 * IMAGE_PADDING;
-
-        imageView.setFitWidth(maxAllowedWidth);
-        imageView.setFitHeight(maxAllowedHeight);
+    void setImageViewToMaxAllowedSize() {
+        imageView.setFitWidth(getMaxAllowedImageWidth());
+        imageView.setFitHeight(getMaxAllowedImageHeight());
     }
 
-    void setInitialImageViewSize() {
-        final double imageWidth = imageView.getImage().getWidth();
-        final double imageHeight = imageView.getImage().getHeight();
-        final double maxAllowedWidth = this.getWidth() - 2 * IMAGE_PADDING;
-        final double maxAllowedHeight = this.getHeight() - 2 * IMAGE_PADDING;
+    void setImageViewToPreferOriginalImageSize() {
+        imageView.setFitWidth(Math.min(imageView.getImage().getWidth(), getMaxAllowedImageWidth()));
+        imageView.setFitHeight(Math.min(imageView.getImage().getHeight(), getMaxAllowedImageHeight()));
+    }
 
-        imageView.setFitWidth(Math.min(imageWidth, maxAllowedWidth));
-        imageView.setFitHeight(Math.min(imageHeight, maxAllowedHeight));
+    private void setUpImageView() {
+        imageView.setSmooth(true);
+        imageView.setCache(true);
+        imageView.setPickOnBounds(true);
+        imageView.setPreserveRatio(true);
+        imageView.setEffect(colorAdjust);
+        imageView.setId(IMAGE_VIEW_ID);
+    }
+
+    private void resetProgressIndicatorAnimation() {
+        progressIndicator.setProgress(0);
+        progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+    }
+
+    private boolean getMaximizeImageView() {
+        return maximizeImageView.get();
+    }
+
+    void setMaximizeImageView(boolean maximizeImageView) {
+        this.maximizeImageView.set(maximizeImageView);
     }
 
     private void setUpInternalListeners() {
-        this.widthProperty().addListener((value, oldValue, newValue) -> {
-            if(!isFitToWindow()) {
-                double prefWidth = 0;
-                if(imageView.getImage() != null) {
-                    prefWidth = imageView.getImage().getWidth();
-                }
-                imageView.setFitWidth(Math.min(prefWidth, newValue.doubleValue() - 2 * IMAGE_PADDING));
+        widthProperty().addListener((value, oldValue, newValue) -> {
+            if(!getMaximizeImageView()) {
+                final Image image = imageView.getImage();
+                double prefWidth = image != null ? image.getWidth() : 0;
+                imageView.setFitWidth(Math.min(prefWidth, getMaxAllowedImageWidth()));
             } else {
-                imageView.setFitWidth(newValue.doubleValue() - 2 * IMAGE_PADDING);
+                imageView.setFitWidth(getMaxAllowedImageWidth());
             }
-
         });
 
-        this.heightProperty().addListener((value, oldValue, newValue) -> {
-            if(!isFitToWindow()) {
-                double prefHeight = 0;
-                if(imageView.getImage() != null) {
-                    prefHeight = imageView.getImage().getHeight();
-                }
-                imageView.setFitHeight(Math.min(prefHeight, newValue.doubleValue() - 2 * IMAGE_PADDING));
+        heightProperty().addListener((value, oldValue, newValue) -> {
+            if(!getMaximizeImageView()) {
+                final Image image = imageView.getImage();
+                double prefHeight = image != null ? image.getHeight() : 0;
+                imageView.setFitHeight(Math.min(prefHeight, getMaxAllowedImageHeight()));
             } else {
-                imageView.setFitHeight(newValue.doubleValue() - 2 * IMAGE_PADDING);
+                imageView.setFitHeight(getMaxAllowedImageHeight());
             }
-
         });
 
-        this.setOnScroll(event -> {
+        setOnScroll(event -> {
             if(event.isControlDown()) {
                 final Image image = imageView.getImage();
-                final double delta = event.getDeltaY();
-
-                final double newFitWidth = MathUtils.clamp(imageView.getFitWidth() + delta,
-                        Math.min(ZOOM_MIN_WINDOW_RATIO * this.getWidth(), image.getWidth()),
-                        this.getWidth() - 2 * IMAGE_PADDING);
-                final double newFitHeight = MathUtils.clamp(imageView.getFitHeight() + delta,
-                        Math.min(ZOOM_MIN_WINDOW_RATIO * this.getHeight(), image.getHeight()),
-                        this.getHeight() - 2 * IMAGE_PADDING);
+                double newFitWidth = MathUtils.clamp(imageView.getFitWidth() + event.getDeltaY(),
+                        Math.min(ZOOM_MIN_WINDOW_RATIO * getWidth(), image.getWidth()),
+                        getMaxAllowedImageWidth());
+                double newFitHeight = MathUtils.clamp(imageView.getFitHeight() + event.getDeltaY(),
+                        Math.min(ZOOM_MIN_WINDOW_RATIO * getHeight(), image.getHeight()),
+                        getMaxAllowedImageHeight());
 
                 imageView.setFitWidth(newFitWidth);
                 imageView.setFitHeight(newFitHeight);
             }
         });
+    }
 
-        selectionRectangle.confineTo(imageView.boundsInParentProperty());
+    private double getMaxAllowedImageWidth() {
+        return Math.max(0, getWidth() - 2 * IMAGE_PADDING);
+    }
+
+    private double getMaxAllowedImageHeight() {
+        return Math.max(0, getHeight() - 2 * IMAGE_PADDING);
     }
 }

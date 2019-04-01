@@ -2,21 +2,21 @@ package BoundingboxEditor.model;
 
 import javafx.scene.image.Image;
 
+import java.util.Objects;
+
 public class ImageMetaData {
     private String filePath;
     private double imageWidth;
     private double imageHeight;
-    private double imageDepth;
 
-    private ImageMetaData(String filePath, double imageWidth, double imageHeight, double imageDepth) {
+    public ImageMetaData(String filePath, double imageWidth, double imageHeight) {
         this.filePath = filePath;
         this.imageHeight = imageHeight;
         this.imageWidth = imageWidth;
-        this.imageDepth = imageDepth;
     }
 
     public static ImageMetaData fromImage(final Image image) {
-        return new ImageMetaData(image.getUrl(), image.getWidth(), image.getHeight(), 0);
+        return new ImageMetaData(image.getUrl(), image.getWidth(), image.getHeight());
     }
 
     public double getImageWidth() {
@@ -27,12 +27,15 @@ public class ImageMetaData {
         return imageHeight;
     }
 
-
-    public double getImageDepth() {
-        return imageDepth;
-    }
-
     public String getFilePath() {
         return filePath;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof ImageMetaData) {
+            return Objects.equals(filePath, ((ImageMetaData) obj).filePath);
+        }
+        return false;
     }
 }

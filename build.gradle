@@ -20,6 +20,9 @@ dependencies {
     // TestFX (UI testing)
     testCompile('org.testfx:testfx-core:4.0.15-alpha')
     testCompile('org.testfx:testfx-junit5:4.0.15-alpha')
+
+    // Monocle (for TestFx headless testing)
+    testCompile "org.testfx:openjfx-monocle:jdk-11+26"
 }
 
 javafx {

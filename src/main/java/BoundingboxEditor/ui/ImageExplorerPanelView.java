@@ -8,13 +8,18 @@ import java.io.File;
 
 public class ImageExplorerPanelView extends VBox implements View {
     private static final double SIDE_PANEL_SPACING = 5;
+    private static final String IMAGE_EXPLORER_ID = "image-explorer-panel";
+    private static final String IMAGE_EXPLORER_SIDE_PANEL_STYLE = "image-explorer-side-panel";
+    private static final String IMAGE_EXPLORER_LABEL_TEXT = "Image Explorer";
+
     private final ImageGalleryView imageGallery = new ImageGalleryView();
 
     ImageExplorerPanelView() {
-        this.getChildren().addAll(new Label("Image Explorer"), imageGallery);
-        this.getStyleClass().add("image-explorer-side-panel");
-        this.setSpacing(SIDE_PANEL_SPACING);
-        this.setVisible(false);
+        getChildren().addAll(new Label(IMAGE_EXPLORER_LABEL_TEXT), imageGallery);
+        getStyleClass().add(IMAGE_EXPLORER_SIDE_PANEL_STYLE);
+
+        setSpacing(SIDE_PANEL_SPACING);
+        setId(IMAGE_EXPLORER_ID);
 
         setUpInternalListeners();
     }
