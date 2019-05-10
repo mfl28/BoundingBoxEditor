@@ -33,27 +33,31 @@ public class ImageAnnotationDataElement {
 
     }
 
-    Path getImagePath() {
-        return Paths.get(imageMetaData.getFilePath().replace("file:/C:", ""));
+    public Path getImagePath() {
+        return Paths.get(imageMetaData.getImageFilePath().replace("file:/C:", ""));
     }
 
-    double getImageWidth() {
+    public double getImageWidth() {
         return imageMetaData.getImageWidth();
     }
 
-    double getImageHeight() {
+    public double getImageHeight() {
         return imageMetaData.getImageHeight();
     }
 
-    List<BoundingBoxElement> getBoundingBoxes() {
+    public List<BoundingBoxElement> getBoundingBoxes() {
         return boundingBoxes;
     }
 
-    String getContainingFolderName() {
+    public String getContainingFolderName() {
         return getImagePath().getParent().toString();
     }
 
-    String getImageFileName() {
+    public String getImageFileName() {
         return getImagePath().getFileName().toString();
+    }
+
+    public ImageMetaData getImageMetaData() {
+        return imageMetaData;
     }
 }

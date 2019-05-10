@@ -101,10 +101,10 @@ public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
         final Element bndBox = document.createElement(BOUNDING_BOX_SIZE_GROUP_NAME);
         object.appendChild(bndBox);
 
-        bndBox.appendChild(createDoubleValueElement(document, XMIN_TAG, boundingBox.getxMin()));
-        bndBox.appendChild(createDoubleValueElement(document, XMAX_TAG, boundingBox.getxMax()));
-        bndBox.appendChild(createDoubleValueElement(document, YMIN_TAG, boundingBox.getyMin()));
-        bndBox.appendChild(createDoubleValueElement(document, YMAX_TAG, boundingBox.getyMax()));
+        bndBox.appendChild(createDoubleValueElement(document, XMIN_TAG, boundingBox.getXMin()));
+        bndBox.appendChild(createDoubleValueElement(document, XMAX_TAG, boundingBox.getXMax()));
+        bndBox.appendChild(createDoubleValueElement(document, YMIN_TAG, boundingBox.getYMin()));
+        bndBox.appendChild(createDoubleValueElement(document, YMAX_TAG, boundingBox.getYMax()));
 
         return object;
     }

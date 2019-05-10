@@ -17,20 +17,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PVOCLoader implements ImageAnnotationLoader {
     private static int MAX_DIRECTORY_DEPTH = 1;
     private final DocumentBuilder documentBuilder;
+    private final Set<String> loadableFileNames;
 
-    public PVOCLoader() throws ParserConfigurationException {
+    public PVOCLoader(Set<String> loadableFileNames) throws ParserConfigurationException {
+        this.loadableFileNames = loadableFileNames;
         documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
     }
 
     @Override
     public List<ImageAnnotationDataElement> load(Path path) throws IOException {
         List<File> annotationFiles = Files.walk(path, MAX_DIRECTORY_DEPTH)
-                .filter(p -> p.getFileName().toString().endsWith("_A.xml"))
+                .filter(this::validateFilename)
                 .map(Path::toFile)
                 .collect(Collectors.toList());
 
@@ -46,8 +49,6 @@ public class PVOCLoader implements ImageAnnotationLoader {
                 ++numberNotParsedFiles;
             }
         }
-
-        System.out.println("Successfully parsed " + (numberFiles - numberNotParsedFiles) + " of " + numberFiles + " Files.");
 
         return imageAnnotations;
     }
@@ -135,6 +136,12 @@ public class PVOCLoader implements ImageAnnotationLoader {
         }
 
         return Double.parseDouble(doubleNode.getTextContent());
+    }
+
+    private boolean validateFilename(Path filePath) {
+        String fileName = filePath.getFileName().toString();
+        return fileName.endsWith("_A.xml") &&
+                loadableFileNames.contains(fileName.substring(0, fileName.lastIndexOf('_')));
     }
 
 }

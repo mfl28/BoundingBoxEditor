@@ -29,6 +29,7 @@ public class MainView extends BorderPane implements View {
     public static void displayErrorAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
+        alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
     }
@@ -61,15 +62,15 @@ public class MainView extends BorderPane implements View {
         return workspace.getImageShower().getImagePane().getCurrentImage();
     }
 
-    public TableView<BoundingBoxCategory> getBoundingBoxItemTableView() {
+    public TableView<BoundingBoxCategory> getBoundingBoxCategoryTableView() {
         return workspace.getProjectSidePanel().getCategorySelector();
     }
 
-    public TextField getCategoryInputField() {
+    public TextField getBoundingBoxCategoryInputField() {
         return workspace.getProjectSidePanel().getCategoryNameTextField();
     }
 
-    public ColorPicker getBoundingBoxColorPicker() {
+    public ColorPicker getBoundingBoxCategoryColorPicker() {
         return workspace.getProjectSidePanel().getCategoryColorPicker();
     }
 
@@ -121,6 +122,10 @@ public class MainView extends BorderPane implements View {
 
     public void reset() {
         workspace.reset();
+    }
+
+    public void updateBoundingBoxesInWorkspace() {
+        workspace.updateCurrentImageFullyLoadedListener();
     }
 
     private void setUpInternalListeners() {

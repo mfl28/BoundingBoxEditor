@@ -5,12 +5,12 @@ import javafx.scene.image.Image;
 import java.util.Objects;
 
 public class ImageMetaData {
-    private String filePath;
+    private String imageFilePath;
     private double imageWidth;
     private double imageHeight;
 
-    public ImageMetaData(String filePath, double imageWidth, double imageHeight) {
-        this.filePath = filePath;
+    public ImageMetaData(String imageFilePath, double imageWidth, double imageHeight) {
+        this.imageFilePath = imageFilePath;
         this.imageHeight = imageHeight;
         this.imageWidth = imageWidth;
     }
@@ -27,14 +27,14 @@ public class ImageMetaData {
         return imageHeight;
     }
 
-    public String getFilePath() {
-        return filePath;
+    public String getImageFilePath() {
+        return imageFilePath;
     }
 
     @Override
     public boolean equals(Object obj) {
         if(obj instanceof ImageMetaData) {
-            return Objects.equals(filePath, ((ImageMetaData) obj).filePath);
+            return Objects.equals(imageFilePath, ((ImageMetaData) obj).imageFilePath);
         }
         return false;
     }

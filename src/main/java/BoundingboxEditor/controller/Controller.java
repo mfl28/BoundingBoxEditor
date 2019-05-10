@@ -1,32 +1,21 @@
 package BoundingboxEditor.controller;
 
 import BoundingboxEditor.model.BoundingBoxCategory;
-import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.model.Model;
 import BoundingboxEditor.model.io.ImageAnnotationDataElement;
 import BoundingboxEditor.model.io.ImageAnnotationsSaveStrategy;
 import BoundingboxEditor.model.io.ImageAnnotationsSaver;
 import BoundingboxEditor.model.io.PVOCLoader;
-import BoundingboxEditor.ui.BoundingBoxView;
-import BoundingboxEditor.ui.DragAnchor;
 import BoundingboxEditor.ui.MainView;
 import BoundingboxEditor.utils.ColorUtils;
-import BoundingboxEditor.utils.MathUtils;
 import javafx.application.Platform;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
-import javafx.geometry.Point2D;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
@@ -60,6 +49,11 @@ public class Controller {
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
     private static final String IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE = "Choose a folder containing image annotation files";
+    private static final String LOAD_IMAGE_FOLDER_ERROR_TITLE = "Error loading image folder";
+    private static final String LOAD_IMAGE_FOLDER_ERROR_CONTENT = "The chosen folder does not contain any valid image files.";
+    private static final String CATEGORY_INPUT_ERROR_TITLE = "Category Input Error";
+    private static final String INVALID_CATEGORY_NAME_ERROR_CONTENT = "Please provide a category name.";
+    private static final String APPLICATION_ICON_PATH = "/icons/app_icon.png";
 
     private final Stage stage;
     private final MainView view = new MainView();
@@ -72,7 +66,7 @@ public class Controller {
 
         view.connectToController(this);
         setModelListeners();
-        stage.getIcons().add(new Image(getClass().getResource("/icons/drawing_crop120.png").toExternalForm()));
+        stage.getIcons().add(new Image(getClass().getResource(APPLICATION_ICON_PATH).toExternalForm()));
     }
 
     //TODO: when folder is changed: ask if the current categories should be kept or deleted
@@ -136,7 +130,7 @@ public class Controller {
             try {
                 importAnnotationsFromFolder(importDirectory);
             } catch(ParserConfigurationException exception) {
-                MainView.displayErrorAlert("XML Parser Error", "Could not set up XML-Parser");
+                MainView.displayErrorAlert("XML-Parser Error", "Could not set up XML-Parser");
             } catch(IOException exception) {
                 MainView.displayErrorAlert("Error reading image annotation files", "Could not read image-annotation files");
             }
@@ -144,7 +138,7 @@ public class Controller {
     }
 
 
-    public void onRegisterNextButtonClickedAction(ActionEvent event) {
+    public void onRegisterNextButtonClickedAction() {
         // cancel image loading when clicking next
         // button while the image has not been loaded completely
         if(!view.getImagePaneView().getProgressIndicator().isVisible()) {
@@ -155,7 +149,7 @@ public class Controller {
 
     }
 
-    public void onRegisterPreviousButtonClickedAction(ActionEvent event) {
+    public void onRegisterPreviousButtonClickedAction() {
         // cancel image loading when clicking previous
         // button while the image has not been loaded completely
         if(!view.getImagePaneView().getProgressIndicator().isVisible()) {
@@ -165,76 +159,31 @@ public class Controller {
         }
     }
 
-    public void onMousePressed(MouseEvent event) {
-        if(event.getButton().equals(MouseButton.PRIMARY) &&
-                !view.getBoundingBoxItemTableView().getSelectionModel().isEmpty()) {
-            final Point2D parentCoordinates = view.getImageView().localToParent(event.getX(), event.getY());
-            view.getImagePaneDragAnchor().setFromMouseEvent(event);
+    public void onRegisterAddBoundingBoxCategoryAction() {
+        final String categoryName = view.getBoundingBoxCategoryInputField().getText();
 
-            final BoundingBoxView rectangle = view.getInitializerBoundingBox();
-            rectangle.setXYWH(parentCoordinates.getX(), parentCoordinates.getY(), 0, 0);
-            rectangle.setVisible(true);
-        }
-    }
-
-    public void onMouseDragged(MouseEvent event) {
-        if(event.getButton().equals(MouseButton.PRIMARY) &&
-                !view.getBoundingBoxItemTableView().getSelectionModel().isEmpty()) {
-            final ImageView imageView = view.getImageView();
-            final Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
-            final DragAnchor mousePressed = view.getImagePaneDragAnchor();
-            final Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(),
-                    mousePressed.getX()), Math.min(clampedEventXY.getY(), mousePressed.getY()));
-
-            view.getInitializerBoundingBox().setXYWH(parentCoordinates.getX(),
-                    parentCoordinates.getY(),
-                    Math.abs(clampedEventXY.getX() - mousePressed.getX()),
-                    Math.abs(clampedEventXY.getY() - mousePressed.getY()));
-        }
-    }
-
-    public void onMouseReleased(MouseEvent event) {
-        if(event.getButton().equals(MouseButton.PRIMARY) && !view.getBoundingBoxItemTableView().getSelectionModel().isEmpty()) {
-            BoundingBoxView rectangle = view.getInitializerBoundingBox();
-
-            BoundingBoxCategory selectedBoundingBox = view.getBoundingBoxItemTableView().getSelectionModel().getSelectedItem();
-            ImageMetaData imageMetaData = ImageMetaData.fromImage(view.getCurrentImage());
-            BoundingBoxView newRectangle = new BoundingBoxView(selectedBoundingBox, imageMetaData);
-            newRectangle.setXYWH(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
-            newRectangle.setVisible(true);
-            newRectangle.setStroke(rectangle.getStroke());
-            newRectangle.confineTo(view.getImageView().boundsInParentProperty());
-
-            view.getImagePaneView().getBoundingBoxDataBase().addToCurrentBoundingBoxes(newRectangle);
-            rectangle.setVisible(false);
-        }
-    }
-
-    public void onRegisterAddBoundingBoxItemAction(ActionEvent event) {
-        final String boundingBoxItemName = view.getCategoryInputField().getText();
-
-        if(boundingBoxItemName.trim().isEmpty()) {
-            MainView.displayErrorAlert("Category Input Error", "Please provide a category name.");
+        if(categoryName.trim().isEmpty()) {
+            MainView.displayErrorAlert(CATEGORY_INPUT_ERROR_TITLE, INVALID_CATEGORY_NAME_ERROR_CONTENT);
             return;
         }
 
-        if(model.getBoundingBoxCategoryNames().contains(boundingBoxItemName)) {
-            MainView.displayErrorAlert("Category Input Error", "The category \"" + boundingBoxItemName + "\" already exists.");
+        if(model.getBoundingBoxCategoryNames().contains(categoryName)) {
+            MainView.displayErrorAlert(CATEGORY_INPUT_ERROR_TITLE, "The category \"" + categoryName + "\" already exists.");
             return;
         }
 
-        final Color boundingBoxItemColor = view.getBoundingBoxColorPicker().getValue();
+        final Color categoryColor = view.getBoundingBoxCategoryColorPicker().getValue();
 
-        model.getBoundingBoxCategories().add(new BoundingBoxCategory(boundingBoxItemName, boundingBoxItemColor));
-        view.getCategoryInputField().clear();
+        model.getBoundingBoxCategories().add(new BoundingBoxCategory(categoryName, categoryColor));
+        view.getBoundingBoxCategoryInputField().clear();
 
-        final var selectionModel = view.getBoundingBoxItemTableView().getSelectionModel();
+        final var selectionModel = view.getBoundingBoxCategoryTableView().getSelectionModel();
 
         // auto select the created category
         selectionModel.selectLast();
-        view.getBoundingBoxColorPicker().setValue(ColorUtils.createRandomColor(random));
+        view.getBoundingBoxCategoryColorPicker().setValue(ColorUtils.createRandomColor(random));
         // auto scroll to the created category (if it would otherwise be outside the viewport)
-        view.getBoundingBoxItemTableView().scrollTo(selectionModel.getSelectedIndex());
+        view.getBoundingBoxCategoryTableView().scrollTo(selectionModel.getSelectedIndex());
     }
 
     public void onRegisterSceneKeyPressed(KeyEvent event) {
@@ -242,16 +191,16 @@ public class Controller {
 
         if(keyCode.equals(KeyCode.D)) {
             if(model.getImageFiles() != null && model.isHasNextFile()) {
-                onRegisterNextButtonClickedAction(new ActionEvent());
+                onRegisterNextButtonClickedAction();
             }
         } else if(keyCode.equals(KeyCode.A)) {
             if(model.getImageFiles() != null && model.isHasPreviousFile()) {
-                onRegisterPreviousButtonClickedAction(new ActionEvent());
+                onRegisterPreviousButtonClickedAction();
             }
         } else if(event.isControlDown() && keyCode.equals(KeyCode.F)) {
             view.getCategorySearchField().requestFocus();
         } else if(event.isControlDown() && keyCode.equals(KeyCode.B)) {
-            view.getCategoryInputField().requestFocus();
+            view.getBoundingBoxCategoryInputField().requestFocus();
         }
     }
 
@@ -260,11 +209,11 @@ public class Controller {
     }
 
     public void onSelectorCellEditEvent(TableColumn.CellEditEvent<BoundingBoxCategory, String> event) {
-        // FIXME: This is not working, implement custom tablecell
         BoundingBoxCategory boundingBoxCategory = event.getRowValue();
 
         if(model.getBoundingBoxCategoryNames().contains(event.getNewValue())) {
             MainView.displayErrorAlert("Category Input Error", "The category already exits.");
+            // FIXME: Supposedly not reliable
             boundingBoxCategory.setName(event.getOldValue());
             event.getTableView().refresh();
         } else {
@@ -278,35 +227,6 @@ public class Controller {
         return view;
     }
 
-    private void loadSelectionRectangleList() {
-        Image newImage = view.getCurrentImage();
-        newImage.progressProperty().removeListener(this::fullProgressListener);
-        newImage.progressProperty().addListener(this::fullProgressListener);
-    }
-
-    private void fullProgressListener(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-        if(newValue.doubleValue() == 1.0) {
-            // reset visibility status to visible
-            view.getImagePaneView().getCurrentBoundingBoxes().forEach(item -> item.setVisible(true));
-            view.getImagePaneView().removeAllBoundingBoxesFromView();
-            view.getProjectSidePanel().getBoundingBoxExplorer().getRoot().getChildren().clear();
-// Set the loaded list as the current working list
-            final ObservableList<BoundingBoxView> loadedBoundingBoxViews = view.getCurrentBoundingBoxes();
-
-
-            if(!loadedBoundingBoxViews.isEmpty()) {
-                view.getImagePaneView().addBoundingBoxesToView(loadedBoundingBoxViews);
-                // Add the loaded rectangles to the scenegraph and the explorer tree
-                view.getProjectSidePanel().getBoundingBoxExplorer().addTreeItemsFromSelectionRectangles(loadedBoundingBoxViews);
-            }
-
-            view.updateBoundingBoxDatabaseListener();
-
-            // Setup the listeners for add/remove functionality
-
-        }
-    }
-
     public void updateViewFromDirectory(final File selectedDirectory) {
         List<File> imageFiles;
 
@@ -318,29 +238,28 @@ public class Controller {
         }
 
         if(imageFiles.isEmpty()) {
-            MainView.displayErrorAlert("Error: Empty image folder", null);
+            MainView.displayErrorAlert(LOAD_IMAGE_FOLDER_ERROR_TITLE, LOAD_IMAGE_FOLDER_ERROR_CONTENT);
             return;
         }
 
-        ///-------------------------------------------------------------------------------------------
-
         model.updateFromFiles(imageFiles);
+        setUpView();
+    }
 
+    private void setUpView() {
         view.reset();
 
-        // TODO: selection rectangles in model? -> hashmap<Integer, selectionrectangle>
-
-        view.getImagePaneView().resetSelectionRectangleDatabase(model.getImageFileListSize());
+        view.getImagePaneView().resetBoundingBoxDatabase(model.getImageFileListSize());
         view.getImagePaneView().getBoundingBoxDataBase().indexProperty().bind(model.fileIndexProperty());
 
         view.updateBoundingBoxDatabaseListener();
 
         view.setImageView(model.getCurrentImage());
-        stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME);
+        stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
 
         // Should be done just once
-        view.getBoundingBoxItemTableView().setItems(model.getBoundingBoxCategories());
-        view.getBoundingBoxItemTableView().getSelectionModel().selectFirst();
+        view.getBoundingBoxCategoryTableView().setItems(model.getBoundingBoxCategories());
+        view.getBoundingBoxCategoryTableView().getSelectionModel().selectFirst();
         // Should be done just once
         view.getImageExplorerPanel().setImageGalleryItems(model.getImageFiles());
         view.getImageExplorerPanel().getImageGallery().getSelectionModel().selectFirst();
@@ -348,10 +267,9 @@ public class Controller {
 
     private void setModelListeners() {
         model.fileIndexProperty().addListener((value, oldValue, newValue) -> {
-            // FIXME: Load new folder -> add rectangles to a picture -> load another folder -> exception thrown
             view.setImageView(model.getCurrentImage());
-            stage.setTitle(model.getCurrentImageFilePath() + PROGRAM_NAME_EXTENSION_SEPARATOR + PROGRAM_NAME);
-            loadSelectionRectangleList();
+            stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
+            view.updateBoundingBoxesInWorkspace();
             view.getBottomLabel().setText(model.getCurrentImageFilePath());
             view.getImageExplorerPanel().getImageGallery().getSelectionModel().select(newValue.intValue());
         });
@@ -367,7 +285,6 @@ public class Controller {
             if(newValue.intValue() != -1) {
                 model.fileIndexProperty().set(newValue.intValue());
             }
-
         }));
 
         view.getPreviousButton().disableProperty().bind(model.previousFileValidProperty().not());
@@ -375,10 +292,10 @@ public class Controller {
     }
 
     private void importAnnotationsFromFolder(File annotationFolder) throws ParserConfigurationException, IOException {
-        PVOCLoader loader = new PVOCLoader();
+        PVOCLoader loader = new PVOCLoader(model.getImageFileSet());
         List<ImageAnnotationDataElement> imageAnnotations = loader.load(Paths.get(annotationFolder.getPath()));
 
-        System.out.println("Imported " + imageAnnotations.size() + " annotations");
+        view.getBottomLabel().setText("Successfully imported annotations for " + imageAnnotations.size() + " files.");
 
         view.updateWorkspaceFromImageAnnotations(imageAnnotations);
     }

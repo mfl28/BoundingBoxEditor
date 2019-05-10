@@ -3,7 +3,6 @@ package BoundingboxEditor;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
-import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
@@ -67,7 +66,7 @@ public class NoImageFolderOpenedTests extends BoundingBoxAppTestBase {
         assertTrue(imageExplorerItem.isDisable());
     }
 
-    private void verifyNodeVisiblitities(){
+    private void verifyNodeVisiblitities() {
         verifyThat("#main-menu-bar", NodeMatchers.isVisible());
         verifyThat("#work-space", NodeMatchers.isInvisible());
         verifyThat("#status-panel", NodeMatchers.isVisible());

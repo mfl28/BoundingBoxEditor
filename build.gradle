@@ -1,32 +1,40 @@
 plugins {
-    id 'java'
-    id 'application'
-    id 'org.openjfx.javafxplugin' version '0.0.7'
+    id "java"
+    id "application"
+    id "org.openjfx.javafxplugin" version "0.0.7"
     id "pmd"
+    id "com.github.hierynomus.license" version "0.15.0"
 }
 
-version '1.0-SNAPSHOT'
+version "1.0-SNAPSHOT"
 
-sourceCompatibility = 1.11
+sourceCompatibility = 1.12
 
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
     // Junit (Unit testing)
-    testImplementation('org.junit.jupiter:junit-jupiter:5.4.0')
+    testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     
     // TestFX (UI testing)
-    testCompile('org.testfx:testfx-core:4.0.15-alpha')
-    testCompile('org.testfx:testfx-junit5:4.0.15-alpha')
+    testCompile("org.testfx:testfx-core:4.0.15-alpha")
+    testCompile("org.testfx:testfx-junit5:4.0.15-alpha")
 
     // Monocle (for TestFx headless testing)
-    testCompile "org.testfx:openjfx-monocle:jdk-11+26"
+    testCompile("org.testfx:openjfx-monocle:jdk-11+26")
+
+    // For ListOrderedMap: https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
+    compile("org.apache.commons:commons-collections4:4.3")
+
+    // ControlsFX https://mvnrepository.com/artifact/org.controlsfx/controlsfx
+    compile("org.controlsfx:controlsfx:11.0.0")
 }
 
 javafx {
-    modules = [ 'javafx.controls' ]
+    version = "12.0.1"
+    modules = [ "javafx.controls" ]
 }
 
 test {
@@ -34,4 +42,4 @@ test {
 }
 
 // Define the main class for the application
-mainClassName = 'BoundingboxEditor.BoundingBoxEditorApp'
+mainClassName = "BoundingboxEditor.BoundingBoxEditorApp"

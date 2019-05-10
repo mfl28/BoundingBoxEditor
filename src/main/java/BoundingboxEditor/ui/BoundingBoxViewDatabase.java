@@ -13,11 +13,16 @@ import java.util.stream.Stream;
 public class BoundingBoxViewDatabase implements Iterable<ObservableList<BoundingBoxView>> {
     private final IntegerProperty index = new SimpleIntegerProperty(0);
     private final List<ObservableList<BoundingBoxView>> imageBoundingBoxes = new ArrayList<>();
+    //private final Map<File, ObservableList<BoundingBoxView>> imageBoundingBoxes = new HashMap<>();
 
     BoundingBoxViewDatabase(int size) {
         for(int i = 0; i != size; ++i) {
             imageBoundingBoxes.add(FXCollections.observableArrayList());
         }
+    }
+
+    public void add(int index, BoundingBoxView boundingBoxView) {
+        imageBoundingBoxes.get(index).add(boundingBoxView);
     }
 
     public void addToCurrentBoundingBoxes(BoundingBoxView boundingBox) {

@@ -1,22 +1,26 @@
 package BoundingboxEditor.ui;
 
-import BoundingboxEditor.controller.Controller;
+import BoundingboxEditor.model.BoundingBoxCategory;
+import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.utils.MathUtils;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
+import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class ImagePaneView extends StackPane implements View {
-    private static final double IMAGE_PADDING = 10.0;
+    static final double IMAGE_PADDING = 10.0;
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String IMAGE_PANE_STYLE = "pane";
     private static final String IMAGE_VIEW_ID = "image-pane";
@@ -27,6 +31,7 @@ public class ImagePaneView extends StackPane implements View {
     private final ProgressIndicator progressIndicator = new ProgressIndicator();
     private final ObjectProperty<Image> currentImageObject = new SimpleObjectProperty<>();
     private final SimpleBooleanProperty maximizeImageView = new SimpleBooleanProperty(true);
+    private final ObjectProperty<BoundingBoxCategory> selectedCategory = new SimpleObjectProperty<>(null);
     private final Group boundingBoxGroup = new Group();
 
     private BoundingBoxView initializerBoundingBox = new BoundingBoxView(null, null);
@@ -45,28 +50,32 @@ public class ImagePaneView extends StackPane implements View {
         setUpInternalListeners();
     }
 
-    public void addBoundingBoxesToView(Collection<? extends BoundingBoxView> selectionRectangles) {
-        selectionRectangles.forEach(item -> boundingBoxGroup.getChildren().addAll(item.getNodeGroup()));
+    public void addBoundingBoxesToView(Collection<? extends BoundingBoxView> boundingBoxes) {
+        boundingBoxGroup.getChildren().addAll(boundingBoxes.stream()
+                .map(BoundingBoxView::getNodeGroup)
+                .collect(Collectors.toList()));
     }
 
     public void removeAllBoundingBoxesFromView() {
         boundingBoxGroup.getChildren().clear();
     }
 
-    public void resetSelectionRectangleDatabase(int size) {
+    public void resetBoundingBoxDatabase(int size) {
         removeAllBoundingBoxesFromView();
         boundingBoxDataBase = new BoundingBoxViewDatabase(size);
+    }
+
+    public void resetCurrentBoundingBoxes() {
+        getCurrentBoundingBoxes().forEach(item -> item.setVisible(true));
+        removeAllBoundingBoxesFromView();
     }
 
     public ProgressIndicator getProgressIndicator() {
         return progressIndicator;
     }
 
-    @Override
-    public void connectToController(Controller controller) {
-        imageView.setOnMousePressed(controller::onMousePressed);
-        imageView.setOnMouseDragged(controller::onMouseDragged);
-        imageView.setOnMouseReleased(controller::onMouseReleased);
+    public BoundingBoxCategory getSelectedCategory() {
+        return selectedCategory.get();
     }
 
     public BoundingBoxViewDatabase getBoundingBoxDataBase() {
@@ -77,8 +86,14 @@ public class ImagePaneView extends StackPane implements View {
         return boundingBoxDataBase.getCurrentBoundingBoxes();
     }
 
+    ObjectProperty<BoundingBoxCategory> selectedCategoryProperty() {
+        return selectedCategory;
+    }
+
     void removeBoundingBoxesFromView(Collection<? extends BoundingBoxView> boundingBoxes) {
-        boundingBoxes.forEach(item -> boundingBoxGroup.getChildren().removeAll(item.getNodeGroup()));
+        boundingBoxGroup.getChildren().removeAll(boundingBoxes.stream()
+                .map(BoundingBoxView::getNodeGroup)
+                .collect(Collectors.toList()));
     }
 
     ColorAdjust getColorAdjust() {
@@ -105,7 +120,7 @@ public class ImagePaneView extends StackPane implements View {
                 imageView.setImage(currentImageObject.getValue());
                 progressIndicator.setVisible(false);
 
-                if(getMaximizeImageView()) {
+                if(isMaximizeImageView()) {
                     setImageViewToMaxAllowedSize();
                 } else {
                     setImageViewToPreferOriginalImageSize();
@@ -132,6 +147,26 @@ public class ImagePaneView extends StackPane implements View {
         imageView.setFitHeight(Math.min(imageView.getImage().getHeight(), getMaxAllowedImageHeight()));
     }
 
+    boolean isMaximizeImageView() {
+        return maximizeImageView.get();
+    }
+
+    void setMaximizeImageView(boolean maximizeImageView) {
+        this.maximizeImageView.set(maximizeImageView);
+    }
+
+    double getMaxAllowedImageWidth() {
+        return Math.max(0, getWidth() - 2 * IMAGE_PADDING);
+    }
+
+    double getMaxAllowedImageHeight() {
+        return Math.max(0, getHeight() - 2 * IMAGE_PADDING);
+    }
+
+    private boolean isCategorySelected() {
+        return selectedCategory.get() != null;
+    }
+
     private void setUpImageView() {
         imageView.setSmooth(true);
         imageView.setCache(true);
@@ -146,17 +181,9 @@ public class ImagePaneView extends StackPane implements View {
         progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
     }
 
-    private boolean getMaximizeImageView() {
-        return maximizeImageView.get();
-    }
-
-    void setMaximizeImageView(boolean maximizeImageView) {
-        this.maximizeImageView.set(maximizeImageView);
-    }
-
     private void setUpInternalListeners() {
         widthProperty().addListener((value, oldValue, newValue) -> {
-            if(!getMaximizeImageView()) {
+            if(!isMaximizeImageView()) {
                 final Image image = imageView.getImage();
                 double prefWidth = image != null ? image.getWidth() : 0;
                 imageView.setFitWidth(Math.min(prefWidth, getMaxAllowedImageWidth()));
@@ -166,12 +193,49 @@ public class ImagePaneView extends StackPane implements View {
         });
 
         heightProperty().addListener((value, oldValue, newValue) -> {
-            if(!getMaximizeImageView()) {
+            if(!isMaximizeImageView()) {
                 final Image image = imageView.getImage();
                 double prefHeight = image != null ? image.getHeight() : 0;
                 imageView.setFitHeight(Math.min(prefHeight, getMaxAllowedImageHeight()));
             } else {
                 imageView.setFitHeight(getMaxAllowedImageHeight());
+            }
+        });
+
+        imageView.setOnMousePressed(event -> {
+            if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
+                Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
+                dragAnchor.setFromMouseEvent(event);
+
+                initializerBoundingBox.setXYWH(parentCoordinates.getX(), parentCoordinates.getY(), 0, 0);
+                initializerBoundingBox.setVisible(true);
+            }
+        });
+
+        imageView.setOnMouseDragged(event -> {
+            if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
+                Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
+                Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
+                        Math.min(clampedEventXY.getY(), dragAnchor.getY()));
+
+                initializerBoundingBox.setXYWH(parentCoordinates.getX(),
+                        parentCoordinates.getY(),
+                        Math.abs(clampedEventXY.getX() - dragAnchor.getX()),
+                        Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
+            }
+        });
+
+        imageView.setOnMouseReleased(event -> {
+            if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
+                BoundingBoxView newBoundingBox = new BoundingBoxView(selectedCategory.get(),
+                        ImageMetaData.fromImage(getCurrentImage()));
+
+                newBoundingBox.setUpFromInitializer(initializerBoundingBox);
+                newBoundingBox.setVisible(true);
+                newBoundingBox.confineTo(imageView.boundsInParentProperty());
+
+                getBoundingBoxDataBase().addToCurrentBoundingBoxes(newBoundingBox);
+                initializerBoundingBox.setVisible(false);
             }
         });
 
@@ -189,13 +253,5 @@ public class ImagePaneView extends StackPane implements View {
                 imageView.setFitHeight(newFitHeight);
             }
         });
-    }
-
-    private double getMaxAllowedImageWidth() {
-        return Math.max(0, getWidth() - 2 * IMAGE_PADDING);
-    }
-
-    private double getMaxAllowedImageHeight() {
-        return Math.max(0, getHeight() - 2 * IMAGE_PADDING);
     }
 }

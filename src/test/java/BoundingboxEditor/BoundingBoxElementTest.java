@@ -1,10 +1,11 @@
 package BoundingboxEditor;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import BoundingboxEditor.model.io.BoundingBoxElement;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BoundingBoxElementTest {
     @Test
@@ -14,10 +15,10 @@ class BoundingBoxElementTest {
 
         assertAll("boundingBox",
                 () -> assertEquals(boundingBox.getCategoryName(), "Dummy"),
-                () -> assertEquals(boundingBox.getxMin(), 2.5),
-                () -> assertEquals(boundingBox.getyMin(), 6.7),
-                () -> assertEquals(boundingBox.getxMax(), 230.0),
-                () -> assertEquals(boundingBox.getyMax(), 250.0)
+                () -> assertEquals(boundingBox.getXMin(), 2.5),
+                () -> assertEquals(boundingBox.getYMin(), 6.7),
+                () -> assertEquals(boundingBox.getXMax(), 230.0),
+                () -> assertEquals(boundingBox.getYMax(), 250.0)
         );
     }
 }

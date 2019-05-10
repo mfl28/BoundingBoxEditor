@@ -37,19 +37,19 @@ public class BoundingBoxElement {
         return categoryName;
     }
 
-    public double getxMin() {
+    public double getXMin() {
         return xMin;
     }
 
-    public double getyMin() {
+    public double getYMin() {
         return yMin;
     }
 
-    public double getxMax() {
+    public double getXMax() {
         return xMax;
     }
 
-    public double getyMax() {
+    public double getYMax() {
         return yMax;
     }
 }

@@ -24,6 +24,7 @@ public class Model {
     private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
 
     private ObservableList<File> imageFiles = FXCollections.observableArrayList();
+    private Set<String> imageFileSet = new HashSet<>();
     private ObservableList<BoundingBoxCategory> boundingBoxCategories = FXCollections.observableArrayList();
 
     private IntegerProperty fileIndex = new SimpleIntegerProperty(0);
@@ -35,12 +36,12 @@ public class Model {
 
     public Model() {
         numberFormat.applyPattern(BOUNDING_BOX_COORDINATES_PATTERN);
-
         setUpInternalListeners();
     }
 
     public void updateFromFiles(Collection<File> files) {
         imageFiles.setAll(files);
+        imageFileSet = files.stream().map(file -> file.getName().substring(0, file.getName().lastIndexOf('.'))).collect(Collectors.toSet());
         boundingBoxCategories.clear();
         boundingBoxCategoryNames.clear();
         fileIndex.set(0);
@@ -56,6 +57,10 @@ public class Model {
 
     public ObservableList<BoundingBoxCategory> getBoundingBoxCategories() {
         return boundingBoxCategories;
+    }
+
+    public Set<String> getImageFileSet() {
+        return imageFileSet;
     }
 
     public void incrementFileIndex() {
@@ -99,7 +104,7 @@ public class Model {
     }
 
     public ObservableList<File> getImageFiles() {
-        return imageFiles;
+        return FXCollections.unmodifiableObservableList(imageFiles);
     }
 
     private Image getImageFromFile(File file) {
@@ -107,8 +112,9 @@ public class Model {
     }
 
     private void setUpInternalListeners() {
+
         imageFileListSize.bind(Bindings.size(imageFiles));
-        nextFileValid.bind(fileIndex.lessThan(imageFileListSize.subtract(1)));
+        nextFileValid.bind(fileIndex.lessThan(imageFileListSizeProperty().subtract(1)));
         previousFileValid.bind(fileIndex.greaterThan(0));
 
         boundingBoxCategories.addListener((ListChangeListener<BoundingBoxCategory>) c -> {

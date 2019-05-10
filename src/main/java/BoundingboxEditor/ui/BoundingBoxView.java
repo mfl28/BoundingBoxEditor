@@ -28,10 +28,13 @@ public class BoundingBoxView extends Rectangle implements View {
 
     private final DragAnchor dragAnchor = new DragAnchor();
     private final Property<Bounds> confinementBounds = new SimpleObjectProperty<>();
+    private final Property<Bounds> boundsInImage = new SimpleObjectProperty<>();
     private final Group nodeGroup = new Group(this);
 
     private BoundingBoxCategory boundingBoxCategory;
     private ImageMetaData imageMetaData;
+
+    private boolean hasConfinementListener = false;
 
     public BoundingBoxView(BoundingBoxCategory boundingBoxCategory, ImageMetaData imageMetaData) {
         this.imageMetaData = imageMetaData;
@@ -50,6 +53,12 @@ public class BoundingBoxView extends Rectangle implements View {
     private BoundingBoxView() {
     }
 
+    public void setUpFromInitializer(BoundingBoxView initializer) {
+        setXYWH(initializer.getX(), initializer.getY(),
+                initializer.getWidth(), initializer.getHeight());
+        setStroke(initializer.getStroke());
+    }
+
     public BoundingBoxCategory getBoundingBoxCategory() {
         return boundingBoxCategory;
     }
@@ -60,15 +69,14 @@ public class BoundingBoxView extends Rectangle implements View {
 
     public Bounds getImageRelativeBounds() {
         final Bounds imageViewBounds = confinementBounds.getValue();
-        final Bounds selectionRectangleBounds = this.getBoundsInParent();
 
         double imageWidth = imageMetaData.getImageWidth();
         double imageHeight = imageMetaData.getImageHeight();
 
-        double xMinRelative = selectionRectangleBounds.getMinX() * imageWidth / imageViewBounds.getWidth();
-        double yMinRelative = selectionRectangleBounds.getMinY() * imageHeight / imageViewBounds.getHeight();
-        double widthRelative = selectionRectangleBounds.getWidth() * imageWidth / imageViewBounds.getWidth();
-        double heightRelative = selectionRectangleBounds.getHeight() * imageHeight / imageViewBounds.getHeight();
+        double xMinRelative = (getX() - imageViewBounds.getMinX()) * imageWidth / imageViewBounds.getWidth();
+        double yMinRelative = (getY() - imageViewBounds.getMinY()) * imageHeight / imageViewBounds.getHeight();
+        double widthRelative = getWidth() * imageWidth / imageViewBounds.getWidth();
+        double heightRelative = getHeight() * imageHeight / imageViewBounds.getHeight();
 
         return new BoundingBox(xMinRelative, yMinRelative, widthRelative, heightRelative);
     }
@@ -83,6 +91,48 @@ public class BoundingBoxView extends Rectangle implements View {
             setX(newValue.getMinX() + (getX() - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
             setY(newValue.getMinY() + (getY() - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
         });
+
+        hasConfinementListener = true;
+    }
+
+    public Bounds getBoundsInImage() {
+        return boundsInImage.getValue();
+    }
+
+    public void setBoundsInImage(Bounds boundsInImage) {
+        this.boundsInImage.setValue(boundsInImage);
+    }
+
+    public Property<Bounds> boundsInImageProperty() {
+        return boundsInImage;
+    }
+
+    public boolean hasConfinementListener() {
+        return hasConfinementListener;
+    }
+
+    public void addConfinementListener() {
+        confinementBounds.addListener((observable, oldValue, newValue) -> {
+            setWidth(getWidth() * newValue.getWidth() / oldValue.getWidth());
+            setHeight(getHeight() * newValue.getHeight() / oldValue.getHeight());
+
+            setX(newValue.getMinX() + (getX() - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
+            setY(newValue.getMinY() + (getY() - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
+        });
+
+        hasConfinementListener = true;
+    }
+
+    public void initializeFromBoundsInImage() {
+        Bounds boundsInImageValue = boundsInImage.getValue();
+        Bounds confinementBoundsValue = confinementBounds.getValue();
+        double imgWidth = imageMetaData.getImageWidth();
+        double imgHeight = imageMetaData.getImageHeight();
+
+        setX(boundsInImageValue.getMinX() * confinementBoundsValue.getWidth() / imgWidth + confinementBoundsValue.getMinX());
+        setY(boundsInImageValue.getMinY() * confinementBoundsValue.getHeight() / imgHeight + confinementBoundsValue.getMinY());
+        setWidth(boundsInImageValue.getWidth() * confinementBoundsValue.getWidth() / imgWidth);
+        setHeight(boundsInImageValue.getHeight() * confinementBoundsValue.getHeight() / imgHeight);
     }
 
     public void setXYWH(double x, double y, double w, double h) {
@@ -99,6 +149,10 @@ public class BoundingBoxView extends Rectangle implements View {
                     Objects.equals(imageMetaData, ((BoundingBoxView) obj).imageMetaData);
         }
         return false;
+    }
+
+    public Property<Bounds> confinementBoundsProperty() {
+        return confinementBounds;
     }
 
     static BoundingBoxView getDummy() {

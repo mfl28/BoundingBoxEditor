@@ -17,12 +17,10 @@ import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationExtension;
-import org.testfx.framework.junit5.ApplicationTest;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.PointQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
@@ -30,59 +28,13 @@ import org.testfx.util.WaitForAsyncUtils;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.testfx.api.FxToolkit.registerPrimaryStage;
-
 @ExtendWith(ApplicationExtension.class)
-public class BoundingBoxAppTestBase{
+public class BoundingBoxAppTestBase {
     private static final double INITIAL_WINDOW_SCALE = 0.75;
     private static final String STYLESHEET_PATH = "/stylesheets/styles.css";
 
     protected Controller controller;
     protected MainView mainView;
-
-    @BeforeAll
-    public static void setupSpec() throws Exception {
-        if (Boolean.getBoolean("headless")) {
-            System.setProperty("testfx.robot", "glass");
-            System.setProperty("testfx.headless", "true");
-            System.setProperty("prism.verbose", "true");
-            System.setProperty("prism.forceGPU", "true");
-            //System.setProperty("prism.order", "sw");
-            System.setProperty("prism.text", "t2k");
-            System.setProperty("java.awt.headless", "true");
-        }
-        registerPrimaryStage();
-    }
-
-//    // Setting up headless mode (source: https://www.youtube.com/watch?v=V7IHHZc9Bew)
-//    @BeforeAll
-//    static void setHeadlessMode(){
-//        if(Boolean.getBoolean("headless")) {
-//            System.out.println("headless");
-//            System.setProperty("testfx.robot", "glass");
-//            System.setProperty("testfx.headless", "true");
-//            System.setProperty("prism.order", "sw");
-//            System.setProperty("prism.text", "t2k");
-//            System.setProperty("java.awt.headless", "true");
-//        }
-//    }
-
-    @Start
-    void onStart(Stage stage) {
-        controller = new Controller(stage);
-        mainView = controller.getView();
-
-        final Scene scene = createSceneFromParent(mainView);
-        scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
-
-        stage.setScene(scene);
-        stage.show();
-    }
-
-    @AfterEach
-    void tearDown() throws TimeoutException {
-        FxToolkit.hideStage();
-    }
 
     protected static MenuItem getSubMenuItem(FxRobot robot, String menuText, String subMenuText) {
         MenuBar menuBar = robot.lookup("#main-menu-bar").query();
@@ -147,6 +99,22 @@ public class BoundingBoxAppTestBase{
         WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, image.progressProperty().isEqualTo(1));
     }
 
+    @Start
+    void onStart(Stage stage) {
+        controller = new Controller(stage);
+        mainView = controller.getView();
+
+        final Scene scene = createSceneFromParent(mainView);
+        scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
+
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    @AfterEach
+    void tearDown() throws TimeoutException {
+        FxToolkit.hideStage();
+    }
 
     private Scene createSceneFromParent(final Parent parent) {
         final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();

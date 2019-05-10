@@ -1,11 +1,12 @@
 package BoundingboxEditor;
 
-import BoundingboxEditor.model.io.BoundingBoxElement;
 import BoundingboxEditor.model.BoundingBoxCategory;
+import BoundingboxEditor.model.io.BoundingBoxElement;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class BoundingBoxElementCategoryTest {
 

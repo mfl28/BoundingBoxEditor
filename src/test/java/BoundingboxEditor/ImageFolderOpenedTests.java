@@ -1,6 +1,5 @@
 package BoundingboxEditor;
 
-import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
@@ -29,7 +28,7 @@ public class ImageFolderOpenedTests extends BoundingBoxAppTestBase {
     }
 
     @Test
-    void verifyProgramStateAfterImageFolderOpened(FxRobot robot){
+    void verifyProgramStateAfterImageFolderOpened(FxRobot robot) {
         verifyNodeVisibilities();
         verifyMenuBarFunctionality(robot);
         verifyCategorySelectorState(robot);

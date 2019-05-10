@@ -59,8 +59,8 @@ public class NavigationBarView extends ToolBar implements View {
 
     @Override
     public void connectToController(Controller controller) {
-        nextButton.setOnAction(controller::onRegisterNextButtonClickedAction);
-        previousButton.setOnAction(controller::onRegisterPreviousButtonClickedAction);
+        nextButton.setOnAction(action -> controller.onRegisterNextButtonClickedAction());
+        previousButton.setOnAction(action -> controller.onRegisterPreviousButtonClickedAction());
     }
 
     public Label getIndexLabel() {

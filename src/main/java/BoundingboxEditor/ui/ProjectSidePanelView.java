@@ -29,6 +29,7 @@ public class ProjectSidePanelView extends VBox implements View {
     private static final String PROJECT_SIDE_PANEL_ID = "project-side-panel";
     private static final String CATEGORY_INPUT_FIELD_ID = "category-input-field";
     private static final String ADD_BUTTON_ID = "add-button";
+    private static final String TAG_EDITOR_LABEL_TEXT = "Tag Editor";
 
 
     private final TextField categorySearchField = new TextField();
@@ -41,6 +42,8 @@ public class ProjectSidePanelView extends VBox implements View {
     private final ToggleButton visibilityToggle = new ToggleIconButton(SHOW_ICON_PATH, HIDE_ICON_PATH);
     private final ToggleButton expansionToggle = new ToggleIconButton(EXPAND_ICON_PATH, COLLAPSE_ICON_PATH);
 
+    private final BoundingBoxTagEditorView tagEditor = new BoundingBoxTagEditorView();
+
     ProjectSidePanelView() {
         getChildren().addAll(
                 new Label(CLASS_SELECTOR_LABEL_TEXT),
@@ -50,7 +53,10 @@ public class ProjectSidePanelView extends VBox implements View {
                 new Separator(),
                 new Label(OBJECT_SELECTOR_LABEL_TEXT),
                 boundingBoxExplorer,
-                createBoundingBoxExplorerControlBox()
+                createBoundingBoxExplorerControlBox(),
+                new Separator(),
+                new Label(TAG_EDITOR_LABEL_TEXT),
+                tagEditor
         );
 
         setUpStyles();
@@ -72,9 +78,9 @@ public class ProjectSidePanelView extends VBox implements View {
 
     @Override
     public void connectToController(Controller controller) {
-        addCategoryButton.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
+        addCategoryButton.setOnAction(action -> controller.onRegisterAddBoundingBoxCategoryAction());
         categorySelector.connectToController(controller);
-        categoryNameTextField.setOnAction(controller::onRegisterAddBoundingBoxItemAction);
+        categoryNameTextField.setOnAction(action -> controller.onRegisterAddBoundingBoxCategoryAction());
     }
 
     @Override
@@ -135,7 +141,6 @@ public class ProjectSidePanelView extends VBox implements View {
         addCategoryButton.setId(ADD_BUTTON_ID);
     }
 
-
     private void setUpInternalListeners() {
         managedProperty().bind(visibleProperty());
 
@@ -172,5 +177,7 @@ public class ProjectSidePanelView extends VBox implements View {
         expansionToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
                 boundingBoxExplorer.getRoot().getChildren().forEach(child -> child.setExpanded(newValue))
         ));
+
+        tagEditor.maxWidthProperty().bind(widthProperty());
     }
 }

@@ -2,12 +2,22 @@ package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.model.BoundingBoxCategory;
+import BoundingboxEditor.model.io.BoundingBoxElement;
 import BoundingboxEditor.model.io.ImageAnnotationDataElement;
+import BoundingboxEditor.utils.ColorUtils;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.geometry.BoundingBox;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
 
+import java.io.File;
+import java.net.URI;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 class WorkspaceView extends SplitPane implements View {
@@ -22,6 +32,7 @@ class WorkspaceView extends SplitPane implements View {
     private final ImageExplorerPanelView imageExplorer = new ImageExplorerPanelView();
 
     private final ListChangeListener<BoundingBoxView> boundingBoxDatabaseListener = createBoundingBoxDatabaseListener();
+    private final ChangeListener<Number> imageFullyLoadedListener = createImageFullyLoadedListener();
 
     WorkspaceView() {
         getItems().addAll(projectSidePanel, imageShower, imageExplorer);
@@ -51,23 +62,66 @@ class WorkspaceView extends SplitPane implements View {
     }
 
     void updateFromImageAnnotations(List<ImageAnnotationDataElement> imageAnnotations) {
-        /// Iterate over annotations:
-        // Get image meta data from annotation
-        // -> check if image exists in current workspace
-        // -> -> if yes, proceed
-        // -> -> if not, ignore this annotation
+        final Random random = new Random();
 
-        // Construct bounding boxes from annotation
-        // -> check if category already exits in current workspace
-        // -> -> if yes, then assign the existing category to the bounding box
-        // -> -> if not, then construct a new category and add it to the selector
-        // -> handle the xmin, ymin, xmax, ymax scaling relation between the size of the image and the image
-        //    width and height in the annotation
+        for(ImageAnnotationDataElement element : imageAnnotations) {
+            File imageFile = imageExplorer.getImageGallery().getItems().stream()
+                    .filter(item -> Paths.get(item.getPath()).getFileName().equals(element.getImagePath()
+                            .getFileName()))
+                    .findFirst()
+                    .orElseThrow();
+
+            int index = imageExplorer.getImageGallery().getItems().indexOf(imageFile);
+
+            for(BoundingBoxElement boundingBoxElement : element.getBoundingBoxes()) {
+                BoundingBoxCategory existingCategory = projectSidePanel.getCategorySelector()
+                        .getItems()
+                        .stream()
+                        .filter(item -> item.getName().equals(boundingBoxElement.getCategoryName()))
+                        .findFirst()
+                        .orElse(null);
+
+                BoundingBoxView boundingBox;
+
+                if(existingCategory != null) {
+                    boundingBox = new BoundingBoxView(existingCategory, element.getImageMetaData());
+                    boundingBox.setStroke(existingCategory.getColor());
+                } else {
+                    BoundingBoxCategory category = new BoundingBoxCategory(boundingBoxElement.getCategoryName(),
+                            ColorUtils.createRandomColor(random));
+                    projectSidePanel.getCategorySelector().getItems().add(category);
+                    boundingBox = new BoundingBoxView(category, element.getImageMetaData());
+                    boundingBox.setStroke(category.getColor());
+                }
+
+                double xMin = boundingBoxElement.getXMin();
+                double yMin = boundingBoxElement.getYMin();
+                double xMax = boundingBoxElement.getXMax();
+                double yMax = boundingBoxElement.getYMax();
+
+                boundingBox.setBoundsInImage(new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin));
+                boundingBox.setVisible(true);
+
+                if(element.getImagePath().getFileName().equals(Paths.get(URI.create(getImageShower().getImagePane().getCurrentImage().getUrl())).getFileName())) {
+                    boundingBox.confinementBoundsProperty().bind(getImageShower().getImagePane().getImageView().boundsInParentProperty());
+                    boundingBox.initializeFromBoundsInImage();
+                    boundingBox.addConfinementListener();
+                }
+
+                imageShower.getImagePane().getBoundingBoxDataBase().add(index, boundingBox);
+            }
+        }
     }
 
     void updateBoundingBoxDatabaseListener() {
         removeDatabaseListener();
         setDatabaseListener();
+    }
+
+    void updateCurrentImageFullyLoadedListener() {
+        Image currentImage = imageShower.getImagePane().getCurrentImage();
+        currentImage.progressProperty().removeListener(imageFullyLoadedListener);
+        currentImage.progressProperty().addListener(imageFullyLoadedListener);
     }
 
     ProjectSidePanelView getProjectSidePanel() {
@@ -98,6 +152,8 @@ class WorkspaceView extends SplitPane implements View {
                 imageShower.getImagePane().getInitializerBoundingBox().setStroke(newValue.getColor());
             }
         });
+
+        imageShower.getImagePane().selectedCategoryProperty().bind(projectSidePanel.getCategorySelector().getSelectionModel().selectedItemProperty());
     }
 
     private ListChangeListener<BoundingBoxView> createBoundingBoxDatabaseListener() {
@@ -112,10 +168,42 @@ class WorkspaceView extends SplitPane implements View {
 
                 if(c.wasRemoved()) {
                     imageShower.getImagePane().removeBoundingBoxesFromView(c.getRemoved());
-
                 }
             }
         };
+    }
+
+    private ChangeListener<Number> createImageFullyLoadedListener() {
+        return (observable, oldValue, newValue) -> {
+            if(newValue.intValue() == 1) {
+                resetBoundingBoxesInView();
+                removeDatabaseListener();
+                loadCurrentBoundingBoxes();
+                setDatabaseListener();
+                //updateBoundingBoxDatabaseListener();
+            }
+        };
+    }
+
+    private void resetBoundingBoxesInView() {
+        imageShower.getImagePane().resetCurrentBoundingBoxes();
+        getProjectSidePanel().getBoundingBoxExplorer().getRoot().getChildren().clear();
+    }
+
+    private void loadCurrentBoundingBoxes() {
+        ObservableList<BoundingBoxView> loadedBoundingBoxViews = imageShower.getImagePane().getCurrentBoundingBoxes();
+
+        if(!loadedBoundingBoxViews.isEmpty()) {
+            loadedBoundingBoxViews.stream().filter(item -> !item.hasConfinementListener())
+                    .forEach(item -> {
+                        item.confinementBoundsProperty().bind(getImageShower().getImagePane().getImageView().boundsInParentProperty());
+                        item.initializeFromBoundsInImage();
+                        item.addConfinementListener();
+                    });
+
+            imageShower.getImagePane().addBoundingBoxesToView(loadedBoundingBoxViews);
+            getProjectSidePanel().getBoundingBoxExplorer().addTreeItemsFromSelectionRectangles(loadedBoundingBoxViews);
+        }
     }
 
     private void setBoundingBoxCategorySelectorDeleteCellFactory() {
