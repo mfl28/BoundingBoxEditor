@@ -20,20 +20,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class PVOCLoader implements ImageAnnotationLoader {
+public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     private static int MAX_DIRECTORY_DEPTH = 1;
     private final DocumentBuilder documentBuilder;
-    private final Set<String> loadableFileNames;
 
-    public PVOCLoader(Set<String> loadableFileNames) throws ParserConfigurationException {
-        this.loadableFileNames = loadableFileNames;
+    public PVOCLoadStrategy() throws ParserConfigurationException {
         documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
     }
 
     @Override
-    public List<ImageAnnotationDataElement> load(Path path) throws IOException {
+    public List<ImageAnnotationDataElement> load(final Set<String> fileNamesToLoad, final Path path) throws IOException {
+        FilePathValidator filePathValidator = new FilePathValidator(fileNamesToLoad);
+
         List<File> annotationFiles = Files.walk(path, MAX_DIRECTORY_DEPTH)
-                .filter(this::validateFilename)
+                .filter(filePathValidator::isValid)
                 .map(Path::toFile)
                 .collect(Collectors.toList());
 
@@ -97,7 +97,6 @@ public class PVOCLoader implements ImageAnnotationLoader {
         return new BoundingBoxElement(categoryName, xMin, yMin, xMax, yMax);
     }
 
-
     private String parseTextElement(Document document, String tagName) throws InvalidAnnotationFileFormatException {
         Node textNode = document.getElementsByTagName(tagName).item(0);
 
@@ -138,10 +137,18 @@ public class PVOCLoader implements ImageAnnotationLoader {
         return Double.parseDouble(doubleNode.getTextContent());
     }
 
-    private boolean validateFilename(Path filePath) {
-        String fileName = filePath.getFileName().toString();
-        return fileName.endsWith("_A.xml") &&
-                loadableFileNames.contains(fileName.substring(0, fileName.lastIndexOf('_')));
+    private static class FilePathValidator {
+        final Set<String> allowedFileNames;
+
+        FilePathValidator(Set<String> allowedFileNames) {
+            this.allowedFileNames = allowedFileNames;
+        }
+
+        boolean isValid(Path file) {
+            String fileName = file.getFileName().toString();
+            return fileName.endsWith("_A.xml") &&
+                    allowedFileNames.contains(fileName.substring(0, fileName.lastIndexOf('_')));
+        }
     }
 
 }

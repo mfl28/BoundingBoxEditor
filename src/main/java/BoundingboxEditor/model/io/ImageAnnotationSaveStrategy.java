@@ -4,16 +4,13 @@ import java.nio.file.Path;
 import java.security.InvalidParameterException;
 import java.util.Collection;
 
-public interface ImageAnnotationsSaveStrategy {
-    static ImageAnnotationsSaveStrategy createStrategy(final SaveStrategy saveStrategy) {
-        ImageAnnotationsSaveStrategy strategy;
+public interface ImageAnnotationSaveStrategy {
+    static ImageAnnotationSaveStrategy createStrategy(final SaveStrategy saveStrategy) {
+        ImageAnnotationSaveStrategy strategy;
 
         switch(saveStrategy) {
             case PASCAL_VOC:
                 strategy = new PVOCSaveStrategy();
-                break;
-            case SIMPLE_SAVE:
-                strategy = new SimpleSaveStrategy();
                 break;
             default:
                 throw new InvalidParameterException();
@@ -24,5 +21,5 @@ public interface ImageAnnotationsSaveStrategy {
 
     void save(final Collection<ImageAnnotationDataElement> dataset, final Path savePath) throws Exception;
 
-    enum SaveStrategy {PASCAL_VOC, SIMPLE_SAVE}
+    enum SaveStrategy {PASCAL_VOC}
 }

@@ -2,10 +2,7 @@ package BoundingboxEditor.controller;
 
 import BoundingboxEditor.model.BoundingBoxCategory;
 import BoundingboxEditor.model.Model;
-import BoundingboxEditor.model.io.ImageAnnotationDataElement;
-import BoundingboxEditor.model.io.ImageAnnotationsSaveStrategy;
-import BoundingboxEditor.model.io.ImageAnnotationsSaver;
-import BoundingboxEditor.model.io.PVOCLoader;
+import BoundingboxEditor.model.io.*;
 import BoundingboxEditor.ui.MainView;
 import BoundingboxEditor.utils.ColorUtils;
 import javafx.application.Platform;
@@ -101,7 +98,7 @@ public class Controller {
                         @Override
                         protected Void call() throws Exception {
                             final List<ImageAnnotationDataElement> imageAnnotations = createImageAnnotations();
-                            final ImageAnnotationsSaver saver = new ImageAnnotationsSaver(ImageAnnotationsSaveStrategy.SaveStrategy.PASCAL_VOC);
+                            final ImageAnnotationSaver saver = new ImageAnnotationSaver(ImageAnnotationSaveStrategy.SaveStrategy.PASCAL_VOC);
                             saver.save(imageAnnotations, Paths.get(saveDirectory.getPath()));
                             return null;
                         }
@@ -292,8 +289,8 @@ public class Controller {
     }
 
     private void importAnnotationsFromFolder(File annotationFolder) throws ParserConfigurationException, IOException {
-        PVOCLoader loader = new PVOCLoader(model.getImageFileSet());
-        List<ImageAnnotationDataElement> imageAnnotations = loader.load(Paths.get(annotationFolder.getPath()));
+        ImageAnnotationLoader loader = new ImageAnnotationLoader(ImageAnnotationLoadStrategy.LoadStrategy.PASCAL_VOC);
+        List<ImageAnnotationDataElement> imageAnnotations = loader.load(model.getImageFileSet(), Paths.get(annotationFolder.getPath()));
 
         view.getBottomLabel().setText("Successfully imported annotations for " + imageAnnotations.size() + " files.");
 

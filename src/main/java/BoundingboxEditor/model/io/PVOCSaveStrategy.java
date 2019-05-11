@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.Collection;
 
-public class PVOCSaveStrategy implements ImageAnnotationsSaveStrategy {
+public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
     private static final String ROOT_ELEMENT_NAME = "annotation";
     private static final String FOLDER_ELEMENT_NAME = "folder";
