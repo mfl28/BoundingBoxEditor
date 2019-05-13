@@ -2,16 +2,14 @@ package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.model.BoundingBoxCategory;
-import BoundingboxEditor.model.io.BoundingBoxElement;
+import BoundingboxEditor.model.io.BoundingBoxData;
 import BoundingboxEditor.model.io.ImageAnnotationDataElement;
 import BoundingboxEditor.utils.ColorUtils;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeItem;
-import javafx.scene.image.Image;
 
 import java.io.File;
 import java.net.URI;
@@ -73,11 +71,11 @@ class WorkspaceView extends SplitPane implements View {
 
             int index = imageExplorer.getImageGallery().getItems().indexOf(imageFile);
 
-            for(BoundingBoxElement boundingBoxElement : element.getBoundingBoxes()) {
+            for(BoundingBoxData boundingBoxData : element.getBoundingBoxes()) {
                 BoundingBoxCategory existingCategory = projectSidePanel.getCategorySelector()
                         .getItems()
                         .stream()
-                        .filter(item -> item.getName().equals(boundingBoxElement.getCategoryName()))
+                        .filter(item -> item.getName().equals(boundingBoxData.getCategoryName()))
                         .findFirst()
                         .orElse(null);
 
@@ -87,17 +85,17 @@ class WorkspaceView extends SplitPane implements View {
                     boundingBox = new BoundingBoxView(existingCategory, element.getImageMetaData());
                     boundingBox.setStroke(existingCategory.getColor());
                 } else {
-                    BoundingBoxCategory category = new BoundingBoxCategory(boundingBoxElement.getCategoryName(),
+                    BoundingBoxCategory category = new BoundingBoxCategory(boundingBoxData.getCategoryName(),
                             ColorUtils.createRandomColor(random));
                     projectSidePanel.getCategorySelector().getItems().add(category);
                     boundingBox = new BoundingBoxView(category, element.getImageMetaData());
                     boundingBox.setStroke(category.getColor());
                 }
 
-                double xMin = boundingBoxElement.getXMin();
-                double yMin = boundingBoxElement.getYMin();
-                double xMax = boundingBoxElement.getXMax();
-                double yMax = boundingBoxElement.getYMax();
+                double xMin = boundingBoxData.getXMin();
+                double yMin = boundingBoxData.getYMin();
+                double xMax = boundingBoxData.getXMax();
+                double yMax = boundingBoxData.getYMax();
 
                 boundingBox.setBoundsInImage(new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin));
                 boundingBox.setVisible(true);
@@ -113,15 +111,12 @@ class WorkspaceView extends SplitPane implements View {
         }
     }
 
-    void updateBoundingBoxDatabaseListener() {
-        removeDatabaseListener();
-        setDatabaseListener();
+    void addFullyLoadedImageListener() {
+        imageShower.getImagePane().getCurrentImage().progressProperty().addListener(imageFullyLoadedListener);
     }
 
-    void updateCurrentImageFullyLoadedListener() {
-        Image currentImage = imageShower.getImagePane().getCurrentImage();
-        currentImage.progressProperty().removeListener(imageFullyLoadedListener);
-        currentImage.progressProperty().addListener(imageFullyLoadedListener);
+    void removeFullyLoadedImageListener() {
+        imageShower.getImagePane().getCurrentImage().progressProperty().removeListener(imageFullyLoadedListener);
     }
 
     ProjectSidePanelView getProjectSidePanel() {
@@ -136,12 +131,12 @@ class WorkspaceView extends SplitPane implements View {
         return imageExplorer;
     }
 
-    private void setDatabaseListener() {
+    void setDatabaseListener() {
         imageShower.getImagePane().getCurrentBoundingBoxes().addListener(boundingBoxDatabaseListener);
     }
 
-    private void removeDatabaseListener() {
-        imageShower.getImagePane().getCurrentBoundingBoxes().removeListener(boundingBoxDatabaseListener);
+    void removeDatabaseListener(int index) {
+        imageShower.getImagePane().getBoundingBoxDataBase().get(index).removeListener(boundingBoxDatabaseListener);
     }
 
     private void setUpInternalListeners() {
@@ -163,7 +158,7 @@ class WorkspaceView extends SplitPane implements View {
                     List<? extends BoundingBoxView> addedItemsList = c.getAddedSubList();
 
                     imageShower.getImagePane().addBoundingBoxesToView(addedItemsList);
-                    projectSidePanel.getBoundingBoxExplorer().addTreeItemsFromSelectionRectangles(addedItemsList);
+                    projectSidePanel.getBoundingBoxExplorer().addTreeItemsFromBoundingBoxes(addedItemsList);
                 }
 
                 if(c.wasRemoved()) {
@@ -176,22 +171,20 @@ class WorkspaceView extends SplitPane implements View {
     private ChangeListener<Number> createImageFullyLoadedListener() {
         return (observable, oldValue, newValue) -> {
             if(newValue.intValue() == 1) {
+                //removeDatabaseListener();
                 resetBoundingBoxesInView();
-                removeDatabaseListener();
                 loadCurrentBoundingBoxes();
                 setDatabaseListener();
-                //updateBoundingBoxDatabaseListener();
             }
         };
     }
 
     private void resetBoundingBoxesInView() {
         imageShower.getImagePane().resetCurrentBoundingBoxes();
-        getProjectSidePanel().getBoundingBoxExplorer().getRoot().getChildren().clear();
     }
 
     private void loadCurrentBoundingBoxes() {
-        ObservableList<BoundingBoxView> loadedBoundingBoxViews = imageShower.getImagePane().getCurrentBoundingBoxes();
+        List<BoundingBoxView> loadedBoundingBoxViews = imageShower.getImagePane().getCurrentBoundingBoxes();
 
         if(!loadedBoundingBoxViews.isEmpty()) {
             loadedBoundingBoxViews.stream().filter(item -> !item.hasConfinementListener())
@@ -200,9 +193,10 @@ class WorkspaceView extends SplitPane implements View {
                         item.initializeFromBoundsInImage();
                         item.addConfinementListener();
                     });
+            // FIXME: Bounding-Box explorer is not cleared properly when switching between images.
 
             imageShower.getImagePane().addBoundingBoxesToView(loadedBoundingBoxViews);
-            getProjectSidePanel().getBoundingBoxExplorer().addTreeItemsFromSelectionRectangles(loadedBoundingBoxViews);
+            getProjectSidePanel().getBoundingBoxExplorer().addTreeItemsFromBoundingBoxes(loadedBoundingBoxViews);
         }
     }
 

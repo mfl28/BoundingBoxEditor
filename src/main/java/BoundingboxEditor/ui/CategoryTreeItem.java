@@ -18,6 +18,7 @@ class CategoryTreeItem extends TreeItem<BoundingBoxView> {
     CategoryTreeItem(BoundingBoxCategory category) {
         // TreeItems require a non-null value-item for them not to be considered 'empty':
         super(BoundingBoxView.getDummy());
+
         boundingBoxCategory = category;
         setGraphic(toggleIcon);
 

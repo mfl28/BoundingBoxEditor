@@ -116,7 +116,7 @@ public class ImagePaneView extends StackPane implements View {
         progressIndicator.setVisible(true);
 
         currentImageObject.getValue().progressProperty().addListener((value, oldValue, newValue) -> {
-            if(newValue.equals(1.0)) {
+            if(newValue.intValue() == 1) {
                 imageView.setImage(currentImageObject.getValue());
                 progressIndicator.setVisible(false);
 

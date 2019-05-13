@@ -33,6 +33,10 @@ public class BoundingBoxViewDatabase implements Iterable<ObservableList<Bounding
         return index;
     }
 
+    public ObservableList<BoundingBoxView> get(int index) {
+        return imageBoundingBoxes.get(index);
+    }
+
     public boolean isEmpty() {
         return imageBoundingBoxes.isEmpty() || imageBoundingBoxes.stream().allMatch(List::isEmpty);
     }

@@ -30,17 +30,14 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
             setContextMenu(null);
         } else {
             setContextMenu(contextMenu);
-
             final TreeItem<BoundingBoxView> treeItem = getTreeItem();
             setGraphic(treeItem.getGraphic());
 
-            if(!textProperty().isBound()) {
-                if(treeItem instanceof BoundingBoxTreeItem) {
-                    textProperty().bind(treeItem.getValue().getBoundingBoxCategory().nameProperty()
-                            .concat(((BoundingBoxTreeItem) treeItem).getId()));
-                } else {
-                    textProperty().bind(((CategoryTreeItem) treeItem).getBoundingBoxCategory().nameProperty());
-                }
+            if(treeItem instanceof BoundingBoxTreeItem) {
+                textProperty().bind(treeItem.getValue().getBoundingBoxCategory().nameProperty()
+                        .concat(((BoundingBoxTreeItem) treeItem).getId()));
+            } else {
+                textProperty().bind(((CategoryTreeItem) treeItem).getBoundingBoxCategory().nameProperty());
             }
         }
     }

@@ -11,9 +11,9 @@ import java.util.List;
 
 public class ImageAnnotationDataElement {
     private final ImageMetaData imageMetaData;
-    private final List<BoundingBoxElement> boundingBoxes;
+    private final List<BoundingBoxData> boundingBoxes;
 
-    ImageAnnotationDataElement(final ImageMetaData imageMetaData, final List<BoundingBoxElement> boundingBoxes) {
+    ImageAnnotationDataElement(final ImageMetaData imageMetaData, final List<BoundingBoxData> boundingBoxes) {
         this.imageMetaData = imageMetaData;
         this.boundingBoxes = boundingBoxes;
     }
@@ -23,13 +23,13 @@ public class ImageAnnotationDataElement {
             return null;
         }
 
-        final List<BoundingBoxElement> boundingBoxElements = new ArrayList<>(boundingBoxViews.size());
+        final List<BoundingBoxData> boundingBoxData = new ArrayList<>(boundingBoxViews.size());
 
         for(BoundingBoxView item : boundingBoxViews) {
-            boundingBoxElements.add(BoundingBoxElement.fromSelectionRectangle(item));
+            boundingBoxData.add(BoundingBoxData.fromSelectionRectangle(item));
         }
 
-        return new ImageAnnotationDataElement(boundingBoxViews.iterator().next().getImageMetaData(), boundingBoxElements);
+        return new ImageAnnotationDataElement(boundingBoxViews.iterator().next().getImageMetaData(), boundingBoxData);
 
     }
 
@@ -45,7 +45,7 @@ public class ImageAnnotationDataElement {
         return imageMetaData.getImageHeight();
     }
 
-    public List<BoundingBoxElement> getBoundingBoxes() {
+    public List<BoundingBoxData> getBoundingBoxes() {
         return boundingBoxes;
     }
 

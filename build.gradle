@@ -4,7 +4,6 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.7'
     id 'pmd'
     id 'com.github.hierynomus.license' version '0.15.0'
-    id 'nebula.lint' version '11.5.0'
 }
 
 version '1.0-SNAPSHOT'
@@ -28,6 +27,12 @@ dependencies {
 
     // ControlsFX https://mvnrepository.com/artifact/org.controlsfx/controlsfx
     compile 'org.controlsfx:controlsfx:11.0.0'
+
+    // Logback https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+    // SLF4J https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.26'
 }
 
 javafx {
@@ -38,8 +43,6 @@ javafx {
 test {
     useJUnitPlatform()
 }
-
-gradleLint.rules = ['all-dependency']
 
 // Define the main class for the application
 mainClassName = 'BoundingboxEditor.BoundingBoxEditorApp'

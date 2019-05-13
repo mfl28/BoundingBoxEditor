@@ -7,6 +7,8 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -30,6 +32,7 @@ public class BoundingBoxView extends Rectangle implements View {
     private final Property<Bounds> confinementBounds = new SimpleObjectProperty<>();
     private final Property<Bounds> boundsInImage = new SimpleObjectProperty<>();
     private final Group nodeGroup = new Group(this);
+    private final ObservableList<String> tags = FXCollections.observableArrayList();
 
     private BoundingBoxCategory boundingBoxCategory;
     private ImageMetaData imageMetaData;
@@ -95,16 +98,9 @@ public class BoundingBoxView extends Rectangle implements View {
         hasConfinementListener = true;
     }
 
-    public Bounds getBoundsInImage() {
-        return boundsInImage.getValue();
-    }
 
     public void setBoundsInImage(Bounds boundsInImage) {
         this.boundsInImage.setValue(boundsInImage);
-    }
-
-    public Property<Bounds> boundsInImageProperty() {
-        return boundsInImage;
     }
 
     public boolean hasConfinementListener() {
@@ -140,6 +136,10 @@ public class BoundingBoxView extends Rectangle implements View {
         setY(y);
         setWidth(w);
         setHeight(h);
+    }
+
+    public ObservableList<String> getTags() {
+        return tags;
     }
 
     @Override

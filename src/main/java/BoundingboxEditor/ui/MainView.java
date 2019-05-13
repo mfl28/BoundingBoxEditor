@@ -112,9 +112,6 @@ public class MainView extends BorderPane implements View {
         workspace.connectToController(controller);
     }
 
-    public void updateBoundingBoxDatabaseListener() {
-        workspace.updateBoundingBoxDatabaseListener();
-    }
 
     public void updateWorkspaceFromImageAnnotations(List<ImageAnnotationDataElement> imageAnnotations) {
         workspace.updateFromImageAnnotations(imageAnnotations);
@@ -124,8 +121,24 @@ public class MainView extends BorderPane implements View {
         workspace.reset();
     }
 
-    public void updateBoundingBoxesInWorkspace() {
-        workspace.updateCurrentImageFullyLoadedListener();
+    public void addFullyLoadedImageListener() {
+        workspace.addFullyLoadedImageListener();
+    }
+
+    public void removeFullyLoadedImageListener() {
+        workspace.removeFullyLoadedImageListener();
+    }
+
+    public BoundingBoxExplorerView getBoundingBoxExplorer() {
+        return workspace.getProjectSidePanel().getBoundingBoxExplorer();
+    }
+
+    public void addBoundingBoxDatabaseListener() {
+        workspace.setDatabaseListener();
+    }
+
+    public void removeBoundingBoxDatabaseListener(int index) {
+        workspace.removeDatabaseListener(index);
     }
 
     private void setUpInternalListeners() {

@@ -1,19 +1,22 @@
 package BoundingboxEditor.model.io;
 
 import BoundingboxEditor.ui.BoundingBoxView;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 
-public class BoundingBoxElement {
+public class BoundingBoxData {
     private final String categoryName;
     private final double xMin;
     private final double yMin;
     private final double xMax;
     private final double yMax;
+    private final ObservableList<String> tags = FXCollections.observableArrayList();
 
     // TODO: Optionally add attributes: pose (Front, back, right etc.), truncated(0 or 1), difficult(0 or 1)
     //       occluded (0 or 1)
 
-    public BoundingBoxElement(String categoryName, double xMin, double yMin, double xMax, double yMax) {
+    public BoundingBoxData(String categoryName, double xMin, double yMin, double xMax, double yMax) {
         this.categoryName = categoryName;
         this.xMin = xMin;
         this.yMin = yMin;
@@ -21,7 +24,7 @@ public class BoundingBoxElement {
         this.yMax = yMax;
     }
 
-    public BoundingBoxElement(String categoryName, Bounds rectangleBounds) {
+    public BoundingBoxData(String categoryName, Bounds rectangleBounds) {
         this.categoryName = categoryName;
         this.xMin = rectangleBounds.getMinX();
         this.yMin = rectangleBounds.getMinY();
@@ -29,8 +32,8 @@ public class BoundingBoxElement {
         this.yMax = rectangleBounds.getMaxY();
     }
 
-    public static BoundingBoxElement fromSelectionRectangle(final BoundingBoxView boundingBoxView) {
-        return new BoundingBoxElement(boundingBoxView.getBoundingBoxCategory().getName(), boundingBoxView.getImageRelativeBounds());
+    public static BoundingBoxData fromSelectionRectangle(final BoundingBoxView boundingBoxView) {
+        return new BoundingBoxData(boundingBoxView.getBoundingBoxCategory().getName(), boundingBoxView.getImageRelativeBounds());
     }
 
     public String getCategoryName() {
@@ -51,6 +54,10 @@ public class BoundingBoxElement {
 
     public double getYMax() {
         return yMax;
+    }
+
+    public ObservableList<String> getTags() {
+        return tags;
     }
 }
 

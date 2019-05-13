@@ -551,11 +551,12 @@
     -fx-accent: -base-background-color;
 }
 
-.toggle-button {
+#toggle-icon-button {
     -fx-background-color: transparent;
+    -fx-padding: 0;
 }
 
-.toggle-button:hover {
+#toggle-icon-button:hover {
     -fx-background-color: -base-highlight-color;
 }
 

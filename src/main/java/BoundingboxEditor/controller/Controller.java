@@ -239,8 +239,14 @@ public class Controller {
             return;
         }
 
+        boolean requireAddDatabaseListener = model.fileIndexProperty().get() == 0;
+
         model.updateFromFiles(imageFiles);
         setUpView();
+
+        if(requireAddDatabaseListener) {
+            view.addBoundingBoxDatabaseListener();
+        }
     }
 
     private void setUpView() {
@@ -248,8 +254,6 @@ public class Controller {
 
         view.getImagePaneView().resetBoundingBoxDatabase(model.getImageFileListSize());
         view.getImagePaneView().getBoundingBoxDataBase().indexProperty().bind(model.fileIndexProperty());
-
-        view.updateBoundingBoxDatabaseListener();
 
         view.setImageView(model.getCurrentImage());
         stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
@@ -264,9 +268,13 @@ public class Controller {
 
     private void setModelListeners() {
         model.fileIndexProperty().addListener((value, oldValue, newValue) -> {
+            view.removeFullyLoadedImageListener();
+            view.removeBoundingBoxDatabaseListener(oldValue.intValue());
+            // Prevents javafx-bug with uncleared items in tree-view when switching between images.
+            view.getBoundingBoxExplorer().reset();
             view.setImageView(model.getCurrentImage());
             stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
-            view.updateBoundingBoxesInWorkspace();
+            view.addFullyLoadedImageListener();
             view.getBottomLabel().setText(model.getCurrentImageFilePath());
             view.getImageExplorerPanel().getImageGallery().getSelectionModel().select(newValue.intValue());
         });

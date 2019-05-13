@@ -1,17 +1,17 @@
 package BoundingboxEditor;
 
-import BoundingboxEditor.model.io.BoundingBoxElement;
+import BoundingboxEditor.model.io.BoundingBoxData;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class BoundingBoxElementTest {
+class BoundingBoxDataTest {
     @Test
     @DisplayName("A simple dummy test to show junit 5 functionality.")
     void simpleTest() {
-        BoundingBoxElement boundingBox = new BoundingBoxElement("Dummy", 2.5, 6.7, 230.0, 250.0);
+        BoundingBoxData boundingBox = new BoundingBoxData("Dummy", 2.5, 6.7, 230.0, 250.0);
 
         assertAll("boundingBox",
                 () -> assertEquals(boundingBox.getCategoryName(), "Dummy"),

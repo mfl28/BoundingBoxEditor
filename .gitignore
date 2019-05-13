@@ -38,3 +38,6 @@
 # ---------
 /incoming-distributions
 /intTestHomeDir
+
+# Temporary docs
+/docs

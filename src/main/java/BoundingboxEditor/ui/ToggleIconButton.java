@@ -5,8 +5,9 @@ import javafx.scene.image.ImageView;
 
 
 class ToggleIconButton extends ToggleButton {
-    private static final double ICON_WIDTH = 20.0;
-    private static final double ICON_HEIGHT = 20.0;
+    private static final double ICON_WIDTH = 15.0;
+    private static final double ICON_HEIGHT = 15.0;
+    private static final String TOGGLE_ICON_BUTTON_ID = "toggle-icon-button";
 
     private final ImageView toggledOnIcon;
     private final ImageView toggledOffIcon;
@@ -26,6 +27,7 @@ class ToggleIconButton extends ToggleButton {
         setFocusTraversable(false);
         setGraphic(toggledOffIcon);
         setUpInternalListeners();
+        setId(TOGGLE_ICON_BUTTON_ID);
     }
 
     private void setUpInternalListeners() {

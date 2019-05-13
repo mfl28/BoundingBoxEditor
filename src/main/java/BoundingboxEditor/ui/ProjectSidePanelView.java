@@ -51,9 +51,8 @@ public class ProjectSidePanelView extends VBox implements View {
                 categorySelector,
                 createAddCategoryControlBox(),
                 new Separator(),
-                new Label(OBJECT_SELECTOR_LABEL_TEXT),
+                createBoundingBoxExplorerTopPanel(),
                 boundingBoxExplorer,
-                createBoundingBoxExplorerControlBox(),
                 new Separator(),
                 new Label(TAG_EDITOR_LABEL_TEXT),
                 tagEditor
@@ -123,8 +122,10 @@ public class ProjectSidePanelView extends VBox implements View {
         return addItemControls;
     }
 
-    private HBox createBoundingBoxExplorerControlBox() {
-        return new HBox(visibilityToggle, expansionToggle);
+    private HBox createBoundingBoxExplorerTopPanel() {
+        HBox panel = new HBox(new Label(OBJECT_SELECTOR_LABEL_TEXT), UiUtils.createHSpacer(), visibilityToggle, expansionToggle);
+        panel.setSpacing(10);
+        return panel;
     }
 
     private void setUpStyles() {
@@ -171,13 +172,25 @@ public class ProjectSidePanelView extends VBox implements View {
 
         // FIXME: Flickers when changing between images that contain bounding box annotations
         //  (actually normal because of image loading in between)
-        visibilityToggle.disableProperty().bind(boundingBoxExplorer.getRoot().leafProperty());
-        expansionToggle.disableProperty().bind(boundingBoxExplorer.getRoot().leafProperty());
+        boundingBoxExplorer.rootProperty().addListener((observable, oldValue, newValue) -> {
+            visibilityToggle.disableProperty().unbind();
+            expansionToggle.disableProperty().unbind();
+            visibilityToggle.disableProperty().bind(boundingBoxExplorer.rootProperty().get().leafProperty());
+            expansionToggle.disableProperty().bind(boundingBoxExplorer.rootProperty().get().leafProperty());
+        });
 
         expansionToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
                 boundingBoxExplorer.getRoot().getChildren().forEach(child -> child.setExpanded(newValue))
         ));
 
         tagEditor.maxWidthProperty().bind(widthProperty());
+
+        boundingBoxExplorer.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue instanceof BoundingBoxTreeItem) {
+                tagEditor.setTags(newValue.getValue().getTags());
+            } else {
+                tagEditor.setTags(null);
+            }
+        });
     }
 }

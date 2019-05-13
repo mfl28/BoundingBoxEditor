@@ -21,7 +21,10 @@ public class NoImageFolderOpenedTests extends BoundingBoxAppTestBase {
     @Test
     void onMenuItemsClicked_ShouldCorrectlyApplyVisibilityAndShowDialogueWindows(FxRobot robot) {
         verifyNodeVisiblitities();
+        verifyMenuBarFunctionality(robot);
+    }
 
+    private void verifyMenuBarFunctionality(FxRobot robot){
         robot.clickOn("File");
 
         WaitForAsyncUtils.waitForFxEvents();

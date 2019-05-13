@@ -58,9 +58,9 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         document.normalize();
 
         ImageMetaData imageMetaData = parseImageMetaData(document);
-        List<BoundingBoxElement> boundingBoxElements = parseBoundingBoxElements(document);
+        List<BoundingBoxData> boundingBoxData = parseBoundingBoxElements(document);
 
-        return new ImageAnnotationDataElement(imageMetaData, boundingBoxElements);
+        return new ImageAnnotationDataElement(imageMetaData, boundingBoxData);
     }
 
     private ImageMetaData parseImageMetaData(Document document) throws InvalidAnnotationFileFormatException {
@@ -71,30 +71,30 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return new ImageMetaData(path, width, height);
     }
 
-    private List<BoundingBoxElement> parseBoundingBoxElements(Document document) throws InvalidAnnotationFileFormatException {
+    private List<BoundingBoxData> parseBoundingBoxElements(Document document) throws InvalidAnnotationFileFormatException {
         NodeList objectElements = document.getElementsByTagName("object");
 
-        List<BoundingBoxElement> boundingBoxElements = new ArrayList<>();
+        List<BoundingBoxData> boundingBoxData = new ArrayList<>();
 
         for(int i = 0; i != objectElements.getLength(); ++i) {
             Node objectNode = objectElements.item(i);
 
             if(objectNode.getNodeType() == Node.ELEMENT_NODE) {
-                boundingBoxElements.add(parseBoundingBoxElement((Element) objectNode));
+                boundingBoxData.add(parseBoundingBoxElement((Element) objectNode));
             }
         }
 
-        return boundingBoxElements;
+        return boundingBoxData;
     }
 
-    private BoundingBoxElement parseBoundingBoxElement(Element objectElement) {
+    private BoundingBoxData parseBoundingBoxElement(Element objectElement) {
         String categoryName = parseTextElement(objectElement, "name");
         double xMin = parseDoubleElement(objectElement, "xmin");
         double xMax = parseDoubleElement(objectElement, "xmax");
         double yMin = parseDoubleElement(objectElement, "ymin");
         double yMax = parseDoubleElement(objectElement, "ymax");
 
-        return new BoundingBoxElement(categoryName, xMin, yMin, xMax, yMax);
+        return new BoundingBoxData(categoryName, xMin, yMin, xMax, yMax);
     }
 
     private String parseTextElement(Document document, String tagName) throws InvalidAnnotationFileFormatException {

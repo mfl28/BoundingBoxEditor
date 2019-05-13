@@ -1,14 +1,14 @@
 package BoundingboxEditor;
 
 import BoundingboxEditor.model.BoundingBoxCategory;
-import BoundingboxEditor.model.io.BoundingBoxElement;
+import BoundingboxEditor.model.io.BoundingBoxData;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-class BoundingBoxElementCategoryTest {
+class BoundingBoxDataCategoryTest {
 
     @Test
     void equals_IdenticalBoundingBoxCategories_ReturnsEqual() {
@@ -37,7 +37,7 @@ class BoundingBoxElementCategoryTest {
     @Test
     void equals_MismatchedObjectTypeAsSecondParameter_ReturnsNotEqual() {
         final BoundingBoxCategory boundingBoxCategory1 = new BoundingBoxCategory("Category1", Color.RED);
-        final BoundingBoxElement boundingBox = new BoundingBoxElement("name", 1, 2, 3, 4);
+        final BoundingBoxData boundingBox = new BoundingBoxData("name", 1, 2, 3, 4);
 
         assertNotEquals(boundingBoxCategory1, boundingBox);
     }

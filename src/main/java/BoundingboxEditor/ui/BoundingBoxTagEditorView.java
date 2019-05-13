@@ -1,6 +1,6 @@
 package BoundingboxEditor.ui;
 
-import javafx.collections.FXCollections;
+import javafx.beans.property.SimpleListProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -16,7 +16,8 @@ import java.util.stream.Collectors;
 
 class BoundingBoxTagEditorView extends FlowPane implements View {
     private static final String TAG_INPUT_FIELD_ID = "tag-input-field";
-    private final ObservableList<String> tags = FXCollections.observableArrayList();
+    private final SimpleListProperty<String> tags = new SimpleListProperty<>();
+    private final ListChangeListener<String> tagsListener = createTagsListener();
     private final TextField inputField = new TextField();
 
     BoundingBoxTagEditorView() {
@@ -25,28 +26,50 @@ class BoundingBoxTagEditorView extends FlowPane implements View {
 
         setUpInternalListeners();
 
-        tags.addAll("Test1",
-                "Test2",
-                "Test3",
-                "Test4",
-                "Test5");
-
         inputField.setOnAction(event -> {
             String text = inputField.getText();
-            if(!text.isEmpty() && !tags.contains(text)) {
-                tags.add(text);
+            if(!text.isEmpty() && !tags.get().contains(text)) {
+                tags.get().add(text);
                 inputField.clear();
             }
         });
 
         inputField.setId(TAG_INPUT_FIELD_ID);
         inputField.setPromptText("New tag");
+        // wll be enabled if a tag-list is registered with the tagLists-property.
+        inputField.setDisable(true);
 
         getChildren().add(inputField);
+        setMinHeight(50);
+    }
+
+    void setTags(ObservableList<String> newTags) {
+        tags.set(newTags);
     }
 
     private void setUpInternalListeners() {
-        tags.addListener((ListChangeListener<String>) c -> {
+        tags.addListener((observable, oldValue, newValue) -> {
+            if(oldValue == newValue) {
+                // Listeners have to be updated exactly once after a new tag-list was set.
+                return;
+            }
+            if(oldValue != null) {
+                oldValue.removeListener(tagsListener);
+                getChildren().removeIf(node -> node instanceof TagBox);
+            }
+
+            if(newValue != null) {
+                getChildren().addAll(0, newValue.stream().map(TagBox::new).collect(Collectors.toList()));
+                newValue.addListener(tagsListener);
+                inputField.setDisable(false);
+            } else {
+                inputField.setDisable(true);
+            }
+        });
+    }
+
+    private ListChangeListener<String> createTagsListener() {
+        return c -> {
             while(c.next()) {
                 if(c.wasRemoved()) {
                     getChildren().subList(c.getFrom(), c.getFrom() + c.getRemovedSize()).clear();
@@ -56,7 +79,7 @@ class BoundingBoxTagEditorView extends FlowPane implements View {
                     getChildren().addAll(c.getFrom(), c.getAddedSubList().stream().map(TagBox::new).collect(Collectors.toList()));
                 }
             }
-        });
+        };
     }
 
     private class TagBox extends HBox {
@@ -94,7 +117,7 @@ class BoundingBoxTagEditorView extends FlowPane implements View {
             deleteButton.setId(DELETE_BUTTON_ID);
             deleteButton.setGraphic(deleteIcon);
 
-            deleteButton.setOnAction(event -> tags.remove(tagNameText.getText()));
+            deleteButton.setOnAction(event -> tags.get().remove(tagNameText.getText()));
 
             return deleteButton;
         }
