@@ -11,7 +11,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.paint.Color;
 
-class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> implements View {
+public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> implements View {
     private static final String TABLE_NAME_COLUMN_FACTORY_NAME = "name";
     private static final int TABLE_VIEW_COLOR_COLUMN_WIDTH = 5;
     private static final int TABLE_VIEW_DELETE_COLUMN_WIDTH = 19;
@@ -33,6 +33,8 @@ class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> imp
         setFocusTraversable(false);
         setPlaceholder(new Label(PLACEHOLDER_TEXT));
         setId(BOUNDING_BOX_CATEGORY_SELECTOR_ID);
+
+
     }
 
     @Override

@@ -37,7 +37,11 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
                 textProperty().bind(treeItem.getValue().getBoundingBoxCategory().nameProperty()
                         .concat(((BoundingBoxTreeItem) treeItem).getId()));
             } else {
-                textProperty().bind(((CategoryTreeItem) treeItem).getBoundingBoxCategory().nameProperty());
+                textProperty().bind(((CategoryTreeItem) treeItem).getBoundingBoxCategory()
+                        .nameProperty()
+                        .concat(" (")
+                        .concat(treeItem.getChildren().size())
+                        .concat(")"));
             }
         }
     }
@@ -70,9 +74,11 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
         TreeItem<BoundingBoxView> treeItem = getTreeItem();
 
         if(treeItem instanceof BoundingBoxTreeItem) {
-            treeItem.getValue().fillOpaque();
+            if(!treeItem.getValue().isSelected()) {
+                treeItem.getValue().fillOpaque();
+            }
         } else {
-            treeItem.getChildren().forEach(child -> child.getValue().fillOpaque());
+            treeItem.getChildren().stream().filter(child -> !child.getValue().isSelected()).forEach(child -> child.getValue().fillOpaque());
         }
     }
 
@@ -80,9 +86,11 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
         TreeItem<BoundingBoxView> treeItem = getTreeItem();
 
         if(treeItem instanceof BoundingBoxTreeItem) {
-            treeItem.getValue().fillTransparent();
+            if(!treeItem.getValue().isSelected()) {
+                treeItem.getValue().fillTransparent();
+            }
         } else {
-            treeItem.getChildren().forEach(child -> child.getValue().fillTransparent());
+            treeItem.getChildren().stream().filter(child -> !child.getValue().isSelected()).forEach(child -> child.getValue().fillTransparent());
         }
     }
 }

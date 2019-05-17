@@ -1,8 +1,10 @@
 package BoundingboxEditor.controller;
 
 import BoundingboxEditor.model.BoundingBoxCategory;
+import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.model.Model;
 import BoundingboxEditor.model.io.*;
+import BoundingboxEditor.ui.BoundingBoxView;
 import BoundingboxEditor.ui.MainView;
 import BoundingboxEditor.utils.ColorUtils;
 import javafx.application.Platform;
@@ -13,6 +15,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
@@ -20,6 +24,7 @@ import javafx.stage.Stage;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -125,7 +130,7 @@ public class Controller {
 
         if(importDirectory != null) {
             try {
-                importAnnotationsFromFolder(importDirectory);
+                importAnnotationsFromDirectoryPath(Paths.get(importDirectory.getPath()));
             } catch(ParserConfigurationException exception) {
                 MainView.displayErrorAlert("XML-Parser Error", "Could not set up XML-Parser");
             } catch(IOException exception) {
@@ -187,11 +192,11 @@ public class Controller {
         KeyCode keyCode = event.getCode();
 
         if(keyCode.equals(KeyCode.D)) {
-            if(model.getImageFiles() != null && model.isHasNextFile()) {
+            if(!model.getImageFiles().isEmpty() && model.isHasNextFile()) {
                 onRegisterNextButtonClickedAction();
             }
         } else if(keyCode.equals(KeyCode.A)) {
-            if(model.getImageFiles() != null && model.isHasPreviousFile()) {
+            if(!model.getImageFiles().isEmpty() && model.isHasPreviousFile()) {
                 onRegisterPreviousButtonClickedAction();
             }
         } else if(event.isControlDown() && keyCode.equals(KeyCode.F)) {
@@ -217,6 +222,23 @@ public class Controller {
             model.getBoundingBoxCategoryNames().remove(boundingBoxCategory.getName());
             model.getBoundingBoxCategoryNames().add(event.getNewValue());
             boundingBoxCategory.setName(event.getNewValue());
+        }
+    }
+
+    public void onImageViewMouseReleasedEvent(MouseEvent event) {
+        if(event.getButton().equals(MouseButton.PRIMARY) && view.getBoundingBoxCategoryTableView().getSelectionModel().getSelectedItem() != null) {
+            ImageMetaData imageMetaData = model.getImageMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
+                    key -> ImageMetaData.fromImage(view.getCurrentImage()));
+
+            BoundingBoxView newBoundingBox = new BoundingBoxView(view.getBoundingBoxCategoryTableView().getSelectionModel().getSelectedItem(),
+                    imageMetaData);
+
+            newBoundingBox.setUpFromInitializer(view.getImagePaneView().getBoundingBoxInitializer());
+            newBoundingBox.setVisible(true);
+            newBoundingBox.confineTo(view.getImageView().boundsInParentProperty());
+
+            view.getImagePaneView().getBoundingBoxDataBase().addToCurrentBoundingBoxes(newBoundingBox);
+            view.getImagePaneView().getBoundingBoxInitializer().setVisible(false);
         }
     }
 
@@ -262,7 +284,7 @@ public class Controller {
         view.getBoundingBoxCategoryTableView().setItems(model.getBoundingBoxCategories());
         view.getBoundingBoxCategoryTableView().getSelectionModel().selectFirst();
         // Should be done just once
-        view.getImageExplorerPanel().setImageGalleryItems(model.getImageFiles());
+        view.getImageExplorerPanel().setImageGalleryItems(model.getImageFilesAsObservableList());
         view.getImageExplorerPanel().getImageGallery().getSelectionModel().selectFirst();
     }
 
@@ -286,25 +308,66 @@ public class Controller {
                         .concat(" | ")
                         .concat(model.imageFileListSizeProperty().asString()));
 
-        view.getImageExplorerPanel().getImageGallery().getSelectionModel().selectedIndexProperty().addListener(((observable, oldValue, newValue) -> {
+        view.getImageExplorerPanel().getImageGallery().getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue.intValue() != -1) {
                 model.fileIndexProperty().set(newValue.intValue());
             }
-        }));
+        });
 
         view.getPreviousButton().disableProperty().bind(model.previousFileValidProperty().not());
         view.getNextButton().disableProperty().bind(model.nextFileValidProperty().not());
     }
 
-    private void importAnnotationsFromFolder(File annotationFolder) throws ParserConfigurationException, IOException {
-        ImageAnnotationLoader loader = new ImageAnnotationLoader(ImageAnnotationLoadStrategy.LoadStrategy.PASCAL_VOC);
-        List<ImageAnnotationDataElement> imageAnnotations = loader.load(model.getImageFileSet(), Paths.get(annotationFolder.getPath()));
+    private void importAnnotationsFromDirectoryPath(Path directoryPath) throws ParserConfigurationException, IOException {
+        ImageAnnotationLoader loader = new ImageAnnotationLoader(ImageAnnotationLoadStrategy.Type.PASCAL_VOC);
+        List<ImageAnnotationDataElement> imageAnnotations = loader.load(model.getImageFileNameSet(), directoryPath);
 
         view.getBottomLabel().setText("Successfully imported annotations for " + imageAnnotations.size() + " files.");
 
-        view.updateWorkspaceFromImageAnnotations(imageAnnotations);
+        updateViewFromImageAnnotations(imageAnnotations);
     }
 
+    private void updateViewFromImageAnnotations(List<ImageAnnotationDataElement> imageAnnotations) {
+        final Random random = new Random();
+
+        for(ImageAnnotationDataElement element : imageAnnotations) {
+            File imageFile = model.getImageFiles().get(element.getImageFileName());
+            int imageFileIndex = model.getImageFiles().indexOf(imageFile.getName());
+
+            for(BoundingBoxData boundingBoxData : element.getBoundingBoxes()) {
+                BoundingBoxCategory existingCategory = view.getBoundingBoxCategoryTableView()
+                        .getItems()
+                        .stream()
+                        .filter(item -> item.getName().equals(boundingBoxData.getCategoryName()))
+                        .findFirst()
+                        .orElse(null);
+
+                BoundingBoxView boundingBox;
+
+                if(existingCategory != null) {
+                    boundingBox = new BoundingBoxView(existingCategory, element.getImageMetaData());
+                    boundingBox.setStroke(existingCategory.getColor());
+                } else {
+                    BoundingBoxCategory category = new BoundingBoxCategory(boundingBoxData.getCategoryName(),
+                            ColorUtils.createRandomColor(random));
+                    model.getBoundingBoxCategories().add(category);
+                    boundingBox = new BoundingBoxView(category, element.getImageMetaData());
+                    boundingBox.setStroke(category.getColor());
+                }
+
+                boundingBox.setBoundsInImage(boundingBoxData.getBoundsInImage());
+                boundingBox.setVisible(true);
+
+                if(element.getImageFileName().equals(Paths.get(URI.create(model.getCurrentImage().getUrl())).getFileName().toString())) {
+                    boundingBox.confinementBoundsProperty().bind(view.getImageView().boundsInParentProperty());
+                    boundingBox.initializeFromBoundsInImage();
+                    boundingBox.addConfinementListener();
+                }
+
+                view.getBoundingBoxDatabase().add(imageFileIndex, boundingBox);
+            }
+        }
+    }
 
     private List<ImageAnnotationDataElement> createImageAnnotations() {
         return view.getImagePaneView().getBoundingBoxDataBase().stream()

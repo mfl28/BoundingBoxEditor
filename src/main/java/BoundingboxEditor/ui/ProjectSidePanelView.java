@@ -30,6 +30,8 @@ public class ProjectSidePanelView extends VBox implements View {
     private static final String CATEGORY_INPUT_FIELD_ID = "category-input-field";
     private static final String ADD_BUTTON_ID = "add-button";
     private static final String TAG_EDITOR_LABEL_TEXT = "Tag Editor";
+    private static final String AUTO_SHOW_ICON_PATH = "/icons/auto-show.png";
+    private static final String AUTO_HIDE_ICON_PATH = "/icons/auto-hide.png";
 
 
     private final TextField categorySearchField = new TextField();
@@ -40,6 +42,7 @@ public class ProjectSidePanelView extends VBox implements View {
 
     private final BoundingBoxExplorerView boundingBoxExplorer = new BoundingBoxExplorerView();
     private final ToggleButton visibilityToggle = new ToggleIconButton(SHOW_ICON_PATH, HIDE_ICON_PATH);
+    private final ToggleButton autoShowToggle = new ToggleIconButton(AUTO_SHOW_ICON_PATH, AUTO_HIDE_ICON_PATH);
     private final ToggleButton expansionToggle = new ToggleIconButton(EXPAND_ICON_PATH, COLLAPSE_ICON_PATH);
 
     private final BoundingBoxTagEditorView tagEditor = new BoundingBoxTagEditorView();
@@ -87,7 +90,7 @@ public class ProjectSidePanelView extends VBox implements View {
         boundingBoxExplorer.reset();
     }
 
-    BoundingBoxCategorySelectorView getCategorySelector() {
+    public BoundingBoxCategorySelectorView getCategorySelector() {
         return categorySelector;
     }
 
@@ -123,7 +126,13 @@ public class ProjectSidePanelView extends VBox implements View {
     }
 
     private HBox createBoundingBoxExplorerTopPanel() {
-        HBox panel = new HBox(new Label(OBJECT_SELECTOR_LABEL_TEXT), UiUtils.createHSpacer(), visibilityToggle, expansionToggle);
+        HBox panel = new HBox(
+                new Label(OBJECT_SELECTOR_LABEL_TEXT),
+                UiUtils.createHSpacer(),
+                visibilityToggle,
+                autoShowToggle,
+                expansionToggle
+        );
         panel.setSpacing(10);
         return panel;
     }
@@ -170,13 +179,17 @@ public class ProjectSidePanelView extends VBox implements View {
                         .forEach(childItem -> childItem.setIconToggledOn(!newValue))
         ));
 
-        // FIXME: Flickers when changing between images that contain bounding box annotations
-        //  (actually normal because of image loading in between)
+        autoShowToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
+                boundingBoxExplorer.setAutoHideNonSelected(newValue)));
+
         boundingBoxExplorer.rootProperty().addListener((observable, oldValue, newValue) -> {
             visibilityToggle.disableProperty().unbind();
-            expansionToggle.disableProperty().unbind();
             visibilityToggle.disableProperty().bind(boundingBoxExplorer.rootProperty().get().leafProperty());
+            autoShowToggle.disableProperty().unbind();
+            autoShowToggle.disableProperty().bind(boundingBoxExplorer.rootProperty().get().leafProperty());
+            expansionToggle.disableProperty().unbind();
             expansionToggle.disableProperty().bind(boundingBoxExplorer.rootProperty().get().leafProperty());
+
         });
 
         expansionToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->

@@ -1,6 +1,5 @@
 package BoundingboxEditor.model;
 
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -9,23 +8,21 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
+import org.apache.commons.collections4.map.ListOrderedMap;
 
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Model {
     private static final String BOUNDING_BOX_COORDINATES_PATTERN = "#0.0000";
     private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
 
-    private ObservableList<File> imageFiles = FXCollections.observableArrayList();
-    private Set<String> imageFileSet = new HashSet<>();
+    private ListOrderedMap<String, File> imageFiles = new ListOrderedMap<>();
     private ObservableList<BoundingBoxCategory> boundingBoxCategories = FXCollections.observableArrayList();
+    private Map<String, ImageMetaData> imageMetaDataMap = new HashMap<>();
 
     private IntegerProperty fileIndex = new SimpleIntegerProperty(0);
     private IntegerProperty imageFileListSize = new SimpleIntegerProperty(0);
@@ -40,15 +37,20 @@ public class Model {
     }
 
     public void updateFromFiles(Collection<File> files) {
-        imageFiles.setAll(files);
-        imageFileSet = files.stream().map(file -> file.getName().substring(0, file.getName().lastIndexOf('.'))).collect(Collectors.toSet());
+        imageFiles = ListOrderedMap.listOrderedMap(files.parallelStream().collect(LinkedHashMap::new, (map, item) -> map.put(item.getName(), item), Map::putAll));
+
         boundingBoxCategories.clear();
         boundingBoxCategoryNames.clear();
+        imageFileListSize.set(imageFiles.size());
         fileIndex.set(0);
     }
 
+    public Map<String, ImageMetaData> getImageMetaDataMap() {
+        return imageMetaDataMap;
+    }
+
     public Image getCurrentImage() {
-        return getImageFromFile(imageFiles.get(fileIndex.get()));
+        return getImageFromFile(imageFiles.getValue(fileIndex.get()));
     }
 
     public IntegerProperty fileIndexProperty() {
@@ -59,8 +61,8 @@ public class Model {
         return boundingBoxCategories;
     }
 
-    public Set<String> getImageFileSet() {
-        return imageFileSet;
+    public Set<String> getImageFileNameSet() {
+        return imageFiles.keySet();
     }
 
     public void incrementFileIndex() {
@@ -96,15 +98,23 @@ public class Model {
     }
 
     public String getCurrentImageFilePath() {
-        return imageFiles.get(fileIndex.get()).getPath();
+        return imageFiles.getValue(fileIndex.get()).getPath();
+    }
+
+    public String getCurrentImageFileName() {
+        return imageFiles.getValue(fileIndex.get()).getName();
     }
 
     public Set<String> getBoundingBoxCategoryNames() {
         return boundingBoxCategoryNames;
     }
 
-    public ObservableList<File> getImageFiles() {
-        return FXCollections.unmodifiableObservableList(imageFiles);
+    public ListOrderedMap<String, File> getImageFiles() {
+        return imageFiles;
+    }
+
+    public ObservableList<File> getImageFilesAsObservableList() {
+        return FXCollections.unmodifiableObservableList(FXCollections.observableList(imageFiles.valueList()));
     }
 
     private Image getImageFromFile(File file) {
@@ -112,8 +122,6 @@ public class Model {
     }
 
     private void setUpInternalListeners() {
-
-        imageFileListSize.bind(Bindings.size(imageFiles));
         nextFileValid.bind(fileIndex.lessThan(imageFileListSizeProperty().subtract(1)));
         previousFileValid.bind(fileIndex.greaterThan(0));
 

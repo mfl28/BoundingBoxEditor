@@ -2,14 +2,13 @@ package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.model.BoundingBoxCategory;
-import BoundingboxEditor.model.io.ImageAnnotationDataElement;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-
-import java.util.List;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 public class MainView extends BorderPane implements View {
     private final TopPanelView topPanel = new TopPanelView();
@@ -31,6 +30,30 @@ public class MainView extends BorderPane implements View {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    public static void displayInfoAlert(String title, String header, String content, String text) {
+        // Source: https://code.makery.ch/blog/javafx-dialogs-official/
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+
+        TextArea textArea = new TextArea(text);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+
+        textArea.setMaxWidth(Double.MAX_VALUE);
+        textArea.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setVgrow(textArea, Priority.ALWAYS);
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+        GridPane expContent = new GridPane();
+        expContent.setMaxWidth(Double.MAX_VALUE);
+        expContent.add(textArea, 0, 0);
+
+        alert.getDialogPane().setExpandableContent(expContent);
         alert.showAndWait();
     }
 
@@ -112,11 +135,6 @@ public class MainView extends BorderPane implements View {
         workspace.connectToController(controller);
     }
 
-
-    public void updateWorkspaceFromImageAnnotations(List<ImageAnnotationDataElement> imageAnnotations) {
-        workspace.updateFromImageAnnotations(imageAnnotations);
-    }
-
     public void reset() {
         workspace.reset();
     }
@@ -139,6 +157,10 @@ public class MainView extends BorderPane implements View {
 
     public void removeBoundingBoxDatabaseListener(int index) {
         workspace.removeDatabaseListener(index);
+    }
+
+    public BoundingBoxViewDatabase getBoundingBoxDatabase() {
+        return getImagePaneView().getBoundingBoxDataBase();
     }
 
     private void setUpInternalListeners() {

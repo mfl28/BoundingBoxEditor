@@ -36,7 +36,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String XMAX_TAG = "xmax";
     private static final String YMIN_TAG = "ymin";
     private static final String YMAX_TAG = "ymax";
-    private static final String FILENAME_ANNOTATION_EXTENSION = "_A";
+    private static final String ANNOTATION_FILENAME_EXTENSION = "_A";
 
     @Override
     public void save(final Collection<ImageAnnotationDataElement> dataSet, final Path path) throws Exception {
@@ -69,11 +69,11 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         DOMSource domSource = new DOMSource(document);
 
         String fileName = dataElement.getImageFileName();
-        String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf('.'));
+        String annotationFileNameBase = fileName.replace('.', '_');
 
         File outputFile = new File(path.toString().concat("\\")
-                .concat(fileNameWithoutExtension)
-                .concat(FILENAME_ANNOTATION_EXTENSION)
+                .concat(annotationFileNameBase)
+                .concat(ANNOTATION_FILENAME_EXTENSION)
                 .concat(FILE_EXTENSION));
 
         StreamResult streamResult = new StreamResult(outputFile);
@@ -84,7 +84,6 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private void appendHeaderFromImageAnnotationDataElement(final Document document, final Node root, final ImageAnnotationDataElement dataElement) {
         root.appendChild(createStringValueElement(document, FOLDER_ELEMENT_NAME, dataElement.getContainingFolderName()));
         root.appendChild(createStringValueElement(document, FILENAME_ELEMENT_NAME, dataElement.getImageFileName()));
-        root.appendChild(createStringValueElement(document, PATH_ELEMENT_NAME, dataElement.getImagePath().toString()));
 
         final Element sizeElement = document.createElement(IMAGE_SIZE_ELEMENT_NAME);
         root.appendChild(sizeElement);

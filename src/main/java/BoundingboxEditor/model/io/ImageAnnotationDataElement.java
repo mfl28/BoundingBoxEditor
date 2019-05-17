@@ -3,8 +3,6 @@ package BoundingboxEditor.model.io;
 import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.ui.BoundingBoxView;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,38 +24,34 @@ public class ImageAnnotationDataElement {
         final List<BoundingBoxData> boundingBoxData = new ArrayList<>(boundingBoxViews.size());
 
         for(BoundingBoxView item : boundingBoxViews) {
-            boundingBoxData.add(BoundingBoxData.fromSelectionRectangle(item));
+            boundingBoxData.add(BoundingBoxData.fromBoundingBoxView(item));
         }
 
         return new ImageAnnotationDataElement(boundingBoxViews.iterator().next().getImageMetaData(), boundingBoxData);
 
     }
 
-    public Path getImagePath() {
-        return Paths.get(imageMetaData.getImageFilePath().replace("file:/C:", ""));
-    }
-
-    public double getImageWidth() {
-        return imageMetaData.getImageWidth();
-    }
-
-    public double getImageHeight() {
-        return imageMetaData.getImageHeight();
-    }
-
     public List<BoundingBoxData> getBoundingBoxes() {
         return boundingBoxes;
     }
 
-    public String getContainingFolderName() {
-        return getImagePath().getParent().toString();
-    }
-
     public String getImageFileName() {
-        return getImagePath().getFileName().toString();
+        return imageMetaData.getFileName();
     }
 
     public ImageMetaData getImageMetaData() {
         return imageMetaData;
+    }
+
+    double getImageWidth() {
+        return imageMetaData.getImageWidth();
+    }
+
+    double getImageHeight() {
+        return imageMetaData.getImageHeight();
+    }
+
+    String getContainingFolderName() {
+        return imageMetaData.getFolderName();
     }
 }

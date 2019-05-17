@@ -2,20 +2,12 @@ package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.model.BoundingBoxCategory;
-import BoundingboxEditor.model.io.BoundingBoxData;
-import BoundingboxEditor.model.io.ImageAnnotationDataElement;
-import BoundingboxEditor.utils.ColorUtils;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
-import javafx.geometry.BoundingBox;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeItem;
 
-import java.io.File;
-import java.net.URI;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 class WorkspaceView extends SplitPane implements View {
@@ -57,58 +49,6 @@ class WorkspaceView extends SplitPane implements View {
     public void reset() {
         setVisible(true);
         projectSidePanel.reset();
-    }
-
-    void updateFromImageAnnotations(List<ImageAnnotationDataElement> imageAnnotations) {
-        final Random random = new Random();
-
-        for(ImageAnnotationDataElement element : imageAnnotations) {
-            File imageFile = imageExplorer.getImageGallery().getItems().stream()
-                    .filter(item -> Paths.get(item.getPath()).getFileName().equals(element.getImagePath()
-                            .getFileName()))
-                    .findFirst()
-                    .orElseThrow();
-
-            int index = imageExplorer.getImageGallery().getItems().indexOf(imageFile);
-
-            for(BoundingBoxData boundingBoxData : element.getBoundingBoxes()) {
-                BoundingBoxCategory existingCategory = projectSidePanel.getCategorySelector()
-                        .getItems()
-                        .stream()
-                        .filter(item -> item.getName().equals(boundingBoxData.getCategoryName()))
-                        .findFirst()
-                        .orElse(null);
-
-                BoundingBoxView boundingBox;
-
-                if(existingCategory != null) {
-                    boundingBox = new BoundingBoxView(existingCategory, element.getImageMetaData());
-                    boundingBox.setStroke(existingCategory.getColor());
-                } else {
-                    BoundingBoxCategory category = new BoundingBoxCategory(boundingBoxData.getCategoryName(),
-                            ColorUtils.createRandomColor(random));
-                    projectSidePanel.getCategorySelector().getItems().add(category);
-                    boundingBox = new BoundingBoxView(category, element.getImageMetaData());
-                    boundingBox.setStroke(category.getColor());
-                }
-
-                double xMin = boundingBoxData.getXMin();
-                double yMin = boundingBoxData.getYMin();
-                double xMax = boundingBoxData.getXMax();
-                double yMax = boundingBoxData.getYMax();
-
-                boundingBox.setBoundsInImage(new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin));
-                boundingBox.setVisible(true);
-
-                if(element.getImagePath().getFileName().equals(Paths.get(URI.create(getImageShower().getImagePane().getCurrentImage().getUrl())).getFileName())) {
-                    boundingBox.confinementBoundsProperty().bind(getImageShower().getImagePane().getImageView().boundsInParentProperty());
-                    boundingBox.initializeFromBoundsInImage();
-                    boundingBox.addConfinementListener();
-                }
-
-                imageShower.getImagePane().getBoundingBoxDataBase().add(index, boundingBox);
-            }
-        }
     }
 
     void addFullyLoadedImageListener() {
@@ -171,7 +111,6 @@ class WorkspaceView extends SplitPane implements View {
     private ChangeListener<Number> createImageFullyLoadedListener() {
         return (observable, oldValue, newValue) -> {
             if(newValue.intValue() == 1) {
-                //removeDatabaseListener();
                 resetBoundingBoxesInView();
                 loadCurrentBoundingBoxes();
                 setDatabaseListener();

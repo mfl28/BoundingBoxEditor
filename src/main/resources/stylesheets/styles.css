@@ -162,10 +162,9 @@
     -fx-background-color: -base-alt-colorful-component-color;
 }
 
-/* selectionRectangle */
+/* BoundingBoxView */
 
-.selectionRectangle {
-    -fx-fill: transparent;
+#bounding-box-view {
     -fx-stroke-width: 3px;
 }
 

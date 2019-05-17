@@ -3,10 +3,7 @@ package BoundingboxEditor.ui;
 import BoundingboxEditor.model.BoundingBoxCategory;
 import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.utils.MathUtils;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.Property;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
@@ -24,15 +21,17 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class BoundingBoxView extends Rectangle implements View {
-    private static final String SELECTION_RECTANGLE_STYLE = "selectionRectangle";
     private static final double DEFAULT_FILL_OPACITY = 0.4;
+    private static final double SELECTED_FILL_OPACITY = 0.6;
     private static final BoundingBoxView NULL_BOUNDING_BOX_VIEW = new BoundingBoxView();
+    private static final String BOUNDING_BOX_VIEW_ID = "bounding-box-view";
 
     private final DragAnchor dragAnchor = new DragAnchor();
     private final Property<Bounds> confinementBounds = new SimpleObjectProperty<>();
     private final Property<Bounds> boundsInImage = new SimpleObjectProperty<>();
     private final Group nodeGroup = new Group(this);
     private final ObservableList<String> tags = FXCollections.observableArrayList();
+    private final BooleanProperty selected = new SimpleBooleanProperty(false);
 
     private BoundingBoxCategory boundingBoxCategory;
     private ImageMetaData imageMetaData;
@@ -45,12 +44,14 @@ public class BoundingBoxView extends Rectangle implements View {
 
         setManaged(false);
         setVisible(false);
-        getStyleClass().add(SELECTION_RECTANGLE_STYLE);
+        setFill(Color.TRANSPARENT);
+        setId(BOUNDING_BOX_VIEW_ID);
 
         nodeGroup.setManaged(false);
         nodeGroup.getChildren().addAll(createResizeHandles());
 
         addMoveFunctionality();
+        setUpInternalListeners();
     }
 
     private BoundingBoxView() {
@@ -129,6 +130,18 @@ public class BoundingBoxView extends Rectangle implements View {
         setY(boundsInImageValue.getMinY() * confinementBoundsValue.getHeight() / imgHeight + confinementBoundsValue.getMinY());
         setWidth(boundsInImageValue.getWidth() * confinementBoundsValue.getWidth() / imgWidth);
         setHeight(boundsInImageValue.getHeight() * confinementBoundsValue.getHeight() / imgHeight);
+    }
+
+    public boolean isSelected() {
+        return selected.get();
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected.set(selected);
+    }
+
+    public BooleanProperty selectedProperty() {
+        return selected;
     }
 
     public void setXYWH(double x, double y, double w, double h) {
@@ -214,6 +227,12 @@ public class BoundingBoxView extends Rectangle implements View {
             }
             event.consume();
         });
+    }
+
+    private void setUpInternalListeners() {
+        selected.addListener(((observable, oldValue, newValue) ->
+                setFill(newValue ? Color.web(getStroke().toString(), SELECTED_FILL_OPACITY) : Color.TRANSPARENT)
+        ));
     }
 
     private enum CompassPoint {NW, N, NE, E, SE, S, SW, W}

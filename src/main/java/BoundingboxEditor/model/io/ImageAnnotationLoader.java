@@ -13,7 +13,7 @@ import java.util.Set;
 public class ImageAnnotationLoader {
     private final ImageAnnotationLoadStrategy loadStrategy;
 
-    public ImageAnnotationLoader(final ImageAnnotationLoadStrategy.LoadStrategy strategy) throws ParserConfigurationException {
+    public ImageAnnotationLoader(final ImageAnnotationLoadStrategy.Type strategy) throws ParserConfigurationException {
         loadStrategy = ImageAnnotationLoadStrategy.createStrategy(strategy);
     }
 

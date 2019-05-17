@@ -1,7 +1,7 @@
 package BoundingboxEditor.ui;
 
+import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.model.BoundingBoxCategory;
-import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.utils.MathUtils;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -50,6 +50,11 @@ public class ImagePaneView extends StackPane implements View {
         setUpInternalListeners();
     }
 
+    @Override
+    public void connectToController(Controller controller) {
+        imageView.setOnMouseReleased(controller::onImageViewMouseReleasedEvent);
+    }
+
     public void addBoundingBoxesToView(Collection<? extends BoundingBoxView> boundingBoxes) {
         boundingBoxGroup.getChildren().addAll(boundingBoxes.stream()
                 .map(BoundingBoxView::getNodeGroup)
@@ -76,6 +81,10 @@ public class ImagePaneView extends StackPane implements View {
 
     public BoundingBoxCategory getSelectedCategory() {
         return selectedCategory.get();
+    }
+
+    public BoundingBoxView getBoundingBoxInitializer() {
+        return initializerBoundingBox;
     }
 
     public BoundingBoxViewDatabase getBoundingBoxDataBase() {
@@ -225,19 +234,19 @@ public class ImagePaneView extends StackPane implements View {
             }
         });
 
-        imageView.setOnMouseReleased(event -> {
-            if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
-                BoundingBoxView newBoundingBox = new BoundingBoxView(selectedCategory.get(),
-                        ImageMetaData.fromImage(getCurrentImage()));
-
-                newBoundingBox.setUpFromInitializer(initializerBoundingBox);
-                newBoundingBox.setVisible(true);
-                newBoundingBox.confineTo(imageView.boundsInParentProperty());
-
-                getBoundingBoxDataBase().addToCurrentBoundingBoxes(newBoundingBox);
-                initializerBoundingBox.setVisible(false);
-            }
-        });
+//        imageView.setOnMouseReleased(event -> {
+//            if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
+//                BoundingBoxView newBoundingBox = new BoundingBoxView(selectedCategory.get(),
+//                        ImageMetaData.fromImage(getCurrentImage()));
+//
+//                newBoundingBox.setUpFromInitializer(initializerBoundingBox);
+//                newBoundingBox.setVisible(true);
+//                newBoundingBox.confineTo(imageView.boundsInParentProperty());
+//
+//                getBoundingBoxDataBase().addToCurrentBoundingBoxes(newBoundingBox);
+//                initializerBoundingBox.setVisible(false);
+//            }
+//        });
 
         setOnScroll(event -> {
             if(event.isControlDown()) {

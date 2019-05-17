@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Set;
 
 public interface ImageAnnotationLoadStrategy {
-    static ImageAnnotationLoadStrategy createStrategy(final LoadStrategy loadStrategy) throws ParserConfigurationException {
-        switch(loadStrategy) {
+    static ImageAnnotationLoadStrategy createStrategy(final Type type) throws ParserConfigurationException {
+        switch(type) {
             case PASCAL_VOC:
                 return new PVOCLoadStrategy();
             default:
@@ -19,5 +19,5 @@ public interface ImageAnnotationLoadStrategy {
 
     List<ImageAnnotationDataElement> load(final Set<String> fileNamesToLoad, final Path path) throws IOException;
 
-    enum LoadStrategy {PASCAL_VOC}
+    enum Type {PASCAL_VOC}
 }

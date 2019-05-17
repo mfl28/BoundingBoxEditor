@@ -8,6 +8,7 @@ import javafx.scene.layout.VBox;
 
 public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implements View {
     private static final String BOUNDING_BOX_TREE_VIEW_STYLE = "bounding-box-tree-view";
+    private boolean autoHideNonSelected = false;
 
     BoundingBoxExplorerView() {
         VBox.setVgrow(this, Priority.ALWAYS);
@@ -16,6 +17,7 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
         setShowRoot(false);
 
         getStyleClass().add(BOUNDING_BOX_TREE_VIEW_STYLE);
+        setUpInternalListeners();
     }
 
     @Override
@@ -23,7 +25,15 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
         setRoot(new TreeItem<>());
     }
 
-    public void addTreeItemsFromBoundingBoxes(Iterable<? extends BoundingBoxView> boundingBoxes) {
+    public boolean isAutoHideNonSelected() {
+        return autoHideNonSelected;
+    }
+
+    public void setAutoHideNonSelected(boolean autoHideNonSelected) {
+        this.autoHideNonSelected = autoHideNonSelected;
+    }
+
+    void addTreeItemsFromBoundingBoxes(Iterable<? extends BoundingBoxView> boundingBoxes) {
         for(BoundingBoxView boundingBox : boundingBoxes) {
 
             BoundingBoxTreeItem boundingBoxTreeItem = new BoundingBoxTreeItem(boundingBox);
@@ -50,5 +60,29 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
         boundingBoxTreeItem.setId(categoryTreeItem.getChildren().size() + 1);
         categoryTreeItem.getChildren().add(boundingBoxTreeItem);
         getSelectionModel().select(boundingBoxTreeItem);
+    }
+
+    private void setUpInternalListeners() {
+        getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
+            if(oldValue instanceof BoundingBoxTreeItem) {
+                oldValue.getValue().setSelected(false);
+            }
+
+            if(autoHideNonSelected) {
+                getRoot().getChildren()
+                        .forEach(category -> category.getChildren()
+                                .stream()
+                                .map(child -> (BoundingBoxTreeItem) child)
+                                .forEach(child -> child.setIconToggledOn(false)));
+            }
+
+            if(newValue instanceof BoundingBoxTreeItem) {
+                newValue.getValue().setSelected(true);
+
+                if(autoHideNonSelected) {
+                    ((BoundingBoxTreeItem) newValue).setIconToggledOn(true);
+                }
+            }
+        }));
     }
 }
