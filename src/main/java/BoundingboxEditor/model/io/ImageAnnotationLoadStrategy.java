@@ -1,14 +1,13 @@
 package BoundingboxEditor.model.io;
 
-import javax.xml.parsers.ParserConfigurationException;
+import BoundingboxEditor.model.Model;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.InvalidParameterException;
-import java.util.List;
-import java.util.Set;
 
 public interface ImageAnnotationLoadStrategy {
-    static ImageAnnotationLoadStrategy createStrategy(final Type type) throws ParserConfigurationException {
+    static ImageAnnotationLoadStrategy createStrategy(final Type type) {
         switch(type) {
             case PASCAL_VOC:
                 return new PVOCLoadStrategy();
@@ -17,7 +16,7 @@ public interface ImageAnnotationLoadStrategy {
         }
     }
 
-    List<ImageAnnotationDataElement> load(final Set<String> fileNamesToLoad, final Path path) throws IOException;
+    ImageAnnotationLoader.LoadResult load(final Model model, final Path path) throws IOException;
 
     enum Type {PASCAL_VOC}
 }

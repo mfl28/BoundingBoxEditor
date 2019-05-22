@@ -2,6 +2,7 @@ package BoundingboxEditor.ui;
 
 import BoundingboxEditor.model.BoundingBoxCategory;
 import BoundingboxEditor.model.ImageMetaData;
+import BoundingboxEditor.model.io.BoundingBoxData;
 import BoundingboxEditor.utils.MathUtils;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -45,6 +46,7 @@ public class BoundingBoxView extends Rectangle implements View {
         setManaged(false);
         setVisible(false);
         setFill(Color.TRANSPARENT);
+        setStroke(Color.TRANSPARENT);
         setId(BOUNDING_BOX_VIEW_ID);
 
         nodeGroup.setManaged(false);
@@ -57,10 +59,23 @@ public class BoundingBoxView extends Rectangle implements View {
     private BoundingBoxView() {
     }
 
+    public static BoundingBoxView fromData(BoundingBoxData boundingBoxData, ImageMetaData metaData) {
+        BoundingBoxView boundingBox = new BoundingBoxView(boundingBoxData.getCategory(), metaData);
+        boundingBox.setBoundsInImage(boundingBoxData.getBoundsInImage());
+        boundingBox.setStroke(boundingBoxData.getCategory().getColor());
+        boundingBox.getTags().setAll(boundingBoxData.getTags());
+        boundingBox.setVisible(true);
+        return boundingBox;
+    }
+
     public void setUpFromInitializer(BoundingBoxView initializer) {
         setXYWH(initializer.getX(), initializer.getY(),
                 initializer.getWidth(), initializer.getHeight());
         setStroke(initializer.getStroke());
+    }
+
+    public BoundingBoxData toBoundingBoxData() {
+        return new BoundingBoxData(getBoundingBoxCategory(), getImageRelativeBounds(), getTags());
     }
 
     public BoundingBoxCategory getBoundingBoxCategory() {

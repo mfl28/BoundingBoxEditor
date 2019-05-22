@@ -42,7 +42,7 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
         nameColumn.setOnEditCommit(controller::onSelectorCellEditEvent);
     }
 
-    TableColumn<BoundingBoxCategory, BoundingBoxCategory> getDeleteColumn() {
+    public TableColumn<BoundingBoxCategory, BoundingBoxCategory> getDeleteColumn() {
         return deleteColumn;
     }
 

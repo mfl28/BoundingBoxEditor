@@ -6,6 +6,7 @@ import BoundingboxEditor.utils.MathUtils;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
@@ -16,6 +17,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -33,9 +35,8 @@ public class ImagePaneView extends StackPane implements View {
     private final SimpleBooleanProperty maximizeImageView = new SimpleBooleanProperty(true);
     private final ObjectProperty<BoundingBoxCategory> selectedCategory = new SimpleObjectProperty<>(null);
     private final Group boundingBoxGroup = new Group();
-
+    private final ObservableList<BoundingBoxView> currentBoundingBoxes = FXCollections.observableArrayList();
     private BoundingBoxView initializerBoundingBox = new BoundingBoxView(null, null);
-    private BoundingBoxViewDatabase boundingBoxDataBase;
 
     ImagePaneView() {
         getChildren().addAll(imageView, initializerBoundingBox.getNodeGroup(), boundingBoxGroup, progressIndicator);
@@ -65,14 +66,30 @@ public class ImagePaneView extends StackPane implements View {
         boundingBoxGroup.getChildren().clear();
     }
 
-    public void resetBoundingBoxDatabase(int size) {
-        removeAllBoundingBoxesFromView();
-        boundingBoxDataBase = new BoundingBoxViewDatabase(size);
+    public void addToCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBox) {
+        currentBoundingBoxes.addAll(boundingBox);
     }
 
-    public void resetCurrentBoundingBoxes() {
-        getCurrentBoundingBoxes().forEach(item -> item.setVisible(true));
+    public void setAllCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
+        currentBoundingBoxes.setAll(boundingBoxes);
+    }
+
+    public void addToCurrentBoundingBoxes(BoundingBoxView boundingBox) {
+        currentBoundingBoxes.add(boundingBox);
+    }
+
+
+    public void removeCurrentBoundingBoxes() {
         removeAllBoundingBoxesFromView();
+        currentBoundingBoxes.clear();
+    }
+
+    public void removeAllFromCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
+        currentBoundingBoxes.removeAll(boundingBoxes);
+    }
+
+    public void removeFromCurrentBoundingBoxes(BoundingBoxView boundingBox) {
+        currentBoundingBoxes.remove(boundingBox);
     }
 
     public ProgressIndicator getProgressIndicator() {
@@ -87,12 +104,8 @@ public class ImagePaneView extends StackPane implements View {
         return initializerBoundingBox;
     }
 
-    public BoundingBoxViewDatabase getBoundingBoxDataBase() {
-        return boundingBoxDataBase;
-    }
-
-    public ObservableList<BoundingBoxView> getCurrentBoundingBoxes() {
-        return boundingBoxDataBase.getCurrentBoundingBoxes();
+    ObservableList<BoundingBoxView> getCurrentBoundingBoxes() {
+        return currentBoundingBoxes;
     }
 
     ObjectProperty<BoundingBoxCategory> selectedCategoryProperty() {
@@ -117,9 +130,9 @@ public class ImagePaneView extends StackPane implements View {
         return imageView;
     }
 
-    void updateImage(final Image image) {
+    void updateImageFromFile(final File imageFile) {
         // FIXME: Image loading does not keep up (ie the wrong image is loaded) when using  pressed up/down keys to quickly iterate through images in image gallery.
-        currentImageObject.set(image);
+        currentImageObject.set(new Image(imageFile.toURI().toString(), true));
 
         resetProgressIndicatorAnimation();
         progressIndicator.setVisible(true);

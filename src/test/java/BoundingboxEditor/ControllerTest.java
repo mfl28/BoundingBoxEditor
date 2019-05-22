@@ -167,7 +167,7 @@ public class ControllerTest extends ApplicationTest {
 
         final BoundingBoxView boundingBoxView = mainView.getCurrentBoundingBoxes().get(0);
         // The boundingBoxView's category should be the same as the currently selected category in the category selector.
-        verifyThat(boundingBoxView.getBoundingBoxCategory(), CoreMatchers.equalTo(mainView.getBoundingBoxCategoryTableView().getSelectionModel().getSelectedItem()));
+        verifyThat(boundingBoxView.getBoundingBoxCategory(), CoreMatchers.equalTo(mainView.getBoundingBoxCategorySelectorView().getSelectionModel().getSelectedItem()));
 
         final Bounds selectionRectangleBounds = boundingBoxView.localToScreen(boundingBoxView.getBoundsInLocal());
 
@@ -183,7 +183,7 @@ public class ControllerTest extends ApplicationTest {
     void onAddNewBoundingBoxCategory_WhenFolderLoaded_ShouldDisplayAndSelectCategoryInTableView(FxRobot robot) {
         final String testName = "Dummy";
         enterNewCategory(robot, testName);
-        verifyThat(controller.getView().getBoundingBoxCategoryTableView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
+        verifyThat(controller.getView().getBoundingBoxCategorySelectorView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
     }
 
     @Test
@@ -203,7 +203,7 @@ public class ControllerTest extends ApplicationTest {
         //then
         verifyThat(topModalStage, CoreMatchers.notNullValue());
         verifyThat(topModalStage.getTitle(), CoreMatchers.equalTo("Category Input Error"));
-        verifyThat(controller.getView().getBoundingBoxCategoryTableView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
+        verifyThat(controller.getView().getBoundingBoxCategorySelectorView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
     }
 
     @Test

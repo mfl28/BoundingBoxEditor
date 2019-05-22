@@ -1,31 +1,37 @@
 package BoundingboxEditor.model.io;
 
-import BoundingboxEditor.ui.BoundingBoxView;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import BoundingboxEditor.model.BoundingBoxCategory;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 
+import java.util.List;
+
 public class BoundingBoxData {
-    private final String categoryName;
+    private final BoundingBoxCategory category;
     private final Bounds boundsInImage;
-    private final ObservableList<String> tags = FXCollections.observableArrayList();
+    private final List<String> tags;
 
     // TODO: Optionally add attributes: pose (Front, back, right etc.), truncated(0 or 1), difficult(0 or 1)
     //       occluded (0 or 1)
 
-    public BoundingBoxData(String categoryName, double xMin, double yMin, double xMax, double yMax) {
-        this.categoryName = categoryName;
+    public BoundingBoxData(BoundingBoxCategory category, double xMin, double yMin, double xMax, double yMax, List<String> tags) {
+        this.category = category;
         this.boundsInImage = new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin);
+        this.tags = tags;
     }
 
-    public BoundingBoxData(String categoryName, Bounds rectangleBounds) {
-        this.categoryName = categoryName;
+    public BoundingBoxData(BoundingBoxCategory category, Bounds rectangleBounds, List<String> tags) {
+        this.category = category;
         this.boundsInImage = rectangleBounds;
+        this.tags = tags;
     }
 
     public String getCategoryName() {
-        return categoryName;
+        return category.getName();
+    }
+
+    public BoundingBoxCategory getCategory() {
+        return category;
     }
 
     public double getXMin() {
@@ -48,12 +54,8 @@ public class BoundingBoxData {
         return boundsInImage;
     }
 
-    public ObservableList<String> getTags() {
+    public List<String> getTags() {
         return tags;
-    }
-
-    static BoundingBoxData fromBoundingBoxView(final BoundingBoxView boundingBoxView) {
-        return new BoundingBoxData(boundingBoxView.getBoundingBoxCategory().getName(), boundingBoxView.getImageRelativeBounds());
     }
 }
 

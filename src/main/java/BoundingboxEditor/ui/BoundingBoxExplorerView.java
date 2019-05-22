@@ -15,6 +15,7 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
 
         setRoot(new TreeItem<>());
         setShowRoot(false);
+        setFixedCellSize(20);
 
         getStyleClass().add(BOUNDING_BOX_TREE_VIEW_STYLE);
         setUpInternalListeners();

@@ -29,7 +29,10 @@ class ToggleRectangleIcon extends Rectangle {
     }
 
     private void setUpInternalListeners() {
-        setOnMousePressed(event -> toggledOn.set(!toggledOn.get()));
+        setOnMousePressed(event -> {
+            toggledOn.set(!toggledOn.get());
+            event.consume();
+        });
 
         toggledOn.addListener(((observable, oldValue, newValue) ->
                 setOpacity(newValue ? TOGGLED_ON_OPACITY : TOGGLED_OFF_OPACITY)));

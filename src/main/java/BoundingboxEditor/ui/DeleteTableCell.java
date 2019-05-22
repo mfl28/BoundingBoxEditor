@@ -5,12 +5,16 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.layout.Region;
 
-class DeleteTableCell extends TableCell<BoundingBoxCategory, BoundingBoxCategory> {
+public class DeleteTableCell extends TableCell<BoundingBoxCategory, BoundingBoxCategory> {
     private static final String DELETE_BUTTON_ID = "delete-button";
     private static final String TABLE_COLUMN_DELETE_BUTTON_STYLE = "delete-button";
     private static final String TABLE_VIEW_DELETE_ICON_STYLE = "icon";
 
     private final Button deleteButton = createDeleteButton();
+
+    public Button getDeleteButton() {
+        return deleteButton;
+    }
 
     @Override
     protected void updateItem(BoundingBoxCategory item, boolean empty) {
@@ -21,10 +25,6 @@ class DeleteTableCell extends TableCell<BoundingBoxCategory, BoundingBoxCategory
         } else {
             setGraphic(deleteButton);
         }
-    }
-
-    Button getDeleteButton() {
-        return deleteButton;
     }
 
     private Button createDeleteButton() {

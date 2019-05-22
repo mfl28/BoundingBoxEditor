@@ -90,7 +90,7 @@ public class ProjectSidePanelView extends VBox implements View {
         boundingBoxExplorer.reset();
     }
 
-    public BoundingBoxCategorySelectorView getCategorySelector() {
+    BoundingBoxCategorySelectorView getCategorySelector() {
         return categorySelector;
     }
 

@@ -4,8 +4,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -16,13 +16,13 @@ import java.io.File;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
     private static final String ROOT_ELEMENT_NAME = "annotation";
     private static final String FOLDER_ELEMENT_NAME = "folder";
     private static final String FILENAME_ELEMENT_NAME = "filename";
-    private static final String PATH_ELEMENT_NAME = "path";
     private static final String IMAGE_SIZE_ELEMENT_NAME = "size";
     private static final String IMAGE_WIDTH_ELEMENT_NAME = "width";
     private static final String IMAGE_HEIGHT_ELEMENT_NAME = "height";
@@ -38,24 +38,31 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String YMAX_TAG = "ymax";
     private static final String ANNOTATION_FILENAME_EXTENSION = "_A";
 
+    private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+    private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    private Path saveFolderPath;
+
     @Override
     public void save(final Collection<ImageAnnotationDataElement> dataSet, final Path path) throws Exception {
-        final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        final DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+        this.saveFolderPath = path;
 
-        final Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        long startTime = System.nanoTime();
+        dataSet.parallelStream().forEach(annotation -> {
+            try {
+                createXmlFileFromImageAnnotationDataElement(annotation);
+            } catch(TransformerException | ParserConfigurationException e) {
+            }
+        });
 
-        for(final ImageAnnotationDataElement dataElement : dataSet) {
-            createXmlFileFromImageAnnotationDataElement(documentBuilder, transformer, dataElement, path);
-        }
+        long duration = System.nanoTime() - startTime;
+
+        System.out.println("Saving took: " + TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS));
     }
 
-    private void createXmlFileFromImageAnnotationDataElement(final DocumentBuilder documentBuilder,
-                                                             final Transformer transformer,
-                                                             final ImageAnnotationDataElement dataElement,
-                                                             final Path path) throws TransformerException {
-        final Document document = documentBuilder.newDocument();
+    private void createXmlFileFromImageAnnotationDataElement(final ImageAnnotationDataElement dataElement) throws TransformerException, ParserConfigurationException {
+        final Document document = documentBuilderFactory.newDocumentBuilder().newDocument();
+        final Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
         final Element annotationElement = document.createElement(ROOT_ELEMENT_NAME);
         document.appendChild(annotationElement);
@@ -71,7 +78,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         String fileName = dataElement.getImageFileName();
         String annotationFileNameBase = fileName.replace('.', '_');
 
-        File outputFile = new File(path.toString().concat("\\")
+        File outputFile = new File(saveFolderPath.toString().concat("\\")
                 .concat(annotationFileNameBase)
                 .concat(ANNOTATION_FILENAME_EXTENSION)
                 .concat(FILE_EXTENSION));
@@ -111,6 +118,12 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private Element createDoubleValueElement(Document document, String tagName, double value) {
         Element element = document.createElement(tagName);
         element.appendChild(document.createTextNode(Double.valueOf(floatingPointFormat.format(value)).toString()));
+        return element;
+    }
+
+    private Element createIntegerValueElement(Document document, String tagName, int value) {
+        Element element = document.createElement(tagName);
+        element.appendChild(document.createTextNode(Integer.toString(value)));
         return element;
     }
 

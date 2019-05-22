@@ -1,8 +1,6 @@
 package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
-import BoundingboxEditor.model.BoundingBoxCategory;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeItem;
@@ -21,9 +19,6 @@ class WorkspaceView extends SplitPane implements View {
     private final ImageShowerView imageShower = new ImageShowerView();
     private final ImageExplorerPanelView imageExplorer = new ImageExplorerPanelView();
 
-    private final ListChangeListener<BoundingBoxView> boundingBoxDatabaseListener = createBoundingBoxDatabaseListener();
-    private final ChangeListener<Number> imageFullyLoadedListener = createImageFullyLoadedListener();
-
     WorkspaceView() {
         getItems().addAll(projectSidePanel, imageShower, imageExplorer);
 
@@ -35,7 +30,6 @@ class WorkspaceView extends SplitPane implements View {
         setId(WORK_SPACE_ID);
 
         setUpInternalListeners();
-        setBoundingBoxCategorySelectorDeleteCellFactory();
         setBoundingBoxExplorerCellFactory();
     }
 
@@ -51,14 +45,6 @@ class WorkspaceView extends SplitPane implements View {
         projectSidePanel.reset();
     }
 
-    void addFullyLoadedImageListener() {
-        imageShower.getImagePane().getCurrentImage().progressProperty().addListener(imageFullyLoadedListener);
-    }
-
-    void removeFullyLoadedImageListener() {
-        imageShower.getImagePane().getCurrentImage().progressProperty().removeListener(imageFullyLoadedListener);
-    }
-
     ProjectSidePanelView getProjectSidePanel() {
         return projectSidePanel;
     }
@@ -71,28 +57,10 @@ class WorkspaceView extends SplitPane implements View {
         return imageExplorer;
     }
 
-    void setDatabaseListener() {
-        imageShower.getImagePane().getCurrentBoundingBoxes().addListener(boundingBoxDatabaseListener);
-    }
-
-    void removeDatabaseListener(int index) {
-        imageShower.getImagePane().getBoundingBoxDataBase().get(index).removeListener(boundingBoxDatabaseListener);
-    }
-
     private void setUpInternalListeners() {
         managedProperty().bind(visibleProperty());
 
-        projectSidePanel.getCategorySelector().getSelectionModel().selectedItemProperty().addListener((value, oldValue, newValue) -> {
-            if(newValue != null) {
-                imageShower.getImagePane().getInitializerBoundingBox().setStroke(newValue.getColor());
-            }
-        });
-
-        imageShower.getImagePane().selectedCategoryProperty().bind(projectSidePanel.getCategorySelector().getSelectionModel().selectedItemProperty());
-    }
-
-    private ListChangeListener<BoundingBoxView> createBoundingBoxDatabaseListener() {
-        return c -> {
+        imageShower.getImagePane().getCurrentBoundingBoxes().addListener((ListChangeListener<BoundingBoxView>) c -> {
             while(c.next()) {
                 if(c.wasAdded()) {
                     List<? extends BoundingBoxView> addedItemsList = c.getAddedSubList();
@@ -105,21 +73,20 @@ class WorkspaceView extends SplitPane implements View {
                     imageShower.getImagePane().removeBoundingBoxesFromView(c.getRemoved());
                 }
             }
-        };
+        });
+
+        projectSidePanel.getCategorySelector().getSelectionModel().selectedItemProperty().addListener((value, oldValue, newValue) -> {
+            if(newValue != null) {
+                imageShower.getImagePane().getInitializerBoundingBox().setStroke(newValue.getColor());
+            }
+        });
+
+        imageShower.getImagePane().selectedCategoryProperty().bind(projectSidePanel.getCategorySelector().getSelectionModel().selectedItemProperty());
     }
 
-    private ChangeListener<Number> createImageFullyLoadedListener() {
-        return (observable, oldValue, newValue) -> {
-            if(newValue.intValue() == 1) {
-                resetBoundingBoxesInView();
-                loadCurrentBoundingBoxes();
-                setDatabaseListener();
-            }
-        };
-    }
 
     private void resetBoundingBoxesInView() {
-        imageShower.getImagePane().resetCurrentBoundingBoxes();
+        imageShower.getImagePane().removeCurrentBoundingBoxes();
     }
 
     private void loadCurrentBoundingBoxes() {
@@ -139,24 +106,6 @@ class WorkspaceView extends SplitPane implements View {
         }
     }
 
-    private void setBoundingBoxCategorySelectorDeleteCellFactory() {
-        projectSidePanel.getCategorySelector().getDeleteColumn().setCellFactory(factory -> {
-            final DeleteTableCell cell = new DeleteTableCell();
-
-            cell.getDeleteButton().setOnAction(action -> {
-                final BoundingBoxCategory cellItem = cell.getItem();
-
-                if(imageShower.getImagePane().getBoundingBoxDataBase().containsBoundingBoxWithCategory(cellItem)) {
-                    MainView.displayErrorAlert(CATEGORY_DELETION_ERROR_TITLE, CATEGORY_DELETION_ERROR_CONTENT);
-                } else {
-                    cell.getTableView().getItems().remove(cellItem);
-                }
-            });
-
-            return cell;
-        });
-    }
-
     private void setBoundingBoxExplorerCellFactory() {
         projectSidePanel.getBoundingBoxExplorer().setCellFactory(treeView -> {
             final BoundingBoxTreeCell cell = new BoundingBoxTreeCell();
@@ -166,7 +115,7 @@ class WorkspaceView extends SplitPane implements View {
                     final TreeItem<BoundingBoxView> treeItem = cell.getTreeItem();
 
                     if(treeItem instanceof CategoryTreeItem) {
-                        imageShower.getImagePane().getBoundingBoxDataBase().removeAllFromCurrentBoundingBoxes(
+                        imageShower.getImagePane().removeAllFromCurrentBoundingBoxes(
                                 treeItem.getChildren().stream()
                                         .map(TreeItem::getValue)
                                         .collect(Collectors.toList())
@@ -177,7 +126,7 @@ class WorkspaceView extends SplitPane implements View {
                         CategoryTreeItem parentTreeItem = (CategoryTreeItem) treeItem.getParent();
                         parentTreeItem.detachChildId(((BoundingBoxTreeItem) treeItem).getId());
 
-                        imageShower.getImagePane().getBoundingBoxDataBase().removeFromCurrentBoundingBoxes(treeItem.getValue());
+                        imageShower.getImagePane().removeFromCurrentBoundingBoxes(treeItem.getValue());
                         parentTreeItem.getChildren().remove(treeItem);
 
                         if(parentTreeItem.getChildren().isEmpty()) {

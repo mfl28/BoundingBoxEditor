@@ -3,21 +3,21 @@ package BoundingboxEditor.ui;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
 
-public class DragAnchor {
+class DragAnchor {
     private double x, y;
 
     DragAnchor() {
     }
 
-    public double getX() {
+    double getX() {
         return x;
     }
 
-    public double getY() {
+    double getY() {
         return y;
     }
 
-    public void setFromMouseEvent(MouseEvent event) {
+    void setFromMouseEvent(MouseEvent event) {
         x = event.getX();
         y = event.getY();
     }
