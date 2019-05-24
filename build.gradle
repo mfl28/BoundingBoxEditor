@@ -25,6 +25,9 @@ dependencies {
     // For ListOrderedMap: https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
     compile 'org.apache.commons:commons-collections4:4.3'
 
+    // Commons Lang https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    compile 'org.apache.commons:commons-lang3:3.9'
+
     // ControlsFX https://mvnrepository.com/artifact/org.controlsfx/controlsfx
     compile 'org.controlsfx:controlsfx:11.0.0'
 

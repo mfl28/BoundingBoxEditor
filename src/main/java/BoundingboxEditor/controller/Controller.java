@@ -30,7 +30,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -90,6 +89,12 @@ public class Controller {
     }
 
     public void onRegisterSaveAction() {
+        // first update bounding-boxes in the model.
+        if(!model.getImageFiles().isEmpty()) {
+            // if there are currently loaded image-files, then update boundingboxes in model.
+            model.updateCurrentBoundingBoxData(view.getBoundingBoxExplorer().extractCurrentBoundingBoxData());
+        }
+
         if(model.getImageFileNameToAnnotation().isEmpty()) {
             MainView.displayErrorAlert("Save Error", "There are no bounding-box annotations to save.");
             return;
@@ -107,10 +112,6 @@ public class Controller {
                     return new Task<>() {
                         @Override
                         protected Void call() throws Exception {
-                            model.updateCurrentImageAnnotation(view.getCurrentBoundingBoxes().stream()
-                                    .map(BoundingBoxView::toBoundingBoxData)
-                                    .collect(Collectors.toList()));
-
                             final ImageAnnotationSaver saver = new ImageAnnotationSaver(ImageAnnotationSaveStrategy.SaveStrategy.PASCAL_VOC);
                             saver.save(model.getImageAnnotations(), Paths.get(saveDirectory.getPath()));
                             return null;
@@ -132,6 +133,12 @@ public class Controller {
     }
 
     public void onRegisterImportAnnotationsAction() {
+        // first update bounding-boxes in the model.
+        // FIXME: disallow importing when no images loaded.
+        if(!model.getImageFiles().isEmpty()) {
+            model.updateCurrentBoundingBoxData(view.getBoundingBoxExplorer().extractCurrentBoundingBoxData());
+        }
+
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle(IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE);
 
@@ -314,26 +321,8 @@ public class Controller {
     private ChangeListener<Number> createFileIndexListener() {
         return (value, oldValue, newValue) -> {
             removeFullyLoadedImageListener();
-            // store bounding-boxes from previous image:
-//            List<BoundingBoxData> boundingBoxes = view.getCurrentBoundingBoxes().stream()
-//                    .map(BoundingBoxView::toBoundingBoxData)
-//                    .collect(Collectors.toList());
-
-            List<BoundingBoxData> boundingBoxes = view.getBoundingBoxExplorer().extractCurrentBoundingBoxData();
-
-            if(!boundingBoxes.isEmpty()) {
-                String oldFileName = model.getFileNameByIndex(oldValue.intValue());
-                Map<String, ImageAnnotationDataElement> imageFileNameToAnnotation = model.getImageFileNameToAnnotation();
-
-                ImageAnnotationDataElement imageAnnotation = imageFileNameToAnnotation.get(oldFileName);
-
-                if(imageAnnotation == null) {
-                    ImageMetaData metaData = model.getImageMetaDataMap().get(oldFileName);
-                    imageFileNameToAnnotation.put(oldFileName, new ImageAnnotationDataElement(metaData, boundingBoxes));
-                } else {
-                    imageAnnotation.setBoundingBoxes(boundingBoxes);
-                }
-            }
+            // update model bounding-box-data from previous image:
+            model.updateBoundingBoxData(oldValue.intValue(), view.getBoundingBoxExplorer().extractCurrentBoundingBoxData());
 
             // remove old image's bounding boxes
             view.getImagePaneView().removeCurrentBoundingBoxes();
@@ -349,7 +338,6 @@ public class Controller {
     }
 
     private void setModelListeners() {
-        //model.fileIndexProperty().addListener(fileIndexListener);
 
         view.getImageShower().getNavigationBar()
                 .getIndexLabel()
@@ -428,4 +416,5 @@ public class Controller {
                 .collect(Collectors.toList())
         );
     }
+
 }

@@ -57,6 +57,41 @@ public class BoundingBoxView extends Rectangle implements View {
     private BoundingBoxView() {
     }
 
+    public void setUpFromInitializer(BoundingBoxView initializer) {
+        setXYWH(initializer.getX(), initializer.getY(),
+                initializer.getWidth(), initializer.getHeight());
+        setStroke(initializer.getStroke());
+    }
+
+    public BoundingBoxData toBoundingBoxData() {
+        return new BoundingBoxData(getBoundingBoxCategory(), getImageRelativeBounds(), getTags());
+    }
+
+    public BoundingBoxCategory getBoundingBoxCategory() {
+        return boundingBoxCategory;
+    }
+
+    public void confineTo(final ReadOnlyObjectProperty<Bounds> bounds) {
+        confinementBounds.bind(bounds);
+
+        bounds.addListener((observable, oldValue, newValue) -> {
+            setWidth(getWidth() * newValue.getWidth() / oldValue.getWidth());
+            setHeight(getHeight() * newValue.getHeight() / oldValue.getHeight());
+
+            setX(newValue.getMinX() + (getX() - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
+            setY(newValue.getMinY() + (getY() - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
+        });
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof BoundingBoxView) {
+            return super.equals(obj) && Objects.equals(boundingBoxCategory, ((BoundingBoxView) obj).boundingBoxCategory) &&
+                    Objects.equals(imageMetaData, ((BoundingBoxView) obj).imageMetaData);
+        }
+        return false;
+    }
+
     static BoundingBoxView fromData(BoundingBoxData boundingBoxData, ImageMetaData metaData) {
         BoundingBoxView boundingBox = new BoundingBoxView(boundingBoxData.getCategory(), metaData);
         boundingBox.setBoundsInImage(boundingBoxData.getBoundsInImage());
@@ -66,24 +101,45 @@ public class BoundingBoxView extends Rectangle implements View {
         return boundingBox;
     }
 
-    public void setUpFromInitializer(BoundingBoxView initializer) {
-        setXYWH(initializer.getX(), initializer.getY(),
-                initializer.getWidth(), initializer.getHeight());
-        setStroke(initializer.getStroke());
-    }
-
     void confineAndInitialize(ReadOnlyObjectProperty<Bounds> confinementBoundsProperty) {
         this.confinementBounds.bind(confinementBoundsProperty);
         initializeFromBoundsInImage();
         addConfinementListener();
     }
 
-    public BoundingBoxData toBoundingBoxData() {
-        return new BoundingBoxData(getBoundingBoxCategory(), getImageRelativeBounds(), getTags());
+    boolean isSelected() {
+        return selected.get();
     }
 
-    public BoundingBoxCategory getBoundingBoxCategory() {
-        return boundingBoxCategory;
+    void setSelected(boolean selected) {
+        this.selected.set(selected);
+    }
+
+    void setXYWH(double x, double y, double w, double h) {
+        setX(x);
+        setY(y);
+        setWidth(w);
+        setHeight(h);
+    }
+
+    ObservableList<String> getTags() {
+        return tags;
+    }
+
+    static BoundingBoxView getDummy() {
+        return NULL_BOUNDING_BOX_VIEW;
+    }
+
+    Group getNodeGroup() {
+        return nodeGroup;
+    }
+
+    void fillOpaque() {
+        setFill(Color.web(getStroke().toString(), DEFAULT_FILL_OPACITY));
+    }
+
+    void fillTransparent() {
+        setFill(Color.TRANSPARENT);
     }
 
     private Bounds getImageRelativeBounds() {
@@ -99,19 +155,6 @@ public class BoundingBoxView extends Rectangle implements View {
 
         return new BoundingBox(xMinRelative, yMinRelative, widthRelative, heightRelative);
     }
-
-    public void confineTo(final ReadOnlyObjectProperty<Bounds> bounds) {
-        confinementBounds.bind(bounds);
-
-        bounds.addListener((observable, oldValue, newValue) -> {
-            setWidth(getWidth() * newValue.getWidth() / oldValue.getWidth());
-            setHeight(getHeight() * newValue.getHeight() / oldValue.getHeight());
-
-            setX(newValue.getMinX() + (getX() - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
-            setY(newValue.getMinY() + (getY() - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
-        });
-    }
-
 
     private void setBoundsInImage(Bounds boundsInImage) {
         this.boundsInImage.setValue(boundsInImage);
@@ -137,50 +180,6 @@ public class BoundingBoxView extends Rectangle implements View {
         setY(boundsInImageValue.getMinY() * confinementBoundsValue.getHeight() / imgHeight + confinementBoundsValue.getMinY());
         setWidth(boundsInImageValue.getWidth() * confinementBoundsValue.getWidth() / imgWidth);
         setHeight(boundsInImageValue.getHeight() * confinementBoundsValue.getHeight() / imgHeight);
-    }
-
-    boolean isSelected() {
-        return selected.get();
-    }
-
-    void setSelected(boolean selected) {
-        this.selected.set(selected);
-    }
-
-    void setXYWH(double x, double y, double w, double h) {
-        setX(x);
-        setY(y);
-        setWidth(w);
-        setHeight(h);
-    }
-
-    ObservableList<String> getTags() {
-        return tags;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if(obj instanceof BoundingBoxView) {
-            return super.equals(obj) && Objects.equals(boundingBoxCategory, ((BoundingBoxView) obj).boundingBoxCategory) &&
-                    Objects.equals(imageMetaData, ((BoundingBoxView) obj).imageMetaData);
-        }
-        return false;
-    }
-
-    static BoundingBoxView getDummy() {
-        return NULL_BOUNDING_BOX_VIEW;
-    }
-
-    Group getNodeGroup() {
-        return nodeGroup;
-    }
-
-    void fillOpaque() {
-        setFill(Color.web(getStroke().toString(), DEFAULT_FILL_OPACITY));
-    }
-
-    void fillTransparent() {
-        setFill(Color.TRANSPARENT);
     }
 
     private double getMaxX() {

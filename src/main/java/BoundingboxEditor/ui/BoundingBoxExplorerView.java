@@ -37,16 +37,16 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
         setRoot(new TreeItem<>());
     }
 
-    void setAutoHideNonSelected(boolean autoHideNonSelected) {
-        this.autoHideNonSelected = autoHideNonSelected;
-    }
-
     public List<BoundingBoxData> extractCurrentBoundingBoxData() {
         return getRoot().getChildren().stream()
                 .map(TreeItem::getChildren)
                 .flatMap(Collection::stream)
                 .map(child -> treeItemToBoundingBoxData((BoundingBoxTreeItem) child))
                 .collect(Collectors.toList());
+    }
+
+    void setAutoHideNonSelected(boolean autoHideNonSelected) {
+        this.autoHideNonSelected = autoHideNonSelected;
     }
 
     List<BoundingBoxView> extractBoundingBoxViewsAndBuildTreeFromAnnotation(ImageAnnotationDataElement annotation) {

@@ -55,6 +55,27 @@ public class Model {
         fileIndex.set(0);
     }
 
+    public void updateBoundingBoxData(int fileIndex, List<BoundingBoxData> boundingBoxes) {
+        String oldFileName = getFileNameByIndex(fileIndex);
+
+        if(!boundingBoxes.isEmpty()) {
+            ImageAnnotationDataElement imageAnnotation = imageFileNameToAnnotation.get(oldFileName);
+
+            if(imageAnnotation == null) {
+                ImageMetaData metaData = imageMetaDataMap.get(oldFileName);
+                imageFileNameToAnnotation.put(oldFileName, new ImageAnnotationDataElement(metaData, boundingBoxes));
+            } else {
+                imageAnnotation.setBoundingBoxes(boundingBoxes);
+            }
+        } else {
+            imageFileNameToAnnotation.remove(oldFileName);
+        }
+    }
+
+    public void updateCurrentBoundingBoxData(List<BoundingBoxData> boundingBoxes) {
+        updateBoundingBoxData(fileIndex.get(), boundingBoxes);
+    }
+
     public Map<String, ImageMetaData> getImageMetaDataMap() {
         return imageMetaDataMap;
     }

@@ -56,36 +56,13 @@ public class ImagePaneView extends StackPane implements View {
         imageView.setOnMouseReleased(controller::onImageViewMouseReleasedEvent);
     }
 
-    void addBoundingBoxesToView(Collection<? extends BoundingBoxView> boundingBoxes) {
-        boundingBoxGroup.getChildren().addAll(boundingBoxes.stream()
-                .map(BoundingBoxView::getNodeGroup)
-                .collect(Collectors.toList()));
-    }
-
-    private void removeAllBoundingBoxesFromView() {
-        boundingBoxGroup.getChildren().clear();
-    }
-
-    void setAllCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
-        currentBoundingBoxes.setAll(boundingBoxes);
-    }
-
     public void addToCurrentBoundingBoxes(BoundingBoxView boundingBox) {
         currentBoundingBoxes.add(boundingBox);
     }
 
-
     public void removeCurrentBoundingBoxes() {
         removeAllBoundingBoxesFromView();
         currentBoundingBoxes.clear();
-    }
-
-    void removeAllFromCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
-        currentBoundingBoxes.removeAll(boundingBoxes);
-    }
-
-    void removeFromCurrentBoundingBoxes(BoundingBoxView boundingBox) {
-        currentBoundingBoxes.remove(boundingBox);
     }
 
     public ProgressIndicator getProgressIndicator() {
@@ -94,6 +71,24 @@ public class ImagePaneView extends StackPane implements View {
 
     public BoundingBoxView getBoundingBoxInitializer() {
         return initializerBoundingBox;
+    }
+
+    void addBoundingBoxesToView(Collection<? extends BoundingBoxView> boundingBoxes) {
+        boundingBoxGroup.getChildren().addAll(boundingBoxes.stream()
+                .map(BoundingBoxView::getNodeGroup)
+                .collect(Collectors.toList()));
+    }
+
+    void setAllCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
+        currentBoundingBoxes.setAll(boundingBoxes);
+    }
+
+    void removeAllFromCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
+        currentBoundingBoxes.removeAll(boundingBoxes);
+    }
+
+    void removeFromCurrentBoundingBoxes(BoundingBoxView boundingBox) {
+        currentBoundingBoxes.remove(boundingBox);
     }
 
     ObservableList<BoundingBoxView> getCurrentBoundingBoxes() {
@@ -155,6 +150,10 @@ public class ImagePaneView extends StackPane implements View {
     void setImageViewToPreferOriginalImageSize() {
         imageView.setFitWidth(Math.min(imageView.getImage().getWidth(), getMaxAllowedImageWidth()));
         imageView.setFitHeight(Math.min(imageView.getImage().getHeight(), getMaxAllowedImageHeight()));
+    }
+
+    private void removeAllBoundingBoxesFromView() {
+        boundingBoxGroup.getChildren().clear();
     }
 
     private boolean isMaximizeImageView() {

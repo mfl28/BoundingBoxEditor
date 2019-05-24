@@ -1,5 +1,6 @@
 package BoundingboxEditor.model.io;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -18,6 +19,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
@@ -39,11 +41,11 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String YMIN_TAG = "ymin";
     private static final String YMAX_TAG = "ymax";
     private static final String ANNOTATION_FILENAME_EXTENSION = "_A";
-
+    private static final String BOUNDING_BOX_PART_NAME = "part";
+    private static final Logger logger = LoggerFactory.getLogger(PVOCSaveStrategy.class);
     private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
     private Path saveFolderPath;
-    private static final Logger logger = LoggerFactory.getLogger(PVOCSaveStrategy.class);
 
     @Override
     public void save(final Collection<ImageAnnotationDataElement> dataSet, final Path path) {
@@ -73,9 +75,8 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         appendHeaderFromImageAnnotationDataElement(document, annotationElement, dataElement);
 
-        for(BoundingBoxData boundingBox : dataElement.getBoundingBoxes()) {
-            annotationElement.appendChild(createXmlElementFromBoundingBox(document, boundingBox));
-        }
+        dataElement.getBoundingBoxes().forEach(boundingBox ->
+                annotationElement.appendChild(createXmlElementFromBoundingBox(document, BOUNDING_BOX_ENTRY_ELEMENT_NAME, boundingBox)));
 
         DOMSource domSource = new DOMSource(document);
 
@@ -104,19 +105,34 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     }
 
 
-    private Element createXmlElementFromBoundingBox(final Document document, final BoundingBoxData boundingBox) {
-        final Element object = document.createElement(BOUNDING_BOX_ENTRY_ELEMENT_NAME);
-        object.appendChild(createStringValueElement(document, BOUNDING_BOX_CATEGORY_NAME, boundingBox.getCategoryName()));
+    private Element createXmlElementFromBoundingBox(final Document document, String elementName, final BoundingBoxData boundingBox) {
+        final Element element = document.createElement(elementName);
+        element.appendChild(createStringValueElement(document, BOUNDING_BOX_CATEGORY_NAME, boundingBox.getCategoryName()));
+
+        // add tags
+        List<String> tags = boundingBox.getTags();
+        String poseString = tags.stream().filter(tag -> tag.startsWith("pose: ")).findFirst().orElse(null);
+
+        element.appendChild(createIntegerValueElement(document, "difficult", tags.contains("difficult") ? 1 : 0));
+        element.appendChild(createIntegerValueElement(document, "occluded", tags.contains("occluded") ? 1 : 0));
+        element.appendChild(createStringValueElement(document, "pose", poseString == null ?
+                "Unspecified" : StringUtils.capitalize(poseString.substring(6).toLowerCase())));
+        element.appendChild(createIntegerValueElement(document, "truncated", tags.contains("truncated") ? 1 : 0));
+
 
         final Element bndBox = document.createElement(BOUNDING_BOX_SIZE_GROUP_NAME);
-        object.appendChild(bndBox);
+        element.appendChild(bndBox);
 
         bndBox.appendChild(createDoubleValueElement(document, XMIN_TAG, boundingBox.getXMin()));
         bndBox.appendChild(createDoubleValueElement(document, XMAX_TAG, boundingBox.getXMax()));
         bndBox.appendChild(createDoubleValueElement(document, YMIN_TAG, boundingBox.getYMin()));
         bndBox.appendChild(createDoubleValueElement(document, YMAX_TAG, boundingBox.getYMax()));
 
-        return object;
+        // add parts
+        boundingBox.getParts().forEach(part ->
+                element.appendChild(createXmlElementFromBoundingBox(document, BOUNDING_BOX_PART_NAME, part)));
+
+        return element;
     }
 
     private Element createDoubleValueElement(Document document, String tagName, double value) {

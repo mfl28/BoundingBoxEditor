@@ -38,10 +38,6 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
         setUpInternalListeners();
     }
 
-    void setDraggedOver(boolean draggedOver) {
-        this.draggedOver.set(draggedOver);
-    }
-
     @Override
     protected void updateItem(BoundingBoxView newBoundingBoxView, boolean empty) {
         super.updateItem(newBoundingBoxView, empty);
@@ -60,6 +56,10 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
             setGraphic(createContentBox());
             setContextMenu(contextMenu);
         }
+    }
+
+    void setDraggedOver(boolean draggedOver) {
+        this.draggedOver.set(draggedOver);
     }
 
     MenuItem getDeleteBoundingBoxMenuItem() {
