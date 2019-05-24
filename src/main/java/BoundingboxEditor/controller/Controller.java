@@ -315,9 +315,11 @@ public class Controller {
         return (value, oldValue, newValue) -> {
             removeFullyLoadedImageListener();
             // store bounding-boxes from previous image:
-            List<BoundingBoxData> boundingBoxes = view.getCurrentBoundingBoxes().stream()
-                    .map(BoundingBoxView::toBoundingBoxData)
-                    .collect(Collectors.toList());
+//            List<BoundingBoxData> boundingBoxes = view.getCurrentBoundingBoxes().stream()
+//                    .map(BoundingBoxView::toBoundingBoxData)
+//                    .collect(Collectors.toList());
+
+            List<BoundingBoxData> boundingBoxes = view.getBoundingBoxExplorer().extractCurrentBoundingBoxData();
 
             if(!boundingBoxes.isEmpty()) {
                 String oldFileName = model.getFileNameByIndex(oldValue.intValue());
@@ -426,5 +428,4 @@ public class Controller {
                 .collect(Collectors.toList())
         );
     }
-
 }

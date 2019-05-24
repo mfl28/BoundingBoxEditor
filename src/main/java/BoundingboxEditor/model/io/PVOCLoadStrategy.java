@@ -122,7 +122,25 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         BoundingBoxCategory category = existingBoundingBoxCategories.computeIfAbsent(categoryName,
                 key -> new BoundingBoxCategory(key, ColorUtils.createRandomColor(random)));
 
-        return new BoundingBoxData(category, xMin, yMin, xMax, yMax, tags);
+        NodeList partElements = objectElement.getElementsByTagName("part");
+
+        BoundingBoxData boundingBoxData = new BoundingBoxData(category, xMin, yMin, xMax, yMax, tags);
+
+        List<BoundingBoxData> parts = new ArrayList<>();
+
+        for(int i = 0; i != partElements.getLength(); ++i) {
+            Node partNode = partElements.item(i);
+
+            if(partNode.getNodeType() == Node.ELEMENT_NODE) {
+                parts.add(parseBoundingBoxElement((Element) partNode));
+            }
+        }
+
+        if(!parts.isEmpty()) {
+            boundingBoxData.setParts(parts);
+        }
+
+        return boundingBoxData;
     }
 
     private List<String> parseTags(Element objectElement) {
@@ -130,7 +148,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
         String poseValue = parseOptionalTextElement(objectElement, "pose");
 
-        if(poseValue != null) {
+        if(poseValue != null && !poseValue.toLowerCase().equals("unspecified")) {
             tags.add("pose: " + poseValue.toLowerCase());
         }
 

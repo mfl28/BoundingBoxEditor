@@ -4,12 +4,14 @@ import BoundingboxEditor.model.BoundingBoxCategory;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 
+import java.util.Collections;
 import java.util.List;
 
 public class BoundingBoxData {
     private final BoundingBoxCategory category;
     private final Bounds boundsInImage;
     private final List<String> tags;
+    private List<BoundingBoxData> parts = Collections.emptyList();
 
     // TODO: Optionally add attributes: pose (Front, back, right etc.), truncated(0 or 1), difficult(0 or 1)
     //       occluded (0 or 1)
@@ -56,6 +58,14 @@ public class BoundingBoxData {
 
     public List<String> getTags() {
         return tags;
+    }
+
+    public List<BoundingBoxData> getParts() {
+        return parts;
+    }
+
+    public void setParts(List<BoundingBoxData> parts) {
+        this.parts = parts;
     }
 }
 

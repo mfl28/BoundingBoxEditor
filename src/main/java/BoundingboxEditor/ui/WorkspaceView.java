@@ -1,9 +1,20 @@
 package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
+import BoundingboxEditor.model.BoundingBoxCategory;
 import javafx.collections.ListChangeListener;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.paint.Color;
+import javafx.scene.transform.Transform;
+import javafx.util.Callback;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,13 +22,19 @@ import java.util.stream.Collectors;
 class WorkspaceView extends SplitPane implements View {
     private static final double DEFAULT_FIRST_DIVIDER_RATIO = 0.15;
     private static final double DEFAULT_SECOND_DIVIDER_RATIO = 0.85;
-    private static final String CATEGORY_DELETION_ERROR_TITLE = "Category Deletion Error";
-    private static final String CATEGORY_DELETION_ERROR_CONTENT = "You cannot delete a category that has existing bounding-boxes assigned to it.";
     private static final String WORK_SPACE_ID = "work-space";
+    private static final SnapshotParameters snapShotParameters = new SnapshotParameters();
+    private static final DataFormat dragDataFormat = new DataFormat("box-item");
+
+    static {
+        snapShotParameters.setTransform(Transform.scale(1.5, 1.5));
+        snapShotParameters.setFill(Color.TRANSPARENT);
+    }
 
     private final ProjectSidePanelView projectSidePanel = new ProjectSidePanelView();
     private final ImageShowerView imageShower = new ImageShowerView();
     private final ImageExplorerPanelView imageExplorer = new ImageExplorerPanelView();
+    private boolean treeUpdateEnabled = true;
 
     WorkspaceView() {
         getItems().addAll(projectSidePanel, imageShower, imageExplorer);
@@ -45,6 +62,14 @@ class WorkspaceView extends SplitPane implements View {
         projectSidePanel.reset();
     }
 
+    boolean isTreeUpdateEnabled() {
+        return treeUpdateEnabled;
+    }
+
+    void setTreeUpdateEnabled(boolean treeUpdateEnabled) {
+        this.treeUpdateEnabled = treeUpdateEnabled;
+    }
+
     ProjectSidePanelView getProjectSidePanel() {
         return projectSidePanel;
     }
@@ -66,7 +91,10 @@ class WorkspaceView extends SplitPane implements View {
                     List<? extends BoundingBoxView> addedItemsList = c.getAddedSubList();
 
                     imageShower.getImagePane().addBoundingBoxesToView(addedItemsList);
-                    projectSidePanel.getBoundingBoxExplorer().addTreeItemsFromBoundingBoxes(addedItemsList);
+
+                    if(isTreeUpdateEnabled()) {
+                        projectSidePanel.getBoundingBoxExplorer().addTreeItemsFromBoundingBoxes(addedItemsList);
+                    }
                 }
 
                 if(c.wasRemoved()) {
@@ -84,59 +112,179 @@ class WorkspaceView extends SplitPane implements View {
         imageShower.getImagePane().selectedCategoryProperty().bind(projectSidePanel.getCategorySelector().getSelectionModel().selectedItemProperty());
     }
 
-
-    private void resetBoundingBoxesInView() {
-        imageShower.getImagePane().removeCurrentBoundingBoxes();
-    }
-
-    private void loadCurrentBoundingBoxes() {
-        List<BoundingBoxView> loadedBoundingBoxViews = imageShower.getImagePane().getCurrentBoundingBoxes();
-
-        if(!loadedBoundingBoxViews.isEmpty()) {
-            loadedBoundingBoxViews.stream().filter(item -> !item.hasConfinementListener())
-                    .forEach(item -> {
-                        item.confinementBoundsProperty().bind(getImageShower().getImagePane().getImageView().boundsInParentProperty());
-                        item.initializeFromBoundsInImage();
-                        item.addConfinementListener();
-                    });
-            // FIXME: Bounding-Box explorer is not cleared properly when switching between images.
-
-            imageShower.getImagePane().addBoundingBoxesToView(loadedBoundingBoxViews);
-            getProjectSidePanel().getBoundingBoxExplorer().addTreeItemsFromBoundingBoxes(loadedBoundingBoxViews);
-        }
-    }
-
     private void setBoundingBoxExplorerCellFactory() {
-        projectSidePanel.getBoundingBoxExplorer().setCellFactory(treeView -> {
-            final BoundingBoxTreeCell cell = new BoundingBoxTreeCell();
+        projectSidePanel.getBoundingBoxExplorer().setCellFactory(new Callback<>() {
+            private TreeItem<BoundingBoxView> draggedItem;
 
-            cell.getDeleteBoundingBoxMenuItem().setOnAction(event -> {
-                if(!cell.isEmpty()) {
-                    final TreeItem<BoundingBoxView> treeItem = cell.getTreeItem();
+            @Override
+            public TreeCell<BoundingBoxView> call(TreeView<BoundingBoxView> treeView) {
+                final BoundingBoxTreeCell cell = new BoundingBoxTreeCell();
 
-                    if(treeItem instanceof CategoryTreeItem) {
-                        imageShower.getImagePane().removeAllFromCurrentBoundingBoxes(
-                                treeItem.getChildren().stream()
-                                        .map(TreeItem::getValue)
-                                        .collect(Collectors.toList())
-                        );
+                cell.getDeleteBoundingBoxMenuItem().setOnAction(event -> {
+                    if(!cell.isEmpty()) {
+                        final TreeItem<BoundingBoxView> treeItem = cell.getTreeItem();
 
-                        treeView.getRoot().getChildren().remove(treeItem);
-                    } else {
-                        CategoryTreeItem parentTreeItem = (CategoryTreeItem) treeItem.getParent();
-                        parentTreeItem.detachChildId(((BoundingBoxTreeItem) treeItem).getId());
+                        if(treeItem instanceof CategoryTreeItem) {
+//
+                            if(treeItem.getChildren().stream().allMatch(TreeItem::isLeaf)) {
+                                imageShower.getImagePane().removeAllFromCurrentBoundingBoxes(
+                                        treeItem.getChildren().stream()
+                                                .map(TreeItem::getValue)
+                                                .collect(Collectors.toList())
+                                );
+                            } else {
+                                imageShower.getImagePane().removeAllFromCurrentBoundingBoxes(
+                                        BoundingBoxExplorerView.getBoundingBoxViewsRecursively(treeItem));
+                            }
 
-                        imageShower.getImagePane().removeFromCurrentBoundingBoxes(treeItem.getValue());
-                        parentTreeItem.getChildren().remove(treeItem);
+                            treeItem.getParent().getChildren().remove(treeItem);
+                        } else {
+                            CategoryTreeItem parentTreeItem = (CategoryTreeItem) treeItem.getParent();
+                            parentTreeItem.detachChildId(((BoundingBoxTreeItem) treeItem).getId());
 
-                        if(parentTreeItem.getChildren().isEmpty()) {
-                            treeView.getRoot().getChildren().remove(parentTreeItem);
+                            if(treeItem.isLeaf()) {
+                                imageShower.getImagePane().removeFromCurrentBoundingBoxes(treeItem.getValue());
+                            } else {
+                                imageShower.getImagePane().removeAllFromCurrentBoundingBoxes(
+                                        BoundingBoxExplorerView.getBoundingBoxViewsRecursively(treeItem));
+                            }
+
+                            parentTreeItem.getChildren().remove(treeItem);
+
+                            if(parentTreeItem.getChildren().isEmpty()) {
+                                parentTreeItem.getParent().getChildren().remove(parentTreeItem);
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            return cell;
+                cell.setOnDragDetected(event -> {
+                    if(cell.isEmpty()) {
+                        return;
+                    }
+
+                    draggedItem = cell.getTreeItem();
+
+                    ClipboardContent clipboardContent = new ClipboardContent();
+                    clipboardContent.put(dragDataFormat, "");
+
+                    Dragboard dragboard = startDragAndDrop(TransferMode.MOVE);
+                    dragboard.setContent(clipboardContent);
+                    dragboard.setDragView(cell.getGraphic().snapshot(snapShotParameters, null));
+                    event.consume();
+                });
+
+                cell.setOnDragOver(event -> {
+
+                    if(!event.getDragboard().hasContent(dragDataFormat)) {
+                        return;
+                    }
+
+                    TreeItem thisItem = cell.getTreeItem();
+
+                    if(draggedItem == null || draggedItem == thisItem || thisItem instanceof CategoryTreeItem) {
+                        return;
+                    }
+
+                    if(thisItem != null &&
+                            (thisItem.getChildren().contains(draggedItem) || (draggedItem instanceof CategoryTreeItem
+                                    && draggedItem.getChildren().contains(thisItem)))) {
+                        return;
+                    }
+
+                    if(thisItem == null && ((draggedItem instanceof CategoryTreeItem && draggedItem.getParent().equals(treeView.getRoot())) ||
+                            (draggedItem.getParent().getParent().equals(treeView.getRoot())))) {
+                        return;
+                    }
+
+                    event.acceptTransferModes(TransferMode.MOVE);
+                    event.consume();
+                });
+
+                cell.setOnDragEntered(event -> {
+                    TreeItem thisItem = cell.getTreeItem();
+                    if(draggedItem == null || thisItem == null || draggedItem == thisItem
+                            || thisItem instanceof CategoryTreeItem
+                            || thisItem.getChildren().contains(draggedItem)
+                            || (draggedItem instanceof CategoryTreeItem && draggedItem.getChildren().contains(thisItem))) {
+                        return;
+                    }
+
+                    cell.setDraggedOver(true);
+                    event.consume();
+                });
+
+                cell.setOnDragExited(event -> {
+                    cell.setDraggedOver(false);
+                    event.consume();
+                });
+
+                cell.setOnDragDropped(event -> {
+                    if(!event.getDragboard().hasContent(dragDataFormat)) {
+                        return;
+                    }
+
+                    TreeItem<BoundingBoxView> thisItem = cell.getTreeItem();
+
+                    // cannot drop on CategoryTreeItems
+                    if(thisItem instanceof CategoryTreeItem) {
+                        return;
+                    }
+
+                    TreeItem<BoundingBoxView> draggedItemParent = draggedItem.getParent();
+
+                    if(draggedItemParent instanceof CategoryTreeItem) {
+                        ((CategoryTreeItem) draggedItemParent).detachChildId(((BoundingBoxTreeItem) draggedItem).getId());
+                    }
+
+                    draggedItemParent.getChildren().remove(draggedItem);
+
+                    if(draggedItemParent instanceof CategoryTreeItem && draggedItemParent.getChildren().isEmpty()) {
+                        draggedItemParent.getParent().getChildren().remove(draggedItemParent);
+                    }
+
+                    BoundingBoxCategory draggedItemCategory = (draggedItem instanceof CategoryTreeItem) ? ((CategoryTreeItem) draggedItem).getBoundingBoxCategory() :
+                            draggedItem.getValue().getBoundingBoxCategory();
+
+                    // if the target is an empty cell, we add the dragged item to a (possibly new) category that is a child of the tree-root.
+                    if(thisItem == null) {
+                        thisItem = treeView.getRoot();
+                    }
+                    //add to new location
+                    CategoryTreeItem newParentItem = ((BoundingBoxExplorerView) treeView).findParentCategoryTreeItemForCategory(thisItem, draggedItemCategory);
+
+                    if(newParentItem == null) {
+                        // category does not exits in new location
+                        if(draggedItem instanceof CategoryTreeItem) {
+                            // full category is added:
+                            thisItem.getChildren().add(draggedItem);
+                        } else {
+                            // create new Category part
+                            CategoryTreeItem newCategoryPar = new CategoryTreeItem(draggedItem.getValue().getBoundingBoxCategory());
+                            newCategoryPar.getChildren().add(draggedItem);
+                            thisItem.getChildren().add(newCategoryPar);
+                        }
+                    } else {
+                        // category already exists:
+                        if(draggedItem instanceof CategoryTreeItem) {
+                            // full category is added:
+                            draggedItem.getChildren().stream()
+                                    .map(child -> (BoundingBoxTreeItem) child)
+                                    .forEach(child -> ((BoundingBoxExplorerView) treeView).attachBoundingBoxTreeItemToCategoryTreeItem(child, newParentItem));
+
+                        } else {
+                            ((BoundingBoxExplorerView) treeView).attachBoundingBoxTreeItemToCategoryTreeItem((BoundingBoxTreeItem) draggedItem, newParentItem);
+                        }
+                    }
+
+                    event.setDropCompleted(true);
+                    event.consume();
+                });
+
+                return cell;
+            }
         });
+
+
     }
 }

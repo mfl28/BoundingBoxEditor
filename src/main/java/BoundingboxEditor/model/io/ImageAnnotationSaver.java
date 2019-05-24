@@ -10,8 +10,7 @@ public class ImageAnnotationSaver {
         saveStrategy = ImageAnnotationSaveStrategy.createStrategy(strategy);
     }
 
-    public void save(final Collection<ImageAnnotationDataElement> dataset, final Path saveFolderPath) throws Exception {
-        //FIXME: Sometimes no save files are created.
-        saveStrategy.save(dataset, saveFolderPath);
+    public void save(final Collection<ImageAnnotationDataElement> annotations, final Path saveFolderPath) throws Exception {
+        saveStrategy.save(annotations, saveFolderPath);
     }
 }

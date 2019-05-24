@@ -1,5 +1,7 @@
 package BoundingboxEditor.model.io;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -41,9 +43,10 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
     private Path saveFolderPath;
+    private static final Logger logger = LoggerFactory.getLogger(PVOCSaveStrategy.class);
 
     @Override
-    public void save(final Collection<ImageAnnotationDataElement> dataSet, final Path path) throws Exception {
+    public void save(final Collection<ImageAnnotationDataElement> dataSet, final Path path) {
         this.saveFolderPath = path;
 
         long startTime = System.nanoTime();
@@ -51,6 +54,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
             try {
                 createXmlFileFromImageAnnotationDataElement(annotation);
             } catch(TransformerException | ParserConfigurationException e) {
+                logger.info("Saving-error: " + e.getMessage());
             }
         });
 

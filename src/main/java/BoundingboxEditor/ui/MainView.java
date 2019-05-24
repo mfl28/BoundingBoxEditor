@@ -1,7 +1,6 @@
 package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
-import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.model.io.ImageAnnotationDataElement;
 import BoundingboxEditor.model.io.ImageAnnotationLoader;
 import javafx.collections.FXCollections;
@@ -17,7 +16,6 @@ import javafx.scene.layout.Priority;
 
 import java.io.File;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MainView extends BorderPane implements View {
     private static final int INFO_DIALOGUE_MIN_WIDTH = 600;
@@ -167,20 +165,14 @@ public class MainView extends BorderPane implements View {
     }
 
     public void loadBoundingBoxesFromAnnotation(ImageAnnotationDataElement annotation) {
-        ImageMetaData metaData = annotation.getImageMetaData();
+        List<BoundingBoxView> boundingBoxes = getBoundingBoxExplorer().extractBoundingBoxViewsAndBuildTreeFromAnnotation(annotation);
 
-        List<BoundingBoxView> boundingBoxes = annotation.getBoundingBoxes()
-                .stream()
-                .map(boundingBoxData -> BoundingBoxView.fromData(boundingBoxData, metaData))
-                .collect(Collectors.toList());
+        boundingBoxes.forEach(item -> item.confineAndInitialize(getImageView().boundsInParentProperty()));
 
-        boundingBoxes.forEach(item -> {
-            item.confinementBoundsProperty().bind(getImageView().boundsInParentProperty());
-            item.initializeFromBoundsInImage();
-            item.addConfinementListener();
-        });
-
+        // temporarily switch off automatic adding of boundingBoxes to the explorer (those are already imported)
+        workspace.setTreeUpdateEnabled(false);
         getImagePaneView().setAllCurrentBoundingBoxes(boundingBoxes);
+        workspace.setTreeUpdateEnabled(true);
     }
 
     private void setUpInternalListeners() {

@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 public class ImagePaneView extends StackPane implements View {
-    static final double IMAGE_PADDING = 10.0;
+    private static final double IMAGE_PADDING = 10.0;
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String IMAGE_PANE_STYLE = "pane";
     private static final String IMAGE_VIEW_ID = "image-pane";
@@ -56,21 +56,17 @@ public class ImagePaneView extends StackPane implements View {
         imageView.setOnMouseReleased(controller::onImageViewMouseReleasedEvent);
     }
 
-    public void addBoundingBoxesToView(Collection<? extends BoundingBoxView> boundingBoxes) {
+    void addBoundingBoxesToView(Collection<? extends BoundingBoxView> boundingBoxes) {
         boundingBoxGroup.getChildren().addAll(boundingBoxes.stream()
                 .map(BoundingBoxView::getNodeGroup)
                 .collect(Collectors.toList()));
     }
 
-    public void removeAllBoundingBoxesFromView() {
+    private void removeAllBoundingBoxesFromView() {
         boundingBoxGroup.getChildren().clear();
     }
 
-    public void addToCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBox) {
-        currentBoundingBoxes.addAll(boundingBox);
-    }
-
-    public void setAllCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
+    void setAllCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
         currentBoundingBoxes.setAll(boundingBoxes);
     }
 
@@ -84,20 +80,16 @@ public class ImagePaneView extends StackPane implements View {
         currentBoundingBoxes.clear();
     }
 
-    public void removeAllFromCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
+    void removeAllFromCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
         currentBoundingBoxes.removeAll(boundingBoxes);
     }
 
-    public void removeFromCurrentBoundingBoxes(BoundingBoxView boundingBox) {
+    void removeFromCurrentBoundingBoxes(BoundingBoxView boundingBox) {
         currentBoundingBoxes.remove(boundingBox);
     }
 
     public ProgressIndicator getProgressIndicator() {
         return progressIndicator;
-    }
-
-    public BoundingBoxCategory getSelectedCategory() {
-        return selectedCategory.get();
     }
 
     public BoundingBoxView getBoundingBoxInitializer() {
@@ -120,10 +112,6 @@ public class ImagePaneView extends StackPane implements View {
 
     ColorAdjust getColorAdjust() {
         return colorAdjust;
-    }
-
-    DragAnchor getDragAnchor() {
-        return dragAnchor;
     }
 
     ImageView getImageView() {
@@ -169,7 +157,7 @@ public class ImagePaneView extends StackPane implements View {
         imageView.setFitHeight(Math.min(imageView.getImage().getHeight(), getMaxAllowedImageHeight()));
     }
 
-    boolean isMaximizeImageView() {
+    private boolean isMaximizeImageView() {
         return maximizeImageView.get();
     }
 
@@ -177,11 +165,11 @@ public class ImagePaneView extends StackPane implements View {
         this.maximizeImageView.set(maximizeImageView);
     }
 
-    double getMaxAllowedImageWidth() {
+    private double getMaxAllowedImageWidth() {
         return Math.max(0, getWidth() - 2 * IMAGE_PADDING);
     }
 
-    double getMaxAllowedImageHeight() {
+    private double getMaxAllowedImageHeight() {
         return Math.max(0, getHeight() - 2 * IMAGE_PADDING);
     }
 
@@ -246,20 +234,6 @@ public class ImagePaneView extends StackPane implements View {
                         Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
             }
         });
-
-//        imageView.setOnMouseReleased(event -> {
-//            if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
-//                BoundingBoxView newBoundingBox = new BoundingBoxView(selectedCategory.get(),
-//                        ImageMetaData.fromImage(getCurrentImage()));
-//
-//                newBoundingBox.setUpFromInitializer(initializerBoundingBox);
-//                newBoundingBox.setVisible(true);
-//                newBoundingBox.confineTo(imageView.boundsInParentProperty());
-//
-//                getBoundingBoxDataBase().addToCurrentBoundingBoxes(newBoundingBox);
-//                initializerBoundingBox.setVisible(false);
-//            }
-//        });
 
         setOnScroll(event -> {
             if(event.isControlDown()) {

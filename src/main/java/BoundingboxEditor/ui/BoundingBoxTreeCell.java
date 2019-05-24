@@ -1,6 +1,9 @@
 package BoundingboxEditor.ui;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -12,9 +15,12 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
     private static final String DELETE_CONTEXT_MENU_TEXT = "Delete";
     private static final String NAME_TEXT_STYLE = "default-text";
     private static final String INFO_TEXT_ID = "info-text";
-    private static final int CONTENT_SPACING = 4;
     private static final String TAG_ICON_REGION_ID = "tag-icon";
+    private static final PseudoClass draggedOverPseudoClass = PseudoClass.getPseudoClass("dragged-over");
+    private static final String CATEGORY_NAME_TEXT_ID = "category-name-text";
+    private static final String TREE_CELL_CONTENT_ID = "tree-cell-content";
 
+    private final BooleanProperty draggedOver = new SimpleBooleanProperty(false);
     private final MenuItem deleteBoundingBoxMenuItem = new MenuItem(DELETE_CONTEXT_MENU_TEXT);
     private final ContextMenu contextMenu = new ContextMenu();
     private final Text nameText = new Text();
@@ -32,17 +38,24 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
         setUpInternalListeners();
     }
 
+    void setDraggedOver(boolean draggedOver) {
+        this.draggedOver.set(draggedOver);
+    }
+
     @Override
     protected void updateItem(BoundingBoxView newBoundingBoxView, boolean empty) {
         super.updateItem(newBoundingBoxView, empty);
 
         nameText.textProperty().unbind();
+        nameText.setUnderline(false);
+        nameText.setId(null);
         additionalInfoText.textProperty().unbind();
         tagIconRegion.visibleProperty().unbind();
 
         if(empty || newBoundingBoxView == null) {
             setGraphic(null);
             setContextMenu(null);
+            setDraggedOver(false);
         } else {
             setGraphic(createContentBox());
             setContextMenu(contextMenu);
@@ -71,6 +84,8 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
                 fillBoundingBoxesTransparent();
             }
         });
+
+        draggedOver.addListener((observable, oldValue, newValue) -> pseudoClassStateChanged(draggedOverPseudoClass, newValue));
     }
 
     private void fillBoundingBoxesOpaque() {
@@ -106,7 +121,7 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
     private HBox createContentBox() {
         final TreeItem<BoundingBoxView> treeItem = getTreeItem();
         final HBox content = new HBox(treeItem.getGraphic(), nameText);
-        content.setSpacing(CONTENT_SPACING);
+        content.setId(TREE_CELL_CONTENT_ID);
         content.setAlignment(Pos.CENTER_LEFT);
 
         if(treeItem instanceof BoundingBoxTreeItem) {
@@ -116,6 +131,7 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
             content.getChildren().add(tagIconRegion);
         } else {
             nameText.textProperty().bind(((CategoryTreeItem) treeItem).getBoundingBoxCategory().nameProperty());
+            nameText.setId(CATEGORY_NAME_TEXT_ID);
             additionalInfoText.textProperty().bind(Bindings.format("(%d)", treeItem.getChildren().size()));
             content.getChildren().add(additionalInfoText);
         }

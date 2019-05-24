@@ -37,8 +37,6 @@ public class BoundingBoxView extends Rectangle implements View {
     private BoundingBoxCategory boundingBoxCategory;
     private ImageMetaData imageMetaData;
 
-    private boolean hasConfinementListener = false;
-
     public BoundingBoxView(BoundingBoxCategory boundingBoxCategory, ImageMetaData imageMetaData) {
         this.imageMetaData = imageMetaData;
         this.boundingBoxCategory = boundingBoxCategory;
@@ -59,7 +57,7 @@ public class BoundingBoxView extends Rectangle implements View {
     private BoundingBoxView() {
     }
 
-    public static BoundingBoxView fromData(BoundingBoxData boundingBoxData, ImageMetaData metaData) {
+    static BoundingBoxView fromData(BoundingBoxData boundingBoxData, ImageMetaData metaData) {
         BoundingBoxView boundingBox = new BoundingBoxView(boundingBoxData.getCategory(), metaData);
         boundingBox.setBoundsInImage(boundingBoxData.getBoundsInImage());
         boundingBox.setStroke(boundingBoxData.getCategory().getColor());
@@ -74,6 +72,12 @@ public class BoundingBoxView extends Rectangle implements View {
         setStroke(initializer.getStroke());
     }
 
+    void confineAndInitialize(ReadOnlyObjectProperty<Bounds> confinementBoundsProperty) {
+        this.confinementBounds.bind(confinementBoundsProperty);
+        initializeFromBoundsInImage();
+        addConfinementListener();
+    }
+
     public BoundingBoxData toBoundingBoxData() {
         return new BoundingBoxData(getBoundingBoxCategory(), getImageRelativeBounds(), getTags());
     }
@@ -82,11 +86,7 @@ public class BoundingBoxView extends Rectangle implements View {
         return boundingBoxCategory;
     }
 
-    public ImageMetaData getImageMetaData() {
-        return imageMetaData;
-    }
-
-    public Bounds getImageRelativeBounds() {
+    private Bounds getImageRelativeBounds() {
         final Bounds imageViewBounds = confinementBounds.getValue();
 
         double imageWidth = imageMetaData.getImageWidth();
@@ -110,20 +110,14 @@ public class BoundingBoxView extends Rectangle implements View {
             setX(newValue.getMinX() + (getX() - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
             setY(newValue.getMinY() + (getY() - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
         });
-
-        hasConfinementListener = true;
     }
 
 
-    public void setBoundsInImage(Bounds boundsInImage) {
+    private void setBoundsInImage(Bounds boundsInImage) {
         this.boundsInImage.setValue(boundsInImage);
     }
 
-    public boolean hasConfinementListener() {
-        return hasConfinementListener;
-    }
-
-    public void addConfinementListener() {
+    private void addConfinementListener() {
         confinementBounds.addListener((observable, oldValue, newValue) -> {
             setWidth(getWidth() * newValue.getWidth() / oldValue.getWidth());
             setHeight(getHeight() * newValue.getHeight() / oldValue.getHeight());
@@ -131,11 +125,9 @@ public class BoundingBoxView extends Rectangle implements View {
             setX(newValue.getMinX() + (getX() - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
             setY(newValue.getMinY() + (getY() - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
         });
-
-        hasConfinementListener = true;
     }
 
-    public void initializeFromBoundsInImage() {
+    private void initializeFromBoundsInImage() {
         Bounds boundsInImageValue = boundsInImage.getValue();
         Bounds confinementBoundsValue = confinementBounds.getValue();
         double imgWidth = imageMetaData.getImageWidth();
@@ -147,26 +139,22 @@ public class BoundingBoxView extends Rectangle implements View {
         setHeight(boundsInImageValue.getHeight() * confinementBoundsValue.getHeight() / imgHeight);
     }
 
-    public boolean isSelected() {
+    boolean isSelected() {
         return selected.get();
     }
 
-    public void setSelected(boolean selected) {
+    void setSelected(boolean selected) {
         this.selected.set(selected);
     }
 
-    public BooleanProperty selectedProperty() {
-        return selected;
-    }
-
-    public void setXYWH(double x, double y, double w, double h) {
+    void setXYWH(double x, double y, double w, double h) {
         setX(x);
         setY(y);
         setWidth(w);
         setHeight(h);
     }
 
-    public ObservableList<String> getTags() {
+    ObservableList<String> getTags() {
         return tags;
     }
 
@@ -177,10 +165,6 @@ public class BoundingBoxView extends Rectangle implements View {
                     Objects.equals(imageMetaData, ((BoundingBoxView) obj).imageMetaData);
         }
         return false;
-    }
-
-    public Property<Bounds> confinementBoundsProperty() {
-        return confinementBounds;
     }
 
     static BoundingBoxView getDummy() {

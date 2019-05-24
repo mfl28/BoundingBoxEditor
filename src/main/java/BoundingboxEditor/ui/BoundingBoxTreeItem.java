@@ -37,6 +37,15 @@ class BoundingBoxTreeItem extends TreeItem<BoundingBoxView> {
         toggleIcon.toggledOnProperty().addListener(((observable, oldValue, newValue) -> {
             getValue().setVisible(newValue);
 
+            // recursive toggling
+            getChildren().forEach(child -> {
+                if(child instanceof CategoryTreeItem) {
+                    ((CategoryTreeItem) child).setIconToggledOn(newValue);
+                } else {
+                    ((BoundingBoxTreeItem) child).setIconToggledOn(newValue);
+                }
+            });
+
             if(newValue) {
                 ((CategoryTreeItem) getParent()).incrementNumToggledOnChildren();
             } else {

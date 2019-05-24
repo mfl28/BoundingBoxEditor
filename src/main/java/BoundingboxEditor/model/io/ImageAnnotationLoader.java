@@ -19,7 +19,6 @@ public class ImageAnnotationLoader {
         loadStrategy = ImageAnnotationLoadStrategy.createStrategy(strategy);
     }
 
-
     public LoadResult load(final Model model, final Path saveFolderPath) throws IOException {
         return loadStrategy.load(model, saveFolderPath);
     }
