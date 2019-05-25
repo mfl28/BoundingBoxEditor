@@ -6,6 +6,7 @@ import BoundingboxEditor.model.BoundingBoxCategory;
 import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.model.Model;
 import BoundingboxEditor.utils.ColorUtils;
+import javafx.beans.property.DoubleProperty;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -21,6 +22,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -32,7 +34,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     private Random random = new Random();
 
     @Override
-    public ImageAnnotationLoader.LoadResult load(final Model model, final Path path) throws IOException {
+    public IOResult load(final Model model, final Path path, final DoubleProperty progress) throws IOException {
         long startTime = System.nanoTime();
 
         this.fileNamesToLoad = model.getImageFileNameSet();
@@ -45,15 +47,20 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 .map(Path::toFile)
                 .collect(Collectors.toList());
 
-        List<ImageAnnotationLoader.LoadResult.ErrorTableEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
+        List<IOResult.ErrorTableEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
+
+        int totalNrOfFiles = annotationFiles.size();
+        AtomicInteger nrProcessedFiles = new AtomicInteger(0);
 
         List<ImageAnnotationDataElement> imageAnnotations = annotationFiles.parallelStream()
                 .map(file -> {
+                    progress.set(1.0 * nrProcessedFiles.incrementAndGet() / totalNrOfFiles);
+
                     try {
                         return parseAnnotationFile(file);
                     } catch(SAXException | IOException | InvalidAnnotationFileFormatException
                             | ParserConfigurationException | AnnotationToNonExistentImageException e) {
-                        unParsedFileErrorMessages.add(new ImageAnnotationLoader.LoadResult.ErrorTableEntry(file.getName(), e.getMessage()));
+                        unParsedFileErrorMessages.add(new IOResult.ErrorTableEntry(file.getName(), e.getMessage()));
                         return null;
                     }
                 })
@@ -65,7 +72,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
         long estimatedTime = System.nanoTime() - startTime;
 
-        return new ImageAnnotationLoader.LoadResult(imageAnnotations.size(), TimeUnit.MILLISECONDS.convert(estimatedTime, TimeUnit.NANOSECONDS), unParsedFileErrorMessages);
+        return new IOResult(imageAnnotations.size(), TimeUnit.MILLISECONDS.convert(estimatedTime, TimeUnit.NANOSECONDS), unParsedFileErrorMessages);
     }
 
     private ImageAnnotationDataElement parseAnnotationFile(File file) throws SAXException, IOException,

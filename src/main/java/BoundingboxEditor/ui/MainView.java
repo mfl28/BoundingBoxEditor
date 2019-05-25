@@ -1,8 +1,8 @@
 package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
+import BoundingboxEditor.model.io.IOResult;
 import BoundingboxEditor.model.io.ImageAnnotationDataElement;
-import BoundingboxEditor.model.io.ImageAnnotationLoader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -59,11 +59,11 @@ public class MainView extends BorderPane implements View {
         alert.showAndWait();
     }
 
-    public static void displayLoadResultInfoAlert(ImageAnnotationLoader.LoadResult loadResult) {
-        TableView<ImageAnnotationLoader.LoadResult.ErrorTableEntry> errorTable = new TableView<>();
-        TableColumn<ImageAnnotationLoader.LoadResult.ErrorTableEntry, String> fileNameColumn = new TableColumn<>("File");
+    public static void displayLoadResultInfoAlert(IOResult loadResult) {
+        TableView<IOResult.ErrorTableEntry> errorTable = new TableView<>();
+        TableColumn<IOResult.ErrorTableEntry, String> fileNameColumn = new TableColumn<>("File");
 
-        TableColumn<ImageAnnotationLoader.LoadResult.ErrorTableEntry, String> problemColumn = new TableColumn<>("Problem");
+        TableColumn<IOResult.ErrorTableEntry, String> problemColumn = new TableColumn<>("Problem");
         errorTable.getColumns().add(fileNameColumn);
         errorTable.getColumns().add(problemColumn);
         errorTable.setEditable(false);
@@ -108,6 +108,10 @@ public class MainView extends BorderPane implements View {
 
     public Image getCurrentImage() {
         return workspace.getImageShower().getImagePane().getCurrentImage();
+    }
+
+    public MenuItem getFileImportAnnotationsItem() {
+        return topPanel.getFileImportAnnotationsItem();
     }
 
     public BoundingBoxCategorySelectorView getBoundingBoxCategorySelectorView() {

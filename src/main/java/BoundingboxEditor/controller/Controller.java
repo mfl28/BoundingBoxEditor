@@ -22,6 +22,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.controlsfx.dialog.ProgressDialog;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +47,7 @@ public class Controller {
     private static final String OPEN_FOLDER_ERROR_HEADER = "The selected folder is not a valid image folder.";
     private static final String SAVE_BOUNDING_BOX_DATA_TITLE = "Save bounding box data";
     private static final String SAVE_BOUNDING_BOX_DATA_ERROR_TITLE = "Error while saving bounding box data";
-    private static final String SAVE_BOUNDING_BOX_DATA_ERROR_HEADER = "Could not save bounding box data into the specified file.";
+    private static final String SAVE_BOUNDING_BOX_DATA_ERROR_HEADER = "The specified save-folder does not exist.";
     private static final String DIRECTORY_CHOOSER_TITLE = "Choose an image folder";
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
@@ -106,29 +107,41 @@ public class Controller {
         final File saveDirectory = directoryChooser.showDialog(stage);
 
         if(saveDirectory != null) {
-            Service<Void> saveService = new Service<>() {
+
+            if(!saveDirectory.exists()) {
+                MainView.displayErrorAlert(SAVE_BOUNDING_BOX_DATA_ERROR_TITLE, SAVE_BOUNDING_BOX_DATA_ERROR_HEADER);
+                return;
+            }
+
+            Service<IOResult> saveService = new Service<>() {
                 @Override
-                protected Task<Void> createTask() {
+                protected Task<IOResult> createTask() {
                     return new Task<>() {
                         @Override
-                        protected Void call() throws Exception {
-                            final ImageAnnotationSaver saver = new ImageAnnotationSaver(ImageAnnotationSaveStrategy.SaveStrategy.PASCAL_VOC);
-                            saver.save(model.getImageAnnotations(), Paths.get(saveDirectory.getPath()));
-                            return null;
+                        protected IOResult call() {
+                            final ImageAnnotationSaver saver = new ImageAnnotationSaver(ImageAnnotationSaveStrategy.Type.PASCAL_VOC);
+
+                            saver.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
+
+                            return saver.save(model.getImageAnnotations(), Paths.get(saveDirectory.getPath()));
                         }
                     };
                 }
             };
 
-            try {
-                saveService.start();
-            } catch(Exception e) {
-                // Message text should wrap around.
-                MainView.displayErrorAlert(SAVE_BOUNDING_BOX_DATA_ERROR_TITLE, SAVE_BOUNDING_BOX_DATA_ERROR_HEADER);
-            }
+            ProgressDialog progressDialog = new ProgressDialog(saveService);
+            progressDialog.setTitle("Saving");
+            progressDialog.setHeaderText("Saving Annotations...");
 
-            saveService.setOnSucceeded(event1 -> view.getStatusPanel().setStatus("Successfully saved " + model.getImageFileNameToAnnotation().size()
-                    + " image-annotation" + (model.getImageFileNameToAnnotation().size() != 1 ? "s." : ".")));
+            saveService.start();
+
+            saveService.setOnSucceeded(successEvent -> {
+                IOResult saveResult = saveService.getValue();
+
+                view.getStatusPanel().setStatus("Successfully saved " + model.getImageFileNameToAnnotation().size()
+                        + " image-annotation" + (model.getImageFileNameToAnnotation().size() != 1 ? "s" : "") + " in "
+                        + String.format("%.3f", saveResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.");
+            });
         }
     }
 
@@ -151,24 +164,13 @@ public class Controller {
 
 
     public void onRegisterNextButtonClickedAction() {
-        // cancel image loading when clicking next
-        // button while the image has not been loaded completely
-        if(!view.getImagePaneView().getProgressIndicator().isVisible()) {
-            view.getBoundingBoxTreeViewRoot().getChildren().clear();
-            //view.getCurrentBoundingBoxes().clear();
-            model.incrementFileIndex();
-        }
-
+        model.incrementFileIndex();
+        view.getImageExplorerPanel().getImageGallery().scrollTo(Math.max(0, model.getCurrentFileIndex() - 1));
     }
 
     public void onRegisterPreviousButtonClickedAction() {
-        // cancel image loading when clicking previous
-        // button while the image has not been loaded completely
-        if(!view.getImagePaneView().getProgressIndicator().isVisible()) {
-            view.getBoundingBoxTreeViewRoot().getChildren().clear();
-            //view.getCurrentBoundingBoxes().clear();
-            model.decrementFileIndex();
-        }
+        model.decrementFileIndex();
+        view.getImageExplorerPanel().getImageGallery().scrollTo(Math.max(0, model.getCurrentFileIndex() - 1));
     }
 
     public void onRegisterAddBoundingBoxCategoryAction() {
@@ -273,7 +275,6 @@ public class Controller {
             return;
         }
 
-        // FIXME: Remove model listeners.
         model.fileIndexProperty().removeListener(fileIndexListener);
         model.updateFromFiles(imageFiles);
         model.fileIndexProperty().addListener(fileIndexListener);
@@ -320,20 +321,26 @@ public class Controller {
 
     private ChangeListener<Number> createFileIndexListener() {
         return (value, oldValue, newValue) -> {
-            removeFullyLoadedImageListener();
-            // update model bounding-box-data from previous image:
-            model.updateBoundingBoxData(oldValue.intValue(), view.getBoundingBoxExplorer().extractCurrentBoundingBoxData());
-
-            // remove old image's bounding boxes
-            view.getImagePaneView().removeCurrentBoundingBoxes();
-
-            // Prevents javafx-bug with uncleared items in tree-view when switching between images.
-            view.getBoundingBoxExplorer().reset();
-            view.updateImageFromFile(model.getCurrentImageFile());
-            stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
-            addFullyLoadedImageListener();
-
             view.getImageExplorerPanel().getImageGallery().getSelectionModel().select(newValue.intValue());
+            // Remove the old images bounding-box-loading listener (that triggers when an image is fully loaded.)
+            removeFullyLoadedImageListener();
+            // Updating bounding-box data corresponding to the previous image only needs to be done, if
+            // the old image was fully loaded.
+            if(view.getCurrentImage().getProgress() == 1.0) {
+                // FIXME: when switching between images very fast, sometimes bounding-box-data gets lost.
+                // update model bounding-box-data from previous image:
+                model.updateBoundingBoxData(oldValue.intValue(), view.getBoundingBoxExplorer().extractCurrentBoundingBoxData());
+
+                // remove old image's bounding boxes
+                view.getImagePaneView().removeCurrentBoundingBoxes();
+
+                // Prevents javafx-bug with uncleared items in tree-view when switching between images.
+                view.getBoundingBoxExplorer().reset();
+            }
+
+            stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
+            view.updateImageFromFile(model.getCurrentImageFile());
+            addFullyLoadedImageListener();
         };
     }
 
@@ -351,6 +358,8 @@ public class Controller {
                 model.fileIndexProperty().set(newValue.intValue());
             }
         });
+
+        view.getFileImportAnnotationsItem().disableProperty().bind(model.imageFileListSizeProperty().isEqualTo(0));
 
         view.getPreviousButton().disableProperty().bind(model.previousFileValidProperty().not());
         view.getNextButton().disableProperty().bind(model.nextFileValidProperty().not());
@@ -373,14 +382,15 @@ public class Controller {
     }
 
     private void importAnnotationsFromDirectoryPath(Path directoryPath) {
-        ImageAnnotationLoader loader = new ImageAnnotationLoader(ImageAnnotationLoadStrategy.Type.PASCAL_VOC);
 
-        Service<ImageAnnotationLoader.LoadResult> loadService = new Service<>() {
+        Service<IOResult> loadService = new Service<>() {
             @Override
-            protected Task<ImageAnnotationLoader.LoadResult> createTask() {
+            protected Task<IOResult> createTask() {
                 return new Task<>() {
                     @Override
-                    protected ImageAnnotationLoader.LoadResult call() throws Exception {
+                    protected IOResult call() throws Exception {
+                        ImageAnnotationLoader loader = new ImageAnnotationLoader(ImageAnnotationLoadStrategy.Type.PASCAL_VOC);
+                        loader.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
                         return loader.load(model, directoryPath);
                     }
                 };
@@ -388,9 +398,9 @@ public class Controller {
         };
 
         loadService.setOnSucceeded(event -> {
-            ImageAnnotationLoader.LoadResult loadResult = loadService.getValue();
+            IOResult loadResult = loadService.getValue();
 
-            view.getStatusPanel().setStatus("Successfully imported annotations from " + loadResult.getNrLoadedImageAnnotations() + " files in " +
+            view.getStatusPanel().setStatus("Successfully imported annotations from " + loadResult.getNrSuccessfullyProcessedAnnotations() + " files in " +
                     String.format("%.3f", loadResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.");
 
             ImageAnnotationDataElement annotation = model.getCurrentImageAnnotation();
@@ -404,6 +414,10 @@ public class Controller {
                 MainView.displayLoadResultInfoAlert(loadResult);
             }
         });
+
+        ProgressDialog progressDialog = new ProgressDialog(loadService);
+        progressDialog.setTitle("Loading");
+        progressDialog.setHeaderText("Loading annotations...");
 
         loadService.start();
     }

@@ -2,6 +2,7 @@ package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.VBox;
 
@@ -19,6 +20,10 @@ class TopPanelView extends VBox implements View {
     @Override
     public void connectToController(final Controller controller) {
         menuBar.connectToController(controller);
+    }
+
+    public MenuItem getFileImportAnnotationsItem() {
+        return menuBar.getFileImportAnnotationsItem();
     }
 
     Separator getSeparator() {

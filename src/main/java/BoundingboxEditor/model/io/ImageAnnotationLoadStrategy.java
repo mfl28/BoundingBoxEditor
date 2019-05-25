@@ -1,6 +1,7 @@
 package BoundingboxEditor.model.io;
 
 import BoundingboxEditor.model.Model;
+import javafx.beans.property.DoubleProperty;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,7 +17,7 @@ public interface ImageAnnotationLoadStrategy {
         }
     }
 
-    ImageAnnotationLoader.LoadResult load(final Model model, final Path path) throws IOException;
+    IOResult load(final Model model, final Path path, final DoubleProperty progress) throws IOException;
 
     enum Type {PASCAL_VOC}
 }

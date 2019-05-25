@@ -9,7 +9,7 @@ import javafx.scene.control.TreeItem;
 import java.util.List;
 
 class CategoryTreeItem extends TreeItem<BoundingBoxView> {
-    private static final double TOGGLE_ICON_SIDE_LENGTH = 10.0;
+    private static final double TOGGLE_ICON_SIDE_LENGTH = 9.5;
 
     private final ToggleRectangleIcon toggleIcon = new ToggleRectangleIcon(TOGGLE_ICON_SIDE_LENGTH, TOGGLE_ICON_SIDE_LENGTH);
     private final IntegerProperty numToggledOnChildren = new SimpleIntegerProperty(0);

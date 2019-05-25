@@ -1,14 +1,16 @@
 package BoundingboxEditor.model.io;
 
+import javafx.beans.property.DoubleProperty;
+
 import java.nio.file.Path;
 import java.security.InvalidParameterException;
 import java.util.Collection;
 
 public interface ImageAnnotationSaveStrategy {
-    static ImageAnnotationSaveStrategy createStrategy(final SaveStrategy saveStrategy) {
+    static ImageAnnotationSaveStrategy createStrategy(final Type type) {
         ImageAnnotationSaveStrategy strategy;
 
-        switch(saveStrategy) {
+        switch(type) {
             case PASCAL_VOC:
                 strategy = new PVOCSaveStrategy();
                 break;
@@ -19,7 +21,7 @@ public interface ImageAnnotationSaveStrategy {
         return strategy;
     }
 
-    void save(final Collection<ImageAnnotationDataElement> dataset, final Path savePath) throws Exception;
+    IOResult save(final Collection<ImageAnnotationDataElement> dataset, final Path savePath, final DoubleProperty progress);
 
-    enum SaveStrategy {PASCAL_VOC}
+    enum Type {PASCAL_VOC}
 }

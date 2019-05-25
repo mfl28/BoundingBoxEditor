@@ -15,7 +15,6 @@ public class ProjectSidePanelView extends VBox implements View {
     private static final String SEARCH_CATEGORY_PROMPT_TEXT = "Search Category";
     private static final String BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT = "Add";
     private static final String SIDE_PANEL_STYLE = "side-panel";
-    private static final String BOUNDING_BOX_ITEM_CONTROLS_STYLE = "table-view-input-controls";
     private static final String BOUNDING_BOX_NAME_TEXT_FIELD_STYLE = "bounding-box-name-text-field";
     private static final String BOUNDING_BOX_COLOR_PICKER_STYLE = "bounding-box-color-picker";
     private static final String OBJECT_SELECTOR_LABEL_TEXT = "Explorer";
@@ -32,6 +31,7 @@ public class ProjectSidePanelView extends VBox implements View {
     private static final String TAG_EDITOR_LABEL_TEXT = "Tag Editor";
     private static final String AUTO_SHOW_ICON_PATH = "/icons/auto-show.png";
     private static final String AUTO_HIDE_ICON_PATH = "/icons/auto-hide.png";
+    private static final String BOUNDING_BOX_EXPLORER_TOP_PANEL_ID = "bounding-box-explorer-top-panel";
 
 
     private final TextField categorySearchField = new TextField();
@@ -120,7 +120,6 @@ public class ProjectSidePanelView extends VBox implements View {
         HBox addItemControls = new HBox(categoryColorPicker, UiUtils.createHSpacer(),
                 categoryNameTextField, UiUtils.createHSpacer(), addCategoryButton);
         categoryNameTextField.setPromptText(CATEGORY_INPUT_FIELD_PROMPT_TEXT);
-        addItemControls.getStyleClass().add(BOUNDING_BOX_ITEM_CONTROLS_STYLE);
 
         return addItemControls;
     }
@@ -134,6 +133,7 @@ public class ProjectSidePanelView extends VBox implements View {
                 expansionToggle
         );
         panel.setSpacing(10);
+        panel.setId(BOUNDING_BOX_EXPLORER_TOP_PANEL_ID);
         return panel;
     }
 

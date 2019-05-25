@@ -35,6 +35,10 @@ class MenuBarView extends MenuBar implements View {
         fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
     }
 
+    public MenuItem getFileImportAnnotationsItem() {
+        return fileImportAnnotationsItem;
+    }
+
     CheckMenuItem getViewShowImageExplorerItem() {
         return viewShowImageExplorerItem;
     }

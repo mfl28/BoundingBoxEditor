@@ -1,5 +1,6 @@
 package BoundingboxEditor.model.io;
 
+import javafx.beans.property.DoubleProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +19,12 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
@@ -48,21 +52,28 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private Path saveFolderPath;
 
     @Override
-    public void save(final Collection<ImageAnnotationDataElement> dataSet, final Path path) {
+    public IOResult save(final Collection<ImageAnnotationDataElement> dataSet, final Path path, final DoubleProperty progress) {
         this.saveFolderPath = path;
+
+        List<IOResult.ErrorTableEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
+
+        int totalNrOfAnnotations = dataSet.size();
+        AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
 
         long startTime = System.nanoTime();
         dataSet.parallelStream().forEach(annotation -> {
             try {
                 createXmlFileFromImageAnnotationDataElement(annotation);
             } catch(TransformerException | ParserConfigurationException e) {
-                logger.info("Saving-error: " + e.getMessage());
+                unParsedFileErrorMessages.add(new IOResult.ErrorTableEntry(annotation.getImageFileName(), e.getMessage()));
             }
-        });
 
+            progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrOfAnnotations);
+        });
         long duration = System.nanoTime() - startTime;
 
-        System.out.println("Saving took: " + TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS));
+        return new IOResult(dataSet.size() - unParsedFileErrorMessages.size(),
+                TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS), unParsedFileErrorMessages);
     }
 
     private void createXmlFileFromImageAnnotationDataElement(final ImageAnnotationDataElement dataElement) throws TransformerException, ParserConfigurationException {

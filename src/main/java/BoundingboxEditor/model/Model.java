@@ -88,6 +88,10 @@ public class Model {
         return imageFileNameToAnnotation.get(getCurrentImageFileName());
     }
 
+    public int getCurrentFileIndex() {
+        return fileIndex.get();
+    }
+
     public void updateCurrentImageAnnotation(List<BoundingBoxData> boundingBoxData) {
         getCurrentImageAnnotation().setBoundingBoxes(boundingBoxData);
     }
