@@ -1,30 +1,62 @@
 package BoundingboxEditor.ui;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.OverrunStyle;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 
 import java.util.stream.Collectors;
 
-class BoundingBoxTagEditorView extends FlowPane implements View {
+class BoundingBoxTagEditorView extends ScrollPane implements View {
     private static final String TAG_INPUT_FIELD_ID = "tag-input-field";
+    private static final String TEXT_FIELD_PROMPT_TEXT = "New tag";
+    private static final String TAG_EDITOR_SCROLL_PANE_ID = "tag-editor-scroll-pane";
     private final SimpleListProperty<String> tags = new SimpleListProperty<>();
+    private final TextField inputField = createTagInputField();
+    private final FlowPane tagFlowPane = createTagFlowPane();
     private final ListChangeListener<String> tagsListener = createTagsListener();
-    private final TextField inputField = new TextField();
 
     BoundingBoxTagEditorView() {
-        setHgap(10);
-        setVgap(10);
-
+        setContent(tagFlowPane);
+        setId(TAG_EDITOR_SCROLL_PANE_ID);
+        setFitToWidth(true);
+        fixBlurryText();
         setUpInternalListeners();
+    }
+
+    void setTags(ObservableList<String> newTags) {
+        tags.set(newTags);
+    }
+
+    private TextField createTagInputField() {
+        TextField textField = new TextField();
+        textField.setId(TAG_INPUT_FIELD_ID);
+        textField.setPromptText(TEXT_FIELD_PROMPT_TEXT);
+        // wll be enabled if a tag-list is registered with the tagLists-property.
+        textField.setDisable(true);
+
+        return textField;
+    }
+
+    private FlowPane createTagFlowPane() {
+        FlowPane flowPane = new FlowPane(inputField);
+        flowPane.setHgap(10);
+        flowPane.setVgap(10);
+        flowPane.setMinHeight(50);
+
+        return flowPane;
+    }
+
+    private void setUpInternalListeners() {
+        // Auto scroll to end if the height of the tag-flow-pane changes.
+        tagFlowPane.heightProperty().addListener((observable, oldValue, newValue) -> vvalueProperty().set(newValue.doubleValue()));
+
+        tagFlowPane.maxWidthProperty().bind(widthProperty());
 
         inputField.setOnAction(event -> {
             String text = inputField.getText();
@@ -34,20 +66,6 @@ class BoundingBoxTagEditorView extends FlowPane implements View {
             }
         });
 
-        inputField.setId(TAG_INPUT_FIELD_ID);
-        inputField.setPromptText("New tag");
-        // wll be enabled if a tag-list is registered with the tagLists-property.
-        inputField.setDisable(true);
-
-        getChildren().add(inputField);
-        setMinHeight(50);
-    }
-
-    void setTags(ObservableList<String> newTags) {
-        tags.set(newTags);
-    }
-
-    private void setUpInternalListeners() {
         tags.addListener((observable, oldValue, newValue) -> {
             if(oldValue == newValue) {
                 // Listeners have to be updated exactly once after a new tag-list was set.
@@ -55,11 +73,11 @@ class BoundingBoxTagEditorView extends FlowPane implements View {
             }
             if(oldValue != null) {
                 oldValue.removeListener(tagsListener);
-                getChildren().removeIf(node -> node instanceof TagBox);
+                tagFlowPane.getChildren().removeIf(node -> node instanceof TagBox);
             }
 
             if(newValue != null) {
-                getChildren().addAll(0, newValue.stream().map(TagBox::new).collect(Collectors.toList()));
+                tagFlowPane.getChildren().addAll(0, newValue.stream().map(TagBox::new).collect(Collectors.toList()));
                 newValue.addListener(tagsListener);
                 inputField.setDisable(false);
             } else {
@@ -72,14 +90,23 @@ class BoundingBoxTagEditorView extends FlowPane implements View {
         return c -> {
             while(c.next()) {
                 if(c.wasRemoved()) {
-                    getChildren().subList(c.getFrom(), c.getFrom() + c.getRemovedSize()).clear();
+                    tagFlowPane.getChildren().subList(c.getFrom(), c.getFrom() + c.getRemovedSize()).clear();
                 }
 
                 if(c.wasAdded()) {
-                    getChildren().addAll(c.getFrom(), c.getAddedSubList().stream().map(TagBox::new).collect(Collectors.toList()));
+                    tagFlowPane.getChildren().addAll(c.getFrom(), c.getAddedSubList().stream().map(TagBox::new).collect(Collectors.toList()));
                 }
             }
         };
+    }
+
+    private void fixBlurryText() {
+        // Workaround to fix blurry text in scroll-pane
+        // (adapted from: https://gist.github.com/siavvasm/1f15d58351c1e99e0cf5337613b7c3ae)
+        Platform.runLater(() -> {
+            setCache(false);
+            getChildrenUnmodifiable().forEach(childNode -> childNode.setCache(false));
+        });
     }
 
     private class TagBox extends HBox {
@@ -99,7 +126,7 @@ class BoundingBoxTagEditorView extends FlowPane implements View {
             setId(TAG_ID);
 
             tagNameText.setTextOverrun(OverrunStyle.ELLIPSIS);
-            tagNameText.maxWidthProperty().bind(BoundingBoxTagEditorView.this.maxWidthProperty()
+            tagNameText.maxWidthProperty().bind(tagFlowPane.maxWidthProperty()
                     .subtract(deleteButton.widthProperty())
                     .subtract(25));
 

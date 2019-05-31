@@ -92,7 +92,7 @@ public class Controller {
     public void onRegisterSaveAction() {
         // first update bounding-boxes in the model.
         if(!model.getImageFiles().isEmpty()) {
-            // if there are currently loaded image-files, then update boundingboxes in model.
+            // if there are currently loaded image-files, then update bounding-boxes in model.
             model.updateCurrentBoundingBoxData(view.getBoundingBoxExplorer().extractCurrentBoundingBoxData());
         }
 
@@ -147,7 +147,6 @@ public class Controller {
 
     public void onRegisterImportAnnotationsAction() {
         // first update bounding-boxes in the model.
-        // FIXME: disallow importing when no images loaded.
         if(!model.getImageFiles().isEmpty()) {
             model.updateCurrentBoundingBoxData(view.getBoundingBoxExplorer().extractCurrentBoundingBoxData());
         }
@@ -192,7 +191,6 @@ public class Controller {
         view.getBoundingBoxCategoryInputField().clear();
 
         final var selectionModel = view.getBoundingBoxCategorySelectorView().getSelectionModel();
-
         // auto select the created category
         selectionModel.selectLast();
         view.getBoundingBoxCategoryColorPicker().setValue(ColorUtils.createRandomColor(random));
@@ -238,7 +236,8 @@ public class Controller {
     }
 
     public void onImageViewMouseReleasedEvent(MouseEvent event) {
-        if(event.getButton().equals(MouseButton.PRIMARY) && view.getBoundingBoxCategorySelectorView().getSelectionModel().getSelectedItem() != null) {
+        if(event.getButton().equals(MouseButton.PRIMARY) &&
+                view.getBoundingBoxCategorySelectorView().getSelectionModel().getSelectedItem() != null) {
             ImageMetaData imageMetaData = model.getImageMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
                     key -> ImageMetaData.fromImage(view.getCurrentImage()));
 
@@ -248,10 +247,18 @@ public class Controller {
             newBoundingBox.setUpFromInitializer(view.getImagePaneView().getBoundingBoxInitializer());
             newBoundingBox.setVisible(true);
             newBoundingBox.confineTo(view.getImageView().boundsInParentProperty());
+            newBoundingBox.setToggleGroup(view.getImagePaneView().getBoundingBoxSelectionGroup());
+
+            // FIXME: do all in view-part and add listener to current-boundingboxes
+            //        to update names in model?
 
             model.getCategoriesWithExistingBoundingBoxes().add(newBoundingBox.getBoundingBoxCategory().getName());
 
             view.getImagePaneView().addToCurrentBoundingBoxes(newBoundingBox);
+
+
+            view.getImagePaneView().getBoundingBoxSelectionGroup().selectToggle(newBoundingBox);
+
             view.getImagePaneView().getBoundingBoxInitializer().setVisible(false);
         }
     }
@@ -327,7 +334,6 @@ public class Controller {
             // Updating bounding-box data corresponding to the previous image only needs to be done, if
             // the old image was fully loaded.
             if(view.getCurrentImage().getProgress() == 1.0) {
-                // FIXME: when switching between images very fast, sometimes bounding-box-data gets lost.
                 // update model bounding-box-data from previous image:
                 model.updateBoundingBoxData(oldValue.intValue(), view.getBoundingBoxExplorer().extractCurrentBoundingBoxData());
 

@@ -41,24 +41,6 @@ public class MainView extends BorderPane implements View {
         alert.showAndWait();
     }
 
-    public static void displayInfoAlert(String title, String header, String content, Node additionalInfoNode) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.getDialogPane().setMinWidth(INFO_DIALOGUE_MIN_WIDTH);
-
-        GridPane.setVgrow(additionalInfoNode, Priority.ALWAYS);
-        GridPane.setHgrow(additionalInfoNode, Priority.ALWAYS);
-
-        GridPane expandableContent = new GridPane();
-        expandableContent.setMaxWidth(Double.MAX_VALUE);
-        expandableContent.add(additionalInfoNode, 0, 0);
-
-        alert.getDialogPane().setExpandableContent(expandableContent);
-        alert.showAndWait();
-    }
-
     public static void displayLoadResultInfoAlert(IOResult loadResult) {
         TableView<IOResult.ErrorTableEntry> errorTable = new TableView<>();
         TableColumn<IOResult.ErrorTableEntry, String> fileNameColumn = new TableColumn<>("File");
@@ -170,13 +152,35 @@ public class MainView extends BorderPane implements View {
 
     public void loadBoundingBoxesFromAnnotation(ImageAnnotationDataElement annotation) {
         List<BoundingBoxView> boundingBoxes = getBoundingBoxExplorer().extractBoundingBoxViewsAndBuildTreeFromAnnotation(annotation);
+        ToggleGroup boundingBoxSelectionToggleGroup = getImagePaneView().getBoundingBoxSelectionGroup();
 
-        boundingBoxes.forEach(item -> item.confineAndInitialize(getImageView().boundsInParentProperty()));
+        boundingBoxes.forEach(item -> {
+            item.confineAndInitialize(getImageView().boundsInParentProperty());
+            item.setToggleGroup(boundingBoxSelectionToggleGroup);
+        });
 
         // temporarily switch off automatic adding of boundingBoxes to the explorer (those are already imported)
         workspace.setTreeUpdateEnabled(false);
         getImagePaneView().setAllCurrentBoundingBoxes(boundingBoxes);
         workspace.setTreeUpdateEnabled(true);
+    }
+
+    private static void displayInfoAlert(String title, String header, String content, Node additionalInfoNode) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.getDialogPane().setMinWidth(INFO_DIALOGUE_MIN_WIDTH);
+
+        GridPane.setVgrow(additionalInfoNode, Priority.ALWAYS);
+        GridPane.setHgrow(additionalInfoNode, Priority.ALWAYS);
+
+        GridPane expandableContent = new GridPane();
+        expandableContent.setMaxWidth(Double.MAX_VALUE);
+        expandableContent.add(additionalInfoNode, 0, 0);
+
+        alert.getDialogPane().setExpandableContent(expandableContent);
+        alert.showAndWait();
     }
 
     private void setUpInternalListeners() {

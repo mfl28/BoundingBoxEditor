@@ -26,7 +26,7 @@ public class ImageGalleryView extends ListView<File> implements View {
 
         ImageGalleryCell() {
             setTextOverrun(OverrunStyle.CENTER_WORD_ELLIPSIS);
-            prefWidthProperty().bind(ImageGalleryView.this.widthProperty().subtract(20));
+            prefWidthProperty().bind(ImageGalleryView.this.widthProperty().subtract(30));
             setMaxWidth(Control.USE_PREF_SIZE);
         }
 

@@ -3,9 +3,11 @@ package BoundingboxEditor.ui;
 import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.utils.ColorUtils;
 import BoundingboxEditor.utils.UiUtils;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.util.Random;
@@ -17,7 +19,7 @@ public class ProjectSidePanelView extends VBox implements View {
     private static final String SIDE_PANEL_STYLE = "side-panel";
     private static final String BOUNDING_BOX_NAME_TEXT_FIELD_STYLE = "bounding-box-name-text-field";
     private static final String BOUNDING_BOX_COLOR_PICKER_STYLE = "bounding-box-color-picker";
-    private static final String OBJECT_SELECTOR_LABEL_TEXT = "Explorer";
+    private static final String OBJECT_SELECTOR_LABEL_TEXT = "Object Editor";
     private static final int CATEGORY_SEARCH_BOX_SPACING = 10;
     private static final int SIDE_PANEL_SPACING = 5;
     private static final String HIDE_ICON_PATH = "/icons/hide.png";
@@ -33,7 +35,6 @@ public class ProjectSidePanelView extends VBox implements View {
     private static final String AUTO_HIDE_ICON_PATH = "/icons/auto-hide.png";
     private static final String BOUNDING_BOX_EXPLORER_TOP_PANEL_ID = "bounding-box-explorer-top-panel";
 
-
     private final TextField categorySearchField = new TextField();
     private final BoundingBoxCategorySelectorView categorySelector = new BoundingBoxCategorySelectorView();
     private final ColorPicker categoryColorPicker = new ColorPicker();
@@ -41,16 +42,17 @@ public class ProjectSidePanelView extends VBox implements View {
     private final Button addCategoryButton = new Button(BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT);
 
     private final BoundingBoxExplorerView boundingBoxExplorer = new BoundingBoxExplorerView();
-    private final ToggleButton visibilityToggle = new ToggleIconButton(SHOW_ICON_PATH, HIDE_ICON_PATH);
-    private final ToggleButton autoShowToggle = new ToggleIconButton(AUTO_SHOW_ICON_PATH, AUTO_HIDE_ICON_PATH);
-    private final ToggleButton expansionToggle = new ToggleIconButton(EXPAND_ICON_PATH, COLLAPSE_ICON_PATH);
+    //private final ToggleButton sortCategoryToggle = new ToggleIconButton();
+    private final ToggleButton visibilityToggle = new ToggleIconButton("visibility-toggle-button");
+    private final ToggleButton autoShowToggle = new ToggleIconButton("auto-show-toggle-button");
+    private final ToggleButton expansionToggle = new ToggleIconButton("expansion-toggle-button");
 
     private final BoundingBoxTagEditorView tagEditor = new BoundingBoxTagEditorView();
 
     ProjectSidePanelView() {
         getChildren().addAll(
                 new Label(CLASS_SELECTOR_LABEL_TEXT),
-                createCategorySearchBox(),
+                createCategorySelectorTopPanel(),
                 categorySelector,
                 createAddCategoryControlBox(),
                 new Separator(),
@@ -102,16 +104,23 @@ public class ProjectSidePanelView extends VBox implements View {
         return categoryColorPicker;
     }
 
-    private HBox createCategorySearchBox() {
+    private HBox createCategorySelectorTopPanel() {
         HBox.setHgrow(categorySearchField, Priority.ALWAYS);
 
         categorySearchField.setPromptText(SEARCH_CATEGORY_PROMPT_TEXT);
         categorySearchField.setFocusTraversable(false);
 
-        HBox categorySearchBox = new HBox(categorySearchField);
-        categorySearchBox.setSpacing(CATEGORY_SEARCH_BOX_SPACING);
+        Region searchIcon = new Region();
+        searchIcon.setId("search-icon");
+        Label iconLabel = new Label();
+        iconLabel.setGraphic(searchIcon);
+        iconLabel.setId("search-icon-label");
 
-        return categorySearchBox;
+        HBox categorySelectorTopPanel = new HBox(iconLabel, categorySearchField);
+        categorySelectorTopPanel.setAlignment(Pos.CENTER);
+        categorySelectorTopPanel.setSpacing(0);
+
+        return categorySelectorTopPanel;
     }
 
     private HBox createAddCategoryControlBox() {
@@ -172,7 +181,6 @@ public class ProjectSidePanelView extends VBox implements View {
             }
         }));
 
-        // TODO: should reset appropriately
         visibilityToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
                 boundingBoxExplorer.getRoot().getChildren().stream()
                         .map(childItem -> (CategoryTreeItem) childItem)
@@ -195,8 +203,6 @@ public class ProjectSidePanelView extends VBox implements View {
         expansionToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
                 boundingBoxExplorer.getRoot().getChildren().forEach(child -> child.setExpanded(newValue))
         ));
-
-        tagEditor.maxWidthProperty().bind(widthProperty());
 
         boundingBoxExplorer.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue instanceof BoundingBoxTreeItem) {

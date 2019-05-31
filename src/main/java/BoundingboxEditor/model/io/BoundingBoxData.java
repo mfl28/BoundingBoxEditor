@@ -13,9 +13,6 @@ public class BoundingBoxData {
     private final List<String> tags;
     private List<BoundingBoxData> parts = Collections.emptyList();
 
-    // TODO: Optionally add attributes: pose (Front, back, right etc.), truncated(0 or 1), difficult(0 or 1)
-    //       occluded (0 or 1)
-
     public BoundingBoxData(BoundingBoxCategory category, double xMin, double yMin, double xMax, double yMax, List<String> tags) {
         this.category = category;
         this.boundsInImage = new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin);

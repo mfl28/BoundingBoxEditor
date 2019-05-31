@@ -2,8 +2,6 @@ package BoundingboxEditor.model.io;
 
 import javafx.beans.property.DoubleProperty;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -25,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
@@ -36,7 +35,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String IMAGE_HEIGHT_ELEMENT_NAME = "height";
     private static final String BOUNDING_BOX_ENTRY_ELEMENT_NAME = "object";
     private static final String BOUNDING_BOX_CATEGORY_NAME = "name";
-    private static final String BOUNDING_BOX_SIZE_GROUP_NAME = "bndBox";
+    private static final String BOUNDING_BOX_SIZE_GROUP_NAME = "bndbox";
 
     private static final DecimalFormat floatingPointFormat = new DecimalFormat("#.##");
     private static final String FILE_EXTENSION = ".xml";
@@ -46,13 +45,14 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String YMAX_TAG = "ymax";
     private static final String ANNOTATION_FILENAME_EXTENSION = "_A";
     private static final String BOUNDING_BOX_PART_NAME = "part";
-    private static final Logger logger = LoggerFactory.getLogger(PVOCSaveStrategy.class);
+    private static final String ACTIONS_TAG_NAME = "actions";
     private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
     private Path saveFolderPath;
 
     @Override
     public IOResult save(final Collection<ImageAnnotationDataElement> dataSet, final Path path, final DoubleProperty progress) {
+        long startTime = System.nanoTime();
         this.saveFolderPath = path;
 
         List<IOResult.ErrorTableEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
@@ -60,7 +60,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         int totalNrOfAnnotations = dataSet.size();
         AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
 
-        long startTime = System.nanoTime();
+
         dataSet.parallelStream().forEach(annotation -> {
             try {
                 createXmlFileFromImageAnnotationDataElement(annotation);
@@ -120,7 +120,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         final Element element = document.createElement(elementName);
         element.appendChild(createStringValueElement(document, BOUNDING_BOX_CATEGORY_NAME, boundingBox.getCategoryName()));
 
-        // add tags
+        // add tags:
         List<String> tags = boundingBox.getTags();
         String poseString = tags.stream().filter(tag -> tag.startsWith("pose: ")).findFirst().orElse(null);
 
@@ -130,6 +130,18 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
                 "Unspecified" : StringUtils.capitalize(poseString.substring(6).toLowerCase())));
         element.appendChild(createIntegerValueElement(document, "truncated", tags.contains("truncated") ? 1 : 0));
 
+        // add action tags:
+        List<String> actionTags = tags.stream()
+                .filter(tag -> tag.startsWith("action: ") && !tag.equals("action: "))
+                .map(tag -> tag.substring(8))
+                .collect(Collectors.toList());
+
+        if(!actionTags.isEmpty()) {
+            Element actionsElement = document.createElement(ACTIONS_TAG_NAME);
+            element.appendChild(actionsElement);
+
+            actionTags.forEach(action -> actionsElement.appendChild(createIntegerValueElement(document, action, 1)));
+        }
 
         final Element bndBox = document.createElement(BOUNDING_BOX_SIZE_GROUP_NAME);
         element.appendChild(bndBox);

@@ -92,10 +92,6 @@ public class Model {
         return fileIndex.get();
     }
 
-    public void updateCurrentImageAnnotation(List<BoundingBoxData> boundingBoxData) {
-        getCurrentImageAnnotation().setBoundingBoxes(boundingBoxData);
-    }
-
     public void updateImageAnnotations(List<ImageAnnotationDataElement> imageAnnotations) {
         imageAnnotations.forEach(annotation -> {
             ImageAnnotationDataElement imageAnnotationDataElement = imageFileNameToAnnotation.get(annotation.getImageFileName());

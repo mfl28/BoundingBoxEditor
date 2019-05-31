@@ -4,11 +4,14 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.css.PseudoClass;
+import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
+
 
 class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
     private static final String DELETE_CONTEXT_MENU_STYLE = "delete-context-menu";
@@ -27,6 +30,9 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
     private final Text additionalInfoText = new Text();
     private final Region tagIconRegion = createTagIconRegion();
 
+
+    private final EventHandler<ContextMenuEvent> showContextMenu = createShowContextMenuEventHandler();
+
     BoundingBoxTreeCell() {
         contextMenu.getItems().add(deleteBoundingBoxMenuItem);
         deleteBoundingBoxMenuItem.setId(DELETE_CONTEXT_MENU_STYLE);
@@ -40,6 +46,11 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
 
     @Override
     protected void updateItem(BoundingBoxView newBoundingBoxView, boolean empty) {
+        BoundingBoxView oldItem = getItem();
+        if(oldItem != null) {
+            oldItem.removeEventHandler(ContextMenuEvent.CONTEXT_MENU_REQUESTED, showContextMenu);
+        }
+
         super.updateItem(newBoundingBoxView, empty);
 
         nameText.textProperty().unbind();
@@ -55,6 +66,8 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
         } else {
             setGraphic(createContentBox());
             setContextMenu(contextMenu);
+
+            newBoundingBoxView.setOnContextMenuRequested(showContextMenu);
         }
     }
 
@@ -137,5 +150,9 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
         }
 
         return content;
+    }
+
+    private EventHandler<ContextMenuEvent> createShowContextMenuEventHandler() {
+        return event -> contextMenu.show(getItem(), event.getScreenX(), event.getScreenY());
     }
 }

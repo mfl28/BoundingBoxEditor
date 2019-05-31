@@ -29,12 +29,12 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
         setFixedCellSize(20);
 
         getStyleClass().add(BOUNDING_BOX_TREE_VIEW_STYLE);
-        setUpInternalListeners();
     }
 
     @Override
     public void reset() {
         setRoot(new TreeItem<>());
+        getSelectionModel().clearSelection();
     }
 
     public List<BoundingBoxData> extractCurrentBoundingBoxData() {
@@ -43,6 +43,10 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
                 .flatMap(Collection::stream)
                 .map(child -> treeItemToBoundingBoxData((BoundingBoxTreeItem) child))
                 .collect(Collectors.toList());
+    }
+
+    public boolean isAutoHideNonSelected() {
+        return autoHideNonSelected;
     }
 
     void setAutoHideNonSelected(boolean autoHideNonSelected) {
@@ -82,7 +86,6 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
     void attachBoundingBoxTreeItemToCategoryTreeItem(BoundingBoxTreeItem boundingBoxTreeItem, CategoryTreeItem categoryTreeItem) {
         boundingBoxTreeItem.setId(categoryTreeItem.getChildren().size() + 1);
         categoryTreeItem.getChildren().add(boundingBoxTreeItem);
-        getSelectionModel().select(boundingBoxTreeItem);
     }
 
     private void constructTreeFromBoundingBoxData(TreeItem<BoundingBoxView> root, BoundingBoxData boundingBoxData, ImageMetaData metaData) {
@@ -93,7 +96,9 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
             root.getChildren().add(categoryTreeItem);
         }
 
-        BoundingBoxTreeItem newTreeItem = new BoundingBoxTreeItem(BoundingBoxView.fromData(boundingBoxData, metaData));
+        BoundingBoxView newBoundingBoxView = BoundingBoxView.fromData(boundingBoxData, metaData);
+        BoundingBoxTreeItem newTreeItem = new BoundingBoxTreeItem(newBoundingBoxView);
+        newBoundingBoxView.setTreeItem(newTreeItem);
 
         attachBoundingBoxTreeItemToCategoryTreeItem(newTreeItem, categoryTreeItem);
 
@@ -118,6 +123,7 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
 
     private void createTreeItemFromBoundingBoxView(TreeItem<BoundingBoxView> root, BoundingBoxView boundingBox) {
         BoundingBoxTreeItem boundingBoxTreeItem = new BoundingBoxTreeItem(boundingBox);
+        boundingBox.setTreeItem(boundingBoxTreeItem);
         CategoryTreeItem parentCategoryTreeItem = findParentCategoryTreeItemForCategory(root, boundingBox.getBoundingBoxCategory());
 
         if(parentCategoryTreeItem != null) {
@@ -127,30 +133,6 @@ public class BoundingBoxExplorerView extends TreeView<BoundingBoxView> implement
             root.getChildren().add(categoryTreeItem);
             attachBoundingBoxTreeItemToCategoryTreeItem(boundingBoxTreeItem, categoryTreeItem);
         }
-    }
-
-    private void setUpInternalListeners() {
-        getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
-            if(oldValue instanceof BoundingBoxTreeItem) {
-                oldValue.getValue().setSelected(false);
-            }
-
-            if(autoHideNonSelected) {
-                getRoot().getChildren()
-                        .forEach(category -> category.getChildren()
-                                .stream()
-                                .map(child -> (BoundingBoxTreeItem) child)
-                                .forEach(child -> child.setIconToggledOn(false)));
-            }
-
-            if(newValue instanceof BoundingBoxTreeItem) {
-                newValue.getValue().setSelected(true);
-
-                if(autoHideNonSelected) {
-                    ((BoundingBoxTreeItem) newValue).setIconToggledOn(true);
-                }
-            }
-        }));
     }
 
     private static class BoundingBoxTreeItemIterator implements Iterator<TreeItem<BoundingBoxView>> {

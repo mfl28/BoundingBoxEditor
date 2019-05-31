@@ -119,29 +119,80 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private BoundingBoxData parseBoundingBoxElement(Element objectElement) {
-        String categoryName = parseTextElement(objectElement, "name");
-        List<String> tags = parseTags(objectElement);
-        double xMin = parseDoubleElement(objectElement, "xmin");
-        double xMax = parseDoubleElement(objectElement, "xmax");
-        double yMin = parseDoubleElement(objectElement, "ymin");
-        double yMax = parseDoubleElement(objectElement, "ymax");
+        NodeList childElements = objectElement.getChildNodes();
+
+        String categoryName = "";
+        double xMin = Double.NaN;
+        double xMax = Double.NaN;
+        double yMin = Double.NaN;
+        double yMax = Double.NaN;
+        List<String> tags = new ArrayList<>();
+        List<BoundingBoxData> parts = new ArrayList<>();
+
+        for(int i = 0; i != childElements.getLength(); ++i) {
+            Node currentChild = childElements.item(i);
+
+            if(currentChild.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+
+            Element currentElement = (Element) currentChild;
+
+
+            switch(currentElement.getTagName()) {
+                case "name":
+                    categoryName = currentElement.getTextContent();
+
+                    if(categoryName == null || categoryName.isBlank()) {
+                        throw new InvalidAnnotationFileFormatException("Blank category-name");
+                    }
+
+                    break;
+                case "bndbox":
+                    xMin = parseDoubleElement(currentElement, "xmin");
+                    xMax = parseDoubleElement(currentElement, "xmax");
+                    yMin = parseDoubleElement(currentElement, "ymin");
+                    yMax = parseDoubleElement(currentElement, "ymax");
+                    break;
+                case "pose":
+                    String poseValue = currentElement.getTextContent();
+
+                    if(poseValue != null && !poseValue.toLowerCase().equals("unspecified")) {
+                        tags.add("pose: " + poseValue.toLowerCase());
+                    }
+                    break;
+                case "truncated":
+                    if(Integer.parseInt(currentElement.getTextContent()) == 1) {
+                        tags.add("truncated");
+                    }
+                    break;
+                case "occluded":
+                    if(Integer.parseInt(currentElement.getTextContent()) == 1) {
+                        tags.add("occluded");
+                    }
+                    break;
+                case "difficult":
+                    if(Integer.parseInt(currentElement.getTextContent()) == 1) {
+                        tags.add("difficult");
+                    }
+                    break;
+                case "part":
+                    parts.add(parseBoundingBoxElement(currentElement));
+                    break;
+                case "actions":
+                    tags.addAll(parseActions(currentElement));
+            }
+        }
+
+        if(categoryName.isEmpty()) {
+            throw new InvalidAnnotationFileFormatException("Missing category-name.");
+        }
 
         BoundingBoxCategory category = existingBoundingBoxCategories.computeIfAbsent(categoryName,
                 key -> new BoundingBoxCategory(key, ColorUtils.createRandomColor(random)));
 
-        NodeList partElements = objectElement.getElementsByTagName("part");
 
         BoundingBoxData boundingBoxData = new BoundingBoxData(category, xMin, yMin, xMax, yMax, tags);
-
-        List<BoundingBoxData> parts = new ArrayList<>();
-
-        for(int i = 0; i != partElements.getLength(); ++i) {
-            Node partNode = partElements.item(i);
-
-            if(partNode.getNodeType() == Node.ELEMENT_NODE) {
-                parts.add(parseBoundingBoxElement((Element) partNode));
-            }
-        }
 
         if(!parts.isEmpty()) {
             boundingBoxData.setParts(parts);
@@ -150,28 +201,25 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return boundingBoxData;
     }
 
-    private List<String> parseTags(Element objectElement) {
-        List<String> tags = new ArrayList<>();
+    private List<String> parseActions(Element element) {
+        NodeList childList = element.getChildNodes();
+        List<String> actions = new ArrayList<>();
 
-        String poseValue = parseOptionalTextElement(objectElement, "pose");
+        for(int i = 0; i != childList.getLength(); ++i) {
+            Node childNode = childList.item(i);
 
-        if(poseValue != null && !poseValue.toLowerCase().equals("unspecified")) {
-            tags.add("pose: " + poseValue.toLowerCase());
+            if(childNode.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+
+            Element childElement = (Element) childNode;
+
+            if(Integer.parseInt(childElement.getTextContent()) == 1) {
+                actions.add("action: " + childElement.getTagName());
+            }
         }
 
-        if(parseOptionalIntegerElement(objectElement, "truncated") != 0) {
-            tags.add("truncated");
-        }
-
-        if(parseOptionalIntegerElement(objectElement, "difficult") != 0) {
-            tags.add("difficult");
-        }
-
-        if(parseOptionalIntegerElement(objectElement, "occluded") != 0) {
-            tags.add("occluded");
-        }
-
-        return tags;
+        return actions;
     }
 
     private String parseTextElement(Document document, String tagName) throws InvalidAnnotationFileFormatException {
@@ -182,21 +230,6 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         }
 
         return textNode.getTextContent();
-    }
-
-    private String parseTextElement(Element element, String tagName) throws InvalidAnnotationFileFormatException {
-        Node textNode = element.getElementsByTagName(tagName).item(0);
-
-        if(textNode == null) {
-            throw new InvalidAnnotationFileFormatException("Missing \"" + tagName + "\"-element.");
-        }
-
-        return textNode.getTextContent();
-    }
-
-    private String parseOptionalTextElement(Element element, String tagName) throws InvalidAnnotationFileFormatException {
-        Node textNode = element.getElementsByTagName(tagName).item(0);
-        return textNode == null ? null : textNode.getTextContent();
     }
 
     private double parseDoubleElement(Document document, String tagName) throws InvalidAnnotationFileFormatException {
@@ -217,10 +250,5 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         }
 
         return Double.parseDouble(doubleNode.getTextContent());
-    }
-
-    private int parseOptionalIntegerElement(Element element, String tagName) throws InvalidAnnotationFileFormatException {
-        Node intNode = element.getElementsByTagName(tagName).item(0);
-        return intNode == null ? 0 : Integer.parseInt(intNode.getTextContent());
     }
 }

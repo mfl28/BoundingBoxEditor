@@ -4,6 +4,7 @@ import BoundingboxEditor.model.BoundingBoxCategory;
 import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.model.io.BoundingBoxData;
 import BoundingboxEditor.utils.MathUtils;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,6 +13,9 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.TreeItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -21,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class BoundingBoxView extends Rectangle implements View {
+public class BoundingBoxView extends Rectangle implements View, Toggle {
     private static final double DEFAULT_FILL_OPACITY = 0.4;
     private static final double SELECTED_FILL_OPACITY = 0.6;
     private static final BoundingBoxView NULL_BOUNDING_BOX_VIEW = new BoundingBoxView();
@@ -33,6 +37,8 @@ public class BoundingBoxView extends Rectangle implements View {
     private final Group nodeGroup = new Group(this);
     private final ObservableList<String> tags = FXCollections.observableArrayList();
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
+    private final ObjectProperty<ToggleGroup> toggleGroup = new SimpleObjectProperty<>();
+    private TreeItem<BoundingBoxView> treeItem;
 
     private BoundingBoxCategory boundingBoxCategory;
     private ImageMetaData imageMetaData;
@@ -71,6 +77,14 @@ public class BoundingBoxView extends Rectangle implements View {
         return boundingBoxCategory;
     }
 
+    public TreeItem<BoundingBoxView> getTreeItem() {
+        return treeItem;
+    }
+
+    public void setTreeItem(TreeItem<BoundingBoxView> treeItem) {
+        this.treeItem = treeItem;
+    }
+
     public void confineTo(final ReadOnlyObjectProperty<Bounds> bounds) {
         confinementBounds.bind(bounds);
 
@@ -92,6 +106,36 @@ public class BoundingBoxView extends Rectangle implements View {
         return false;
     }
 
+    @Override
+    public ToggleGroup getToggleGroup() {
+        return toggleGroup.get();
+    }
+
+    @Override
+    public void setToggleGroup(ToggleGroup toggleGroup) {
+        this.toggleGroup.set(toggleGroup);
+    }
+
+    @Override
+    public ObjectProperty<ToggleGroup> toggleGroupProperty() {
+        return toggleGroup;
+    }
+
+    @Override
+    public boolean isSelected() {
+        return selected.get();
+    }
+
+    @Override
+    public void setSelected(boolean selected) {
+        this.selected.set(selected);
+    }
+
+    @Override
+    public BooleanProperty selectedProperty() {
+        return selected;
+    }
+
     static BoundingBoxView fromData(BoundingBoxData boundingBoxData, ImageMetaData metaData) {
         BoundingBoxView boundingBox = new BoundingBoxView(boundingBoxData.getCategory(), metaData);
         boundingBox.setBoundsInImage(boundingBoxData.getBoundsInImage());
@@ -105,14 +149,6 @@ public class BoundingBoxView extends Rectangle implements View {
         this.confinementBounds.bind(confinementBoundsProperty);
         initializeFromBoundsInImage();
         addConfinementListener();
-    }
-
-    boolean isSelected() {
-        return selected.get();
-    }
-
-    void setSelected(boolean selected) {
-        this.selected.set(selected);
     }
 
     void setXYWH(double x, double y, double w, double h) {
@@ -197,12 +233,25 @@ public class BoundingBoxView extends Rectangle implements View {
     }
 
     private void addMoveFunctionality() {
-        this.setOnMouseEntered(event -> {
-            this.setCursor(Cursor.MOVE);
+        setOnMouseEntered(event -> {
+            setCursor(Cursor.MOVE);
+
+            if(!isSelected()) {
+                setFill(Color.web(getStroke().toString(), DEFAULT_FILL_OPACITY));
+            }
+
             event.consume();
         });
 
-        this.setOnMousePressed(event -> {
+        setOnMouseExited(event -> {
+            if(!isSelected()) {
+                setFill(Color.TRANSPARENT);
+            }
+        });
+
+        setOnMousePressed(event -> {
+            getToggleGroup().selectToggle(this);
+
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 dragAnchor.setFromPoint2D(eventXY.subtract(getX(), getY()));
@@ -210,7 +259,7 @@ public class BoundingBoxView extends Rectangle implements View {
             event.consume();
         });
 
-        this.setOnMouseDragged(event -> {
+        setOnMouseDragged(event -> {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 Point2D eventXY = new Point2D(event.getX(), event.getY());
                 Point2D newXY = eventXY.subtract(dragAnchor.getX(), dragAnchor.getY());
@@ -231,6 +280,13 @@ public class BoundingBoxView extends Rectangle implements View {
         selected.addListener(((observable, oldValue, newValue) ->
                 setFill(newValue ? Color.web(getStroke().toString(), SELECTED_FILL_OPACITY) : Color.TRANSPARENT)
         ));
+
+
+        nodeGroup.viewOrderProperty().bind(
+                Bindings.when(selectedProperty())
+                        .then(0)
+                        .otherwise(Bindings.min(widthProperty(), heightProperty()))
+        );
     }
 
     private enum CompassPoint {NW, N, NE, E, SE, S, SW, W}
@@ -258,7 +314,7 @@ public class BoundingBoxView extends Rectangle implements View {
 
             fillProperty().bind(rectangle.strokeProperty());
             managedProperty().bind(rectangle.managedProperty());
-            visibleProperty().bind(rectangle.visibleProperty());
+            visibleProperty().bind(rectangle.visibleProperty().and(rectangle.selectedProperty()));
 
             switch(compassPoint) {
                 case NW:

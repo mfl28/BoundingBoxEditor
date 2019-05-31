@@ -33,8 +33,7 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
         setFocusTraversable(false);
         setPlaceholder(new Label(PLACEHOLDER_TEXT));
         setId(BOUNDING_BOX_CATEGORY_SELECTOR_ID);
-
-
+        getSortOrder().add(nameColumn);
     }
 
     @Override
@@ -61,6 +60,8 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
         final TableColumn<BoundingBoxCategory, String> nameColumn = new TableColumn<>();
         nameColumn.setCellValueFactory(new PropertyValueFactory<>(TABLE_NAME_COLUMN_FACTORY_NAME));
         nameColumn.setEditable(true);
+        nameColumn.setSortable(true);
+        nameColumn.setSortType(TableColumn.SortType.ASCENDING);
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         return nameColumn;
     }

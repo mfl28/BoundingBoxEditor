@@ -7,7 +7,7 @@ import javafx.scene.layout.BorderPane;
 public class ImageShowerView extends BorderPane implements View {
     private static final String IMAGE_SHOWER_ID = "image-shower";
 
-    private final NavigationBarView navigationBar = new NavigationBarView();
+    private final ImageToolBarView navigationBar = new ImageToolBarView();
     private final ImagePaneView imagePane = new ImagePaneView();
 
     ImageShowerView() {
@@ -20,7 +20,7 @@ public class ImageShowerView extends BorderPane implements View {
     }
 
 
-    public NavigationBarView getNavigationBar() {
+    public ImageToolBarView getNavigationBar() {
         return navigationBar;
     }
 

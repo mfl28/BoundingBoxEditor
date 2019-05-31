@@ -11,6 +11,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -36,15 +37,20 @@ public class ImagePaneView extends StackPane implements View {
     private final ObjectProperty<BoundingBoxCategory> selectedCategory = new SimpleObjectProperty<>(null);
     private final Group boundingBoxGroup = new Group();
     private final ObservableList<BoundingBoxView> currentBoundingBoxes = FXCollections.observableArrayList();
-    private BoundingBoxView initializerBoundingBox = new BoundingBoxView(null, null);
+    private final BoundingBoxView initializerBoundingBox = new BoundingBoxView(null, null);
+
+    private final ToggleGroup boundingBoxSelectionGroup = new ToggleGroup();
 
     ImagePaneView() {
-        getChildren().addAll(imageView, initializerBoundingBox.getNodeGroup(), boundingBoxGroup, progressIndicator);
+        getChildren().addAll(imageView, boundingBoxGroup, initializerBoundingBox.getNodeGroup(), progressIndicator);
         getStyleClass().add(IMAGE_PANE_STYLE);
 
         boundingBoxGroup.setManaged(false);
         progressIndicator.setVisible(false);
 
+        // initializer is not subjected to the normal BoundingBoxView view-order,
+        // instead it will always be drawn on top of all other boxes (if it is visible).
+        initializerBoundingBox.getNodeGroup().viewOrderProperty().unbind();
         initializerBoundingBox.confineTo(imageView.boundsInParentProperty());
 
         setUpImageView();
@@ -71,6 +77,14 @@ public class ImagePaneView extends StackPane implements View {
 
     public BoundingBoxView getBoundingBoxInitializer() {
         return initializerBoundingBox;
+    }
+
+    public Group getBoundingBoxGroup() {
+        return boundingBoxGroup;
+    }
+
+    public ToggleGroup getBoundingBoxSelectionGroup() {
+        return boundingBoxSelectionGroup;
     }
 
     void addBoundingBoxesToView(Collection<? extends BoundingBoxView> boundingBoxes) {
@@ -114,7 +128,6 @@ public class ImagePaneView extends StackPane implements View {
     }
 
     void updateImageFromFile(final File imageFile) {
-        // FIXME: Image loading does not keep up (ie the wrong image is loaded) when using  pressed up/down keys to quickly iterate through images in image gallery.
         currentImageObject.set(new Image(imageFile.toURI().toString(), true));
 
         resetProgressIndicatorAnimation();

@@ -8,10 +8,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
+import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Transform;
 import javafx.util.Callback;
@@ -85,6 +82,40 @@ class WorkspaceView extends SplitPane implements View {
     private void setUpInternalListeners() {
         managedProperty().bind(visibleProperty());
 
+        getImageShower().getImagePane().setOnMousePressed(event -> {
+            if(event.getButton().equals(MouseButton.SECONDARY)) {
+                getProjectSidePanel().getBoundingBoxExplorer().getSelectionModel().clearSelection();
+            }
+        });
+
+        getProjectSidePanel().getBoundingBoxExplorer().getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
+            if(getProjectSidePanel().getBoundingBoxExplorer().isAutoHideNonSelected()) {
+                getProjectSidePanel().getBoundingBoxExplorer().getRoot().getChildren()
+                        .forEach(category -> category.getChildren()
+                                .stream()
+                                .map(child -> (BoundingBoxTreeItem) child)
+                                .forEach(child -> child.setIconToggledOn(false)));
+            }
+
+            if(newValue instanceof BoundingBoxTreeItem) {
+                getProjectSidePanel().getBoundingBoxExplorer().scrollTo(getProjectSidePanel().getBoundingBoxExplorer().getRow(newValue));
+                getImageShower().getImagePane().getBoundingBoxSelectionGroup().selectToggle(newValue.getValue());
+
+                if(getProjectSidePanel().getBoundingBoxExplorer().isAutoHideNonSelected()) {
+                    ((BoundingBoxTreeItem) newValue).setIconToggledOn(true);
+                }
+            } else {
+                getImageShower().getImagePane().getBoundingBoxSelectionGroup().selectToggle(null);
+            }
+
+        }));
+
+        getImageShower().getImagePane().getBoundingBoxSelectionGroup().selectedToggleProperty().addListener(((observable, oldValue, newValue) -> {
+            if(newValue != null) {
+                getProjectSidePanel().getBoundingBoxExplorer().getSelectionModel().select(((BoundingBoxView) newValue).getTreeItem());
+            }
+        }));
+
         imageShower.getImagePane().getCurrentBoundingBoxes().addListener((ListChangeListener<BoundingBoxView>) c -> {
             while(c.next()) {
                 if(c.wasAdded()) {
@@ -110,6 +141,8 @@ class WorkspaceView extends SplitPane implements View {
         });
 
         imageShower.getImagePane().selectedCategoryProperty().bind(projectSidePanel.getCategorySelector().getSelectionModel().selectedItemProperty());
+
+
     }
 
     private void setBoundingBoxExplorerCellFactory() {
@@ -125,7 +158,6 @@ class WorkspaceView extends SplitPane implements View {
                         final TreeItem<BoundingBoxView> treeItem = cell.getTreeItem();
 
                         if(treeItem instanceof CategoryTreeItem) {
-//
                             if(treeItem.getChildren().stream().allMatch(TreeItem::isLeaf)) {
                                 imageShower.getImagePane().removeAllFromCurrentBoundingBoxes(
                                         treeItem.getChildren().stream()
@@ -155,6 +187,8 @@ class WorkspaceView extends SplitPane implements View {
                                 parentTreeItem.getParent().getChildren().remove(parentTreeItem);
                             }
                         }
+
+                        getProjectSidePanel().getBoundingBoxExplorer().getSelectionModel().clearSelection();
                     }
                 });
 
@@ -251,7 +285,7 @@ class WorkspaceView extends SplitPane implements View {
                     if(thisItem == null) {
                         thisItem = boundingBoxExplorer.getRoot();
                     }
-                    //add to new location
+                    // add to new location
                     CategoryTreeItem newParentItem = boundingBoxExplorer.findParentCategoryTreeItemForCategory(thisItem, draggedItemCategory);
 
                     if(newParentItem == null) {
