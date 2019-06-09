@@ -25,6 +25,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * Implements the saving of image-annotations to xml-files using the
+ * 'PASCAL Visual Object Classes (Pascal VOC)'-format.
+ *
+ * @see <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC</a>
+ */
 public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
     private static final String ROOT_ELEMENT_NAME = "annotation";
@@ -51,32 +57,36 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private Path saveFolderPath;
 
     @Override
-    public IOResult save(final Collection<ImageAnnotationDataElement> dataSet, final Path path, final DoubleProperty progress) {
+    public IOResult save(Collection<ImageAnnotation> annotations, Path saveFolderPath, DoubleProperty progress) {
         long startTime = System.nanoTime();
-        this.saveFolderPath = path;
+        this.saveFolderPath = saveFolderPath;
 
-        List<IOResult.ErrorTableEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
+        List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
-        int totalNrOfAnnotations = dataSet.size();
+        int totalNrOfAnnotations = annotations.size();
         AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
 
 
-        dataSet.parallelStream().forEach(annotation -> {
+        annotations.parallelStream().forEach(annotation -> {
             try {
                 createXmlFileFromImageAnnotationDataElement(annotation);
             } catch(TransformerException | ParserConfigurationException e) {
-                unParsedFileErrorMessages.add(new IOResult.ErrorTableEntry(annotation.getImageFileName(), e.getMessage()));
+                unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
             }
 
             progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrOfAnnotations);
         });
         long duration = System.nanoTime() - startTime;
 
-        return new IOResult(dataSet.size() - unParsedFileErrorMessages.size(),
-                TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS), unParsedFileErrorMessages);
+        return new IOResult(
+                IOResult.OperationType.ANNOTATION_SAVING,
+                annotations.size() - unParsedFileErrorMessages.size(),
+                TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS),
+                unParsedFileErrorMessages
+        );
     }
 
-    private void createXmlFileFromImageAnnotationDataElement(final ImageAnnotationDataElement dataElement) throws TransformerException, ParserConfigurationException {
+    private void createXmlFileFromImageAnnotationDataElement(final ImageAnnotation dataElement) throws TransformerException, ParserConfigurationException {
         final Document document = documentBuilderFactory.newDocumentBuilder().newDocument();
         final Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -86,7 +96,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         appendHeaderFromImageAnnotationDataElement(document, annotationElement, dataElement);
 
-        dataElement.getBoundingBoxes().forEach(boundingBox ->
+        dataElement.getBoundingBoxData().forEach(boundingBox ->
                 annotationElement.appendChild(createXmlElementFromBoundingBox(document, BOUNDING_BOX_ENTRY_ELEMENT_NAME, boundingBox)));
 
         DOMSource domSource = new DOMSource(document);
@@ -104,7 +114,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         transformer.transform(domSource, streamResult);
     }
 
-    private void appendHeaderFromImageAnnotationDataElement(final Document document, final Node root, final ImageAnnotationDataElement dataElement) {
+    private void appendHeaderFromImageAnnotationDataElement(final Document document, final Node root, final ImageAnnotation dataElement) {
         root.appendChild(createStringValueElement(document, FOLDER_ELEMENT_NAME, dataElement.getContainingFolderName()));
         root.appendChild(createStringValueElement(document, FILENAME_ELEMENT_NAME, dataElement.getImageFileName()));
 

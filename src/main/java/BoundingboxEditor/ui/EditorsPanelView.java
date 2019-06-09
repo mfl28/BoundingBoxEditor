@@ -3,16 +3,13 @@ package BoundingboxEditor.ui;
 import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.utils.ColorUtils;
 import BoundingboxEditor.utils.UiUtils;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-import java.util.Random;
-
-public class ProjectSidePanelView extends VBox implements View {
+public class EditorsPanelView extends VBox implements View {
     private static final String CLASS_SELECTOR_LABEL_TEXT = "Category Editor";
     private static final String SEARCH_CATEGORY_PROMPT_TEXT = "Search Category";
     private static final String BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT = "Add";
@@ -20,36 +17,33 @@ public class ProjectSidePanelView extends VBox implements View {
     private static final String BOUNDING_BOX_NAME_TEXT_FIELD_STYLE = "bounding-box-name-text-field";
     private static final String BOUNDING_BOX_COLOR_PICKER_STYLE = "bounding-box-color-picker";
     private static final String OBJECT_SELECTOR_LABEL_TEXT = "Object Editor";
-    private static final int CATEGORY_SEARCH_BOX_SPACING = 10;
-    private static final int SIDE_PANEL_SPACING = 5;
-    private static final String HIDE_ICON_PATH = "/icons/hide.png";
-    private static final String SHOW_ICON_PATH = "/icons/show.png";
-    private static final String EXPAND_ICON_PATH = "/icons/expand.png";
-    private static final String COLLAPSE_ICON_PATH = "/icons/collapse.png";
     private static final String CATEGORY_INPUT_FIELD_PROMPT_TEXT = "Category Name";
     private static final String PROJECT_SIDE_PANEL_ID = "project-side-panel";
     private static final String CATEGORY_INPUT_FIELD_ID = "category-input-field";
     private static final String ADD_BUTTON_ID = "add-button";
     private static final String TAG_EDITOR_LABEL_TEXT = "Tag Editor";
-    private static final String AUTO_SHOW_ICON_PATH = "/icons/auto-show.png";
-    private static final String AUTO_HIDE_ICON_PATH = "/icons/auto-hide.png";
     private static final String BOUNDING_BOX_EXPLORER_TOP_PANEL_ID = "bounding-box-explorer-top-panel";
+    private static final String VISIBILITY_TOGGLE_BUTTON_ID = "visibility-toggle-button";
+    private static final String AUTO_SHOW_TOGGLE_BUTTON_ID = "auto-show-toggle-button";
+    private static final String EXPANSION_TOGGLE_BUTTON_ID = "expansion-toggle-button";
+    private static final String SEARCH_ICON_ID = "search-icon";
+    private static final String SEARCH_ICON_LABEL_ID = "search-icon-label";
+    private static final String CATEGORY_SELECTOR_TOP_PANEL_ID = "category-selector-top-panel";
 
     private final TextField categorySearchField = new TextField();
-    private final BoundingBoxCategorySelectorView categorySelector = new BoundingBoxCategorySelectorView();
+    private final BoundingBoxCategoryTableView categorySelector = new BoundingBoxCategoryTableView();
     private final ColorPicker categoryColorPicker = new ColorPicker();
     private final TextField categoryNameTextField = new TextField();
     private final Button addCategoryButton = new Button(BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT);
 
-    private final BoundingBoxExplorerView boundingBoxExplorer = new BoundingBoxExplorerView();
-    //private final ToggleButton sortCategoryToggle = new ToggleIconButton();
-    private final ToggleButton visibilityToggle = new ToggleIconButton("visibility-toggle-button");
-    private final ToggleButton autoShowToggle = new ToggleIconButton("auto-show-toggle-button");
-    private final ToggleButton expansionToggle = new ToggleIconButton("expansion-toggle-button");
+    private final BoundingBoxTreeView boundingBoxExplorer = new BoundingBoxTreeView();
+    private final ToggleButton visibilityToggle = new ToggleIconButton(VISIBILITY_TOGGLE_BUTTON_ID);
+    private final ToggleButton autoShowToggle = new ToggleIconButton(AUTO_SHOW_TOGGLE_BUTTON_ID);
+    private final ToggleButton expansionToggle = new ToggleIconButton(EXPANSION_TOGGLE_BUTTON_ID);
 
-    private final BoundingBoxTagEditorView tagEditor = new BoundingBoxTagEditorView();
+    private final BoundingBoxTagScrollPaneView tagEditor = new BoundingBoxTagScrollPaneView();
 
-    ProjectSidePanelView() {
+    EditorsPanelView() {
         getChildren().addAll(
                 new Label(CLASS_SELECTOR_LABEL_TEXT),
                 createCategorySelectorTopPanel(),
@@ -76,7 +70,7 @@ public class ProjectSidePanelView extends VBox implements View {
         return addCategoryButton;
     }
 
-    public BoundingBoxExplorerView getBoundingBoxExplorer() {
+    public BoundingBoxTreeView getBoundingBoxExplorer() {
         return boundingBoxExplorer;
     }
 
@@ -92,7 +86,7 @@ public class ProjectSidePanelView extends VBox implements View {
         boundingBoxExplorer.reset();
     }
 
-    BoundingBoxCategorySelectorView getCategorySelector() {
+    BoundingBoxCategoryTableView getCategorySelector() {
         return categorySelector;
     }
 
@@ -104,21 +98,25 @@ public class ProjectSidePanelView extends VBox implements View {
         return categoryColorPicker;
     }
 
+    TextField getTagInputField() {
+        return tagEditor.getTagInputField();
+    }
+
     private HBox createCategorySelectorTopPanel() {
         HBox.setHgrow(categorySearchField, Priority.ALWAYS);
 
         categorySearchField.setPromptText(SEARCH_CATEGORY_PROMPT_TEXT);
         categorySearchField.setFocusTraversable(false);
 
-        Region searchIcon = new Region();
-        searchIcon.setId("search-icon");
-        Label iconLabel = new Label();
-        iconLabel.setGraphic(searchIcon);
-        iconLabel.setId("search-icon-label");
+        Region categorySearchIcon = new Region();
+        categorySearchIcon.setId(SEARCH_ICON_ID);
 
-        HBox categorySelectorTopPanel = new HBox(iconLabel, categorySearchField);
-        categorySelectorTopPanel.setAlignment(Pos.CENTER);
-        categorySelectorTopPanel.setSpacing(0);
+        Label categorySearchIconLabel = new Label();
+        categorySearchIconLabel.setGraphic(categorySearchIcon);
+        categorySearchIconLabel.setId(SEARCH_ICON_LABEL_ID);
+
+        HBox categorySelectorTopPanel = new HBox(categorySearchIconLabel, categorySearchField);
+        categorySelectorTopPanel.setId(CATEGORY_SELECTOR_TOP_PANEL_ID);
 
         return categorySelectorTopPanel;
     }
@@ -141,7 +139,7 @@ public class ProjectSidePanelView extends VBox implements View {
                 autoShowToggle,
                 expansionToggle
         );
-        panel.setSpacing(10);
+
         panel.setId(BOUNDING_BOX_EXPLORER_TOP_PANEL_ID);
         return panel;
     }
@@ -149,8 +147,7 @@ public class ProjectSidePanelView extends VBox implements View {
     private void setUpStyles() {
         categoryNameTextField.getStyleClass().add(BOUNDING_BOX_NAME_TEXT_FIELD_STYLE);
         categoryColorPicker.getStyleClass().add(BOUNDING_BOX_COLOR_PICKER_STYLE);
-        categoryColorPicker.setValue(ColorUtils.createRandomColor(new Random()));
-        setSpacing(SIDE_PANEL_SPACING);
+        categoryColorPicker.setValue(ColorUtils.createRandomColor());
         getStyleClass().add(SIDE_PANEL_STYLE);
     }
 
@@ -183,12 +180,12 @@ public class ProjectSidePanelView extends VBox implements View {
 
         visibilityToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
                 boundingBoxExplorer.getRoot().getChildren().stream()
-                        .map(childItem -> (CategoryTreeItem) childItem)
+                        .map(childItem -> (BoundingBoxCategoryTreeItem) childItem)
                         .forEach(childItem -> childItem.setIconToggledOn(!newValue))
         ));
 
         autoShowToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
-                boundingBoxExplorer.setAutoHideNonSelected(newValue)));
+                boundingBoxExplorer.setOnlyShowSelectedBoundingBox(newValue)));
 
         boundingBoxExplorer.rootProperty().addListener((observable, oldValue, newValue) -> {
             visibilityToggle.disableProperty().unbind();

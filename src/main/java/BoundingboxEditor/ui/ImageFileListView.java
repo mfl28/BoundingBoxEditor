@@ -11,11 +11,20 @@ import javafx.scene.layout.VBox;
 
 import java.io.File;
 
-public class ImageGalleryView extends ListView<File> implements View {
+/**
+ * A UI-element used for displaying and navigating/selecting the loaded image-files.
+ *
+ * @see ListView
+ * @see View
+ */
+public class ImageFileListView extends ListView<File> implements View {
     private static final double REQUESTED_IMAGE_WIDTH = 150;
     private static final double REQUESTED_IMAGE_HEIGHT = 150;
 
-    ImageGalleryView() {
+    /**
+     * Creates a new image-file list UI-element.
+     */
+    ImageFileListView() {
         VBox.setVgrow(this, Priority.ALWAYS);
 
         setCellFactory(listView -> new ImageGalleryCell());
@@ -26,7 +35,7 @@ public class ImageGalleryView extends ListView<File> implements View {
 
         ImageGalleryCell() {
             setTextOverrun(OverrunStyle.CENTER_WORD_ELLIPSIS);
-            prefWidthProperty().bind(ImageGalleryView.this.widthProperty().subtract(30));
+            prefWidthProperty().bind(ImageFileListView.this.widthProperty().subtract(30));
             setMaxWidth(Control.USE_PREF_SIZE);
         }
 
@@ -46,7 +55,7 @@ public class ImageGalleryView extends ListView<File> implements View {
                     currentImage.cancel();
                 }
                 // If this cell's ImageView does not contain an image or contains an image different to the
-                // image corresponding to the update's file, then update the image (i.e. set the image and start background-loading).
+                // image corresponding to this update's file, then update the image (i.e. set the image and start background-loading).
                 if(currentImage == null || !currentImage.getUrl().equals(item.toURI().toString())) {
                     imageView.setImage(new Image(item.toURI().toString(), REQUESTED_IMAGE_WIDTH, REQUESTED_IMAGE_HEIGHT,
                             true, false, true));
@@ -56,5 +65,4 @@ public class ImageGalleryView extends ListView<File> implements View {
             }
         }
     }
-
 }

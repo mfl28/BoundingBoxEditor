@@ -31,7 +31,7 @@ import java.util.concurrent.TimeoutException;
 @ExtendWith(ApplicationExtension.class)
 public class BoundingBoxAppTestBase {
     private static final double INITIAL_WINDOW_SCALE = 0.75;
-    private static final String STYLESHEET_PATH = "/stylesheets/styles.css";
+    private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
 
     protected Controller controller;
     protected MainView mainView;

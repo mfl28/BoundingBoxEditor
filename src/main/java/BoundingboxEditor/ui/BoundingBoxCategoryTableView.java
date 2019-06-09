@@ -2,37 +2,47 @@ package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.model.BoundingBoxCategory;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.paint.Color;
 
-public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCategory> implements View {
-    private static final String TABLE_NAME_COLUMN_FACTORY_NAME = "name";
-    private static final int TABLE_VIEW_COLOR_COLUMN_WIDTH = 5;
-    private static final int TABLE_VIEW_DELETE_COLUMN_WIDTH = 19;
-    private static final String TABLE_VIEW_STYLE = "noheader-table-view";
+/**
+ * The bounding-box category-table UI-element. Shows information about the currently existing {@link BoundingBoxCategory} objects
+ * such as color and name. Each category row-entry in the table also includes a button to delete the corresponding category.
+ *
+ * @see TableView
+ * @see View
+ */
+public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory> implements View {
     private static final String PLACEHOLDER_TEXT = "No categories";
-    private static final String BOUNDING_BOX_CATEGORY_SELECTOR_ID = "category-selector";
+    private static final String TABLE_NAME_COLUMN_FACTORY_NAME = "name";
+    private static final String TABLE_VIEW_STYLE = "no-header-table-view";
+    private static final int TABLE_VIEW_COLOR_COLUMN_WIDTH = 5;
+    private static final int TABLE_VIEW_DELETE_COLUMN_WIDTH = 18;
+    private static final String BOUNDING_BOX_CATEGORY_TABLE_VIEW_ID = "category-selector";
 
     private final TableColumn<BoundingBoxCategory, BoundingBoxCategory> deleteColumn = createDeleteColumn();
+    private final TableColumn<BoundingBoxCategory, Color> colorColumn = createColorColumn();
     private final TableColumn<BoundingBoxCategory, String> nameColumn = createNameColumn();
 
-    BoundingBoxCategorySelectorView() {
-        getColumns().add(createColorColumn());
+    /**
+     * Creates a new bounding-box category table UI-element.
+     */
+    BoundingBoxCategoryTableView() {
+        getColumns().add(colorColumn);
         getColumns().add(nameColumn);
         getColumns().add(deleteColumn);
 
         getStyleClass().add(TABLE_VIEW_STYLE);
+        setId(BOUNDING_BOX_CATEGORY_TABLE_VIEW_ID);
         setEditable(true);
-        setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         setFocusTraversable(false);
         setPlaceholder(new Label(PLACEHOLDER_TEXT));
-        setId(BOUNDING_BOX_CATEGORY_SELECTOR_ID);
         getSortOrder().add(nameColumn);
     }
 
@@ -41,8 +51,31 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
         nameColumn.setOnEditCommit(controller::onSelectorCellEditEvent);
     }
 
+    /**
+     * Returns the column containing the category-delete-button.
+     *
+     * @return the table column
+     */
     public TableColumn<BoundingBoxCategory, BoundingBoxCategory> getDeleteColumn() {
         return deleteColumn;
+    }
+
+    /**
+     * Returns a boolean indicating if a category is currently selected.
+     *
+     * @return true if a category is currently selected, otherwise false
+     */
+    public boolean isCategorySelected() {
+        return !getSelectionModel().isEmpty();
+    }
+
+    /**
+     * Returns the currently selected category.
+     *
+     * @return the selected category
+     */
+    public BoundingBoxCategory getSelectedCategory() {
+        return getSelectionModel().getSelectedItem();
     }
 
     private TableColumn<BoundingBoxCategory, Color> createColorColumn() {
@@ -55,15 +88,42 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
     }
 
     private TableColumn<BoundingBoxCategory, String> createNameColumn() {
-        //FIXME: Sometimes the horizontal scrollbar is shown even though theoretically the width is correct
-        //       TableView seems to add some padding/border by default.
         final TableColumn<BoundingBoxCategory, String> nameColumn = new TableColumn<>();
         nameColumn.setCellValueFactory(new PropertyValueFactory<>(TABLE_NAME_COLUMN_FACTORY_NAME));
+        bindNameColumnWidth();
+
         nameColumn.setEditable(true);
         nameColumn.setSortable(true);
         nameColumn.setSortType(TableColumn.SortType.ASCENDING);
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         return nameColumn;
+    }
+
+    private void bindNameColumnWidth() {
+        // Looking up the needed width of the vertical scrollbar (if it is visible) is only possible
+        // after the Skin has been attached to the TableView.
+        ChangeListener<Skin<?>> skinChangeListener = new ChangeListener<>() {
+            @Override
+            public void changed(ObservableValue<? extends Skin<?>> observable, Skin<?> oldValue, Skin<?> newValue) {
+                skinProperty().removeListener(this);
+
+                ScrollBar verticalScrollBar = (ScrollBar) lookup(".scroll-bar:vertical");
+
+                // ".add(3)" is need because there seems to be some extra padding with a TableView
+                // which is not taken into account by its width-property. If left out, a horizontal scroll-bar
+                // is shown even though the widths of all columns add up perfectly.
+                nameColumn.prefWidthProperty().bind(widthProperty()
+                        .subtract(colorColumn.widthProperty()
+                                .add(deleteColumn.widthProperty())
+                                .add(3)
+                                .add(Bindings
+                                        .when(verticalScrollBar.visibleProperty())
+                                        .then(verticalScrollBar.widthProperty())
+                                        .otherwise(0))));
+            }
+        };
+
+        skinProperty().addListener(skinChangeListener);
     }
 
     private TableColumn<BoundingBoxCategory, BoundingBoxCategory> createDeleteColumn() {
@@ -85,6 +145,7 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
                 setStyle("-fx-background-color: transparent;");
             } else {
                 final BoundingBoxCategory row = getTableRow().getItem();
+
                 if(row != null) {
                     setStyle("-fx-background-color: " + rgbaFromColor(row.getColor()) + ";");
                 }
@@ -99,5 +160,4 @@ public class BoundingBoxCategorySelectorView extends TableView<BoundingBoxCatego
                     color.getOpacity());
         }
     }
-
 }

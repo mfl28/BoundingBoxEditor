@@ -24,7 +24,7 @@ public class ImageFolderOpenedTests extends BoundingBoxAppTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
-        controller.updateViewFromDirectory(new File(getClass().getResource(TESTIMAGE_FOLDER_PATH).toString().replace("file:", "")));
+        controller.loadImageFilesFromDirectory(new File(getClass().getResource(TESTIMAGE_FOLDER_PATH).toString().replace("file:", "")));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class ImageFolderOpenedTests extends BoundingBoxAppTestBase {
         enterNewCategory(robot, null);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(getTopModalStage(robot, "Category Input Error"), CoreMatchers.notNullValue());
+        verifyThat(getTopModalStage(robot, "Category Creation Error"), CoreMatchers.notNullValue());
 
         robot.clickOn("OK");
         WaitForAsyncUtils.waitForFxEvents();
@@ -115,7 +115,7 @@ public class ImageFolderOpenedTests extends BoundingBoxAppTestBase {
         enterNewCategory(robot, "Test");
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(getTopModalStage(robot, "Category Input Error"), CoreMatchers.notNullValue());
+        verifyThat(getTopModalStage(robot, "Category Creation Error"), CoreMatchers.notNullValue());
 
         robot.clickOn("OK");
         WaitForAsyncUtils.waitForFxEvents();
@@ -136,13 +136,13 @@ public class ImageFolderOpenedTests extends BoundingBoxAppTestBase {
         enterNewCategory(robot, "Test");
         WaitForAsyncUtils.waitForFxEvents();
         // There should be no error message
-        verifyThat(getTopModalStage(robot, "Category Input Error"), CoreMatchers.nullValue());
+        verifyThat(getTopModalStage(robot, "Category Creation Error"), CoreMatchers.nullValue());
 
         // Renaming a category to a name that already exits
         robot.clickOn("Test").write("Dummy").push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(getTopModalStage(robot, "Category Input Error"), CoreMatchers.notNullValue());
+        verifyThat(getTopModalStage(robot, "Category Creation Error"), CoreMatchers.notNullValue());
 
         robot.clickOn("OK");
 

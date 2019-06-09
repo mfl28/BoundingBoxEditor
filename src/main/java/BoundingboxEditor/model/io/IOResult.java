@@ -5,60 +5,143 @@ import javafx.beans.property.StringProperty;
 
 import java.util.List;
 
+/**
+ * Responsible for holding information about a finished IO-operation (e.g. loading or
+ * saving of image-annotations).
+ */
 public class IOResult {
-    private int nrSuccessfullyProcessedAnnotations;
+    private int nrSuccessfullyProcessedItems;
     private long timeTakenInMilliseconds;
-    private List<ErrorTableEntry> errors;
+    private List<ErrorInfoEntry> errorTableEntries;
+    private OperationType operationType;
 
-    public IOResult(int nrSuccessfullyProcessedAnnotations, long timeTakenInMilliseconds, List<ErrorTableEntry> errors) {
-        this.nrSuccessfullyProcessedAnnotations = nrSuccessfullyProcessedAnnotations;
+    /**
+     * Creates a new io-operation result.
+     *
+     * @param operationType                specifies the result's operation-type
+     * @param nrSuccessfullyProcessedItems the number of items (files/annotations) that
+     *                                     were successfully processed
+     * @param timeTakenInMilliseconds      the time (in milliseconds) that the operation took to complete
+     * @param errorTableEntries            a list of objects of type {@link ErrorInfoEntry} that contain information
+     *                                     about where and which errors occurred during the operation.
+     */
+    public IOResult(OperationType operationType, int nrSuccessfullyProcessedItems,
+                    long timeTakenInMilliseconds, List<ErrorInfoEntry> errorTableEntries) {
+        this.operationType = operationType;
+        this.nrSuccessfullyProcessedItems = nrSuccessfullyProcessedItems;
         this.timeTakenInMilliseconds = timeTakenInMilliseconds;
-        this.errors = errors;
+        this.errorTableEntries = errorTableEntries;
     }
 
-    public int getNrSuccessfullyProcessedAnnotations() {
-        return nrSuccessfullyProcessedAnnotations;
+    /**
+     * Returns the type of operation the result belongs to.
+     *
+     * @return the operation type
+     */
+    public OperationType getOperationType() {
+        return operationType;
     }
 
+    /**
+     * Returns the number of successfully processed items during the io-operation.
+     *
+     * @return the number of successfully processed items
+     */
+    public int getNrSuccessfullyProcessedItems() {
+        return nrSuccessfullyProcessedItems;
+    }
+
+    /**
+     * Returns the time (in milliseconds) that the operation took to complete.
+     *
+     * @return the duration in milliseconds
+     */
     public long getTimeTakenInMilliseconds() {
         return timeTakenInMilliseconds;
     }
 
-    public List<ErrorTableEntry> getErrorEntries() {
-        return errors;
+    /**
+     * Returns a list of objects containing information of where and which errors occurred during
+     * the operation.
+     *
+     * @return the list of error-entries
+     */
+    public List<ErrorInfoEntry> getErrorTableEntries() {
+        return errorTableEntries;
     }
 
-    public static class ErrorTableEntry {
-        private StringProperty fileName;
-        private StringProperty problemDescription;
+    public enum OperationType {ANNOTATION_IMPORT, ANNOTATION_SAVING}
 
-        public ErrorTableEntry(String fileName, String problemDescription) {
+    /**
+     * Holds information about an error that occurred during an io-operation.
+     */
+    public static class ErrorInfoEntry {
+        private StringProperty fileName;
+        private StringProperty errorDescription;
+
+        /**
+         * Creates a new error-information entry.
+         *
+         * @param fileName         the filename of the file in the processing of which the error occurred
+         * @param errorDescription a description of the error that occurred
+         */
+        public ErrorInfoEntry(String fileName, String errorDescription) {
             this.fileName = new SimpleStringProperty(fileName);
-            this.problemDescription = new SimpleStringProperty(problemDescription);
+            this.errorDescription = new SimpleStringProperty(errorDescription);
         }
 
+        /**
+         * Returns the filename of the file in the processing of which the error occurred.
+         *
+         * @return the filename
+         */
         public String getFileName() {
             return fileName.get();
         }
 
+        /**
+         * Set the filename of the file in the processing of which the error occurred.
+         *
+         * @param fileName
+         */
         public void setFileName(String fileName) {
             this.fileName.set(fileName);
         }
 
+        /**
+         * Returns the filename-property of the file in the processing of which the error occurred.
+         *
+         * @return filename-property
+         */
         public StringProperty fileNameProperty() {
             return fileName;
         }
 
-        public String getProblemDescription() {
-            return problemDescription.get();
+        /**
+         * Returns the description of the error that occurred.
+         *
+         * @return the error-description
+         */
+        public String getErrorDescription() {
+            return errorDescription.get();
         }
 
-        public void setProblemDescription(String problemDescription) {
-            this.problemDescription.set(problemDescription);
+        /**
+         * Sets a description of the error that occurred.
+         *
+         * @param errorDescription the error-description
+         */
+        public void setErrorDescription(String errorDescription) {
+            this.errorDescription.set(errorDescription);
         }
 
-        public StringProperty problemDescriptionProperty() {
-            return problemDescription;
+        /**
+         * Returns the description-property of the error that occurred.
+         *
+         * @return the error-description-property
+         */
+        public StringProperty errorDescriptionProperty() {
+            return errorDescription;
         }
     }
 }

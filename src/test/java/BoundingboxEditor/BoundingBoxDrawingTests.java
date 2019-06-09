@@ -22,7 +22,7 @@ public class BoundingBoxDrawingTests extends BoundingBoxAppTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
-        controller.updateViewFromDirectory(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).toString().replace("file:", "")));
+        controller.loadImageFilesFromDirectory(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).toString().replace("file:", "")));
     }
 
     @Test
@@ -38,7 +38,7 @@ public class BoundingBoxDrawingTests extends BoundingBoxAppTestBase {
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
 
-        Platform.runLater(() -> controller.updateViewFromDirectory(new File(getClass().
+        Platform.runLater(() -> controller.loadImageFilesFromDirectory(new File(getClass().
                 getResource(TEST_IMAGE_FOLDER_PATH_2).toString().replace("file:", ""))));
 
         WaitForAsyncUtils.waitForFxEvents();

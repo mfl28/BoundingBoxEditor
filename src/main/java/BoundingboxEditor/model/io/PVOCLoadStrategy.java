@@ -1,7 +1,5 @@
 package BoundingboxEditor.model.io;
 
-import BoundingboxEditor.exceptions.AnnotationToNonExistentImageException;
-import BoundingboxEditor.exceptions.InvalidAnnotationFileFormatException;
 import BoundingboxEditor.model.BoundingBoxCategory;
 import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.model.Model;
@@ -25,34 +23,41 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+/**
+ * Implements the loading of xml-files containing image-annotations in the
+ * 'PASCAL Visual Object Classes (Pascal VOC)'-format.
+ *
+ * @see <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC</a>
+ */
 public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
-    private static int MAX_DIRECTORY_DEPTH = 1;
+    private static final boolean INCLUDE_SUBDIRECTORIES = false;
     private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     private Set<String> fileNamesToLoad;
     private Map<String, BoundingBoxCategory> existingBoundingBoxCategories;
-    private Random random = new Random();
+    private Map<String, Integer> boundingBoxCountPerCategory;
 
     @Override
-    public IOResult load(final Model model, final Path path, final DoubleProperty progress) throws IOException {
+    public IOResult load(Model model, Path path, DoubleProperty progress) throws IOException {
         long startTime = System.nanoTime();
 
         this.fileNamesToLoad = model.getImageFileNameSet();
-        this.existingBoundingBoxCategories = new ConcurrentHashMap<>(
-                model.getBoundingBoxCategories().stream().collect(Collectors.toMap(BoundingBoxCategory::getName, Function.identity()))
-        );
+        this.boundingBoxCountPerCategory = new ConcurrentHashMap<>(model.getCategoryToAssignedBoundingBoxesCountMap());
+        this.existingBoundingBoxCategories = new ConcurrentHashMap<>(model.getBoundingBoxCategories().stream()
+                .collect(Collectors.toMap(BoundingBoxCategory::getName, Function.identity())));
 
-        List<File> annotationFiles = Files.walk(path, MAX_DIRECTORY_DEPTH)
+        List<File> annotationFiles = Files.walk(path, INCLUDE_SUBDIRECTORIES ? Integer.MAX_VALUE : 1)
                 .filter(pathItem -> pathItem.getFileName().toString().endsWith(".xml"))
                 .map(Path::toFile)
                 .collect(Collectors.toList());
 
-        List<IOResult.ErrorTableEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
+        List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
         int totalNrOfFiles = annotationFiles.size();
         AtomicInteger nrProcessedFiles = new AtomicInteger(0);
 
-        List<ImageAnnotationDataElement> imageAnnotations = annotationFiles.parallelStream()
+        List<ImageAnnotation> imageAnnotations = annotationFiles.parallelStream()
                 .map(file -> {
                     progress.set(1.0 * nrProcessedFiles.incrementAndGet() / totalNrOfFiles);
 
@@ -60,7 +65,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                         return parseAnnotationFile(file);
                     } catch(SAXException | IOException | InvalidAnnotationFileFormatException
                             | ParserConfigurationException | AnnotationToNonExistentImageException e) {
-                        unParsedFileErrorMessages.add(new IOResult.ErrorTableEntry(file.getName(), e.getMessage()));
+                        unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(file.getName(), e.getMessage()));
                         return null;
                     }
                 })
@@ -68,14 +73,20 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 .collect(Collectors.toList());
 
         model.getBoundingBoxCategories().setAll(existingBoundingBoxCategories.values());
+        model.getCategoryToAssignedBoundingBoxesCountMap().putAll(boundingBoxCountPerCategory);
         model.updateImageAnnotations(imageAnnotations);
 
         long estimatedTime = System.nanoTime() - startTime;
 
-        return new IOResult(imageAnnotations.size(), TimeUnit.MILLISECONDS.convert(estimatedTime, TimeUnit.NANOSECONDS), unParsedFileErrorMessages);
+        return new IOResult(
+                IOResult.OperationType.ANNOTATION_IMPORT,
+                imageAnnotations.size(),
+                TimeUnit.MILLISECONDS.convert(estimatedTime, TimeUnit.NANOSECONDS),
+                unParsedFileErrorMessages
+        );
     }
 
-    private ImageAnnotationDataElement parseAnnotationFile(File file) throws SAXException, IOException,
+    private ImageAnnotation parseAnnotationFile(File file) throws SAXException, IOException,
             InvalidAnnotationFileFormatException, ParserConfigurationException {
         final Document document = documentBuilderFactory.newDocumentBuilder().parse(file);
         document.normalize();
@@ -83,14 +94,13 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         ImageMetaData imageMetaData = parseImageMetaData(document);
 
         if(!fileNamesToLoad.contains(imageMetaData.getFileName())) {
-            throw new AnnotationToNonExistentImageException("The image file " +
-                    imageMetaData.getFileName() +
-                    " does not belong to the currently loaded images.");
+            throw new AnnotationToNonExistentImageException("The image file " + imageMetaData.getFileName()
+                    + " does not belong to the currently loaded images.");
         }
 
         List<BoundingBoxData> boundingBoxData = parseBoundingBoxData(document);
 
-        return new ImageAnnotationDataElement(imageMetaData, boundingBoxData);
+        return new ImageAnnotation(imageMetaData, boundingBoxData);
     }
 
     private ImageMetaData parseImageMetaData(Document document) throws InvalidAnnotationFileFormatException {
@@ -185,12 +195,17 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         }
 
         if(categoryName.isEmpty()) {
-            throw new InvalidAnnotationFileFormatException("Missing category-name.");
+            throw new InvalidAnnotationFileFormatException("Missing \"name\"-element.");
+        }
+
+        if(Stream.of(xMin, xMax, yMin, yMax).anyMatch(item -> item.isNaN())) {
+            throw new InvalidAnnotationFileFormatException("Missing \"bndbox\"-element.");
         }
 
         BoundingBoxCategory category = existingBoundingBoxCategories.computeIfAbsent(categoryName,
-                key -> new BoundingBoxCategory(key, ColorUtils.createRandomColor(random)));
+                key -> new BoundingBoxCategory(key, ColorUtils.createRandomColor()));
 
+        boundingBoxCountPerCategory.merge(category.getName(), 1, Integer::sum);
 
         BoundingBoxData boundingBoxData = new BoundingBoxData(category, xMin, yMin, xMax, yMax, tags);
 
@@ -250,5 +265,17 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         }
 
         return Double.parseDouble(doubleNode.getTextContent());
+    }
+
+    private static class AnnotationToNonExistentImageException extends RuntimeException {
+        AnnotationToNonExistentImageException(String message) {
+            super(message);
+        }
+    }
+
+    private static class InvalidAnnotationFileFormatException extends RuntimeException {
+        InvalidAnnotationFileFormatException(String message) {
+            super(message);
+        }
     }
 }

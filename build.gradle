@@ -1,3 +1,9 @@
+buildscript {
+    dependencies {
+        classpath 'com.github.fgiannesini.libsass.gradle.plugin:libsass-gradle-plugin:+'
+    }
+}
+
 plugins {
     id 'java'
     id 'application'
@@ -5,6 +11,8 @@ plugins {
     id 'pmd'
     id 'com.github.hierynomus.license' version '0.15.0'
 }
+
+apply plugin: 'com.github.fgiannesini.libsass.gradle.plugin'
 
 version '1.0-SNAPSHOT'
 
@@ -46,6 +54,15 @@ javafx {
 test {
     useJUnitPlatform()
 }
+
+libSassParameters {
+    inputFilePath = "$projectDir/src/main/resources/stylesheets/scss/styles.scss"
+    outputFilePath = "$projectDir/src/main/resources/stylesheets/css/styles.css"
+    watchedDirectoryPath = "scss"
+    sourceComments = true
+}
+
+compileJava.finalizedBy('compileLibSass')
 
 // Define the main class for the application
 mainClassName = 'BoundingboxEditor.BoundingBoxEditorApp'

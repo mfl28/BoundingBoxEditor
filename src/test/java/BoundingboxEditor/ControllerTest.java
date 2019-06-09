@@ -66,9 +66,9 @@ public class ControllerTest extends ApplicationTest {
         controller = new Controller(stage);
         mainView = controller.getView();
         final Scene scene = new Scene(mainView, WINDOW_WIDTH, WINDOW_HEIGHT);
-        scene.getStylesheets().add(getClass().getResource("/stylesheets/styles.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/stylesheets/css/styles.css").toExternalForm());
         // Add TestImages programmatically, as System Dialogue Windows (such as Directory Chooser Dialogue) cannot be interacted with in a consistent way.
-        controller.updateViewFromDirectory(new File(getClass().getResource("/TestImages").toString().replace("file:", "")));
+        controller.loadImageFilesFromDirectory(new File(getClass().getResource("/TestImages").toString().replace("file:", "")));
         stage.setScene(scene);
         stage.show();
     }
@@ -76,7 +76,7 @@ public class ControllerTest extends ApplicationTest {
 
     @Test
     void onAddButtonClicked_WhenNoCategoryNameEntered_ShouldShowErrorDialogue(FxRobot robot) {
-        robot.clickOn(mainView.getProjectSidePanel().getAddCategoryButton());
+        robot.clickOn(mainView.getEditorsPanelView().getAddCategoryButton());
         final Stage topModalStage = getTopModalStage(robot);
 
         verifyThat(topModalStage, CoreMatchers.notNullValue());
@@ -87,8 +87,8 @@ public class ControllerTest extends ApplicationTest {
     void onClickThroughImages_WhenEndsReached_ShouldProperlySetButtonDisabledProperty(FxRobot robot) throws Exception {
         waitUntilCurrentImageIsLoaded();
 
-        final Button nextButton = mainView.getNextButton();
-        final Button previousButton = mainView.getPreviousButton();
+        final Button nextButton = mainView.getNextImageNavigationButton();
+        final Button previousButton = mainView.getPreviousImageNavigationButton();
         // forward
         verifyThat(nextButton, NodeMatchers.isEnabled());
         verifyThat(previousButton, NodeMatchers.isDisabled());
@@ -131,7 +131,7 @@ public class ControllerTest extends ApplicationTest {
     void onOpenFolderClicked_WhenNoFolderLoaded_ShouldLoadSelectedFolder(FxRobot robot) throws Exception {
         waitUntilCurrentImageIsLoaded();
 
-        robot.clickOn(mainView.getNextButton());
+        robot.clickOn(mainView.getNextImageNavigationButton());
 
         waitUntilCurrentImageIsLoaded();
 
@@ -167,7 +167,7 @@ public class ControllerTest extends ApplicationTest {
 
         final BoundingBoxView boundingBoxView = mainView.getCurrentBoundingBoxes().get(0);
         // The boundingBoxView's category should be the same as the currently selected category in the category selector.
-        verifyThat(boundingBoxView.getBoundingBoxCategory(), CoreMatchers.equalTo(mainView.getBoundingBoxCategorySelectorView().getSelectionModel().getSelectedItem()));
+        verifyThat(boundingBoxView.getBoundingBoxCategory(), CoreMatchers.equalTo(mainView.getBoundingBoxCategoryTableView().getSelectionModel().getSelectedItem()));
 
         final Bounds selectionRectangleBounds = boundingBoxView.localToScreen(boundingBoxView.getBoundsInLocal());
 
@@ -183,7 +183,7 @@ public class ControllerTest extends ApplicationTest {
     void onAddNewBoundingBoxCategory_WhenFolderLoaded_ShouldDisplayAndSelectCategoryInTableView(FxRobot robot) {
         final String testName = "Dummy";
         enterNewCategory(robot, testName);
-        verifyThat(controller.getView().getBoundingBoxCategorySelectorView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
+        verifyThat(controller.getView().getBoundingBoxCategoryTableView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
     }
 
     @Test
@@ -203,7 +203,7 @@ public class ControllerTest extends ApplicationTest {
         //then
         verifyThat(topModalStage, CoreMatchers.notNullValue());
         verifyThat(topModalStage.getTitle(), CoreMatchers.equalTo("Category Input Error"));
-        verifyThat(controller.getView().getBoundingBoxCategorySelectorView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
+        verifyThat(controller.getView().getBoundingBoxCategoryTableView().getSelectionModel().getSelectedItem().getName(), CoreMatchers.equalTo(testName));
     }
 
     @Test
@@ -215,7 +215,7 @@ public class ControllerTest extends ApplicationTest {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        final List<TreeItem<BoundingBoxView>> categoryList = mainView.getProjectSidePanel().getBoundingBoxExplorer().getRoot().getChildren();
+        final List<TreeItem<BoundingBoxView>> categoryList = mainView.getEditorsPanelView().getBoundingBoxExplorer().getRoot().getChildren();
         // One category item in treeview
         verifyThat(categoryList.size(), CoreMatchers.equalTo(1));
 
@@ -251,7 +251,7 @@ public class ControllerTest extends ApplicationTest {
         enterNewCategory(robot, "Cat1");
         drawSelectionRectangleOnImageView(robot, new Point2D(0.1, 0.1), new Point2D(0.4, 0.4));
 
-        final List<BoundingBoxView> startChildRectangles = mainView.getImagePaneView().getChildren().stream()
+        final List<BoundingBoxView> startChildRectangles = mainView.getImagePane().getChildren().stream()
                 .filter(item -> item instanceof BoundingBoxView)
                 .map(item -> (BoundingBoxView) item)
                 .filter(item -> item.getBoundingBoxCategory() != null)
@@ -261,7 +261,7 @@ public class ControllerTest extends ApplicationTest {
 
         final BoundingBoxView expectedRectangle = startChildRectangles.get(0);
 
-        robot.clickOn(mainView.getNextButton());
+        robot.clickOn(mainView.getNextImageNavigationButton());
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -270,7 +270,7 @@ public class ControllerTest extends ApplicationTest {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.clickOn(mainView.getNextButton());
+        robot.clickOn(mainView.getNextImageNavigationButton());
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -279,7 +279,7 @@ public class ControllerTest extends ApplicationTest {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        final Button previousButton = mainView.getPreviousButton();
+        final Button previousButton = mainView.getPreviousImageNavigationButton();
         robot.clickOn(previousButton);
         waitUntilCurrentImageIsLoaded();
 
@@ -287,7 +287,7 @@ public class ControllerTest extends ApplicationTest {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
-        final List<TreeItem<BoundingBoxView>> categoryList = mainView.getProjectSidePanel().getBoundingBoxExplorer().getRoot().getChildren();
+        final List<TreeItem<BoundingBoxView>> categoryList = mainView.getEditorsPanelView().getBoundingBoxExplorer().getRoot().getChildren();
         // One category item in treeview
         verifyThat(categoryList.size(), CoreMatchers.equalTo(1));
 
@@ -302,7 +302,7 @@ public class ControllerTest extends ApplicationTest {
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingBoxes().get(0).getBoundingBoxCategory().getName(), CoreMatchers.equalTo("Cat1"));
 
-        final List<BoundingBoxView> childRectangles = mainView.getImagePaneView().getChildren().stream()
+        final List<BoundingBoxView> childRectangles = mainView.getImagePane().getChildren().stream()
                 .filter(item -> item instanceof BoundingBoxView)
                 .map(item -> (BoundingBoxView) item)
                 .filter(item -> item.getBoundingBoxCategory() != null)
@@ -375,8 +375,8 @@ public class ControllerTest extends ApplicationTest {
     }
 
     private void enterNewCategory(FxRobot robot, String categoryName) {
-        robot.clickOn(mainView.getProjectSidePanel().getCategoryNameTextField())
+        robot.clickOn(mainView.getEditorsPanelView().getCategoryNameTextField())
                 .write(categoryName)
-                .clickOn(mainView.getProjectSidePanel().getAddCategoryButton());
+                .clickOn(mainView.getEditorsPanelView().getAddCategoryButton());
     }
 }
