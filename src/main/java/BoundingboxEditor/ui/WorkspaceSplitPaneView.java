@@ -129,24 +129,40 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             }
         });
 
-        getEditorsPanel().getBoundingBoxExplorer().getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
+        getEditorsPanel().getBoundingBoxExplorer()
+                .getSelectionModel()
+                .selectedItemProperty()
+                .addListener(((observable, oldValue, newValue) -> {
             if(getEditorsPanel().getBoundingBoxExplorer().isOnlyShowSelectedBoundingBox()) {
-                getEditorsPanel().getBoundingBoxExplorer().getRoot().getChildren()
+                getEditorsPanel().getBoundingBoxExplorer()
+                        .getRoot()
+                        .getChildren()
                         .forEach(category -> category.getChildren()
                                 .stream()
                                 .map(child -> (BoundingBoxTreeItem) child)
                                 .forEach(child -> child.setIconToggledOn(false)));
             }
 
+                    if(oldValue instanceof BoundingBoxCategoryTreeItem) {
+                        oldValue.getChildren().forEach(child -> child.getValue().fillTransparent());
+                    }
+
             if(newValue instanceof BoundingBoxTreeItem) {
-                getEditorsPanel().getBoundingBoxExplorer().scrollTo(getEditorsPanel().getBoundingBoxExplorer().getRow(newValue));
-                getImageBoundingBoxEditor().getImagePane().getBoundingBoxSelectionGroup().selectToggle(newValue.getValue());
+                getEditorsPanel().getBoundingBoxExplorer()
+                        .scrollTo(getEditorsPanel().getBoundingBoxExplorer().getRow(newValue));
+                getImageBoundingBoxEditor().getImagePane()
+                        .getBoundingBoxSelectionGroup().selectToggle(newValue.getValue());
 
                 if(getEditorsPanel().getBoundingBoxExplorer().isOnlyShowSelectedBoundingBox()) {
                     ((BoundingBoxTreeItem) newValue).setIconToggledOn(true);
                 }
             } else {
-                getImageBoundingBoxEditor().getImagePane().getBoundingBoxSelectionGroup().selectToggle(null);
+                getImageBoundingBoxEditor().getImagePane()
+                        .getBoundingBoxSelectionGroup().selectToggle(null);
+
+                if(newValue != null) {
+                    newValue.getChildren().forEach(child -> child.getValue().fillOpaque());
+                }
             }
 
         }));
