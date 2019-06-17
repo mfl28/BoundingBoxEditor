@@ -1,7 +1,6 @@
-package BoundingboxEditor;
+package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
-import BoundingboxEditor.ui.MainView;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
@@ -29,14 +28,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @ExtendWith(ApplicationExtension.class)
-public class BoundingBoxAppTestBase {
+class BoundingBoxEditorTestBase {
     private static final double INITIAL_WINDOW_SCALE = 0.75;
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
 
-    protected Controller controller;
-    protected MainView mainView;
+    Controller controller;
+    MainView mainView;
 
-    protected static MenuItem getSubMenuItem(FxRobot robot, String menuText, String subMenuText) {
+    static MenuItem getSubMenuItem(FxRobot robot, String menuText, String subMenuText) {
         MenuBar menuBar = robot.lookup("#main-menu-bar").query();
 
         // Underscores in menu-item text are treated as mnemonics, as a convenience they are removed before checking for equality.
@@ -51,8 +50,8 @@ public class BoundingBoxAppTestBase {
                 .orElseThrow();
     }
 
-    // source: https://stackoverflow.com/questions/48565782/testfx-how-to-test-validation-dialogs-with-no-ids
-    protected static Stage getTopModalStage(FxRobot robot, String title) {
+    // Source: https://stackoverflow.com/a/48654878
+    static Stage getTopModalStage(FxRobot robot, String title) {
         // Get a list of windows but ordered from top[0] to bottom[n] ones.
         // It is needed to get the first found modal window.
         return (Stage) robot.listWindows()
@@ -64,14 +63,7 @@ public class BoundingBoxAppTestBase {
                 .orElse(null);
     }
 
-    protected Point2D getScreenPointFromImageViewRatios(Point2D ratios) {
-        final ImageView imageView = mainView.getImageView();
-        final Bounds imageViewScreenBounds = imageView.localToScreen(imageView.getBoundsInLocal());
-
-        return PointQueryUtils.atPositionFactors(imageViewScreenBounds, ratios);
-    }
-
-    protected void drawSelectionRectangleOnImageView(FxRobot robot, Point2D startPointRatios, Point2D endPointRatios) {
+    void drawBoundingBox(FxRobot robot, Point2D startPointRatios, Point2D endPointRatios) {
         Point2D startPoint = getScreenPointFromImageViewRatios(startPointRatios);
         Point2D endPoint = getScreenPointFromImageViewRatios(endPointRatios);
 
@@ -81,7 +73,7 @@ public class BoundingBoxAppTestBase {
                 .release(MouseButton.PRIMARY);
     }
 
-    protected void enterNewCategory(FxRobot robot, String categoryName) {
+    void enterNewCategory(FxRobot robot, String categoryName) {
         robot.clickOn("#category-input-field");
 
         if(categoryName != null) {
@@ -91,7 +83,7 @@ public class BoundingBoxAppTestBase {
         robot.clickOn("#add-button");
     }
 
-    protected void waitUntilCurrentImageIsLoaded() throws TimeoutException {
+    void waitUntilCurrentImageIsLoaded() throws TimeoutException {
         final Image image = mainView.getCurrentImage();
 
         WaitForAsyncUtils.waitForFxEvents();
@@ -114,6 +106,13 @@ public class BoundingBoxAppTestBase {
     @AfterEach
     void tearDown() throws TimeoutException {
         FxToolkit.hideStage();
+    }
+
+    private Point2D getScreenPointFromImageViewRatios(Point2D ratios) {
+        final ImageView imageView = mainView.getBoundingBoxEditorImageView();
+        final Bounds imageViewScreenBounds = imageView.localToScreen(imageView.getBoundsInLocal());
+
+        return PointQueryUtils.atPositionFactors(imageViewScreenBounds, ratios);
     }
 
     private Scene createSceneFromParent(final Parent parent) {

@@ -65,6 +65,11 @@ public class BoundingBoxCategory {
         return otherCategory.getName().equals(this.getName()) && otherCategory.getColor().equals(this.getColor());
     }
 
+    @Override
+    public String toString() {
+        return "BoundingBoxCategory[name=" + name.get() + ", color=" + color.get() + "]";
+    }
+
     /**
      * Returns the name of the bounding-box category.
      *

@@ -26,6 +26,22 @@ class BoundingBoxTreeItem extends TreeItem<BoundingBoxView> {
         setUpInternalListeners();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
+
+        if(!(obj instanceof BoundingBoxTreeItem)) {
+            return false;
+        }
+
+        BoundingBoxTreeItem other = (BoundingBoxTreeItem) obj;
+
+        return id == other.id && getValue().equals(other.getValue()) && getChildren().equals(other.getChildren());
+
+    }
+
     /**
      * Returns the toggle-state of the tree-item's toggle-square.
      *
@@ -43,8 +59,14 @@ class BoundingBoxTreeItem extends TreeItem<BoundingBoxView> {
      * @param toggledOn true to toggle on, false to toggle off
      */
     void setIconToggledOn(boolean toggledOn) {
-        if(toggledOn == isIconToggledOn()) {
-            return;
+        if(toggledOn != isIconToggledOn()) {
+            // If the toggle-state changes, update the parent-category-items's
+            // toggled children count.
+            if(toggledOn) {
+                ((BoundingBoxCategoryTreeItem) getParent()).incrementNrToggledOnChildren();
+            } else {
+                ((BoundingBoxCategoryTreeItem) getParent()).decrementNrToggledOnChildren();
+            }
         }
 
         toggleIcon.setToggledOn(toggledOn);
@@ -52,15 +74,8 @@ class BoundingBoxTreeItem extends TreeItem<BoundingBoxView> {
         getValue().setVisible(toggledOn);
         // A BoundingBoxTreeItem either does not have any children, or
         // every child is an instance of BoundingBoxCategoryTreeItem.
-        getChildren().stream()
-                .map(child -> (BoundingBoxCategoryTreeItem) child)
-                .forEach(child -> child.setIconToggledOn(toggledOn));
-        // Similarly the parent of a BoundingBoxTreeItem is always an instance of
-        // BoundingBoxCategoryTreeItem.
-        if(toggledOn) {
-            ((BoundingBoxCategoryTreeItem) getParent()).incrementNrToggledOnChildren();
-        } else {
-            ((BoundingBoxCategoryTreeItem) getParent()).decrementNrToggledOnChildren();
+        for(TreeItem<BoundingBoxView> child : getChildren()) {
+            ((BoundingBoxCategoryTreeItem) child).setIconToggledOn(toggledOn);
         }
     }
 

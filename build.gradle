@@ -5,11 +5,13 @@ buildscript {
 }
 
 plugins {
-    id 'java'
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.7'
     id 'pmd'
     id 'com.github.hierynomus.license' version '0.15.0'
+    id 'com.github.ben-manes.versions' version '0.21.0'
+    id 'org.beryx.jlink' version '2.10.4'
+    id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
 apply plugin: 'com.github.fgiannesini.libsass.gradle.plugin'
@@ -25,12 +27,12 @@ repositories {
 dependencies {
     // Junit (Unit testing)
     testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
-    
+
     // TestFX (UI testing)
     testCompile 'org.testfx:testfx-core:4.0.15-alpha'
     testCompile 'org.testfx:testfx-junit5:4.0.15-alpha'
 
-    // For ListOrderedMap: https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
+    // Commons Collections https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
     compile 'org.apache.commons:commons-collections4:4.3'
 
     // Commons Lang https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
@@ -39,16 +41,21 @@ dependencies {
     // ControlsFX https://mvnrepository.com/artifact/org.controlsfx/controlsfx
     compile 'org.controlsfx:controlsfx:11.0.0'
 
-    // Logback https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-    compile 'ch.qos.logback:logback-classic:1.2.3'
-
-    // SLF4J https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    // Logging
+    // Slf4j https://mvnrepository.com/artifact/org.slf4j/slf4j-api
     compile 'org.slf4j:slf4j-api:1.7.26'
+    // Logback Classic https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+    compile 'ch.qos.logback:logback-classic:1.2.3'
+    // Logback Core https://mvnrepository.com/artifact/ch.qos.logback/logback-core
+    compile 'ch.qos.logback:logback-core:1.2.3'
+
+    // Caffeine https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
+    compile 'com.github.ben-manes.caffeine:caffeine:2.7.0'
 }
 
 javafx {
     version = '12.0.1'
-    modules = [ 'javafx.controls' ]
+    modules = ['javafx.controls']
 }
 
 test {
@@ -64,5 +71,24 @@ libSassParameters {
 
 compileJava.finalizedBy('compileLibSass')
 
-// Define the main class for the application
-mainClassName = 'BoundingboxEditor.BoundingBoxEditorApp'
+mainClassName = "$moduleName/BoundingboxEditor.BoundingBoxEditorApp"
+
+jlink {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    launcher {
+        name = 'boundingboxeditor'
+    }
+
+    imageZip = project.file("${buildDir}/distributions/boundingboxeditor-${javafx.platform.classifier}.zip")
+
+    forceMerge('slf4j-api')
+}
+
+
+test {
+    jvmArgs '-Dtestfx.robot=awt'
+
+    moduleOptions {
+        runOnClasspath = true
+    }
+}

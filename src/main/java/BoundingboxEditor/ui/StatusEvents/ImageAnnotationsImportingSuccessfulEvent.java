@@ -13,7 +13,8 @@ public class ImageAnnotationsImportingSuccessfulEvent extends StatusEvent {
      */
     public ImageAnnotationsImportingSuccessfulEvent(IOResult ioResult) {
         super("Successfully imported annotations from "
-                + ioResult.getNrSuccessfullyProcessedItems() + " files in "
-                + String.format("%.3f", ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.");
+                + ioResult.getNrSuccessfullyProcessedItems() + " file" + (ioResult.getNrSuccessfullyProcessedItems() != 1 ? "s" : "")
+                + " in "
+                + secondsFormat.format(ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.");
     }
 }

@@ -9,6 +9,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Color;
 
 /**
@@ -25,10 +27,16 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
     private static final int TABLE_VIEW_COLOR_COLUMN_WIDTH = 5;
     private static final int TABLE_VIEW_DELETE_COLUMN_WIDTH = 18;
     private static final String BOUNDING_BOX_CATEGORY_TABLE_VIEW_ID = "category-selector";
+    private static final String NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET = BoundingBoxCategoryTableView.class
+            .getResource("/stylesheets/css/noCustomColorsPalette.css").toExternalForm();
 
     private final TableColumn<BoundingBoxCategory, BoundingBoxCategory> deleteColumn = createDeleteColumn();
     private final TableColumn<BoundingBoxCategory, Color> colorColumn = createColorColumn();
     private final TableColumn<BoundingBoxCategory, String> nameColumn = createNameColumn();
+
+    private final ColorPicker categoryColorPicker = new ColorPicker();
+    private final MenuItem colorChangeItem = new MenuItem("Color", categoryColorPicker);
+    private final ContextMenu contextMenu = new ContextMenu(colorChangeItem);
 
     /**
      * Creates a new bounding-box category table UI-element.
@@ -44,6 +52,8 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
         setFocusTraversable(false);
         setPlaceholder(new Label(PLACEHOLDER_TEXT));
         getSortOrder().add(nameColumn);
+        setContextMenu(contextMenu);
+        setUpInternalListeners();
     }
 
     @Override
@@ -76,6 +86,23 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
      */
     public BoundingBoxCategory getSelectedCategory() {
         return getSelectionModel().getSelectedItem();
+    }
+
+    private void setUpInternalListeners() {
+        // Due to a javafx-bug a null-pointer exception is thrown when clicking
+        // on the "Custom Color" hyperlink of the color-palette of a color-picker that is part of a menu-item.
+        // To remove the "Custom Color" hyperlink, a stylesheet needs to be loaded when the color-picker is requested,
+        // (and removed afterwards). See https://community.oracle.com/thread/2562936.
+
+        contextMenu.setOnAction(event -> {
+            getSelectedCategory().setColor(categoryColorPicker.getValue());
+            categoryColorPicker.getStylesheets().remove(NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET);
+        });
+
+        setOnContextMenuRequested(event -> {
+            categoryColorPicker.getStylesheets().add(NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET);
+            categoryColorPicker.setValue(getSelectedCategory().getColor());
+        });
     }
 
     private TableColumn<BoundingBoxCategory, Color> createColorColumn() {
@@ -139,25 +166,21 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
         @Override
         protected void updateItem(Color item, boolean empty) {
             super.updateItem(item, empty);
+
+            backgroundProperty().unbind();
+
             if(empty || getTableRow() == null) {
                 setText(null);
                 setGraphic(null);
-                setStyle("-fx-background-color: transparent;");
+                setBackground(null);
             } else {
-                final BoundingBoxCategory row = getTableRow().getItem();
+                final BoundingBoxCategory categoryItem = getTableRow().getItem();
 
-                if(row != null) {
-                    setStyle("-fx-background-color: " + rgbaFromColor(row.getColor()) + ";");
+                if(categoryItem != null) {
+                    backgroundProperty().bind(Bindings.createObjectBinding(() ->
+                            new Background(new BackgroundFill(categoryItem.getColor(), null, null)), categoryItem.colorProperty()));
                 }
             }
-        }
-
-        private String rgbaFromColor(Color color) {
-            return String.format("rgba(%d, %d, %d, %f)",
-                    (int) (255 * color.getRed()),
-                    (int) (255 * color.getGreen()),
-                    (int) (255 * color.getBlue()),
-                    color.getOpacity());
         }
     }
 }

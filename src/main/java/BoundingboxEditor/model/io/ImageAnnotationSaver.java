@@ -37,7 +37,7 @@ public class ImageAnnotationSaver {
     }
 
     /**
-     * Returns a property representing the progress of thesaving-operation which can be bound
+     * Returns a property representing the progress of the saving-operation which can be bound
      * to update the progress of a {@link javafx.concurrent.Service} performing the saving.
      *
      * @return the progress property

@@ -1,4 +1,4 @@
-package BoundingboxEditor;
+package BoundingboxEditor.ui;
 
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
@@ -12,7 +12,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.testfx.api.FxAssert.verifyThat;
 
-public class NoImageFolderOpenedTests extends BoundingBoxAppTestBase {
+class NoImageFolderOpenedTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
@@ -20,11 +20,11 @@ public class NoImageFolderOpenedTests extends BoundingBoxAppTestBase {
 
     @Test
     void onMenuItemsClicked_ShouldCorrectlyApplyVisibilityAndShowDialogueWindows(FxRobot robot) {
-        verifyNodeVisiblitities();
+        verifyNodeVisibilities();
         verifyMenuBarFunctionality(robot);
     }
 
-    private void verifyMenuBarFunctionality(FxRobot robot){
+    private void verifyMenuBarFunctionality(FxRobot robot) {
         robot.clickOn("File");
 
         WaitForAsyncUtils.waitForFxEvents();
@@ -37,11 +37,11 @@ public class NoImageFolderOpenedTests extends BoundingBoxAppTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        MenuItem saveItem = getSubMenuItem(robot, "File", "Save...");
+        MenuItem saveItem = getSubMenuItem(robot, "File", "Save Annotations...");
         assertTrue(saveItem.isVisible());
         assertFalse(saveItem.isDisable());
 
-        robot.clickOn("File").clickOn("Save...");
+        robot.clickOn("File").clickOn("Save Annotations...");
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -60,19 +60,19 @@ public class NoImageFolderOpenedTests extends BoundingBoxAppTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        MenuItem fitWindowItem = getSubMenuItem(robot, "View", "Fit Window");
+        MenuItem fitWindowItem = getSubMenuItem(robot, "View", "Maximize Images");
         assertTrue(fitWindowItem.isVisible());
         assertTrue(fitWindowItem.isDisable());
 
-        MenuItem imageExplorerItem = getSubMenuItem(robot, "View", "Image Explorer");
+        MenuItem imageExplorerItem = getSubMenuItem(robot, "View", "Show Images Panel");
         assertTrue(imageExplorerItem.isVisible());
         assertTrue(imageExplorerItem.isDisable());
     }
 
-    private void verifyNodeVisiblitities() {
+    private void verifyNodeVisibilities() {
         verifyThat("#main-menu-bar", NodeMatchers.isVisible());
         verifyThat("#work-space", NodeMatchers.isInvisible());
-        verifyThat("#status-panel", NodeMatchers.isVisible());
+        verifyThat("#status-panel", NodeMatchers.isInvisible());
     }
 
 }

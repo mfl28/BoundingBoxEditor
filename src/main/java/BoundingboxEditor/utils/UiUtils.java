@@ -18,4 +18,10 @@ public class UiUtils {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         return spacer;
     }
+
+    public static Pane createWidthBoundHSpacer(HBox node) {
+        final Pane spacer = new Pane();
+        spacer.prefWidthProperty().bind(node.widthProperty());
+        return spacer;
+    }
 }

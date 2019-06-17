@@ -15,6 +15,6 @@ public class ImageAnnotationsSavingSuccessfulEvent extends StatusEvent {
     public ImageAnnotationsSavingSuccessfulEvent(IOResult ioResult) {
         super("Successfully saved " + ioResult.getNrSuccessfullyProcessedItems() + " image-annotation"
                 + (ioResult.getNrSuccessfullyProcessedItems() != 1 ? "s" : "") + " in "
-                + String.format("%.3f", ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.");
+                + secondsFormat.format(ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.");
     }
 }

@@ -1,4 +1,4 @@
-package BoundingboxEditor;
+package BoundingboxEditor.ui;
 
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.MenuItem;
@@ -18,20 +18,20 @@ import java.io.File;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.testfx.api.FxAssert.verifyThat;
 
-public class ImageFolderOpenedTests extends BoundingBoxAppTestBase {
-    private static String TESTIMAGE_FOLDER_PATH = "/TestImages/MediumSizedImages";
+class ImageFolderOpenedTests extends BoundingBoxEditorTestBase {
+    private static String TEST_IMAGE_FOLDER_PATH = "/TestImages/MediumSizedImages";
 
     @Start
     void start(Stage stage) {
         super.onStart(stage);
-        controller.loadImageFilesFromDirectory(new File(getClass().getResource(TESTIMAGE_FOLDER_PATH).toString().replace("file:", "")));
+        controller.loadImageFilesFromDirectory(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH).getFile()));
     }
 
     @Test
     void verifyProgramStateAfterImageFolderOpened(FxRobot robot) {
         verifyNodeVisibilities();
         verifyMenuBarFunctionality(robot);
-        verifyCategorySelectorState(robot);
+        verifyCategorySelectorState();
         verifyCategorySelectorEnterNewCategoryFunctionality(robot);
     }
 
@@ -54,11 +54,11 @@ public class ImageFolderOpenedTests extends BoundingBoxAppTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        MenuItem saveItem = getSubMenuItem(robot, "File", "Save...");
+        MenuItem saveItem = getSubMenuItem(robot, "File", "Save Annotations...");
         assertTrue(saveItem.isVisible());
         assertFalse(saveItem.isDisable());
 
-        robot.clickOn("File").clickOn("Save...");
+        robot.clickOn("File").clickOn("Save Annotations...");
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -77,18 +77,18 @@ public class ImageFolderOpenedTests extends BoundingBoxAppTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        CheckMenuItem fitWindowItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Fit Window");
+        CheckMenuItem fitWindowItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Maximize Images");
         assertTrue(fitWindowItem.isVisible());
         assertFalse(fitWindowItem.isDisable());
         assertTrue(fitWindowItem.isSelected());
 
-        CheckMenuItem imageExplorerItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Image Explorer");
+        CheckMenuItem imageExplorerItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Show Images Panel");
         assertTrue(imageExplorerItem.isVisible());
         assertFalse(imageExplorerItem.isDisable());
         assertTrue(imageExplorerItem.isSelected());
     }
 
-    private void verifyCategorySelectorState(FxRobot robot) {
+    private void verifyCategorySelectorState() {
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
     }
 

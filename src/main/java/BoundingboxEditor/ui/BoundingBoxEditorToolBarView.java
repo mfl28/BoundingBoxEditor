@@ -8,7 +8,7 @@ import javafx.scene.layout.HBox;
 
 /**
  * Represents a UI-element containing navigation and image-settings controls as
- * part of a {@link ImageBoundingBoxEditorView} object.
+ * part of a {@link BoundingBoxEditorView} object.
  */
 public class BoundingBoxEditorToolBarView extends ToolBar implements View {
     private static final String NEXT_BUTTON_ID = "next-button";
@@ -34,7 +34,19 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
     private static final String SATURATION_LABEL_ID = "saturation-label";
     private static final String CUSTOM_MENU_ITEM_HBOX_STYLE = "custom-menu-item-hbox";
 
-    private static final String RESET_ALL_BUTTON_TEXT = "Reset all";
+    private static final String RESET_ALL_BUTTON_TEXT = "Reset All";
+    private static final String BOUNDING_BOX_EDITOR_SETTINGS_BOX_ID = "bounding-box-editor-settings-box";
+    private static final String NEXT_BUTTON_TOOLTIP = "Next (D)";
+    private static final String PREVIOUS_BUTTON_TOOLTIP = "Previous (A)";
+    private static final String BRIGHTNESS_LABEL_TOOLTIP = "Brightness (Double-click to reset)";
+    private static final String CONTRAST_LABEL_TOOLTIP = "Contrast (Double-click to reset)";
+    private static final String SATURATION_TOOLTIP = "Saturation (Double-click to reset)";
+    private static final String IMAGE_SETTINGS_MENU_BUTTON_TOOLTIP = "Image Settings";
+    private static final String SHOW_BOUNDING_BOXES_BUTTON_TOOLTIP = "Show all Bounding Boxes (Ctrl+Alt+V)";
+    private static final String HIDE_BOUNDING_BOXES_BUTTON_TOOLTIP = "Hide all Bounding Boxes (Ctrl+Alt+H)";
+
+    private final IconButton showBoundingBoxesButton = new IconButton("show-bounding-boxes-icon", IconButton.IconType.BACKGROUND);
+    private final IconButton hideBoundingBoxesButton = new IconButton("hide-bounding-boxes-icon", IconButton.IconType.BACKGROUND);
 
     private final Button nextButton = new IconButton(NEXT_BUTTON_ICON_ID, IconButton.IconType.GRAPHIC);
     private final Label indexLabel = new Label();
@@ -49,27 +61,34 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
     private final Label saturationLabel = new Label();
     private final Button resetAllButton = new Button(RESET_ALL_BUTTON_TEXT);
 
+    private final HBox settingsToolBox = new HBox(createImageSettingsButton(), showBoundingBoxesButton, hideBoundingBoxesButton);
+
     /**
      * Creates a new tool-bar containing controls to navigate images
-     * and edit image-settings.
+     * and change image and bounding-box related settings.
      */
     BoundingBoxEditorToolBarView() {
         getItems().addAll(
-                createImageSettingsButton(),
+                settingsToolBox,
                 UiUtils.createHSpacer(),
                 previousButton,
                 indexLabel,
                 nextButton,
-                UiUtils.createHSpacer());
+                UiUtils.createHSpacer(),
+                UiUtils.createWidthBoundHSpacer(settingsToolBox)
+        );
 
-        setUpIds();
+        setId(NAVIGATION_BAR_ID);
+        // Should always be on-top.
+        setViewOrder(-1);
+        setUpButtonsAndLabels();
         setUpInternalListeners();
     }
 
     @Override
     public void connectToController(Controller controller) {
-        nextButton.setOnAction(action -> controller.onRegisterNextButtonClickedAction());
-        previousButton.setOnAction(action -> controller.onRegisterPreviousButtonClickedAction());
+        nextButton.setOnAction(action -> controller.onRegisterNextImageFileRequested());
+        previousButton.setOnAction(action -> controller.onRegisterPreviousImageFileRequested());
     }
 
     /**
@@ -80,6 +99,24 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
      */
     public Label getIndexLabel() {
         return indexLabel;
+    }
+
+    /**
+     * Returns the button that allows to show all existing bounding-boxes corresponding to the current image.
+     *
+     * @return the button
+     */
+    Button getShowBoundingBoxesButton() {
+        return showBoundingBoxesButton;
+    }
+
+    /**
+     * Returns the button that allows to hide all existing bounding-boxes corresponding to the current image.
+     *
+     * @return the button
+     */
+    Button getHideBoundingBoxesButton() {
+        return hideBoundingBoxesButton;
     }
 
     /**
@@ -130,7 +167,9 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
     private MenuButton createImageSettingsButton() {
         MenuButton menuButton = new MenuButton();
         menuButton.setId(IMAGE_SETTINGS_MENU_BUTTON_ID);
+        menuButton.setTooltip(new Tooltip(IMAGE_SETTINGS_MENU_BUTTON_TOOLTIP));
         menuButton.setPickOnBounds(true);
+        menuButton.setAlignment(Pos.CENTER);
 
         HBox brightnessControl = new HBox(brightnessSlider, brightnessLabel);
         brightnessControl.getStyleClass().add(CUSTOM_MENU_ITEM_HBOX_STYLE);
@@ -162,13 +201,26 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
         return menuButton;
     }
 
-    private void setUpIds() {
-        setId(NAVIGATION_BAR_ID);
+    private void setUpButtonsAndLabels() {
         nextButton.setId(NEXT_BUTTON_ID);
+        nextButton.setTooltip(new Tooltip(NEXT_BUTTON_TOOLTIP));
+
         previousButton.setId(PREVIOUS_BUTTON_ID);
+        previousButton.setTooltip(new Tooltip(PREVIOUS_BUTTON_TOOLTIP));
+
         brightnessLabel.setId(BRIGHTNESS_LABEL_ID);
+        brightnessLabel.setTooltip(new Tooltip(BRIGHTNESS_LABEL_TOOLTIP));
+
         contrastLabel.setId(CONTRAST_LABEL_ID);
+        contrastLabel.setTooltip(new Tooltip(CONTRAST_LABEL_TOOLTIP));
+
         saturationLabel.setId(SATURATION_LABEL_ID);
+        saturationLabel.setTooltip(new Tooltip(SATURATION_TOOLTIP));
+
+        settingsToolBox.setId(BOUNDING_BOX_EDITOR_SETTINGS_BOX_ID);
+
+        showBoundingBoxesButton.setTooltip(new Tooltip(SHOW_BOUNDING_BOXES_BUTTON_TOOLTIP));
+        hideBoundingBoxesButton.setTooltip(new Tooltip(HIDE_BOUNDING_BOXES_BUTTON_TOOLTIP));
     }
 
     private void setUpInternalListeners() {

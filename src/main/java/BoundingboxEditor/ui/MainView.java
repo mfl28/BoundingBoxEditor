@@ -32,17 +32,18 @@ import java.util.List;
 public class MainView extends BorderPane implements View {
     private static final int INFO_DIALOGUE_MIN_WIDTH = 600;
     private static final String MAIN_VIEW_ID = "main-view";
+
     private final HeaderView header = new HeaderView();
-    private final WorkspaceSplitPaneView workspace = new WorkspaceSplitPaneView();
-    private final StatusBarView statusPanel = new StatusBarView();
+    private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
+    private final StatusBarView statusBar = new StatusBarView();
 
     /**
      * Constructs the app's main view-component which contains all other UI-elements.
      */
     public MainView() {
         setTop(header);
-        setCenter(workspace);
-        setBottom(statusPanel);
+        setCenter(workspaceSplitPane);
+        setBottom(statusBar);
 
         setId(MAIN_VIEW_ID);
         setUpInternalListeners();
@@ -117,34 +118,26 @@ public class MainView extends BorderPane implements View {
         progressDialog.setHeaderText(header);
     }
 
-    public ImageFileExplorerView getImageExplorerPanel() {
-        return workspace.getImageFileExplorer();
-    }
-
-    public ImageBoundingBoxEditorView getImageShower() {
-        return workspace.getImageBoundingBoxEditor();
-    }
-
     @Override
     public void connectToController(final Controller controller) {
         header.connectToController(controller);
-        workspace.connectToController(controller);
+        workspaceSplitPane.connectToController(controller);
     }
 
     @Override
     public void reset() {
-        workspace.reset();
+        workspaceSplitPane.reset();
     }
-
-    /* Delegating getters */
 
     /**
      * Updates the displayed image in the main image-pane from a provided image-{@link File}.
      *
      * @param imageFile the file of the new image
+     * @param width     the width of image corresponding to the file
+     * @param height    the height of the image corresponding to the file
      */
-    public void updateImageFromFile(final File imageFile) {
-        workspace.getImageBoundingBoxEditor().getImagePane().updateImageFromFile(imageFile);
+    public void updateImageFromFile(final File imageFile, double width, double height) {
+        workspaceSplitPane.getBoundingBoxEditor().getBoundingBoxEditorImagePane().updateImageFromFile(imageFile, width, height);
     }
 
     /**
@@ -156,19 +149,19 @@ public class MainView extends BorderPane implements View {
      * @param annotation the image-annotation to load from
      */
     public void loadBoundingBoxViewsFromAnnotation(ImageAnnotation annotation) {
-        List<BoundingBoxView> boundingBoxes = getBoundingBoxTreeView().extractBoundingBoxViewsAndBuildTreeFromAnnotation(annotation);
-        ToggleGroup boundingBoxSelectionToggleGroup = getImagePane().getBoundingBoxSelectionGroup();
+        List<BoundingBoxView> boundingBoxes = getBoundingBoxTree().extractBoundingBoxViewsAndBuildTreeFromAnnotation(annotation);
+        ToggleGroup boundingBoxSelectionToggleGroup = getBoundingBoxEditorImagePane().getBoundingBoxSelectionGroup();
 
         boundingBoxes.forEach(item -> {
-            item.autoScaleWithBoundsAndInitialize(getImageView().boundsInParentProperty());
+            item.autoScaleWithBoundsAndInitialize(getBoundingBoxEditorImageView().boundsInParentProperty());
             item.setToggleGroup(boundingBoxSelectionToggleGroup);
         });
         // temporarily switch off automatic adding of boundingBoxes to the explorer (those are already imported)
-        workspace.setTreeUpdateEnabled(false);
-        getImagePane().setAllCurrentBoundingBoxes(boundingBoxes);
-        workspace.setTreeUpdateEnabled(true);
-        // expand all first children of the (invisible) tree-root.
-        workspace.getEditorsPanel().getBoundingBoxExplorer().getRoot().getChildren().forEach(item -> item.setExpanded(true));
+        workspaceSplitPane.setTreeUpdateEnabled(false);
+        getBoundingBoxEditorImagePane().setAllCurrentBoundingBoxes(boundingBoxes);
+        workspaceSplitPane.setTreeUpdateEnabled(true);
+        // Expand all tree-items in the bounding-box tree-view.
+        workspaceSplitPane.getEditorsPanel().getBoundingBoxTree().expandAllTreeItems();
     }
 
     /**
@@ -176,105 +169,118 @@ public class MainView extends BorderPane implements View {
      * which are of type {@link BoundingBoxTreeItem}, the associated {@link BoundingBoxView} objects are removed as well.
      */
     public void removeSelectedTreeItemAndChildren() {
-        final TreeItem<BoundingBoxView> selectedTreeItem = getBoundingBoxTreeView().getSelectionModel().getSelectedItem();
+        final TreeItem<BoundingBoxView> selectedTreeItem = getBoundingBoxTree().getSelectionModel().getSelectedItem();
 
         if(selectedTreeItem != null) {
-            workspace.removeBoundingBoxWithTreeItemRecursively(selectedTreeItem);
+            workspaceSplitPane.removeBoundingBoxWithTreeItemRecursively(selectedTreeItem);
         }
     }
 
-    public BoundingBoxTreeView getBoundingBoxTreeView() {
-        return workspace.getEditorsPanel().getBoundingBoxExplorer();
+    /* Delegating Getters */
+
+    public ImageFileExplorerView getImageFileExplorer() {
+        return workspaceSplitPane.getImageFileExplorer();
     }
 
-    public BoundingBoxEditorImagePaneView getImagePane() {
-        return workspace.getImageBoundingBoxEditor().getImagePane();
+    public BoundingBoxEditorView getBoundingBoxEditor() {
+        return workspaceSplitPane.getBoundingBoxEditor();
     }
 
-    public ImageView getImageView() {
-        return workspace.getImageBoundingBoxEditor().getImagePane().getImageView();
+    public BoundingBoxTreeView getBoundingBoxTree() {
+        return workspaceSplitPane.getEditorsPanel().getBoundingBoxTree();
+    }
+
+    public BoundingBoxEditorImagePaneView getBoundingBoxEditorImagePane() {
+        return workspaceSplitPane.getBoundingBoxEditor().getBoundingBoxEditorImagePane();
+    }
+
+    public ImageView getBoundingBoxEditorImageView() {
+        return workspaceSplitPane.getBoundingBoxEditor().getBoundingBoxEditorImagePane().getImageView();
     }
 
     public Button getPreviousImageNavigationButton() {
-        return workspace.getImageBoundingBoxEditor().getImageToolBar().getPreviousButton();
+        return workspaceSplitPane.getBoundingBoxEditor().getBoundingBoxEditorToolBar().getPreviousButton();
     }
 
     public Button getNextImageNavigationButton() {
-        return workspace.getImageBoundingBoxEditor().getImageToolBar().getNextButton();
+        return workspaceSplitPane.getBoundingBoxEditor().getBoundingBoxEditorToolBar().getNextButton();
     }
 
-    public ImageFileListView getImageGallery() {
-        return workspace.getImageFileExplorer().getImageFileListView();
+    public ImageFileListView getImageFileListView() {
+        return workspaceSplitPane.getImageFileExplorer().getImageFileListView();
     }
 
     public TextField getImageFileSearchField() {
-        return workspace.getImageFileExplorer().getImageFileSearchField();
+        return workspaceSplitPane.getImageFileExplorer().getImageFileSearchField();
     }
 
     public Image getCurrentImage() {
-        return workspace.getImageBoundingBoxEditor().getImagePane().getCurrentImage();
+        return workspaceSplitPane.getBoundingBoxEditor().getBoundingBoxEditorImagePane().getCurrentImage();
     }
 
     public MenuItem getFileImportAnnotationsItem() {
         return header.getFileImportAnnotationsItem();
     }
 
-    public BoundingBoxCategoryTableView getBoundingBoxCategoryTableView() {
-        return workspace.getEditorsPanel().getCategorySelector();
+    public BoundingBoxCategoryTableView getBoundingBoxCategoryTable() {
+        return workspaceSplitPane.getEditorsPanel().getBoundingBoxCategoryTable();
     }
 
     public TextField getBoundingBoxCategoryInputField() {
-        return workspace.getEditorsPanel().getCategoryNameTextField();
+        return workspaceSplitPane.getEditorsPanel().getCategoryNameTextField();
     }
 
     public ColorPicker getBoundingBoxCategoryColorPicker() {
-        return workspace.getEditorsPanel().getCategoryColorPicker();
+        return workspaceSplitPane.getEditorsPanel().getCategoryColorPicker();
     }
 
     public ObservableList<BoundingBoxView> getCurrentBoundingBoxes() {
-        return workspace.getImageBoundingBoxEditor().getImagePane().getCurrentBoundingBoxes();
+        return workspaceSplitPane.getBoundingBoxEditor().getBoundingBoxEditorImagePane().getCurrentBoundingBoxes();
     }
 
-    public StatusBarView getStatusPanel() {
-        return statusPanel;
+    public StatusBarView getStatusBar() {
+        return statusBar;
     }
 
     public TextField getCategorySearchField() {
-        return workspace.getEditorsPanel().getCategorySearchField();
+        return workspaceSplitPane.getEditorsPanel().getCategorySearchField();
     }
 
-    public List<BoundingBoxData> getCurrentBoundingBoxData() {
-        return getBoundingBoxTreeView().extractCurrentBoundingBoxData();
+    public List<BoundingBoxData> extractCurrentBoundingBoxData() {
+        return getBoundingBoxTree().extractCurrentBoundingBoxData();
     }
 
     public TextField getTagInputField() {
-        return getEditorsPanelView().getTagInputField();
+        return getEditorsPanel().getTagInputField();
     }
 
-    public EditorsPanelView getEditorsPanelView() {
-        return workspace.getEditorsPanel();
+    public EditorsPanelView getEditorsPanel() {
+        return workspaceSplitPane.getEditorsPanel();
     }
 
     private void setUpInternalListeners() {
-        header.getSeparator().visibleProperty().bind(workspace.visibleProperty());
-        header.getShowImageExplorerMenuItem().disableProperty().bind(workspace.visibleProperty().not());
-        header.getViewFitWindowItem().disableProperty().bind(workspace.visibleProperty().not());
+        header.getSeparator().visibleProperty().bind(workspaceSplitPane.visibleProperty());
+        header.getViewShowImagesPanelItem().disableProperty().bind(workspaceSplitPane.visibleProperty().not());
+        header.getViewMaximizeImagesItem().disableProperty().bind(workspaceSplitPane.visibleProperty().not());
+        statusBar.visibleProperty().bind(workspaceSplitPane.visibleProperty());
 
-        header.getShowImageExplorerMenuItem().selectedProperty().addListener(((observable, oldValue, newValue) -> {
-            getImageExplorerPanel().setVisible(newValue);
-
-            if(!newValue) {
-                workspace.setDividerPosition(1, 1.0);
+        header.getViewShowImagesPanelItem().selectedProperty().addListener(((observable, oldValue, newValue) -> {
+            if(newValue) {
+                workspaceSplitPane.getItems().add(2, getImageFileExplorer());
+                workspaceSplitPane.applySavedDividerPositions();
+            } else {
+                workspaceSplitPane.saveDividerPositions();
+                workspaceSplitPane.getItems().remove(getImageFileExplorer());
             }
         }));
 
-        header.getViewFitWindowItem().selectedProperty().addListener(((observable, oldValue, newValue) -> {
-            getImageShower().getImagePane().setMaximizeImageView(newValue);
+        header.getViewMaximizeImagesItem().selectedProperty().addListener(((observable, oldValue, newValue) -> {
+            getBoundingBoxEditor().getBoundingBoxEditorImagePane().setMaximizeImageView(newValue);
 
             if(newValue) {
-                getImageShower().getImagePane().setImageViewToMaxAllowedSize();
+                getBoundingBoxEditor().getBoundingBoxEditorImagePane().setImageViewToMaxAllowedSize();
             } else {
-                getImageShower().getImagePane().setImageViewToPreferOriginalImageSize();
+                getBoundingBoxEditor().getBoundingBoxEditorImagePane().setImageViewToPreferOriginalImageSize();
             }
         }));
     }

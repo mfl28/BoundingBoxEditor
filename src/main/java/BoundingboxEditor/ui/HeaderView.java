@@ -54,11 +54,11 @@ class HeaderView extends VBox implements View {
      *
      * @return the menu-item
      */
-    CheckMenuItem getShowImageExplorerMenuItem() {
-        return menuBar.getViewShowImageFileExplorerItem();
+    CheckMenuItem getViewShowImagesPanelItem() {
+        return menuBar.getViewShowImagesPanelItem();
     }
 
-    CheckMenuItem getViewFitWindowItem() {
-        return menuBar.getViewFitWindowItem();
+    CheckMenuItem getViewMaximizeImagesItem() {
+        return menuBar.getViewMaximizeImagesItem();
     }
 }

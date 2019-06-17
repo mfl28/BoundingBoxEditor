@@ -4,15 +4,16 @@ import BoundingboxEditor.model.BoundingBoxCategory;
 import BoundingboxEditor.model.ImageMetaData;
 import BoundingboxEditor.model.Model;
 import BoundingboxEditor.model.io.*;
-import BoundingboxEditor.ui.BoundingBoxCategoryDeleteTableCell;
-import BoundingboxEditor.ui.BoundingBoxView;
-import BoundingboxEditor.ui.MainView;
+import BoundingboxEditor.ui.*;
 import BoundingboxEditor.ui.StatusEvents.ImageAnnotationsImportingSuccessfulEvent;
 import BoundingboxEditor.ui.StatusEvents.ImageAnnotationsSavingSuccessfulEvent;
 import BoundingboxEditor.ui.StatusEvents.ImageFilesLoadingSuccessfulEvent;
 import BoundingboxEditor.utils.ColorUtils;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.Service;
@@ -35,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
 /**
@@ -75,6 +77,9 @@ public class Controller {
     private final Model model = new Model();
     private final ListChangeListener<BoundingBoxView> boundingBoxCountPerCategoryListener = createBoundingBoxCountPerCategoryListener();
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
+    private final BooleanProperty navigationKeyDown = new SimpleBooleanProperty(false);
+    private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
+    private String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
 
     /**
@@ -87,9 +92,12 @@ public class Controller {
         stage = mainStage;
         stage.setTitle(PROGRAM_NAME);
         stage.getIcons().add(new Image(getClass().getResource(APPLICATION_ICON_PATH).toExternalForm()));
+        stage.setOnCloseRequest(event -> onCloseStageRequested());
+
+        loadPreferences();
 
         view.connectToController(this);
-        setModelListeners();
+        setUpModelListeners();
     }
 
     /**
@@ -134,7 +142,7 @@ public class Controller {
 
         updateViewImageFiles();
 
-        view.getStatusPanel().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(imageFiles.size(), imageFileDirectory));
+        view.getStatusBar().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(imageFiles.size(), imageFileDirectory));
     }
 
     /**
@@ -143,10 +151,10 @@ public class Controller {
     public void onRegisterSaveAnnotationsAction() {
         // At first (if needed) update the model's bounding-box data from the bounding-boxes currently in view.
         if(model.imageFilesLoaded()) {
-            model.updateCurrentBoundingBoxData(view.getCurrentBoundingBoxData());
+            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
         }
 
-        if(model.getImageFileNameToAnnotation().isEmpty()) {
+        if(model.getImageFileNameToAnnotationMap().isEmpty()) {
             MainView.displayErrorAlert(SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE,
                     NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT);
             return;
@@ -171,7 +179,7 @@ public class Controller {
     public void onRegisterImportAnnotationsAction() {
         // At first (if needed) update the model's bounding-box data from the bounding-boxes currently in view.
         if(model.imageFilesLoaded()) {
-            model.updateCurrentBoundingBoxData(view.getCurrentBoundingBoxData());
+            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
         }
 
         final DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -206,9 +214,9 @@ public class Controller {
         final Color categoryColor = view.getBoundingBoxCategoryColorPicker().getValue();
         model.getBoundingBoxCategories().add(new BoundingBoxCategory(categoryName, categoryColor));
 
-        view.getBoundingBoxCategoryTableView().getSelectionModel().selectLast();
-        view.getBoundingBoxCategoryTableView().scrollTo(view
-                .getBoundingBoxCategoryTableView()
+        view.getBoundingBoxCategoryTable().getSelectionModel().selectLast();
+        view.getBoundingBoxCategoryTable().scrollTo(view
+                .getBoundingBoxCategoryTable()
                 .getSelectionModel()
                 .getSelectedIndex()
         );
@@ -225,7 +233,7 @@ public class Controller {
     }
 
     /**
-     * Handles the event of the user typing a keyboard short-cut.
+     * Handles the event of the user pressing a defined keyboard short-cut.
      *
      * @param event the short-cut key-event
      */
@@ -250,30 +258,34 @@ public class Controller {
                     break;
                 case H:
                     if(event.isAltDown()) {
-                        view.getBoundingBoxTreeView().setToggleIconStateForAllTreeItems(false);
+                        view.getBoundingBoxTree().setToggleIconStateForAllTreeItems(false);
                     } else {
-                        view.getBoundingBoxTreeView().setToggleIconStateForSelectedBoundingBoxTreeItem(false);
+                        view.getBoundingBoxTree().setToggleIconStateForSelectedBoundingBoxTreeItem(false);
                     }
                     break;
                 case V:
                     if(event.isAltDown()) {
-                        view.getBoundingBoxTreeView().setToggleIconStateForAllTreeItems(true);
+                        view.getBoundingBoxTree().setToggleIconStateForAllTreeItems(true);
                     } else {
-                        view.getBoundingBoxTreeView().setToggleIconStateForSelectedBoundingBoxTreeItem(true);
+                        view.getBoundingBoxTree().setToggleIconStateForSelectedBoundingBoxTreeItem(true);
                     }
                     break;
             }
         } else {
             // Handle normal shortcuts
             switch(keyCode) {
+                case DOWN:
                 case D:
+                    navigationKeyDown.set(true);
                     if(model.imageFilesLoaded() && model.nextImageFileExists()) {
-                        onRegisterNextButtonClickedAction();
+                        onRegisterNextImageFileRequested();
                     }
                     break;
+                case UP:
                 case A:
+                    navigationKeyDown.set(true);
                     if(model.imageFilesLoaded() && model.previousImageFileExists()) {
-                        onRegisterPreviousButtonClickedAction();
+                        onRegisterPreviousImageFileRequested();
                     }
                     break;
                 case DELETE:
@@ -284,21 +296,36 @@ public class Controller {
     }
 
     /**
+     * Handles the event of the user releasing a keyboard short-cut.
+     *
+     * @param event the short-cut key-event
+     */
+    public void onRegisterSceneKeyReleased(KeyEvent event) {
+        switch(event.getCode()) {
+            case A:
+            case D:
+            case DOWN:
+            case UP:
+                navigationKeyDown.set(false);
+        }
+    }
+
+    /**
      * Handles the event of the user clicking the next(-image)-button.
      */
-    public void onRegisterNextButtonClickedAction() {
+    public void onRegisterNextImageFileRequested() {
         model.incrementFileIndex();
         // Keep the currently selected item in the image-gallery in view.
-        view.getImageGallery().scrollTo(Math.max(0, model.getCurrentFileIndex() - 1));
+        view.getImageFileListView().scrollTo(model.getCurrentFileIndex());
     }
 
     /**
      * Handles the event of the user clicking the previous(-image)-button.
      */
-    public void onRegisterPreviousButtonClickedAction() {
+    public void onRegisterPreviousImageFileRequested() {
         model.decrementFileIndex();
         // Keep the currently selected item in the image-gallery in view.
-        view.getImageGallery().scrollTo(Math.max(0, model.getCurrentFileIndex() - 1));
+        view.getImageFileListView().scrollTo(model.getCurrentFileIndex());
     }
 
     /**
@@ -336,11 +363,10 @@ public class Controller {
      * @param event the mouse-event
      */
     public void onImageViewMouseReleasedEvent(MouseEvent event) {
-        if(event.getButton().equals(MouseButton.PRIMARY) && view.getBoundingBoxCategoryTableView().isCategorySelected()) {
-            final ImageMetaData imageMetaData = model.getImageFileNameToMetaData()
-                    .computeIfAbsent(model.getCurrentImageFileName(), key -> ImageMetaData.fromImage(view.getCurrentImage()));
+        if(event.getButton().equals(MouseButton.PRIMARY) && view.getBoundingBoxCategoryTable().isCategorySelected()) {
+            final ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap().get(model.getCurrentImageFileName());
 
-            view.getImagePane().constructAndAddNewBoundingBox(imageMetaData);
+            view.getBoundingBoxEditorImagePane().constructAndAddNewBoundingBox(imageMetaData);
         }
     }
 
@@ -353,16 +379,19 @@ public class Controller {
         return view;
     }
 
-    private void setModelListeners() {
+    private void onCloseStageRequested() {
+        Preferences.userNodeForPackage(getClass()).putBoolean("isMaximized", stage.isMaximized());
+    }
 
-        view.getImageShower().getImageToolBar()
+    private void setUpModelListeners() {
+        view.getBoundingBoxEditor().getBoundingBoxEditorToolBar()
                 .getIndexLabel()
                 .textProperty()
                 .bind(model.fileIndexProperty().add(1).asString()
                         .concat(" | ")
                         .concat(model.nrImageFilesProperty().asString()));
 
-        view.getImageExplorerPanel().getImageFileListView().getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
+        view.getImageFileExplorer().getImageFileListView().getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue.intValue() != -1) {
                 model.fileIndexProperty().set(newValue.intValue());
             }
@@ -373,7 +402,7 @@ public class Controller {
         view.getPreviousImageNavigationButton().disableProperty().bind(model.previousImageFileExistsProperty().not());
         view.getNextImageNavigationButton().disableProperty().bind(model.nextImageFileExistsProperty().not());
 
-        view.getBoundingBoxCategoryTableView().getDeleteColumn().setCellFactory(column -> {
+        view.getBoundingBoxCategoryTable().getDeleteColumn().setCellFactory(column -> {
             final BoundingBoxCategoryDeleteTableCell cell = new BoundingBoxCategoryDeleteTableCell();
 
             cell.getDeleteButton().setOnAction(action -> {
@@ -408,16 +437,24 @@ public class Controller {
     private void updateViewImageFiles() {
         view.reset();
 
-        view.getImagePane().removeAllCurrentBoundingBoxes();
+        view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingBoxes();
 
-        view.updateImageFromFile(model.getCurrentImageFile());
+        ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
+                key -> ImageMetaData.fromFile(model.getCurrentImageFile()));
+        view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
         stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
 
-        view.getBoundingBoxCategoryTableView().setItems(model.getBoundingBoxCategories());
-        view.getBoundingBoxCategoryTableView().getSelectionModel().selectFirst();
-        view.getImageExplorerPanel().setImageFiles(model.getImageFilesAsObservableList());
-        view.getImageExplorerPanel().getImageFileListView().getSelectionModel().selectFirst();
-        view.getImageExplorerPanel().getImageFileListView().scrollTo(0);
+        BoundingBoxCategoryTableView boundingBoxCategoryTableView = view.getBoundingBoxCategoryTable();
+        boundingBoxCategoryTableView.setItems(model.getBoundingBoxCategories());
+        boundingBoxCategoryTableView.getSelectionModel().selectFirst();
+
+        ImageFileExplorerView imageFileExplorerView = view.getImageFileExplorer();
+        imageFileExplorerView.setImageFiles(model.getImageFilesAsObservableList());
+
+        ImageFileListView imageFileListView = view.getImageFileListView();
+        imageFileListView.getSelectionModel().selectFirst();
+        imageFileListView.scrollTo(0);
+
         view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
     }
 
@@ -432,7 +469,7 @@ public class Controller {
 
                         saver.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
 
-                        return saver.save(model.getImageFileNameToAnnotationMap(), Paths.get(saveDirectory.getPath()));
+                        return saver.save(model.getImageAnnotations(), Paths.get(saveDirectory.getPath()));
                     }
                 };
             }
@@ -442,7 +479,7 @@ public class Controller {
             IOResult saveResult = saveService.getValue();
 
             if(saveResult.getNrSuccessfullyProcessedItems() != 0) {
-                view.getStatusPanel().setStatusEvent(new ImageAnnotationsSavingSuccessfulEvent(saveService.getValue()));
+                view.getStatusBar().setStatusEvent(new ImageAnnotationsSavingSuccessfulEvent(saveService.getValue()));
             }
 
             if(!saveResult.getErrorTableEntries().isEmpty()) {
@@ -465,13 +502,13 @@ public class Controller {
             IOResult loadResult = loadService.getValue();
 
             if(loadResult.getNrSuccessfullyProcessedItems() != 0) {
-                view.getStatusPanel().setStatusEvent(new ImageAnnotationsImportingSuccessfulEvent(loadResult));
+                view.getStatusBar().setStatusEvent(new ImageAnnotationsImportingSuccessfulEvent(loadResult));
             }
 
             ImageAnnotation annotation = model.getCurrentImageAnnotation();
 
             if(annotation != null) {
-                view.getBoundingBoxTreeView().reset();
+                view.getBoundingBoxTree().reset();
                 view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
                 view.loadBoundingBoxViewsFromAnnotation(annotation);
                 view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
@@ -517,33 +554,59 @@ public class Controller {
 
     private ChangeListener<Number> createSelectedFileIndexListener() {
         return (value, oldValue, newValue) -> {
-            view.getImageExplorerPanel().getImageFileListView().getSelectionModel().select(newValue.intValue());
-            // Remove the old images bounding-box-loading listener (that triggers when an image is fully loaded.)
-            removeImageLoadingProgressListener();
-            // Updating bounding-box data corresponding to the previous image only needs to be done, if
-            // the old image was fully loaded.
-            if(view.getCurrentImage().getProgress() == 1.0) {
-                // update model bounding-box-data from previous image:
-                model.updateBoundingBoxDataAtFileIndex(oldValue.intValue(), view.getBoundingBoxTreeView().extractCurrentBoundingBoxData());
-                // remove old image's bounding boxes
-                view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
-                view.getImagePane().removeAllCurrentBoundingBoxes();
-                // Prevents javafx-bug with uncleared items in tree-view when switching between images.
-                view.getBoundingBoxTreeView().reset();
+            // Update selected item in image-file-list-view.
+            view.getImageFileExplorer().getImageFileListView().getSelectionModel().select(newValue.intValue());
+
+            final Image oldImage = view.getCurrentImage();
+
+            if(oldImage != null && !oldImage.getUrl().equals(lastLoadedImageUrl)) {
+                // Remove the old images bounding-box-loading listener (that triggers when an image is fully loaded.)
+                oldImage.progressProperty().removeListener(imageLoadProgressListener);
+                // Updating bounding-box data corresponding to the previous image only needs to be done, if
+                // the old image was fully loaded.
+                if(oldImage.getProgress() == 1.0) {
+                    // update model bounding-box-data from previous image:
+                    model.updateBoundingBoxDataAtFileIndex(oldValue.intValue(), view.getBoundingBoxTree().extractCurrentBoundingBoxData());
+                    // remove old image's bounding boxes
+                    view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
+                    view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingBoxes();
+                    // Prevents javafx-bug with uncleared items in tree-view when switching between images.
+                    view.getBoundingBoxTree().reset();
+                } else {
+                    oldImage.cancel();
+                }
+
+                view.getBoundingBoxEditorImageView().setImage(null);
+                lastLoadedImageUrl = oldImage.getUrl();
             }
 
             stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
-            view.updateImageFromFile(model.getCurrentImageFile());
-            addImageLoadingProgressListener();
+
+            if(navigationKeyDown.get()) {
+                navigationKeyDown.removeListener(imageNavigationKeyPressedListener);
+                navigationKeyDown.addListener(imageNavigationKeyPressedListener);
+            } else {
+                ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
+                        key -> ImageMetaData.fromFile(model.getCurrentImageFile()));
+                view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
+                view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
+            }
         };
     }
 
-    private void removeImageLoadingProgressListener() {
-        view.getCurrentImage().progressProperty().removeListener(imageLoadProgressListener);
-    }
-
-    private void addImageLoadingProgressListener() {
-        view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
+    private ChangeListener<Boolean> createImageNavigationKeyPressedListener() {
+        return new ChangeListener<>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                if(!newValue) {
+                    ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
+                            key -> ImageMetaData.fromFile(model.getCurrentImageFile()));
+                    view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
+                    view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
+                    navigationKeyDown.removeListener(this);
+                }
+            }
+        };
     }
 
     private ListChangeListener<BoundingBoxView> createBoundingBoxCountPerCategoryListener() {
@@ -563,6 +626,11 @@ public class Controller {
                 }
             }
         };
+    }
+
+    private void loadPreferences() {
+        Preferences preferences = Preferences.userNodeForPackage(getClass());
+        stage.setMaximized(preferences.getBoolean("isMaximized", false));
     }
 
 }

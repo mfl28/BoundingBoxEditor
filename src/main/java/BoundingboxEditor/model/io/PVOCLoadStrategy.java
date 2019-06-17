@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Implements the loading of xml-files containing image-annotations in the
@@ -108,8 +107,9 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         String fileName = parseTextElement(document, "filename");
         double width = parseDoubleElement(document, "width");
         double height = parseDoubleElement(document, "height");
+        int depth = parseIntElement(document, "depth");
 
-        return new ImageMetaData(fileName, folderName, width, height);
+        return new ImageMetaData(fileName, folderName, width, height, depth);
     }
 
     private List<BoundingBoxData> parseBoundingBoxData(Document document) throws InvalidAnnotationFileFormatException {
@@ -198,7 +198,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             throw new InvalidAnnotationFileFormatException("Missing \"name\"-element.");
         }
 
-        if(Stream.of(xMin, xMax, yMin, yMax).anyMatch(item -> item.isNaN())) {
+        if(Double.isNaN(xMin) || Double.isNaN(xMax) || Double.isNaN(yMin) || Double.isNaN(yMax)) {
             throw new InvalidAnnotationFileFormatException("Missing \"bndbox\"-element.");
         }
 
@@ -265,6 +265,16 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         }
 
         return Double.parseDouble(doubleNode.getTextContent());
+    }
+
+    private int parseIntElement(Document document, String tagName) throws InvalidAnnotationFileFormatException {
+        Node intNode = document.getElementsByTagName(tagName).item(0);
+
+        if(intNode == null) {
+            throw new InvalidAnnotationFileFormatException("Missing \"" + tagName + "\"-element.");
+        }
+
+        return Integer.parseInt(intNode.getTextContent());
     }
 
     private static class AnnotationToNonExistentImageException extends RuntimeException {

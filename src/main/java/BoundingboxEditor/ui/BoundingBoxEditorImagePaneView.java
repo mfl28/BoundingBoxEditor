@@ -9,9 +9,9 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
@@ -38,11 +38,12 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String IMAGE_PANE_ID = "image-pane-view";
     private static final String INITIALIZER_RECTANGLE_ID = "bounding-rectangle";
+    private static final int MAXIMUM_IMAGE_WIDTH = 2400;
+    private static final int MAXIMUM_IMAGE_HEIGHT = 1500;
+    private static final double ZOOM_SCALE_FACTOR = 1.05;
 
     private final ImageView imageView = new ImageView();
-    private final ObjectProperty<Image> currentImageObject = new SimpleObjectProperty<>();
     private final SimpleBooleanProperty maximizeImageView = new SimpleBooleanProperty(true);
-    private final ProgressIndicator progressIndicator = new ProgressIndicator();
     private final ColorAdjust colorAdjust = new ColorAdjust();
 
     private final Group boundingBoxSceneGroup = new Group();
@@ -61,14 +62,12 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
         getChildren().addAll(
                 imageView,
                 boundingBoxSceneGroup,
-                initializerRectangle,
-                progressIndicator
+                initializerRectangle
         );
 
         setId(IMAGE_PANE_ID);
 
         boundingBoxSceneGroup.setManaged(false);
-        progressIndicator.setVisible(false);
 
         setUpImageView();
         setUpInternalListeners();
@@ -154,25 +153,21 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
      * Updates the displayed image from a provided image-{@link File}.
      *
      * @param imageFile the file of the new image
+     * @param width     the width of the new image
+     * @param height    the height of the new image
      */
-    void updateImageFromFile(File imageFile) {
-        currentImageObject.set(new Image(imageFile.toURI().toString(), true));
+    void updateImageFromFile(File imageFile, double width, double height) {
+        Dimension2D dimension = calculateLoadedImageDimensions(width, height);
 
-        resetProgressIndicatorAnimation();
-        progressIndicator.setVisible(true);
+        imageView.setImage(new Image(imageFile.toURI().toString(),
+                dimension.getWidth(), dimension.getHeight(), true, true, true));
 
-        currentImageObject.getValue().progressProperty().addListener((value, oldValue, newValue) -> {
-            if(newValue.intValue() == 1) {
-                imageView.setImage(currentImageObject.getValue());
-                progressIndicator.setVisible(false);
+        if(isMaximizeImageView()) {
+            setImageViewToMaxAllowedSize();
+        } else {
+            setImageViewToPreferOriginalImageSize();
+        }
 
-                if(isMaximizeImageView()) {
-                    setImageViewToMaxAllowedSize();
-                } else {
-                    setImageViewToPreferOriginalImageSize();
-                }
-            }
-        });
     }
 
     /**
@@ -242,26 +237,17 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
     }
 
     /**
-     * Returns the {@link Rectangle} object used to initialize new {@link BoundingBoxView} objects.
-     *
-     * @return the initializer-rectangle
-     */
-    Rectangle getInitializerRectangle() {
-        return initializerRectangle;
-    }
-
-    /**
      * Returns the currently loaded {@link Image} object.
      *
      * @return the image
      */
     Image getCurrentImage() {
-        return currentImageObject.get();
+        return imageView.getImage();
     }
 
     private void setUpImageView() {
         imageView.setSmooth(true);
-        imageView.setCache(true);
+        imageView.setCache(false);
         imageView.setPickOnBounds(true);
         imageView.setPreserveRatio(true);
         imageView.setEffect(colorAdjust);
@@ -290,13 +276,14 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
 
         imageView.setOnMousePressed(event -> {
             if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
-                Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
                 dragAnchor.setFromMouseEvent(event);
+                Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
 
                 initializerRectangle.setX(parentCoordinates.getX());
                 initializerRectangle.setY(parentCoordinates.getY());
                 initializerRectangle.setWidth(0);
                 initializerRectangle.setHeight(0);
+                initializerRectangle.setStroke(selectedCategory.getValue().getColor());
                 initializerRectangle.setVisible(true);
             }
         });
@@ -317,10 +304,13 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
         setOnScroll(event -> {
             if(event.isControlDown()) {
                 final Image image = imageView.getImage();
-                double newFitWidth = MathUtils.clamp(imageView.getFitWidth() + event.getDeltaY(),
+
+                double scaleFactor = Math.pow(ZOOM_SCALE_FACTOR, Math.signum(event.getDeltaY()));
+
+                double newFitWidth = MathUtils.clamp(imageView.getFitWidth() * scaleFactor,
                         Math.min(ZOOM_MIN_WINDOW_RATIO * getWidth(), image.getWidth()),
                         getMaxAllowedImageWidth());
-                double newFitHeight = MathUtils.clamp(imageView.getFitHeight() + event.getDeltaY(),
+                double newFitHeight = MathUtils.clamp(imageView.getFitHeight() * scaleFactor,
                         Math.min(ZOOM_MIN_WINDOW_RATIO * getHeight(), image.getHeight()),
                         getMaxAllowedImageHeight());
 
@@ -355,11 +345,6 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
         return selectedCategory.get() != null;
     }
 
-    private void resetProgressIndicatorAnimation() {
-        progressIndicator.setProgress(0);
-        progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
-    }
-
     private Rectangle createInitializerRectangle() {
         Rectangle initializer = new Rectangle();
         initializer.setManaged(false);
@@ -367,5 +352,13 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
         initializer.setFill(Color.TRANSPARENT);
         initializer.setId(INITIALIZER_RECTANGLE_ID);
         return initializer;
+    }
+
+    private Dimension2D calculateLoadedImageDimensions(double width, double height) {
+        if(width > height) {
+            return new Dimension2D(Math.min(width, MAXIMUM_IMAGE_WIDTH), 0);
+        } else {
+            return new Dimension2D(0, Math.min(height, MAXIMUM_IMAGE_HEIGHT));
+        }
     }
 }

@@ -2,6 +2,7 @@ package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
 import javafx.scene.control.*;
+import javafx.scene.layout.Region;
 
 /**
  * Represents the main menu-bar UI-element of the application.
@@ -13,19 +14,22 @@ class MenuBarView extends MenuBar implements View {
     private static final String FILE_MENU_TEXT = "_File";
     private static final String VIEW_MENU_TEXT = "_View";
     private static final String OPEN_FOLDER_TEXT = "_Open Folder...";
-    private static final String SAVE_TEXT = "_Save...";
-    private static final String FIT_WINDOW_TEXT = "_Fit Window";
-    private static final String SHOW_IMAGE_FILE_EXPLORER_TEXT = "_Image Explorer";
+    private static final String SAVE_TEXT = "_Save Annotations...";
+    private static final String MAXIMIZE_IMAGES_TEXT = "_Maximize Images";
+    private static final String SHOW_IMAGE_FILE_EXPLORER_TEXT = "_Show Images Panel";
     private static final String EXIT_TEXT = "E_xit";
     private static final String MAIN_MENU_BAR_ID = "main-menu-bar";
-    private static final String ANNOTATION_IMPORT_TEXT = "Import Annotations...";
+    private static final String ANNOTATION_IMPORT_TEXT = "_Import Annotations...";
+    private static final String SAVE_ICON_ID = "save-icon";
+    private static final String OPEN_FOLDER_ICON_ID = "folder-icon";
+    private static final String EXIT_ICON_ID = "exit-icon";
 
-    private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT);
-    private final MenuItem fileSaveItem = new MenuItem(SAVE_TEXT);
+    private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
+    private final MenuItem fileSaveItem = new MenuItem(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
     private final MenuItem fileImportAnnotationsItem = new MenuItem(ANNOTATION_IMPORT_TEXT);
-    private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT);
-    private final CheckMenuItem viewFitWindowItem = new CheckMenuItem(FIT_WINDOW_TEXT);
-    private final CheckMenuItem viewShowImageFileExplorerItem = new CheckMenuItem(SHOW_IMAGE_FILE_EXPLORER_TEXT);
+    private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT, createIconRegion(EXIT_ICON_ID));
+    private final CheckMenuItem viewMaximizeImagesItem = new CheckMenuItem(MAXIMIZE_IMAGES_TEXT);
+    private final CheckMenuItem viewShowImagesPanelItem = new CheckMenuItem(SHOW_IMAGE_FILE_EXPLORER_TEXT);
 
     /**
      * Creates a new menu-bar UI-element.
@@ -33,8 +37,8 @@ class MenuBarView extends MenuBar implements View {
     MenuBarView() {
         getMenus().addAll(createFileMenu(), createViewMenu());
         setId(MAIN_MENU_BAR_ID);
-        viewShowImageFileExplorerItem.setSelected(true);
-        viewFitWindowItem.setSelected(true);
+        viewShowImagesPanelItem.setSelected(true);
+        viewMaximizeImagesItem.setSelected(true);
     }
 
     @Override
@@ -60,8 +64,8 @@ class MenuBarView extends MenuBar implements View {
      *
      * @return the menu-item
      */
-    CheckMenuItem getViewShowImageFileExplorerItem() {
-        return viewShowImageFileExplorerItem;
+    CheckMenuItem getViewShowImagesPanelItem() {
+        return viewShowImagesPanelItem;
     }
 
     /**
@@ -69,19 +73,38 @@ class MenuBarView extends MenuBar implements View {
      *
      * @return the menu-item
      */
-    CheckMenuItem getViewFitWindowItem() {
-        return viewFitWindowItem;
+    CheckMenuItem getViewMaximizeImagesItem() {
+        return viewMaximizeImagesItem;
     }
 
     private Menu createFileMenu() {
         Menu fileMenu = new Menu(FILE_MENU_TEXT);
-        fileMenu.getItems().addAll(fileOpenFolderItem, fileSaveItem, fileImportAnnotationsItem, fileExitItem);
+
+        fileMenu.getItems().addAll(
+                fileOpenFolderItem,
+                fileSaveItem,
+                fileImportAnnotationsItem,
+                fileExitItem
+        );
+
         return fileMenu;
     }
 
     private Menu createViewMenu() {
         Menu viewMenu = new Menu(VIEW_MENU_TEXT);
-        viewMenu.getItems().addAll(viewFitWindowItem, new SeparatorMenuItem(), viewShowImageFileExplorerItem);
+
+        viewMenu.getItems().addAll(
+                viewMaximizeImagesItem,
+                new SeparatorMenuItem(),
+                viewShowImagesPanelItem
+        );
+
         return viewMenu;
+    }
+
+    private Region createIconRegion(String cssId) {
+        Region region = new Region();
+        region.setId(cssId);
+        return region;
     }
 }

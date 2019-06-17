@@ -25,7 +25,7 @@ public class BoundingBoxEditorApp extends Application {
     /**
      * Launches the application.
      *
-     * @param args
+     * @param args arguments
      */
     public static void main(String[] args) {
         launch(args);
@@ -39,6 +39,7 @@ public class BoundingBoxEditorApp extends Application {
 
         scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
         scene.setOnKeyPressed(controller::onRegisterSceneKeyPressed);
+        scene.setOnKeyReleased(controller::onRegisterSceneKeyReleased);
 
         primaryStage.setScene(scene);
         primaryStage.show();

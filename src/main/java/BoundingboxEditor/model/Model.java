@@ -171,7 +171,7 @@ public class Model {
      *
      * @return the mapping
      */
-    public Map<String, ImageMetaData> getImageFileNameToMetaData() {
+    public Map<String, ImageMetaData> getImageFileNameToMetaDataMap() {
         return imageFileNameToMetaData;
     }
 
@@ -180,7 +180,7 @@ public class Model {
      *
      * @return the mapping
      */
-    public Map<String, ImageAnnotation> getImageFileNameToAnnotation() {
+    public Map<String, ImageAnnotation> getImageFileNameToAnnotationMap() {
         return imageFileNameToAnnotation;
     }
 
@@ -213,16 +213,16 @@ public class Model {
     }
 
     /**
-     * Returns the image-filename to image-annotation mapping.
+     * Returns the currently existing image-annotations.
      *
-     * @return the mapping
+     * @return the image-annotations
      */
-    public Collection<ImageAnnotation> getImageFileNameToAnnotationMap() {
+    public Collection<ImageAnnotation> getImageAnnotations() {
         return imageFileNameToAnnotation.values();
     }
 
     /**
-     * Returns the category to exsting bounding-boxes count mapping.
+     * Returns the category to existing bounding-boxes count mapping.
      *
      * @return the mapping
      */
@@ -339,8 +339,7 @@ public class Model {
      * @return the image-file list
      */
     public ObservableList<File> getImageFilesAsObservableList() {
-        return FXCollections.unmodifiableObservableList(FXCollections
-                .observableList(imageFileNameToFile.valueList()));
+        return FXCollections.unmodifiableObservableList(FXCollections.observableList(imageFileNameToFile.valueList()));
     }
 
     /**

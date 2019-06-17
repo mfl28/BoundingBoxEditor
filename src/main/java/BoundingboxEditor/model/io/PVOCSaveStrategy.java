@@ -17,13 +17,10 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.text.DecimalFormatSymbols;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * Implements the saving of image-annotations to xml-files using the
@@ -43,7 +40,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String BOUNDING_BOX_CATEGORY_NAME = "name";
     private static final String BOUNDING_BOX_SIZE_GROUP_NAME = "bndbox";
 
-    private static final DecimalFormat floatingPointFormat = new DecimalFormat("#.##");
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     private static final String FILE_EXTENSION = ".xml";
     private static final String XMIN_TAG = "xmin";
     private static final String XMAX_TAG = "xmax";
@@ -52,6 +49,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String ANNOTATION_FILENAME_EXTENSION = "_A";
     private static final String BOUNDING_BOX_PART_NAME = "part";
     private static final String ACTIONS_TAG_NAME = "actions";
+    private static final String IMAGE_DEPTH_ELEMENT_NAME = "depth";
     private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
     private Path saveFolderPath;
@@ -123,6 +121,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         sizeElement.appendChild(createDoubleValueElement(document, IMAGE_WIDTH_ELEMENT_NAME, dataElement.getImageWidth()));
         sizeElement.appendChild(createDoubleValueElement(document, IMAGE_HEIGHT_ELEMENT_NAME, dataElement.getImageHeight()));
+        sizeElement.appendChild(createIntegerValueElement(document, IMAGE_DEPTH_ELEMENT_NAME, dataElement.getImageDepth()));
     }
 
 
@@ -131,26 +130,47 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         element.appendChild(createStringValueElement(document, BOUNDING_BOX_CATEGORY_NAME, boundingBox.getCategoryName()));
 
         // add tags:
-        List<String> tags = boundingBox.getTags();
-        String poseString = tags.stream().filter(tag -> tag.startsWith("pose: ")).findFirst().orElse(null);
+        int difficultValue = 0;
+        int occludedValue = 0;
+        int truncatedValue = 0;
+        String poseString = "Unspecified";
+        List<String> actionTags = new ArrayList<>();
 
-        element.appendChild(createIntegerValueElement(document, "difficult", tags.contains("difficult") ? 1 : 0));
-        element.appendChild(createIntegerValueElement(document, "occluded", tags.contains("occluded") ? 1 : 0));
-        element.appendChild(createStringValueElement(document, "pose", poseString == null ?
-                "Unspecified" : StringUtils.capitalize(poseString.substring(6).toLowerCase())));
-        element.appendChild(createIntegerValueElement(document, "truncated", tags.contains("truncated") ? 1 : 0));
+        for(String tag : boundingBox.getTags()) {
+            String lowerCaseTag = tag.toLowerCase();
+
+            if(lowerCaseTag.startsWith("pose:")) {
+                poseString = StringUtils.capitalize(lowerCaseTag.substring(5).stripLeading());
+                continue;
+            } else if(lowerCaseTag.startsWith("action:")) {
+                actionTags.add(lowerCaseTag.substring(7).stripLeading());
+                continue;
+            }
+
+            switch(lowerCaseTag) {
+                case "difficult":
+                    difficultValue = 1;
+                    break;
+                case "occluded":
+                    occludedValue = 1;
+                    break;
+                case "truncated":
+                    truncatedValue = 1;
+            }
+        }
+
+        element.appendChild(createIntegerValueElement(document, "difficult", difficultValue));
+        element.appendChild(createIntegerValueElement(document, "occluded", occludedValue));
+        element.appendChild(createStringValueElement(document, "pose", poseString));
+        element.appendChild(createIntegerValueElement(document, "truncated", truncatedValue));
 
         // add action tags:
-        List<String> actionTags = tags.stream()
-                .filter(tag -> tag.startsWith("action: ") && !tag.equals("action: "))
-                .map(tag -> tag.substring(8))
-                .collect(Collectors.toList());
-
         if(!actionTags.isEmpty()) {
             Element actionsElement = document.createElement(ACTIONS_TAG_NAME);
             element.appendChild(actionsElement);
 
-            actionTags.forEach(action -> actionsElement.appendChild(createIntegerValueElement(document, action, 1)));
+            actionTags.forEach(action ->
+                    actionsElement.appendChild(createIntegerValueElement(document, action, 1)));
         }
 
         final Element bndBox = document.createElement(BOUNDING_BOX_SIZE_GROUP_NAME);
@@ -170,7 +190,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
     private Element createDoubleValueElement(Document document, String tagName, double value) {
         Element element = document.createElement(tagName);
-        element.appendChild(document.createTextNode(Double.valueOf(floatingPointFormat.format(value)).toString()));
+        element.appendChild(document.createTextNode(DECIMAL_FORMAT.format(value)));
         return element;
     }
 

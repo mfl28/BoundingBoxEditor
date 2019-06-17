@@ -37,6 +37,21 @@ class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
         setUpInternalListeners();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
+
+        if(!(obj instanceof BoundingBoxCategoryTreeItem)) {
+            return false;
+        }
+
+        BoundingBoxCategoryTreeItem other = (BoundingBoxCategoryTreeItem) obj;
+
+        return boundingBoxCategory.equals(other.boundingBoxCategory) && getChildren().equals(other.getChildren());
+    }
+
     /**
      * Returns the {@link BoundingBoxCategory} object associated with the tree-item.
      *
@@ -83,15 +98,11 @@ class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
      * @param toggledOn if true, the toggle-square is toggled on, otherwise off
      */
     void setIconToggledOn(boolean toggledOn) {
-        if(toggledOn == isIconToggledOn()) {
-            return;
-        }
-
         toggleIcon.setToggledOn(toggledOn);
 
-        getChildren().stream()
-                .map(childItem -> (BoundingBoxTreeItem) childItem)
-                .forEach(childItem -> childItem.setIconToggledOn(toggledOn));
+        for(TreeItem<BoundingBoxView> child : getChildren()) {
+            ((BoundingBoxTreeItem) child).setIconToggledOn(toggledOn);
+        }
     }
 
     /**

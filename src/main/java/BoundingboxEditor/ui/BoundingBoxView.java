@@ -19,6 +19,9 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,8 +38,9 @@ import java.util.stream.Collectors;
  * @see View
  */
 public class BoundingBoxView extends Rectangle implements View, Toggle {
-    private static final double DEFAULT_FILL_OPACITY = 0.4;
+    private static final double HIGHLIGHTED_FILL_OPACITY = 0.4;
     private static final double SELECTED_FILL_OPACITY = 0.6;
+    private static final double CATEGORY_INDICATOR_TEXT_SIZE = 20.0;
     private static final BoundingBoxView NULL_BOUNDING_BOX_VIEW = new BoundingBoxView();
     private static final String BOUNDING_BOX_VIEW_ID = "bounding-rectangle";
 
@@ -44,8 +48,12 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
     private final Property<Bounds> autoScaleBounds = new SimpleObjectProperty<>();
     private final Property<Bounds> boundsInImage = new SimpleObjectProperty<>();
     private final Group nodeGroup = new Group(this);
+
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
+    private final BooleanProperty highlighted = new SimpleBooleanProperty(false);
     private final ObjectProperty<ToggleGroup> toggleGroup = new SimpleObjectProperty<>();
+
+    private final Text categoryIndicatorText = createCategoryIndicatorText();
     private final ObservableList<String> tags = FXCollections.observableArrayList();
     private TreeItem<BoundingBoxView> treeItem;
     private BoundingBoxCategory boundingBoxCategory;
@@ -70,6 +78,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
 
         nodeGroup.setManaged(false);
         nodeGroup.getChildren().addAll(createResizeHandles());
+        nodeGroup.getChildren().add(categoryIndicatorText);
 
         addMoveFunctionality();
         setUpInternalListeners();
@@ -110,11 +119,25 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
 
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof BoundingBoxView) {
-            return super.equals(obj) && Objects.equals(boundingBoxCategory, ((BoundingBoxView) obj).boundingBoxCategory) &&
-                    Objects.equals(imageMetaData, ((BoundingBoxView) obj).imageMetaData);
+        if(this == obj) {
+            return true;
         }
-        return false;
+
+        if(!(obj instanceof BoundingBoxView)) {
+            return false;
+        }
+
+        BoundingBoxView other = (BoundingBoxView) obj;
+
+        return Objects.equals(boundingBoxCategory, other.boundingBoxCategory) && Objects.equals(imageMetaData, other.imageMetaData)
+                && Double.compare(getX(), other.getX()) == 0 && Double.compare(getY(), other.getY()) == 0
+                && Double.compare(getWidth(), other.getWidth()) == 0 && Double.compare(getHeight(), other.getHeight()) == 0;
+    }
+
+    @Override
+    public String toString() {
+        return "BoundingBoxView[x=" + getX() + ", y=" + getY() + ", width=" + getWidth() + ", height=" + getHeight()
+                + ", fill=" + getFill() + ", category=" + boundingBoxCategory + ", image-metadata=" + imageMetaData + "]";
     }
 
     /**
@@ -195,6 +218,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
      */
     void autoScaleWithBounds(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
         this.autoScaleBounds.bind(autoScaleBounds);
+        rebindCategoryIndicatorTextToBounds(this.autoScaleBounds.getValue());
         addAutoScaleListener();
     }
 
@@ -224,6 +248,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
     void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
         this.autoScaleBounds.bind(autoScaleBounds);
         initializeFromBoundsInImage();
+        rebindCategoryIndicatorTextToBounds(this.autoScaleBounds.getValue());
         addAutoScaleListener();
     }
 
@@ -250,18 +275,18 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
     }
 
     /**
-     * Fills the bounding-box rectangle with the currently registered category-color and
-     * applies a predefined opacity.
+     * Sets the highlighted-status of the bounding-box.
+     *
+     * @param highlighted true to set highlighting on, otherwise off
      */
-    void fillOpaque() {
-        setFill(Color.web(getStroke().toString(), DEFAULT_FILL_OPACITY));
+    void setHighlighted(boolean highlighted) {
+        this.highlighted.set(highlighted);
     }
 
-    /**
-     * Makes the bounding-box fill transparent.
-     */
-    void fillTransparent() {
-        setFill(Color.TRANSPARENT);
+    private Text createCategoryIndicatorText() {
+        final Text text = new Text();
+        text.setFont(Font.font(null, FontWeight.BOLD, CATEGORY_INDICATOR_TEXT_SIZE));
+        return text;
     }
 
     private List<ResizeHandle> createResizeHandles() {
@@ -275,7 +300,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
             setCursor(Cursor.MOVE);
 
             if(!isSelected()) {
-                setFill(Color.web(getStroke().toString(), DEFAULT_FILL_OPACITY));
+                highlighted.set(true);
             }
 
             event.consume();
@@ -283,7 +308,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
 
         setOnMouseExited(event -> {
             if(!isSelected()) {
-                setFill(Color.TRANSPARENT);
+                highlighted.set(false);
             }
         });
 
@@ -309,10 +334,6 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
     }
 
     private void setUpInternalListeners() {
-        selected.addListener(((observable, oldValue, newValue) ->
-                setFill(newValue ? Color.web(getStroke().toString(), SELECTED_FILL_OPACITY) : Color.TRANSPARENT)
-        ));
-
         nodeGroup.viewOrderProperty().bind(
                 Bindings.when(selectedProperty())
                         .then(0)
@@ -320,6 +341,24 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
         );
 
         strokeProperty().bind(boundingBoxCategory.colorProperty());
+
+        categoryIndicatorText.textProperty().bind(boundingBoxCategory.nameProperty());
+        categoryIndicatorText.fillProperty().bind(strokeProperty());
+        categoryIndicatorText.xProperty().bind(xProperty());
+        categoryIndicatorText.visibleProperty().bind(visibleProperty().and(selectedProperty()));
+        categoryIndicatorText.viewOrderProperty().bind(nodeGroup.viewOrderProperty());
+
+        fillProperty().bind(Bindings.when(selectedProperty())
+                .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY), strokeProperty()))
+                .otherwise(Bindings.when(highlighted)
+                        .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
+                        .otherwise(Color.TRANSPARENT)));
+
+        selectedProperty().addListener(((observable, oldValue, newValue) -> {
+            if(newValue) {
+                highlighted.set(false);
+            }
+        }));
     }
 
     private Bounds constructCurrentMoveBounds() {
@@ -349,7 +388,21 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
 
             setX(newValue.getMinX() + (getX() - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
             setY(newValue.getMinY() + (getY() - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
+
+            rebindCategoryIndicatorTextToBounds(newValue);
         });
+    }
+
+    private void rebindCategoryIndicatorTextToBounds(Bounds bounds) {
+        categoryIndicatorText.yProperty().unbind();
+        categoryIndicatorText.yProperty().bind(
+                Bindings.when(yProperty().greaterThan(bounds.getMinY() + CATEGORY_INDICATOR_TEXT_SIZE + 5))
+                        .then(yProperty().subtract(10))
+                        .otherwise(Bindings
+                                .when(yProperty().add(heightProperty()).lessThan(bounds.getMaxY() - CATEGORY_INDICATOR_TEXT_SIZE - 5))
+                                .then(yProperty().add(heightProperty().add(CATEGORY_INDICATOR_TEXT_SIZE + 5)))
+                                .otherwise(yProperty().add(CATEGORY_INDICATOR_TEXT_SIZE + 5)))
+        );
     }
 
     private void setBoundsInImage(Bounds boundsInImage) {

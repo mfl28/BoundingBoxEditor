@@ -78,6 +78,15 @@ public class ImageAnnotation {
     }
 
     /**
+     * Returns the depth (= number of channels) of the annotated image.
+     *
+     * @return the depth of the image
+     */
+    int getImageDepth() {
+        return imageMetaData.getImageDepth();
+    }
+
+    /**
      * Returns the name of the annotated image's containing folder.
      *
      * @return the folder-name

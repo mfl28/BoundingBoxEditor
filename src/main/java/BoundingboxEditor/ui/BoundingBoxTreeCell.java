@@ -106,19 +106,25 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
     private void setUpInternalListeners() {
         setOnMouseEntered(event -> {
             if(!isEmpty()) {
-                fillBoundingBoxesOpaque();
+                setHighlightStatusIncludingChildren(true);
             }
         });
 
         contextMenu.showingProperty().addListener(((observable, oldValue, newValue) -> {
             if(!isEmpty() && !newValue) {
-                fillBoundingBoxesTransparent();
+                setHighlightStatusIncludingChildren(false);
             }
         }));
 
         setOnMouseExited(event -> {
             if(!isEmpty() && !contextMenu.isShowing()) {
-                fillBoundingBoxesTransparent();
+                setHighlightStatusIncludingChildren(false);
+            }
+        });
+
+        setOnScroll(event -> {
+            if(!isEmpty() && !contextMenu.isShowing()) {
+                setHighlightStatusIncludingChildren(false);
             }
         });
 
@@ -133,27 +139,21 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
         });
     }
 
-    private void fillBoundingBoxesOpaque() {
+    private void setHighlightStatusIncludingChildren(boolean highlightStatus) {
         TreeItem<BoundingBoxView> treeItem = getTreeItem();
 
         if(treeItem instanceof BoundingBoxTreeItem) {
             if(!treeItem.getValue().isSelected()) {
-                treeItem.getValue().fillOpaque();
+                treeItem.getValue().setHighlighted(highlightStatus);
             }
         } else {
-            treeItem.getChildren().stream().filter(child -> !child.getValue().isSelected()).forEach(child -> child.getValue().fillOpaque());
-        }
-    }
+            for(TreeItem<BoundingBoxView> child : treeItem.getChildren()) {
+                final BoundingBoxView childBoundingBox = child.getValue();
 
-    private void fillBoundingBoxesTransparent() {
-        TreeItem<BoundingBoxView> treeItem = getTreeItem();
-
-        if(treeItem instanceof BoundingBoxTreeItem) {
-            if(!treeItem.getValue().isSelected()) {
-                treeItem.getValue().fillTransparent();
+                if(!childBoundingBox.isSelected()) {
+                    childBoundingBox.setHighlighted(highlightStatus);
+                }
             }
-        } else {
-            treeItem.getChildren().stream().filter(child -> !child.getValue().isSelected()).forEach(child -> child.getValue().fillTransparent());
         }
     }
 

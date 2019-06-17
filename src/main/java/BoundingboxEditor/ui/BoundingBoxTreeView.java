@@ -6,6 +6,8 @@ import BoundingboxEditor.model.io.BoundingBoxData;
 import BoundingboxEditor.model.io.ImageAnnotation;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.control.skin.TreeViewSkin;
+import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.apache.commons.collections4.IteratorUtils;
@@ -24,7 +26,8 @@ import java.util.stream.Collectors;
  * @see View
  */
 public class BoundingBoxTreeView extends TreeView<BoundingBoxView> implements View {
-    private boolean onlyShowSelectedBoundingBox = false;
+    private static final int FIXED_CELL_SIZE = 20;
+    private VirtualFlow virtualFlow;
 
     /**
      * Creates a new bounding-box tree UI-element.
@@ -34,7 +37,8 @@ public class BoundingBoxTreeView extends TreeView<BoundingBoxView> implements Vi
 
         setRoot(new TreeItem<>());
         setShowRoot(false);
-        setFixedCellSize(20);
+        setFixedCellSize(FIXED_CELL_SIZE);
+        setUpInternalListeners();
     }
 
     /**
@@ -68,13 +72,14 @@ public class BoundingBoxTreeView extends TreeView<BoundingBoxView> implements Vi
      * @param toggleState true to to toggle on, otherwise off
      */
     public void setToggleIconStateForAllTreeItems(boolean toggleState) {
-        getRoot().getChildren().stream()
-                .map(child -> (BoundingBoxCategoryTreeItem) child)
-                .forEach(child -> child.setIconToggledOn(toggleState));
+        for(TreeItem<BoundingBoxView> child : getRoot().getChildren()) {
+            ((BoundingBoxCategoryTreeItem) child).setIconToggledOn(toggleState);
+        }
     }
 
     /**
      * Sets the toggle-icon-state of the currently selected tree-item (if one is selected).
+     *
      * @param toggleState the toggle-icon-state to set
      */
     public void setToggleIconStateForSelectedBoundingBoxTreeItem(boolean toggleState) {
@@ -86,21 +91,21 @@ public class BoundingBoxTreeView extends TreeView<BoundingBoxView> implements Vi
     }
 
     /**
-     * Returns a boolean indicating whether to only show the currently selected {@link BoundingBoxView}
-     * object or all existing objects.
+     * Keeps the provided tree-item in the currently visible part of the tree-view.
      *
-     * @return true if only the currently selected {@link BoundingBoxView} is shown, false otherwise
+     * @param item the tree-item that should be kept in view
      */
-    boolean isOnlyShowSelectedBoundingBox() {
-        return onlyShowSelectedBoundingBox;
-    }
+    void keepTreeItemInView(TreeItem<BoundingBoxView> item) {
+        if(virtualFlow != null) {
+            int rowIndex = getRow(item);
+            var firstVisibleCell = virtualFlow.getFirstVisibleCell();
+            var lastVisibleCell = virtualFlow.getLastVisibleCell();
 
-    /**
-     * Sets a boolean indicating whether to only show the currently selected {@link BoundingBoxView}
-     * object or all existing objects.
-     */
-    void setOnlyShowSelectedBoundingBox(boolean onlyShowSelectedBoundingBox) {
-        this.onlyShowSelectedBoundingBox = onlyShowSelectedBoundingBox;
+            if(firstVisibleCell != null && lastVisibleCell != null &&
+                    (rowIndex <= firstVisibleCell.getIndex() || rowIndex >= lastVisibleCell.getIndex())) {
+                virtualFlow.scrollTo(rowIndex);
+            }
+        }
     }
 
     /**
@@ -165,6 +170,26 @@ public class BoundingBoxTreeView extends TreeView<BoundingBoxView> implements Vi
                 .filter(category -> ((BoundingBoxCategoryTreeItem) category).getBoundingBoxCategory().equals(boundingBoxCategory))
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * Expands all currently existing tree-items.
+     */
+    void expandAllTreeItems() {
+        IteratorUtils.toList(new BoundingBoxTreeItemIterator(getRoot())).forEach(treeItem -> treeItem.setExpanded(true));
+    }
+
+    private void setUpInternalListeners() {
+        skinProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue != null) {
+                TreeViewSkin skin = (TreeViewSkin) newValue;
+                List childNodes = skin.getChildren();
+
+                if(childNodes != null && !childNodes.isEmpty()) {
+                    virtualFlow = (VirtualFlow) childNodes.get(0);
+                }
+            }
+        });
     }
 
     private void createTreeItemFromBoundingBoxView(TreeItem<BoundingBoxView> root, BoundingBoxView boundingBox) {

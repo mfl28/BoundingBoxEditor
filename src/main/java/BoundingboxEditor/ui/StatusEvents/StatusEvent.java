@@ -2,11 +2,16 @@ package BoundingboxEditor.ui.StatusEvents;
 
 import BoundingboxEditor.ui.StatusBarView;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
+
 /**
  * Abstract base class that represents a status event that can be registered and displayed
  * in a {@link StatusBarView StatusBarView}.
  */
 public abstract class StatusEvent {
+    static DecimalFormat secondsFormat = new DecimalFormat("0.0##", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     private String eventMessage;
 
     /**

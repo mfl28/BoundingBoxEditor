@@ -9,97 +9,153 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+/**
+ * A UI-element in the form of a side-panel which contains several UI-components which
+ * can be used to interact with bounding-box data (the elements themselves, categories, tags).
+ *
+ * @see VBox
+ * @see View
+ */
 public class EditorsPanelView extends VBox implements View {
-    private static final String CLASS_SELECTOR_LABEL_TEXT = "Category Editor";
+    private static final String CLASS_SELECTOR_LABEL_TEXT = "Categories";
     private static final String SEARCH_CATEGORY_PROMPT_TEXT = "Search Category";
     private static final String BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT = "Add";
     private static final String SIDE_PANEL_STYLE = "side-panel";
-    private static final String BOUNDING_BOX_NAME_TEXT_FIELD_STYLE = "bounding-box-name-text-field";
     private static final String BOUNDING_BOX_COLOR_PICKER_STYLE = "bounding-box-color-picker";
-    private static final String OBJECT_SELECTOR_LABEL_TEXT = "Object Editor";
+    private static final String OBJECT_SELECTOR_LABEL_TEXT = "Annotated Objects";
     private static final String CATEGORY_INPUT_FIELD_PROMPT_TEXT = "Category Name";
     private static final String PROJECT_SIDE_PANEL_ID = "project-side-panel";
     private static final String CATEGORY_INPUT_FIELD_ID = "category-input-field";
     private static final String ADD_BUTTON_ID = "add-button";
-    private static final String TAG_EDITOR_LABEL_TEXT = "Tag Editor";
+    private static final String TAG_EDITOR_LABEL_TEXT = "Tags";
     private static final String BOUNDING_BOX_EXPLORER_TOP_PANEL_ID = "bounding-box-explorer-top-panel";
-    private static final String VISIBILITY_TOGGLE_BUTTON_ID = "visibility-toggle-button";
-    private static final String AUTO_SHOW_TOGGLE_BUTTON_ID = "auto-show-toggle-button";
-    private static final String EXPANSION_TOGGLE_BUTTON_ID = "expansion-toggle-button";
     private static final String SEARCH_ICON_ID = "search-icon";
     private static final String SEARCH_ICON_LABEL_ID = "search-icon-label";
     private static final String CATEGORY_SELECTOR_TOP_PANEL_ID = "category-selector-top-panel";
+    private static final String EXPAND_TREE_ITEMS_ICON_ID = "expand-tree-items-icon";
+    private static final String COLLAPSE_TREE_ITEMS_ICON_ID = "collapse-tree-items-icon";
+    private static final String CATEGORY_NAME_FIELD_TOOLTIP = "(Ctrl+N to focus)";
+    private static final String CATEGORY_COLOR_PICKER_TOOLTIP = "Category Color";
+    private static final String ADD_CATEGORY_BUTTON_TOOLTIP = "Add new Category";
+    private static final String CATEGORY_SEARCH_FIELD_TOOLTIP = "(Ctrl+F to focus)";
+    private static final String COLLAPSE_TREE_ITEMS_BUTTON_TOOLTIP = "Collapse All";
+    private static final String EXPAND_TREE_ITEMS_BUTTON_TOOLTIP = "Expand All";
 
     private final TextField categorySearchField = new TextField();
-    private final BoundingBoxCategoryTableView categorySelector = new BoundingBoxCategoryTableView();
+    private final BoundingBoxCategoryTableView boundingBoxCategoryTable = new BoundingBoxCategoryTableView();
     private final ColorPicker categoryColorPicker = new ColorPicker();
     private final TextField categoryNameTextField = new TextField();
     private final Button addCategoryButton = new Button(BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT);
 
-    private final BoundingBoxTreeView boundingBoxExplorer = new BoundingBoxTreeView();
-    private final ToggleButton visibilityToggle = new ToggleIconButton(VISIBILITY_TOGGLE_BUTTON_ID);
-    private final ToggleButton autoShowToggle = new ToggleIconButton(AUTO_SHOW_TOGGLE_BUTTON_ID);
-    private final ToggleButton expansionToggle = new ToggleIconButton(EXPANSION_TOGGLE_BUTTON_ID);
+    private final BoundingBoxTreeView boundingBoxTree = new BoundingBoxTreeView();
+    private final IconButton expandTreeItemsButton = new IconButton(EXPAND_TREE_ITEMS_ICON_ID, IconButton.IconType.BACKGROUND);
+    private final IconButton collapseTreeItemsButton = new IconButton(COLLAPSE_TREE_ITEMS_ICON_ID, IconButton.IconType.BACKGROUND);
 
-    private final BoundingBoxTagScrollPaneView tagEditor = new BoundingBoxTagScrollPaneView();
+    private final BoundingBoxTagScrollPaneView boundingBoxTagScrollPane = new BoundingBoxTagScrollPaneView();
 
+    /**
+     * Creates a new panel containing UI-components responsible for interactions
+     * with bounding-box data (the elements themselves, categories, tags).
+     */
     EditorsPanelView() {
         getChildren().addAll(
                 new Label(CLASS_SELECTOR_LABEL_TEXT),
                 createCategorySelectorTopPanel(),
-                categorySelector,
+                boundingBoxCategoryTable,
                 createAddCategoryControlBox(),
                 new Separator(),
                 createBoundingBoxExplorerTopPanel(),
-                boundingBoxExplorer,
+                boundingBoxTree,
                 new Separator(),
                 new Label(TAG_EDITOR_LABEL_TEXT),
-                tagEditor
+                boundingBoxTagScrollPane
         );
 
-        setUpStyles();
-        setUpIds();
+        setId(PROJECT_SIDE_PANEL_ID);
+        getStyleClass().add(SIDE_PANEL_STYLE);
+        setUpButtonsAndTextFields();
         setUpInternalListeners();
     }
 
+    /**
+     * Returns the category name-input text-field.
+     *
+     * @return the text-field
+     */
     public TextField getCategoryNameTextField() {
         return categoryNameTextField;
     }
 
+    /**
+     * Returns the button which allows the user to add a
+     * {@link BoundingboxEditor.model.BoundingBoxCategory BoundingBoxCategory}.
+     *
+     * @return the button
+     */
     public Button getAddCategoryButton() {
         return addCategoryButton;
     }
 
-    public BoundingBoxTreeView getBoundingBoxExplorer() {
-        return boundingBoxExplorer;
+    /**
+     * Returns the {@link BoundingBoxTreeView} object which is responsible
+     * for displaying currently existing bounding-boxes. It also provides
+     * functionality to interact with the displayed bounding-boxes.
+     *
+     * @return the bounding-box tree
+     */
+    public BoundingBoxTreeView getBoundingBoxTree() {
+        return boundingBoxTree;
     }
 
     @Override
     public void connectToController(Controller controller) {
         addCategoryButton.setOnAction(action -> controller.onRegisterAddBoundingBoxCategoryAction());
-        categorySelector.connectToController(controller);
+        boundingBoxCategoryTable.connectToController(controller);
         categoryNameTextField.setOnAction(action -> controller.onRegisterAddBoundingBoxCategoryAction());
     }
 
     @Override
     public void reset() {
-        boundingBoxExplorer.reset();
+        boundingBoxTree.reset();
     }
 
-    BoundingBoxCategoryTableView getCategorySelector() {
-        return categorySelector;
+    /**
+     * Returns the {@link BoundingBoxCategoryTableView} object which is responsible for
+     * displaying the currently existing bounding-box categories. It also provides
+     * functionality to interact with the displayed categories.
+     *
+     * @return the bounding-box category table
+     */
+    BoundingBoxCategoryTableView getBoundingBoxCategoryTable() {
+        return boundingBoxCategoryTable;
     }
 
+    /**
+     * Returns the category-name search text-field.
+     *
+     * @return the text-field
+     */
     TextField getCategorySearchField() {
         return categorySearchField;
     }
 
+    /**
+     * Returns the {@link ColorPicker} object which allows the user to
+     * choose the color which should be associated with a new bounding-box category.
+     *
+     * @return the color-picker
+     */
     ColorPicker getCategoryColorPicker() {
         return categoryColorPicker;
     }
 
+    /**
+     * Returns the tag-input text-field.
+     *
+     * @return the text-field
+     */
     TextField getTagInputField() {
-        return tagEditor.getTagInputField();
+        return boundingBoxTagScrollPane.getTagInputField();
     }
 
     private HBox createCategorySelectorTopPanel() {
@@ -135,26 +191,30 @@ public class EditorsPanelView extends VBox implements View {
         HBox panel = new HBox(
                 new Label(OBJECT_SELECTOR_LABEL_TEXT),
                 UiUtils.createHSpacer(),
-                visibilityToggle,
-                autoShowToggle,
-                expansionToggle
+                collapseTreeItemsButton,
+                expandTreeItemsButton
         );
 
         panel.setId(BOUNDING_BOX_EXPLORER_TOP_PANEL_ID);
         return panel;
     }
 
-    private void setUpStyles() {
-        categoryNameTextField.getStyleClass().add(BOUNDING_BOX_NAME_TEXT_FIELD_STYLE);
+    private void setUpButtonsAndTextFields() {
+        categoryNameTextField.setId(CATEGORY_INPUT_FIELD_ID);
+        categoryNameTextField.setTooltip(new Tooltip(EditorsPanelView.CATEGORY_NAME_FIELD_TOOLTIP));
+
         categoryColorPicker.getStyleClass().add(BOUNDING_BOX_COLOR_PICKER_STYLE);
         categoryColorPicker.setValue(ColorUtils.createRandomColor());
-        getStyleClass().add(SIDE_PANEL_STYLE);
-    }
+        categoryColorPicker.setTooltip(new Tooltip(CATEGORY_COLOR_PICKER_TOOLTIP));
 
-    private void setUpIds() {
-        setId(PROJECT_SIDE_PANEL_ID);
-        categoryNameTextField.setId(CATEGORY_INPUT_FIELD_ID);
         addCategoryButton.setId(ADD_BUTTON_ID);
+        addCategoryButton.setTooltip(new Tooltip(ADD_CATEGORY_BUTTON_TOOLTIP));
+
+        categorySearchField.setTooltip(new Tooltip(CATEGORY_SEARCH_FIELD_TOOLTIP));
+
+        collapseTreeItemsButton.setTooltip(new Tooltip(COLLAPSE_TREE_ITEMS_BUTTON_TOOLTIP));
+
+        expandTreeItemsButton.setTooltip(new Tooltip(EXPAND_TREE_ITEMS_BUTTON_TOOLTIP));
     }
 
     private void setUpInternalListeners() {
@@ -162,12 +222,12 @@ public class EditorsPanelView extends VBox implements View {
 
         categorySearchField.textProperty().addListener(((observable, oldValue, newValue) -> {
             if(newValue != null) {
-                categorySelector.getItems().stream()
+                boundingBoxCategoryTable.getItems().stream()
                         .filter(item -> item.getName().startsWith(newValue))
                         .findAny()
                         .ifPresent(item -> {
-                            categorySelector.getSelectionModel().select(item);
-                            categorySelector.scrollTo(item);
+                            boundingBoxCategoryTable.getSelectionModel().select(item);
+                            boundingBoxCategoryTable.scrollTo(item);
                         });
             }
         }));
@@ -178,34 +238,16 @@ public class EditorsPanelView extends VBox implements View {
             }
         }));
 
-        visibilityToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
-                boundingBoxExplorer.getRoot().getChildren().stream()
-                        .map(childItem -> (BoundingBoxCategoryTreeItem) childItem)
-                        .forEach(childItem -> childItem.setIconToggledOn(!newValue))
-        ));
+        expandTreeItemsButton.setOnAction(event -> boundingBoxTree.expandAllTreeItems());
 
-        autoShowToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
-                boundingBoxExplorer.setOnlyShowSelectedBoundingBox(newValue)));
+        collapseTreeItemsButton.setOnAction(event ->
+                boundingBoxTree.getRoot().getChildren().forEach(child -> child.setExpanded(false)));
 
-        boundingBoxExplorer.rootProperty().addListener((observable, oldValue, newValue) -> {
-            visibilityToggle.disableProperty().unbind();
-            visibilityToggle.disableProperty().bind(boundingBoxExplorer.rootProperty().get().leafProperty());
-            autoShowToggle.disableProperty().unbind();
-            autoShowToggle.disableProperty().bind(boundingBoxExplorer.rootProperty().get().leafProperty());
-            expansionToggle.disableProperty().unbind();
-            expansionToggle.disableProperty().bind(boundingBoxExplorer.rootProperty().get().leafProperty());
-
-        });
-
-        expansionToggle.selectedProperty().addListener(((observable, oldValue, newValue) ->
-                boundingBoxExplorer.getRoot().getChildren().forEach(child -> child.setExpanded(newValue))
-        ));
-
-        boundingBoxExplorer.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+        boundingBoxTree.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue instanceof BoundingBoxTreeItem) {
-                tagEditor.setTags(newValue.getValue().getTags());
+                boundingBoxTagScrollPane.setTags(newValue.getValue().getTags());
             } else {
-                tagEditor.setTags(null);
+                boundingBoxTagScrollPane.setTags(null);
             }
         });
     }

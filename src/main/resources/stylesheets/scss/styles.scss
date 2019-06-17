@@ -42,6 +42,14 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-min-height: $small-icon-size;
 }
 
+@mixin medium-icon {
+    $medium-icon-size: 12px;
+    -fx-max-width: $medium-icon-size;
+    -fx-max-height: $medium-icon-size;
+    -fx-min-width: $medium-icon-size;
+    -fx-min-height: $medium-icon-size;
+}
+
 @mixin large-icon {
     $large-icon-size: 15px;
     -fx-max-width: $large-icon-size;
@@ -60,6 +68,16 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
 @mixin light-background-pane {
     -fx-background-color: $base-background-light-color;
+}
+
+@mixin icon-button-interaction-highlighting {
+    &:hover {
+        -fx-background-color: $base-alt-highlight-light-color;
+    }
+
+    &:pressed {
+        -fx-background-color: $base-alt-highlight-color;
+    }
 }
 
 .default-text {
@@ -175,9 +193,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-rotate: 90;
     -fx-shape: $image-settings-icon;
 
-    &:hover {
-        -fx-background-color: $base-colorful-component-color;
-    }
+    @include icon-button-interaction-highlighting;
 
     & .menu-item {
         -fx-padding: 10px 10px;
@@ -201,6 +217,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-color-label-visible: false;
     -fx-color: transparent;
     -fx-background-color: transparent;
+    -fx-focus-color: $base-background-color;
 
     &:hover {
         -fx-background-color: $base-highlight-color;
@@ -266,41 +283,6 @@ $base-separator-line-color: derive($base-background-color, -15%);
     }
 }
 
-#visibility-toggle-button {
-    -fx-max-width: 17px;
-    -fx-max-height: 17px;
-    -fx-min-width: 17px;
-    -fx-min-height: 17px;
-    -fx-background-insets: 2 0;
-    -fx-background-color: $base-font-color;
-    -fx-shape: $eye-icon;
-
-    &:selected {
-        -fx-background-insets: 0;
-        -fx-shape: $eye-off-icon;
-    }
-}
-
-#auto-show-toggle-button {
-    @include large-icon;
-    -fx-background-color: $base-font-color;
-    -fx-shape: $overlapping-solid-rectangles-icon;
-
-    &:selected {
-        -fx-shape: $solid-rectangle-over-dashed-rectangle-icon;
-    }
-}
-
-#expansion-toggle-button {
-    @include large-icon;
-    -fx-background-color: $base-font-color;
-    -fx-shape: $maximize-icon;
-
-    &:selected {
-        -fx-shape: $minimize-icon;
-    }
-}
-
 // --Icons--
 #previous-button-icon {
     @include large-icon;
@@ -326,12 +308,63 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-shape: $tag-icon;
 }
 
+#folder-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $folder-icon;
+}
+
+#save-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $save-icon;
+}
+
+#exit-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $power-icon;
+}
+
+#show-bounding-boxes-icon {
+    @include large-icon;
+    -fx-background-insets: 2 0;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $eye-icon;
+
+    @include icon-button-interaction-highlighting;
+}
+
+#hide-bounding-boxes-icon {
+    @include large-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $eye-off-icon;
+
+    @include icon-button-interaction-highlighting;
+}
+
 #toggle-square {
     -fx-opacity: 0.3;
 
     &:toggled-on {
         -fx-opacity: 1.0;
     }
+}
+
+#expand-tree-items-icon {
+    @include large-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $maximize-icon;
+
+    @include icon-button-interaction-highlighting;
+}
+
+#collapse-tree-items-icon {
+    @include large-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $minimize-icon;
+
+    @include icon-button-interaction-highlighting;
 }
 
 // --Labels--
@@ -457,12 +490,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
     }
 
     & .thumb {
-        -fx-background-color: $base-colorful-component-color;
+        -fx-background-color: derive($base-highlight-light-color, +20%);
         -fx-effect: none;
 
         &:hover,
         &:pressed {
-            -fx-background-color: $base-font-color;
+            -fx-background-color: $base-alt-highlight-color;
         }
     }
 }
@@ -475,7 +508,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
 }
 
 .text-field-table-cell {
-    & .text-field, .color-picker {
+    & .text-field {
         -fx-padding: 0;
     }
 }
@@ -484,7 +517,10 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-padding: 20px 0;
 }
 
-.bounding-box-name-text-field {
+#bounding-box-editor-settings-box {
+    -fx-spacing: 10px;
+    -fx-alignment: center;
+    -fx-padding: 0 0 0 5px;
 }
 
 #bounding-box-explorer-top-panel {

@@ -1,20 +1,26 @@
 package BoundingboxEditor.model;
 
-import javafx.scene.image.Image;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.Iterator;
 import java.util.Objects;
 
 /**
  * Holds metadata information about an image.
  */
 public class ImageMetaData {
+    private final static Logger log = LoggerFactory.getLogger(ImageMetaData.class);
     private String fileName;
     private String folderName;
     private double imageWidth;
     private double imageHeight;
+    private int imageDepth;
 
     /**
      * Creates a new ImageMetaData object.
@@ -24,23 +30,24 @@ public class ImageMetaData {
      * @param imageWidth  the width of the image
      * @param imageHeight the height of the image
      */
-    public ImageMetaData(String fileName, String folderName, double imageWidth, double imageHeight) {
+    public ImageMetaData(String fileName, String folderName, double imageWidth, double imageHeight, int imageDepth) {
         this.fileName = fileName;
         this.folderName = folderName;
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
+        this.imageDepth = imageDepth;
     }
 
     /**
-     * Constructs an ImageMetaData object from an {@link Image} object.
+     * Constructs an ImageMetaData object from an image-file without loading the whole image.
      *
-     * @param image the image
-     * @return an ImageMetaData object containing metadata about the provided image
+     * @param imageFile the image-file
+     * @return an ImageMetaData object containing metadata about the provided image-file
      */
-    public static ImageMetaData fromImage(Image image) {
-        Path path = Paths.get(URI.create(image.getUrl()));
-        return new ImageMetaData(path.getFileName().toString(),
-                path.getParent().toString(), image.getWidth(), image.getHeight());
+    public static ImageMetaData fromFile(File imageFile) {
+        ImageDimensions imageDimensions = readImageDimensionsFromFile(imageFile);
+        return new ImageMetaData(imageFile.getName(), imageFile.getParent(),
+                imageDimensions.getWidth(), imageDimensions.getHeight(), imageDimensions.getDepth());
     }
 
     /**
@@ -59,6 +66,15 @@ public class ImageMetaData {
      */
     public double getImageHeight() {
         return imageHeight;
+    }
+
+    /**
+     * Returns the depth (= number of channels) of the image.
+     *
+     * @return the depth
+     */
+    public int getImageDepth() {
+        return imageDepth;
     }
 
     /**
@@ -87,5 +103,66 @@ public class ImageMetaData {
                     imageWidth == other.imageWidth && imageHeight == other.imageHeight;
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "ImageMetaData[fileName=" + getFileName() + ", folderName=" + getFolderName()
+                + ", image-width=" + getImageWidth() + ", image-height=" + getImageHeight() + ", image-depth=" + getImageDepth();
+    }
+
+    private static ImageDimensions readImageDimensionsFromFile(File imageFile) {
+        // Source: https://stackoverflow.com/a/1560052
+        try(ImageInputStream imageStream = ImageIO.createImageInputStream(imageFile)) {
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(imageStream);
+            if(readers.hasNext()) {
+                ImageReader reader = readers.next();
+                try {
+                    reader.setInput(imageStream);
+                    return new ImageDimensions(
+                            reader.getWidth(0),
+                            reader.getHeight(0),
+                            reader.getRawImageType(0).getNumComponents()
+                    );
+                } finally {
+                    reader.dispose();
+                }
+            }
+        } catch(IOException e) {
+            log.error("Could not open image-file " + imageFile.getName());
+            return ImageDimensions.zeroDimensions();
+        }
+
+        log.error("Could not read image-size data from file " + imageFile.getName());
+        return ImageDimensions.zeroDimensions();
+    }
+
+    private static class ImageDimensions {
+        private static ImageDimensions zero = new ImageDimensions(0, 0, 0);
+        private final double width;
+        private final double height;
+        private final int depth;
+
+        ImageDimensions(double width, double height, int depth) {
+            this.width = width;
+            this.height = height;
+            this.depth = depth;
+        }
+
+        static ImageDimensions zeroDimensions() {
+            return zero;
+        }
+
+        double getWidth() {
+            return width;
+        }
+
+        double getHeight() {
+            return height;
+        }
+
+        int getDepth() {
+            return depth;
+        }
     }
 }
