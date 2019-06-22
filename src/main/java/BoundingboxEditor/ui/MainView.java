@@ -275,13 +275,8 @@ public class MainView extends BorderPane implements View {
         }));
 
         header.getViewMaximizeImagesItem().selectedProperty().addListener(((observable, oldValue, newValue) -> {
-            getBoundingBoxEditor().getBoundingBoxEditorImagePane().setMaximizeImageView(newValue);
-
-            if(newValue) {
-                getBoundingBoxEditor().getBoundingBoxEditorImagePane().setImageViewToMaxAllowedSize();
-            } else {
-                getBoundingBoxEditor().getBoundingBoxEditorImagePane().setImageViewToPreferOriginalImageSize();
-            }
+            getBoundingBoxEditorImagePane().setMaximizeImageView(newValue);
+            getBoundingBoxEditorImagePane().resetImageViewSize();
         }));
     }
 

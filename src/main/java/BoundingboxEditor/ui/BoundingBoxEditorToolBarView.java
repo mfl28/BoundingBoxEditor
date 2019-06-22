@@ -2,6 +2,7 @@ package BoundingboxEditor.ui;
 
 import BoundingboxEditor.controller.Controller;
 import BoundingboxEditor.utils.UiUtils;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -35,7 +36,6 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
     private static final String CUSTOM_MENU_ITEM_HBOX_STYLE = "custom-menu-item-hbox";
 
     private static final String RESET_ALL_BUTTON_TEXT = "Reset All";
-    private static final String BOUNDING_BOX_EDITOR_SETTINGS_BOX_ID = "bounding-box-editor-settings-box";
     private static final String NEXT_BUTTON_TOOLTIP = "Next (D)";
     private static final String PREVIOUS_BUTTON_TOOLTIP = "Previous (A)";
     private static final String BRIGHTNESS_LABEL_TOOLTIP = "Brightness (Double-click to reset)";
@@ -44,9 +44,12 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
     private static final String IMAGE_SETTINGS_MENU_BUTTON_TOOLTIP = "Image Settings";
     private static final String SHOW_BOUNDING_BOXES_BUTTON_TOOLTIP = "Show all Bounding Boxes (Ctrl+Alt+V)";
     private static final String HIDE_BOUNDING_BOXES_BUTTON_TOOLTIP = "Hide all Bounding Boxes (Ctrl+Alt+H)";
+    private static final String RESET_IMAGE_SIZE_BUTTON_TOOLTIP = "Reset Image Size and Center (Ctrl+R)";
+    private static final String BOUNDING_BOX_EDITOR_TOOLBOX_ID = "bounding-box-editor-toolbox";
 
     private final IconButton showBoundingBoxesButton = new IconButton("show-bounding-boxes-icon", IconButton.IconType.BACKGROUND);
     private final IconButton hideBoundingBoxesButton = new IconButton("hide-bounding-boxes-icon", IconButton.IconType.BACKGROUND);
+    private final IconButton resetImageSizeButton = new IconButton("reset-image-size-icon", IconButton.IconType.BACKGROUND);
 
     private final Button nextButton = new IconButton(NEXT_BUTTON_ICON_ID, IconButton.IconType.GRAPHIC);
     private final Label indexLabel = new Label();
@@ -61,7 +64,8 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
     private final Label saturationLabel = new Label();
     private final Button resetAllButton = new Button(RESET_ALL_BUTTON_TEXT);
 
-    private final HBox settingsToolBox = new HBox(createImageSettingsButton(), showBoundingBoxesButton, hideBoundingBoxesButton);
+    private final HBox boundingBoxToolBox = new HBox(hideBoundingBoxesButton, showBoundingBoxesButton);
+    private final HBox imageSettingsToolBox = new HBox(resetImageSizeButton, createImageSettingsButton());
 
     /**
      * Creates a new tool-bar containing controls to navigate images
@@ -69,13 +73,13 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
      */
     BoundingBoxEditorToolBarView() {
         getItems().addAll(
-                settingsToolBox,
+                boundingBoxToolBox,
                 UiUtils.createHSpacer(),
                 previousButton,
                 indexLabel,
                 nextButton,
                 UiUtils.createHSpacer(),
-                UiUtils.createWidthBoundHSpacer(settingsToolBox)
+                imageSettingsToolBox
         );
 
         setId(NAVIGATION_BAR_ID);
@@ -117,6 +121,16 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
      */
     Button getHideBoundingBoxesButton() {
         return hideBoundingBoxesButton;
+    }
+
+    /**
+     * Returns the button that allows to reset the image-size using the sizing-mode which is selected in
+     * the main menu-bar's view-item.
+     *
+     * @return the button
+     */
+    Button getResetImageSizeButton() {
+        return resetImageSizeButton;
     }
 
     /**
@@ -217,10 +231,12 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
         saturationLabel.setId(SATURATION_LABEL_ID);
         saturationLabel.setTooltip(new Tooltip(SATURATION_TOOLTIP));
 
-        settingsToolBox.setId(BOUNDING_BOX_EDITOR_SETTINGS_BOX_ID);
+        boundingBoxToolBox.setId(BOUNDING_BOX_EDITOR_TOOLBOX_ID);
+        imageSettingsToolBox.setId(BOUNDING_BOX_EDITOR_TOOLBOX_ID);
 
         showBoundingBoxesButton.setTooltip(new Tooltip(SHOW_BOUNDING_BOXES_BUTTON_TOOLTIP));
         hideBoundingBoxesButton.setTooltip(new Tooltip(HIDE_BOUNDING_BOXES_BUTTON_TOOLTIP));
+        resetImageSizeButton.setTooltip(new Tooltip(RESET_IMAGE_SIZE_BUTTON_TOOLTIP));
     }
 
     private void setUpInternalListeners() {
@@ -249,5 +265,8 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
             contrastSlider.setValue(CONTRAST_SLIDER_DEFAULT);
             saturationSlider.setValue(SATURATION_SLIDER_DEFAULT);
         });
+
+        boundingBoxToolBox.prefWidthProperty().bind(Bindings.max(boundingBoxToolBox.widthProperty(), imageSettingsToolBox.widthProperty()));
+        imageSettingsToolBox.prefWidthProperty().bind(Bindings.max(boundingBoxToolBox.widthProperty(), imageSettingsToolBox.widthProperty()));
     }
 }

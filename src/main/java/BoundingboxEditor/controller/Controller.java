@@ -18,6 +18,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.scene.Cursor;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
@@ -270,7 +271,13 @@ public class Controller {
                         view.getBoundingBoxTree().setToggleIconStateForSelectedBoundingBoxTreeItem(true);
                     }
                     break;
+                case R:
+                    view.getBoundingBoxEditorImagePane().resetImageViewSize();
+                    break;
             }
+
+            view.getCurrentBoundingBoxes().forEach(item -> item.setMouseTransparent(true));
+            view.getBoundingBoxEditorImageView().setCursor(Cursor.OPEN_HAND);
         } else {
             // Handle normal shortcuts
             switch(keyCode) {
@@ -307,6 +314,10 @@ public class Controller {
             case DOWN:
             case UP:
                 navigationKeyDown.set(false);
+                break;
+            case CONTROL:
+                view.getBoundingBoxEditorImageView().setCursor(Cursor.DEFAULT);
+                view.getCurrentBoundingBoxes().forEach(item -> item.setMouseTransparent(false));
         }
     }
 
@@ -363,10 +374,14 @@ public class Controller {
      * @param event the mouse-event
      */
     public void onImageViewMouseReleasedEvent(MouseEvent event) {
-        if(event.getButton().equals(MouseButton.PRIMARY) && view.getBoundingBoxCategoryTable().isCategorySelected()) {
-            final ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap().get(model.getCurrentImageFileName());
+        if(event.getButton().equals(MouseButton.PRIMARY)) {
+            if(event.isControlDown()) {
+                view.getBoundingBoxEditorImageView().setCursor(Cursor.OPEN_HAND);
+            } else if(view.getBoundingBoxCategoryTable().isCategorySelected()) {
+                final ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap().get(model.getCurrentImageFileName());
 
-            view.getBoundingBoxEditorImagePane().constructAndAddNewBoundingBox(imageMetaData);
+                view.getBoundingBoxEditorImagePane().constructAndAddNewBoundingBox(imageMetaData);
+            }
         }
     }
 

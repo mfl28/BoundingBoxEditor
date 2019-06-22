@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
  * @see View
  */
 public class BoundingBoxView extends Rectangle implements View, Toggle {
-    private static final double HIGHLIGHTED_FILL_OPACITY = 0.4;
-    private static final double SELECTED_FILL_OPACITY = 0.6;
+    private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
+    private static final double SELECTED_FILL_OPACITY = 0.5;
     private static final double CATEGORY_INDICATOR_TEXT_SIZE = 20.0;
     private static final BoundingBoxView NULL_BOUNDING_BOX_VIEW = new BoundingBoxView();
     private static final String BOUNDING_BOX_VIEW_ID = "bounding-rectangle";
@@ -130,8 +130,8 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
         BoundingBoxView other = (BoundingBoxView) obj;
 
         return Objects.equals(boundingBoxCategory, other.boundingBoxCategory) && Objects.equals(imageMetaData, other.imageMetaData)
-                && Double.compare(getX(), other.getX()) == 0 && Double.compare(getY(), other.getY()) == 0
-                && Double.compare(getWidth(), other.getWidth()) == 0 && Double.compare(getHeight(), other.getHeight()) == 0;
+                && MathUtils.doubleAlmostEqual(getX(), other.getX()) && MathUtils.doubleAlmostEqual(getY(), other.getY())
+                && MathUtils.doubleAlmostEqual(getWidth(), other.getWidth()) && MathUtils.doubleAlmostEqual(getHeight(), other.getHeight());
     }
 
     @Override
@@ -155,24 +155,10 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
      * @param initializer the initializer {@link Rectangle} object
      */
     void setCoordinatesAndSizeFromInitializer(Rectangle initializer) {
-        setXYWH(initializer.getX(), initializer.getY(),
-                initializer.getWidth(), initializer.getHeight());
-    }
-
-    /**
-     * Convenience method for setting the coordinates of the upper-left point as well as the
-     * width and height of this {@link BoundingBoxView} object.
-     *
-     * @param x the x-coordinate of the upper-left point
-     * @param y the y-coordinate of the upper-left point
-     * @param w the width
-     * @param h the height
-     */
-    void setXYWH(double x, double y, double w, double h) {
-        setX(x);
-        setY(y);
-        setWidth(w);
-        setHeight(h);
+        setX(initializer.getX());
+        setY(initializer.getY());
+        setWidth(initializer.getWidth());
+        setHeight(initializer.getHeight());
     }
 
     /**
@@ -182,7 +168,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
      * @return the {@link  BoundingBoxData} object
      */
     BoundingBoxData toBoundingBoxData() {
-        return new BoundingBoxData(getBoundingBoxCategory(), getImageRelativeBounds(), getTags());
+        return new BoundingBoxData(boundingBoxCategory, getImageRelativeBounds(), tags);
     }
 
     /**
@@ -313,23 +299,28 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
         });
 
         setOnMousePressed(event -> {
-            getToggleGroup().selectToggle(this);
+            if(!event.isControlDown()) {
+                getToggleGroup().selectToggle(this);
 
-            if(event.getButton().equals(MouseButton.PRIMARY)) {
-                dragAnchor.setCoordinates(event.getX() - getX(), event.getY() - getY());
+                if(event.getButton().equals(MouseButton.PRIMARY)) {
+                    dragAnchor.setCoordinates(event.getX() - getX(), event.getY() - getY());
+                }
+
+                event.consume();
             }
-            event.consume();
         });
 
         setOnMouseDragged(event -> {
-            if(event.getButton().equals(MouseButton.PRIMARY)) {
-                Point2D newXY = new Point2D(event.getX() - dragAnchor.getX(), event.getY() - dragAnchor.getY());
-                Point2D newXYConfined = MathUtils.clampWithinBounds(newXY, constructCurrentMoveBounds());
+            if(!event.isControlDown()) {
+                if(event.getButton().equals(MouseButton.PRIMARY)) {
+                    Point2D newXY = new Point2D(event.getX() - dragAnchor.getX(), event.getY() - dragAnchor.getY());
+                    Point2D newXYConfined = MathUtils.clampWithinBounds(newXY, constructCurrentMoveBounds());
 
-                setX(newXYConfined.getX());
-                setY(newXYConfined.getY());
+                    setX(newXYConfined.getX());
+                    setY(newXYConfined.getY());
+                }
+                event.consume();
             }
-            event.consume();
         });
     }
 
@@ -362,7 +353,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
     }
 
     private Bounds constructCurrentMoveBounds() {
-        Bounds confinementBoundsValue = autoScaleBounds.getValue();
+        final Bounds confinementBoundsValue = autoScaleBounds.getValue();
         return new BoundingBox(confinementBoundsValue.getMinX(), confinementBoundsValue.getMinY(),
                 confinementBoundsValue.getWidth() - getWidth(), confinementBoundsValue.getHeight() - getHeight());
     }
@@ -370,13 +361,13 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
     private Bounds getImageRelativeBounds() {
         final Bounds imageViewBounds = autoScaleBounds.getValue();
 
-        double imageWidth = imageMetaData.getImageWidth();
-        double imageHeight = imageMetaData.getImageHeight();
+        double widthScaleFactor = imageMetaData.getImageWidth() / imageViewBounds.getWidth();
+        double heightScaleFactor = imageMetaData.getImageHeight() / imageViewBounds.getHeight();
 
-        double xMinRelative = (getX() - imageViewBounds.getMinX()) * imageWidth / imageViewBounds.getWidth();
-        double yMinRelative = (getY() - imageViewBounds.getMinY()) * imageHeight / imageViewBounds.getHeight();
-        double widthRelative = getWidth() * imageWidth / imageViewBounds.getWidth();
-        double heightRelative = getHeight() * imageHeight / imageViewBounds.getHeight();
+        double xMinRelative = (getX() - imageViewBounds.getMinX()) * widthScaleFactor;
+        double yMinRelative = (getY() - imageViewBounds.getMinY()) * heightScaleFactor;
+        double widthRelative = getWidth() * widthScaleFactor;
+        double heightRelative = getHeight() * heightScaleFactor;
 
         return new BoundingBox(xMinRelative, yMinRelative, widthRelative, heightRelative);
     }

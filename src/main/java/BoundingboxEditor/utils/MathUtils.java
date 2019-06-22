@@ -7,6 +7,8 @@ import javafx.geometry.Point2D;
  * A class that comprises mathematical utility-functions.
  */
 public class MathUtils {
+    private static double DOUBLE_EQUAL_THRESHOLD = 1e-8;
+
     /***
      * Clamps a point 'point' inside the rectangle denoted by 'bounds'.
      * @param point the point to be clamped
@@ -38,5 +40,17 @@ public class MathUtils {
      */
     public static double clamp(double val, double min, double max) {
         return Math.max(min, Math.min(max, val));
+    }
+
+    /**
+     * Compares two double values for equality using a predefined threshold for the precision.
+     *
+     * @param a the first value
+     * @param b the second value
+     * @return true if the two values are considered equal according to the
+     * predefined precision, false otherwise
+     */
+    public static boolean doubleAlmostEqual(double a, double b) {
+        return Math.abs(a - b) < DOUBLE_EQUAL_THRESHOLD;
     }
 }

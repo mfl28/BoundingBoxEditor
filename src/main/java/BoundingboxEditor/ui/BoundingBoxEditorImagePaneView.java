@@ -9,9 +9,12 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
@@ -33,14 +36,14 @@ import java.util.stream.Collectors;
  * @see View
  * @see BoundingBoxView
  */
-public class BoundingBoxEditorImagePaneView extends StackPane implements View {
-    private static final double IMAGE_PADDING = 10.0;
+public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
+    private static final double IMAGE_PADDING = 0; // 10.0
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String IMAGE_PANE_ID = "image-pane-view";
     private static final String INITIALIZER_RECTANGLE_ID = "bounding-rectangle";
     private static final int MAXIMUM_IMAGE_WIDTH = 2400;
     private static final int MAXIMUM_IMAGE_HEIGHT = 1500;
-    private static final double ZOOM_SCALE_FACTOR = 1.05;
+    private static final double ZOOM_SCALE_DELTA = 0.05;
 
     private final ImageView imageView = new ImageView();
     private final SimpleBooleanProperty maximizeImageView = new SimpleBooleanProperty(true);
@@ -54,18 +57,21 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
     private final Rectangle initializerRectangle = createInitializerRectangle();
     private final DragAnchor dragAnchor = new DragAnchor();
 
+    private StackPane contentPane = new StackPane(imageView, boundingBoxSceneGroup, initializerRectangle);
+
     /**
      * Creates a new image-pane UI-element responsible for displaying the currently selected image on which the
      * user can draw bounding-boxes.
      */
     BoundingBoxEditorImagePaneView() {
-        getChildren().addAll(
-                imageView,
-                boundingBoxSceneGroup,
-                initializerRectangle
-        );
-
         setId(IMAGE_PANE_ID);
+
+        setContent(contentPane);
+        setFitToHeight(true);
+        setFitToWidth(true);
+
+        setVbarPolicy(ScrollBarPolicy.NEVER);
+        setHbarPolicy(ScrollBarPolicy.NEVER);
 
         boundingBoxSceneGroup.setManaged(false);
 
@@ -101,6 +107,21 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
      */
     public void removeAllCurrentBoundingBoxes() {
         currentBoundingBoxes.clear();
+    }
+
+    /**
+     * Resets the image-view size. Sets to maximum currently possible size if isMaximizeImageView()
+     * returns true, otherwise sets the image-view to the size closest to actual image-size while
+     * still displaying the whole image.
+     */
+    public void resetImageViewSize() {
+        if(isMaximizeImageView()) {
+            imageView.setFitWidth(getMaxAllowedImageWidth());
+            imageView.setFitHeight(getMaxAllowedImageHeight());
+        } else {
+            imageView.setFitWidth(Math.min(imageView.getImage().getWidth(), getMaxAllowedImageWidth()));
+            imageView.setFitHeight(Math.min(imageView.getImage().getHeight(), getMaxAllowedImageHeight()));
+        }
     }
 
     /**
@@ -162,30 +183,7 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
         imageView.setImage(new Image(imageFile.toURI().toString(),
                 dimension.getWidth(), dimension.getHeight(), true, true, true));
 
-        if(isMaximizeImageView()) {
-            setImageViewToMaxAllowedSize();
-        } else {
-            setImageViewToPreferOriginalImageSize();
-        }
-
-    }
-
-    /**
-     * Sets the image-view's width and height to their maximum allowed values.
-     */
-    void setImageViewToMaxAllowedSize() {
-        imageView.setFitWidth(getMaxAllowedImageWidth());
-        imageView.setFitHeight(getMaxAllowedImageHeight());
-    }
-
-    /**
-     * Sets the image-view's width and height to the original width and height values of the currently loaded
-     * image if these values are less than or equal to the maximum allowed values, otherwise
-     * sets the maximum allowed values.
-     */
-    void setImageViewToPreferOriginalImageSize() {
-        imageView.setFitWidth(Math.min(imageView.getImage().getWidth(), getMaxAllowedImageWidth()));
-        imageView.setFitHeight(Math.min(imageView.getImage().getHeight(), getMaxAllowedImageHeight()));
+        resetImageViewSize();
     }
 
     /**
@@ -275,49 +273,72 @@ public class BoundingBoxEditorImagePaneView extends StackPane implements View {
         });
 
         imageView.setOnMousePressed(event -> {
-            if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
-                dragAnchor.setFromMouseEvent(event);
-                Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
+                if(event.isControlDown()) {
+                    dragAnchor.setFromMouseEvent(event);
+                } else if(isCategorySelected()) {
+                    dragAnchor.setFromMouseEvent(event);
+                    Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
 
-                initializerRectangle.setX(parentCoordinates.getX());
-                initializerRectangle.setY(parentCoordinates.getY());
-                initializerRectangle.setWidth(0);
-                initializerRectangle.setHeight(0);
-                initializerRectangle.setStroke(selectedCategory.getValue().getColor());
-                initializerRectangle.setVisible(true);
+                    initializerRectangle.setX(parentCoordinates.getX());
+                    initializerRectangle.setY(parentCoordinates.getY());
+                    initializerRectangle.setWidth(0);
+                    initializerRectangle.setHeight(0);
+                    initializerRectangle.setStroke(selectedCategory.getValue().getColor());
+                    initializerRectangle.setVisible(true);
+                }
             }
         });
 
         imageView.setOnMouseDragged(event -> {
-            if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
-                Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
-                Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
-                        Math.min(clampedEventXY.getY(), dragAnchor.getY()));
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
+                if(event.isControlDown()) {
+                    imageView.setCursor(Cursor.CLOSED_HAND);
+                    setHvalue(getHvalue() - (event.getX() - dragAnchor.getX()) / imageView.getFitWidth());
+                    setVvalue(getVvalue() - (event.getY() - dragAnchor.getY()) / imageView.getFitHeight());
+                } else if(isCategorySelected()) {
+                    Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
+                    Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
+                            Math.min(clampedEventXY.getY(), dragAnchor.getY()));
 
-                initializerRectangle.setX(parentCoordinates.getX());
-                initializerRectangle.setY(parentCoordinates.getY());
-                initializerRectangle.setWidth(Math.abs(clampedEventXY.getX() - dragAnchor.getX()));
-                initializerRectangle.setHeight(Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
+                    initializerRectangle.setX(parentCoordinates.getX());
+                    initializerRectangle.setY(parentCoordinates.getY());
+                    initializerRectangle.setWidth(Math.abs(clampedEventXY.getX() - dragAnchor.getX()));
+                    initializerRectangle.setHeight(Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
+                }
             }
         });
 
-        setOnScroll(event -> {
+        contentPane.setOnScroll(event -> {
             if(event.isControlDown()) {
-                final Image image = imageView.getImage();
+                Bounds contentPaneBounds = contentPane.getLayoutBounds();
+                Bounds viewportBounds = getViewportBounds();
 
-                double scaleFactor = Math.pow(ZOOM_SCALE_FACTOR, Math.signum(event.getDeltaY()));
+                double offsetX = getHvalue() * (contentPaneBounds.getWidth() - viewportBounds.getWidth());
+                double offsetY = getVvalue() * (contentPaneBounds.getHeight() - viewportBounds.getHeight());
 
-                double newFitWidth = MathUtils.clamp(imageView.getFitWidth() * scaleFactor,
-                        Math.min(ZOOM_MIN_WINDOW_RATIO * getWidth(), image.getWidth()),
-                        getMaxAllowedImageWidth());
-                double newFitHeight = MathUtils.clamp(imageView.getFitHeight() * scaleFactor,
-                        Math.min(ZOOM_MIN_WINDOW_RATIO * getHeight(), image.getHeight()),
-                        getMaxAllowedImageHeight());
+                double minimumFitWidth = Math.min(ZOOM_MIN_WINDOW_RATIO * getWidth(), imageView.getImage().getWidth());
+                double minimumFitHeight = Math.min(ZOOM_MIN_WINDOW_RATIO * getHeight(), imageView.getImage().getHeight());
 
-                imageView.setFitWidth(newFitWidth);
-                imageView.setFitHeight(newFitHeight);
+                double zoomFactor = 1.0 + Math.signum(event.getDeltaY()) * ZOOM_SCALE_DELTA;
+
+                imageView.setFitWidth(Math.max(imageView.getFitWidth() * zoomFactor, minimumFitWidth));
+                imageView.setFitHeight(Math.max(imageView.getFitHeight() * zoomFactor, minimumFitHeight));
+
+                layout();
+
+                Bounds newContentPaneBounds = contentPane.getBoundsInLocal();
+                Point2D mousePointInImageView = imageView.parentToLocal(event.getX(), event.getY());
+
+                setHvalue((mousePointInImageView.getX() * (zoomFactor - 1) + offsetX)
+                        / (newContentPaneBounds.getWidth() - viewportBounds.getWidth()));
+                setVvalue((mousePointInImageView.getY() * (zoomFactor - 1) + offsetY)
+                        / (newContentPaneBounds.getHeight() - viewportBounds.getHeight()));
+
+                event.consume();
             }
         });
+
     }
 
     private boolean isMaximizeImageView() {

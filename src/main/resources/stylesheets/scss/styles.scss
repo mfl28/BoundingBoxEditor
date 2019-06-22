@@ -343,6 +343,14 @@ $base-separator-line-color: derive($base-background-color, -15%);
     @include icon-button-interaction-highlighting;
 }
 
+#reset-image-size-icon {
+    @include large-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $reset-image-size-icon;
+
+    @include icon-button-interaction-highlighting;
+}
+
 #toggle-square {
     -fx-opacity: 0.3;
 
@@ -423,7 +431,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
 .tool-bar {
     @include panel;
-    -fx-padding: 0 5px;
+    -fx-padding: 0;
 }
 
 .side-panel {
@@ -513,14 +521,11 @@ $base-separator-line-color: derive($base-background-color, -15%);
     }
 }
 
-.settings-item-box {
-    -fx-padding: 20px 0;
-}
-
-#bounding-box-editor-settings-box {
+#bounding-box-editor-toolbox {
     -fx-spacing: 10px;
     -fx-alignment: center;
-    -fx-padding: 0 0 0 5px;
+    -fx-padding: 0 5px;
+    -fx-background-color: $base-background-light-color;
 }
 
 #bounding-box-explorer-top-panel {
@@ -557,6 +562,16 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-spacing: 0;
     -fx-alignment: center;
 }
+
+
+.scroll-pane {
+     -fx-background-insets: 0;
+     -fx-padding: 0;
+
+     & > .viewport {
+        -fx-background-color: transparent; 
+     }
+ }
 
 // --Table-View--
 #bounding-box-explorer-top-panel > .label {
