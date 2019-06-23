@@ -436,7 +436,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
 .side-panel {
     @include panel;
-    -fx-padding: 3px 5px 0 5px;
+    -fx-padding: 3px 5px 3px 5px;
     -fx-pref-width: 260px;
     -fx-min-width: 260px;
     -fx-border-style: hidden hidden solid hidden;
@@ -447,6 +447,18 @@ $base-separator-line-color: derive($base-background-color, -15%);
     & > .label {
         -fx-font-weight: bold;
     }
+}
+
+.side-panel-box {
+    @include panel;
+    -fx-padding: 3px 5px 0 5px;
+    -fx-pref-width: 260px;
+    -fx-min-width: 260px;
+    -fx-spacing: 5px;
+
+    & > .label {
+        -fx-font-weight: bold;
+    } 
 }
 
 #status-panel {
@@ -464,6 +476,16 @@ $base-separator-line-color: derive($base-background-color, -15%);
         -fx-background-insets: 0;
         -fx-padding: 1px;
     }
+
+    &:vertical > .split-pane-divider {
+        -fx-background-color: $base-separator-line-color;
+        -fx-background-insets: 0;
+        -fx-padding: 1px;
+    }
+}
+
+#editors-split-pane {
+    -fx-background-color: $base-background-color;
 }
 
 .image-file-explorer {
@@ -537,6 +559,11 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-spacing: 0;
 }
 
+#add-category-box {
+    -fx-padding: 0 0 5px 0;
+    -fx-alignment: center;
+}
+
 .bounding-box-color-picker {
     -fx-max-width: 50px;
     -fx-max-height: 25px;
@@ -551,6 +578,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-background-color: transparent;
     -fx-min-height: 50px;
     -fx-pref-height: 70px;
+    -fx-max-height: 180px;
 
     & > .viewport {
         -fx-background-color: transparent;
@@ -574,8 +602,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
  }
 
 // --Table-View--
-#bounding-box-explorer-top-panel > .label {
-    -fx-font-weight: bold;
+#bounding-box-explorer-top-panel {
+    -fx-alignment: center;
+
+    & > .label {
+        -fx-font-weight: bold;
+    }
 }
 
 .table-view {
@@ -622,8 +654,6 @@ $base-separator-line-color: derive($base-background-color, -15%);
 }
 
 .no-header-table-view {
-    -fx-max-height: 300px;
-
     & .column-header-background {
         -fx-max-height: 0;
         -fx-pref-height: 0;
@@ -636,6 +666,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-background-insets: 0;
     -fx-background-color: $base-background-light-color;
     -fx-text-fill: $base-font-color;
+    -fx-min-height: 50px;
 
     & .corner {
         -fx-background-color: transparent;

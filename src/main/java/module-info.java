@@ -1,4 +1,4 @@
-module BoundingboxEditor {
+module BoundingBoxEditor {
     requires javafx.controls;
     requires java.desktop;
     requires org.controlsfx.controls;
@@ -7,8 +7,9 @@ module BoundingboxEditor {
     requires java.xml;
     requires org.apache.commons.lang3;
     requires java.prefs;
-    requires slf4j.api;
-    opens BoundingboxEditor.model to javafx.base;
-    opens BoundingboxEditor.model.io to javafx.base;
-    exports BoundingboxEditor;
+    requires java.logging;
+
+    opens BoundingBoxEditor.model to javafx.base;
+    opens BoundingBoxEditor.model.io to javafx.base;
+    exports BoundingBoxEditor;
 }
