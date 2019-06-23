@@ -32,6 +32,8 @@ import java.util.List;
 public class MainView extends BorderPane implements View {
     private static final int INFO_DIALOGUE_MIN_WIDTH = 600;
     private static final String MAIN_VIEW_ID = "main-view";
+    private static final String ANNOTATION_IMPORT_ERROR_REPORT_TITLE = "Annotation import error report";
+    private static final String ANNOTATION_SAVING_ERROR_REPORT_TITLE = "Annotation saving error report";
 
     private final HeaderView header = new HeaderView();
     private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
@@ -95,11 +97,11 @@ public class MainView extends BorderPane implements View {
 
         switch(ioResult.getOperationType()) {
             case ANNOTATION_IMPORT:
-                MainView.displayInfoAlert("Annotation import error report", "There were errors while loading annotations.",
+                MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE, "There were errors while loading annotations.",
                         ioResult.getErrorTableEntries().size() + " image-annotation file(s) could not be loaded.", errorTable);
                 break;
             case ANNOTATION_SAVING:
-                MainView.displayInfoAlert("Annotation saving error report", "There were errors while saving annotations.",
+                MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE, "There were errors while saving annotations.",
                         ioResult.getErrorTableEntries().size() + " image-annotation file(s) could not be saved.", errorTable);
                 break;
         }

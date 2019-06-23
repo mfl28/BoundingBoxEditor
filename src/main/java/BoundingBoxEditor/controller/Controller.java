@@ -72,6 +72,8 @@ public class Controller {
     private static final String NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT = "There are no image annotations to save.";
     private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Saving Annotations";
     private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
+    private static final String ANNOTATION_IMPORT_ERROR_TITLE = "Annotation Import Error";
+    private static final String ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT = "The folder does not contain any valid annotation files.";
 
     private final Stage stage;
     private final MainView view = new MainView();
@@ -102,7 +104,7 @@ public class Controller {
     }
 
     /**
-     * Handles the event of the user requesting to open new image folder.
+     * Handles the event of the user requesting to open a new image folder.
      */
     public void onRegisterOpenImageFolderAction() {
         // TODO: when folder is changed: ask if the current categories should be kept or deleted
@@ -533,6 +535,9 @@ public class Controller {
 
             if(!loadResult.getErrorTableEntries().isEmpty()) {
                 MainView.displayIOResultErrorInfoAlert(loadResult);
+            }
+            else if(loadResult.getNrSuccessfullyProcessedItems() == 0) {
+                MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE, ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
             }
         });
 

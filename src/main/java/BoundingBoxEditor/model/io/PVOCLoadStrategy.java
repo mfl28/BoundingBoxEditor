@@ -93,8 +93,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         ImageMetaData imageMetaData = parseImageMetaData(document);
 
         if(!fileNamesToLoad.contains(imageMetaData.getFileName())) {
-            throw new AnnotationToNonExistentImageException("The image file " + imageMetaData.getFileName()
-                    + " does not belong to the currently loaded images.");
+            throw new AnnotationToNonExistentImageException("The image file does not belong to the currently loaded images.");
         }
 
         List<BoundingBoxData> boundingBoxData = parseBoundingBoxData(document);
@@ -147,7 +146,6 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             }
 
             Element currentElement = (Element) currentChild;
-
 
             switch(currentElement.getTagName()) {
                 case "name":
