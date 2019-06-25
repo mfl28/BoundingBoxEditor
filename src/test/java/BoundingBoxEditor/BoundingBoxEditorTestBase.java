@@ -99,12 +99,17 @@ public class BoundingBoxEditorTestBase {
     protected void onStart(Stage stage) {
         controller = new Controller(stage);
         mainView = controller.getView();
+        // To make sure that the window is on top of all other windows at the start.
+        stage.setAlwaysOnTop(true);
 
         final Scene scene = createSceneFromParent(mainView);
         scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
 
         stage.setScene(scene);
         stage.show();
+        // To allow for correct testing of dialog windows (which should be in front of the main stage)
+        // switch the top-positioning of the main stage off after it is shown.
+        stage.setAlwaysOnTop(false);
     }
 
     @AfterEach
