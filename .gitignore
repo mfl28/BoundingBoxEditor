@@ -10,11 +10,7 @@
 
 # IDEA
 # ----
-!/.idea
-/.idea/*
-!/.idea/codeStyles
-!/.idea/inspectionProfiles
-*/**/.idea
+.idea
 .shelf
 /*.iml
 /*.ipr
