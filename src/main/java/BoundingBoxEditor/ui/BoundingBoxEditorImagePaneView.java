@@ -12,6 +12,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
@@ -121,6 +122,17 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
             imageView.setFitWidth(Math.min(imageView.getImage().getWidth(), getMaxAllowedImageWidth()));
             imageView.setFitHeight(Math.min(imageView.getImage().getHeight(), getMaxAllowedImageHeight()));
         }
+    }
+
+    /**
+     * Switches the zooming and panning functionality on and off.
+     *
+     * @param value true to switch on, false to switch off
+     */
+    public void setZoomableAndPannable(boolean value) {
+        currentBoundingBoxes.forEach(boundingBox -> boundingBox.setMouseTransparent(value));
+        imageView.setCursor(value ? Cursor.OPEN_HAND : Cursor.DEFAULT);
+        setPannable(value);
     }
 
     /**
@@ -286,7 +298,9 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         });
 
         imageView.setOnMouseDragged(event -> {
-            if(!event.isControlDown() && event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
+            if(event.isControlDown()) {
+                imageView.setCursor(Cursor.CLOSED_HAND);
+            } else if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
                 Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
                 Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
                         Math.min(clampedEventXY.getY(), dragAnchor.getY()));

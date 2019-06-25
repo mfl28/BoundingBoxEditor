@@ -14,7 +14,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -39,6 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The control-component of the application (as in MVC pattern). Responsible for interaction-handling
@@ -152,12 +152,7 @@ public class Controller {
      * Handles the event of the user requesting to save the image annotations.
      */
     public void onRegisterSaveAnnotationsAction() {
-        // At first (if needed) update the model's bounding-box data from the bounding-boxes currently in view.
-        if(model.imageFilesLoaded()) {
-            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
-        }
-
-        if(model.getImageFileNameToAnnotationMap().isEmpty()) {
+        if(model.getImageFileNameToAnnotationMap().isEmpty() && view.getCurrentBoundingBoxes().isEmpty()) {
             MainView.displayErrorAlert(SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE,
                     NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT);
             return;
@@ -169,10 +164,7 @@ public class Controller {
         final File saveDirectory = directoryChooser.showDialog(stage);
 
         if(saveDirectory != null) {
-            final Service<IOResult> saveService = createSaveAnnotationsService(saveDirectory);
-            MainView.displayServiceProgressDialog(saveService, SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
-                    SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
-            saveService.start();
+            saveAnnotationsToDirectory(saveDirectory);
         }
     }
 
@@ -180,11 +172,6 @@ public class Controller {
      * Handles the event of the user requesting to save the current image-annotations.
      */
     public void onRegisterImportAnnotationsAction() {
-        // At first (if needed) update the model's bounding-box data from the bounding-boxes currently in view.
-        if(model.imageFilesLoaded()) {
-            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
-        }
-
         final DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle(IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE);
 
@@ -278,9 +265,7 @@ public class Controller {
                     break;
             }
 
-            view.getCurrentBoundingBoxes().forEach(item -> item.setMouseTransparent(true));
-            view.getBoundingBoxEditorImageView().setCursor(Cursor.OPEN_HAND);
-            view.getBoundingBoxEditorImagePane().setPannable(true);
+            view.getBoundingBoxEditorImagePane().setZoomableAndPannable(true);
         } else {
             // Handle normal shortcuts
             switch(keyCode) {
@@ -319,9 +304,8 @@ public class Controller {
                 navigationKeyDown.set(false);
                 break;
             case CONTROL:
-                view.getBoundingBoxEditorImageView().setCursor(Cursor.DEFAULT);
-                view.getBoundingBoxEditorImagePane().setPannable(false);
-                view.getCurrentBoundingBoxes().forEach(item -> item.setMouseTransparent(false));
+                view.getBoundingBoxEditorImagePane().setZoomableAndPannable(false);
+                break;
         }
     }
 
@@ -398,6 +382,64 @@ public class Controller {
         return view;
     }
 
+    /**
+     * Imports all valid image files in the provided directory into the program.
+     * @param directory the directory containing the image files
+     */
+    void importAnnotationsFromDirectory(File directory) {
+        // At first (if needed) update the model's bounding-box data from the bounding-boxes currently in view.
+        if(model.imageFilesLoaded()) {
+            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
+        }
+
+        Service<IOResult> loadService = createLoadAnnotationsService(directory);
+
+        ProgressDialog progressDialog = new ProgressDialog(loadService);
+        progressDialog.setTitle("Loading");
+        progressDialog.setHeaderText("Loading annotations...");
+
+        loadService.setOnSucceeded(event -> {
+            IOResult loadResult = loadService.getValue();
+
+            if(loadResult.getNrSuccessfullyProcessedItems() != 0) {
+                view.getStatusBar().setStatusEvent(new ImageAnnotationsImportingSuccessfulEvent(loadResult));
+            }
+
+            ImageAnnotation annotation = model.getCurrentImageAnnotation();
+
+            if(annotation != null) {
+                view.getBoundingBoxTree().reset();
+                view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
+                view.loadBoundingBoxViewsFromAnnotation(annotation);
+                view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
+            }
+
+            if(!loadResult.getErrorTableEntries().isEmpty()) {
+                MainView.displayIOResultErrorInfoAlert(loadResult);
+            } else if(loadResult.getNrSuccessfullyProcessedItems() == 0) {
+                MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE, ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
+            }
+        });
+
+        loadService.start();
+    }
+
+    /**
+     * Save all currently existing annotation data to the provided directory.
+     * @param directory the directory to save to
+     */
+    void saveAnnotationsToDirectory(File directory) {
+        // At first (if needed) update the model's bounding-box data from the bounding-boxes currently in view.
+        if(model.imageFilesLoaded()) {
+            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
+        }
+
+        final Service<IOResult> saveService = createSaveAnnotationsService(directory);
+        MainView.displayServiceProgressDialog(saveService, SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
+                SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
+        saveService.start();
+    }
+
     private void onCloseStageRequested() {
         Preferences.userNodeForPackage(getClass()).putBoolean("isMaximized", stage.isMaximized());
     }
@@ -446,11 +488,12 @@ public class Controller {
 
     private List<File> getImageFilesFromDirectory(File directory) throws IOException {
         Path path = Paths.get(directory.getPath());
-        return FXCollections.observableArrayList(Files.walk(path, MAX_DIRECTORY_DEPTH)
-                .filter(p -> Arrays.stream(imageExtensions).anyMatch(p.toString()::endsWith))
-                .map(p -> new File(p.toString()))
-                .collect(Collectors.toList())
-        );
+
+        try(Stream<Path> imageFiles = Files.walk(path, MAX_DIRECTORY_DEPTH)) {
+            return imageFiles.filter(p -> Arrays.stream(imageExtensions).anyMatch(p.toString()::endsWith))
+                    .map(p -> new File(p.toString()))
+                    .collect(Collectors.toList());
+        }
     }
 
     private void updateViewImageFiles() {
@@ -508,40 +551,6 @@ public class Controller {
         });
 
         return saveService;
-    }
-
-    private void importAnnotationsFromDirectory(File directoryPath) {
-        Service<IOResult> loadService = createLoadAnnotationsService(directoryPath);
-
-        ProgressDialog progressDialog = new ProgressDialog(loadService);
-        progressDialog.setTitle("Loading");
-        progressDialog.setHeaderText("Loading annotations...");
-
-        loadService.setOnSucceeded(event -> {
-            IOResult loadResult = loadService.getValue();
-
-            if(loadResult.getNrSuccessfullyProcessedItems() != 0) {
-                view.getStatusBar().setStatusEvent(new ImageAnnotationsImportingSuccessfulEvent(loadResult));
-            }
-
-            ImageAnnotation annotation = model.getCurrentImageAnnotation();
-
-            if(annotation != null) {
-                view.getBoundingBoxTree().reset();
-                view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
-                view.loadBoundingBoxViewsFromAnnotation(annotation);
-                view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
-            }
-
-            if(!loadResult.getErrorTableEntries().isEmpty()) {
-                MainView.displayIOResultErrorInfoAlert(loadResult);
-            }
-            else if(loadResult.getNrSuccessfullyProcessedItems() == 0) {
-                MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE, ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
-            }
-        });
-
-        loadService.start();
     }
 
     private Service<IOResult> createLoadAnnotationsService(File loadDirectory) {

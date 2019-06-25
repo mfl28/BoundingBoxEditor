@@ -45,7 +45,7 @@ public class ImageFileListView extends ListView<File> implements View {
 
     @Override
     public void scrollTo(int index) {
-        setFixedCellSize(REQUESTED_IMAGE_HEIGHT);
+        setFixedCellSize(REQUESTED_IMAGE_HEIGHT + 10);
         super.scrollTo(index);
         setFixedCellSize(0);
     }
@@ -104,6 +104,4 @@ public class ImageFileListView extends ListView<File> implements View {
             }
         }
     }
-
-
 }

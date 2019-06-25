@@ -1,5 +1,6 @@
 package BoundingBoxEditor.ui;
 
+import BoundingBoxEditor.BoundingBoxEditorTestBase;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.stage.Stage;
@@ -16,9 +17,6 @@ import java.util.concurrent.TimeoutException;
 import static org.testfx.api.FxAssert.verifyThat;
 
 class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
-    private static String TEST_IMAGE_FOLDER_PATH_1 = "/TestImages/MediumSizedImages";
-    private static String TEST_IMAGE_FOLDER_PATH_2 = "/TestImages";
-
     @Start
     void start(Stage stage) {
         super.onStart(stage);
@@ -26,11 +24,13 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onLoadingOtherFolder_AfterBoundingBoxDrawn_ShouldResetCorrectly(FxRobot robot) throws TimeoutException {
+    void onOpeningNewImageFolder_WhenBoundingBoxesExist_ShouldResetCorrectly(FxRobot robot) throws TimeoutException {
+        waitUntilCurrentImageIsLoaded();
         enterNewCategory(robot, "Test");
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn("#next-button");
+        waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
         drawBoundingBox(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
@@ -40,11 +40,13 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         final BoundingBoxView drawnBoundingBox = mainView.getCurrentBoundingBoxes().get(0);
 
         robot.clickOn("#previous-button");
+        waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(0));
 
         robot.clickOn("#next-button");
+        waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
@@ -56,6 +58,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
         waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(0));
@@ -67,6 +70,5 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
-
     }
 }

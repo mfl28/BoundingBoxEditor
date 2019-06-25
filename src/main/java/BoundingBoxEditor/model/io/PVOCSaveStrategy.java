@@ -74,6 +74,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
             progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrOfAnnotations);
         });
+
         long duration = System.nanoTime() - startTime;
 
         return new IOResult(
@@ -102,10 +103,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         String fileName = dataElement.getImageFileName();
         String annotationFileNameBase = fileName.replace('.', '_');
 
-        File outputFile = new File(saveFolderPath.toString().concat("\\")
-                .concat(annotationFileNameBase)
-                .concat(ANNOTATION_FILENAME_EXTENSION)
-                .concat(FILE_EXTENSION));
+        File outputFile = saveFolderPath.resolve(annotationFileNameBase + ANNOTATION_FILENAME_EXTENSION + FILE_EXTENSION).toFile();
 
         StreamResult streamResult = new StreamResult(outputFile);
 

@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Implements the loading of xml-files containing image-annotations in the
@@ -46,43 +47,45 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         this.existingBoundingBoxCategories = new ConcurrentHashMap<>(model.getBoundingBoxCategories().stream()
                 .collect(Collectors.toMap(BoundingBoxCategory::getName, Function.identity())));
 
-        List<File> annotationFiles = Files.walk(path, INCLUDE_SUBDIRECTORIES ? Integer.MAX_VALUE : 1)
-                .filter(pathItem -> pathItem.getFileName().toString().endsWith(".xml"))
-                .map(Path::toFile)
-                .collect(Collectors.toList());
+        try(Stream<Path> fileStream = Files.walk(path, INCLUDE_SUBDIRECTORIES ? Integer.MAX_VALUE : 1)) {
+            List<File> annotationFiles = fileStream
+                    .filter(pathItem -> pathItem.getFileName().toString().endsWith(".xml"))
+                    .map(Path::toFile)
+                    .collect(Collectors.toList());
 
-        List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
+            List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
-        int totalNrOfFiles = annotationFiles.size();
-        AtomicInteger nrProcessedFiles = new AtomicInteger(0);
+            int totalNrOfFiles = annotationFiles.size();
+            AtomicInteger nrProcessedFiles = new AtomicInteger(0);
 
-        List<ImageAnnotation> imageAnnotations = annotationFiles.parallelStream()
-                .map(file -> {
-                    progress.set(1.0 * nrProcessedFiles.incrementAndGet() / totalNrOfFiles);
+            List<ImageAnnotation> imageAnnotations = annotationFiles.parallelStream()
+                    .map(file -> {
+                        progress.set(1.0 * nrProcessedFiles.incrementAndGet() / totalNrOfFiles);
 
-                    try {
-                        return parseAnnotationFile(file);
-                    } catch(SAXException | IOException | InvalidAnnotationFileFormatException
-                            | ParserConfigurationException | AnnotationToNonExistentImageException e) {
-                        unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(file.getName(), e.getMessage()));
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                        try {
+                            return parseAnnotationFile(file);
+                        } catch(SAXException | IOException | InvalidAnnotationFileFormatException
+                                | ParserConfigurationException | AnnotationToNonExistentImageException e) {
+                            unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(file.getName(), e.getMessage()));
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
 
-        model.getBoundingBoxCategories().setAll(existingBoundingBoxCategories.values());
-        model.getCategoryToAssignedBoundingBoxesCountMap().putAll(boundingBoxCountPerCategory);
-        model.updateImageAnnotations(imageAnnotations);
+            model.getBoundingBoxCategories().setAll(existingBoundingBoxCategories.values());
+            model.getCategoryToAssignedBoundingBoxesCountMap().putAll(boundingBoxCountPerCategory);
+            model.updateImageAnnotations(imageAnnotations);
 
-        long estimatedTime = System.nanoTime() - startTime;
+            long estimatedTime = System.nanoTime() - startTime;
 
-        return new IOResult(
-                IOResult.OperationType.ANNOTATION_IMPORT,
-                imageAnnotations.size(),
-                TimeUnit.MILLISECONDS.convert(estimatedTime, TimeUnit.NANOSECONDS),
-                unParsedFileErrorMessages
-        );
+            return new IOResult(
+                    IOResult.OperationType.ANNOTATION_IMPORT,
+                    imageAnnotations.size(),
+                    TimeUnit.MILLISECONDS.convert(estimatedTime, TimeUnit.NANOSECONDS),
+                    unParsedFileErrorMessages
+            );
+        }
     }
 
     private ImageAnnotation parseAnnotationFile(File file) throws SAXException, IOException,
