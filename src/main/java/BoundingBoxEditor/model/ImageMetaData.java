@@ -104,6 +104,11 @@ public class ImageMetaData {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(fileName, folderName, imageWidth, imageHeight, imageDepth);
+    }
+
+    @Override
     public String toString() {
         return "ImageMetaData[fileName=" + getFileName() + ", folderName=" + getFolderName()
                 + ", image-width=" + getImageWidth() + ", image-height=" + getImageHeight() + ", image-depth=" + getImageDepth();

@@ -272,14 +272,14 @@ public class Controller {
                 case DOWN:
                 case D:
                     navigationKeyDown.set(true);
-                    if(model.imageFilesLoaded() && model.nextImageFileExists()) {
+                    if(model.imageFilesLoaded() && model.hasNextImageFile()) {
                         onRegisterNextImageFileRequested();
                     }
                     break;
                 case UP:
                 case A:
                     navigationKeyDown.set(true);
-                    if(model.imageFilesLoaded() && model.previousImageFileExists()) {
+                    if(model.imageFilesLoaded() && model.hasPreviousImageFile()) {
                         onRegisterPreviousImageFileRequested();
                     }
                     break;
@@ -460,8 +460,8 @@ public class Controller {
 
         view.getFileImportAnnotationsItem().disableProperty().bind(model.nrImageFilesProperty().isEqualTo(0));
 
-        view.getPreviousImageNavigationButton().disableProperty().bind(model.previousImageFileExistsProperty().not());
-        view.getNextImageNavigationButton().disableProperty().bind(model.nextImageFileExistsProperty().not());
+        view.getPreviousImageNavigationButton().disableProperty().bind(model.hasPreviousImageFileProperty().not());
+        view.getNextImageNavigationButton().disableProperty().bind(model.hasNextImageFileProperty().not());
 
         view.getBoundingBoxCategoryTable().getDeleteColumn().setCellFactory(column -> {
             final BoundingBoxCategoryDeleteTableCell cell = new BoundingBoxCategoryDeleteTableCell();
@@ -490,8 +490,8 @@ public class Controller {
         Path path = Paths.get(directory.getPath());
 
         try(Stream<Path> imageFiles = Files.walk(path, MAX_DIRECTORY_DEPTH)) {
-            return imageFiles.filter(p -> Arrays.stream(imageExtensions).anyMatch(p.toString()::endsWith))
-                    .map(p -> new File(p.toString()))
+            return imageFiles.filter(file -> Arrays.stream(imageExtensions).anyMatch(file.toString()::endsWith))
+                    .map(file -> new File(file.toString()))
                     .collect(Collectors.toList());
         }
     }

@@ -2,6 +2,8 @@ package BoundingBoxEditor.ui;
 
 import javafx.scene.control.TreeItem;
 
+import java.util.Objects;
+
 /**
  * A tree-item representing an existing {@link BoundingBoxView} in a {@link BoundingBoxTreeCell} of a {@link BoundingBoxTreeView}.
  *
@@ -39,7 +41,11 @@ class BoundingBoxTreeItem extends TreeItem<BoundingBoxView> {
         BoundingBoxTreeItem other = (BoundingBoxTreeItem) obj;
 
         return id == other.id && getValue().equals(other.getValue()) && getChildren().equals(other.getChildren());
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, getValue(), getChildren());
     }
 
     /**

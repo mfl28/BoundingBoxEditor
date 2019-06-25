@@ -262,7 +262,7 @@ public class Model {
      *
      * @return true if the current index is the last, false otherwise
      */
-    public Boolean nextImageFileExists() {
+    public Boolean hasNextImageFile() {
         return nextImageFileExists.get();
     }
 
@@ -271,7 +271,7 @@ public class Model {
      *
      * @return true if the current index is the first, false otherwise
      */
-    public Boolean previousImageFileExists() {
+    public Boolean hasPreviousImageFile() {
         return previousImageFileExists.get();
     }
 
@@ -282,7 +282,7 @@ public class Model {
      *
      * @return the property
      */
-    public BooleanProperty nextImageFileExistsProperty() {
+    public BooleanProperty hasNextImageFileProperty() {
         return nextImageFileExists;
     }
 
@@ -293,7 +293,7 @@ public class Model {
      *
      * @return the property
      */
-    public BooleanProperty previousImageFileExistsProperty() {
+    public BooleanProperty hasPreviousImageFileProperty() {
         return previousImageFileExists;
     }
 

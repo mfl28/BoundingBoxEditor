@@ -270,6 +270,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
                 cell.setOnDragEntered(event -> {
                     TreeItem thisItem = cell.getTreeItem();
+
                     if(draggedItem == null || thisItem == null || draggedItem == thisItem
                             || thisItem instanceof BoundingBoxCategoryTreeItem
                             || thisItem.getChildren().contains(draggedItem)

@@ -325,7 +325,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
                         .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
                         .otherwise(Color.TRANSPARENT)));
 
-        selectedProperty().addListener(((observable, oldValue, newValue) -> {
+        selected.addListener(((observable, oldValue, newValue) -> {
             if(newValue) {
                 highlighted.set(false);
             }

@@ -168,24 +168,28 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 case "pose":
                     String poseValue = currentElement.getTextContent();
 
-                    if(poseValue != null && !poseValue.toLowerCase().equals("unspecified")) {
+                    if(poseValue != null && !poseValue.equalsIgnoreCase("unspecified")) {
                         tags.add("pose: " + poseValue.toLowerCase());
                     }
+
                     break;
                 case "truncated":
                     if(Integer.parseInt(currentElement.getTextContent()) == 1) {
                         tags.add("truncated");
                     }
+
                     break;
                 case "occluded":
                     if(Integer.parseInt(currentElement.getTextContent()) == 1) {
                         tags.add("occluded");
                     }
+
                     break;
                 case "difficult":
                     if(Integer.parseInt(currentElement.getTextContent()) == 1) {
                         tags.add("difficult");
                     }
+
                     break;
                 case "part":
                     parts.add(parseBoundingBoxElement(currentElement));

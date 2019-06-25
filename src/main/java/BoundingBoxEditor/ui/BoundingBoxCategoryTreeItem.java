@@ -7,6 +7,7 @@ import javafx.collections.ListChangeListener;
 import javafx.scene.control.TreeItem;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A tree-item representing an existing {@link BoundingBoxCategory} in a {@link BoundingBoxTreeCell} of a {@link BoundingBoxTreeView}.
@@ -50,6 +51,11 @@ class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
         BoundingBoxCategoryTreeItem other = (BoundingBoxCategoryTreeItem) obj;
 
         return boundingBoxCategory.equals(other.boundingBoxCategory) && getChildren().equals(other.getChildren());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(boundingBoxCategory, getChildren());
     }
 
     /**
