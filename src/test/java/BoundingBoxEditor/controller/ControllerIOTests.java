@@ -53,7 +53,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 .release(KeyCode.CONTROL);
 
         // Save the annotations to the temporary folder.
-        Platform.runLater(() -> controller.saveAnnotationsToDirectory(actualDir.toFile()));
+        WaitForAsyncUtils.waitForAsyncFx(5000, () -> controller.saveAnnotationsToDirectory(actualDir.toFile()));
         WaitForAsyncUtils.waitForFxEvents();
 
         Path actualFilePath = actualDir.resolve(EXPECTED_FILE_NAME);

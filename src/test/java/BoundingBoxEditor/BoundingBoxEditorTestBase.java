@@ -2,6 +2,7 @@ package BoundingBoxEditor;
 
 import BoundingBoxEditor.controller.Controller;
 import BoundingBoxEditor.ui.MainView;
+import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
@@ -97,6 +98,7 @@ public class BoundingBoxEditorTestBase {
 
     @Start
     protected void onStart(Stage stage) {
+        Platform.setImplicitExit(false);
         controller = new Controller(stage);
         mainView = controller.getView();
         // To make sure that the window is on top of all other windows at the start.
