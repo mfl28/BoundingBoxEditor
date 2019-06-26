@@ -14,9 +14,9 @@ plugins {
 
 apply plugin: 'com.github.fgiannesini.libsass.gradle.plugin'
 
-version '1.0'
+version '0.1.0'
 
-sourceCompatibility = 1.12
+sourceCompatibility = 1.11
 
 repositories {
     jcenter()
