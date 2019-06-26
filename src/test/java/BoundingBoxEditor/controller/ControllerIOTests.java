@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 class ControllerIOTests extends BoundingBoxEditorTestBase {
@@ -52,17 +53,21 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 .scroll(-30)
                 .release(KeyCode.CONTROL);
 
+        WaitForAsyncUtils.waitForFxEvents();
+
         // Save the annotations to the temporary folder.
-        WaitForAsyncUtils.waitForAsyncFx(5000, () -> controller.saveAnnotationsToDirectory(actualDir.toFile()));
+        Platform.runLater(() -> controller.saveAnnotationsToDirectory(actualDir.toFile()));
         WaitForAsyncUtils.waitForFxEvents();
 
         Path actualFilePath = actualDir.resolve(EXPECTED_FILE_NAME);
 
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> Files.exists(actualFilePath));
+
+        WaitForAsyncUtils.waitForFxEvents();
         // Check if the expected output-file exists.
         Assertions.assertTrue(Files.exists(actualFilePath), "Actual file exists.");
 
         WaitForAsyncUtils.waitForFxEvents();
-
         // The files should be exactly the same.
         Assertions.assertArrayEquals(Files.readAllBytes(referenceFile.toPath()), Files.readAllBytes(actualFilePath));
     }
