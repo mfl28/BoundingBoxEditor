@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -22,6 +24,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     private static String REFERENCE_ANNOTATIONS_PATH = "/testannotations/reference";
     private static String EXPECTED_FILE_NAME = "austin-neill-685084-unsplash_jpg_A.xml";
     private static String REFERENCE_FILE_PATH = REFERENCE_ANNOTATIONS_PATH + "/" + EXPECTED_FILE_NAME;
+    private static int TIMEOUT_DURATION_IN_SEC = 5;
 
     @Start
     void start(Stage stage) {
@@ -36,7 +39,6 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         final File referenceAnnotationsDirectory = new File(getClass().getResource(REFERENCE_ANNOTATIONS_PATH).getFile());
-        final File referenceFile = new File(getClass().getResource(REFERENCE_FILE_PATH).getFile());
 
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller.importAnnotationsFromDirectory(referenceAnnotationsDirectory));
@@ -61,14 +63,20 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         Path actualFilePath = actualDir.resolve(EXPECTED_FILE_NAME);
 
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> Files.exists(actualFilePath));
+        // Wait until the output-file actually exists. If the file was not created in
+        // the specified time-frame, a TimeoutException is thrown and the test fails.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> Files.exists(actualFilePath)),
+                "Output-file was not created within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+        
+        // The output file should be exactly the same as the reference file.
+        final File referenceFile = new File(getClass().getResource(REFERENCE_FILE_PATH).getFile());
+        final byte[] referenceArray = Files.readAllBytes(referenceFile.toPath());
 
-        WaitForAsyncUtils.waitForFxEvents();
-        // Check if the expected output-file exists.
-        Assertions.assertTrue(Files.exists(actualFilePath), "Actual file exists.");
-
-        WaitForAsyncUtils.waitForFxEvents();
-        // The files should be exactly the same.
-        Assertions.assertArrayEquals(Files.readAllBytes(referenceFile.toPath()), Files.readAllBytes(actualFilePath));
+        // Wait until the annotations were written to the output file and the file is equivalent to the reference file
+        // or throw a TimeoutException if this did not happen within the specified time-frame.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> Arrays.equals(referenceArray, Files.readAllBytes(actualFilePath))),
+                "Expected annotation output-file content was not created within " + TIMEOUT_DURATION_IN_SEC + " sec.");
     }
 }
