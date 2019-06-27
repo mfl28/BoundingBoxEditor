@@ -10,6 +10,7 @@ plugins {
     id 'com.github.ben-manes.versions' version '0.21.0'
     id 'org.beryx.jlink' version '2.11.1'
     id 'org.javamodularity.moduleplugin' version '1.5.0'
+    id 'jacoco'
 }
 
 apply plugin: 'com.github.fgiannesini.libsass.gradle.plugin'
@@ -50,6 +51,22 @@ javafx {
 
 test {
     useJUnitPlatform()
+
+    jvmArgs '-Dtestfx.robot=awt'
+
+    moduleOptions {
+        runOnClasspath = true
+    }
+
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        html.enabled = true
+        csv.enabled = false
+    }
 }
 
 libSassParameters {
@@ -72,10 +89,3 @@ jlink {
     imageZip = project.file("${buildDir}/distributions/boundingboxeditor-${javafx.platform.classifier}.zip")
 }
 
-test {
-    jvmArgs '-Dtestfx.robot=awt'
-
-    moduleOptions {
-        runOnClasspath = true
-    }
-}
