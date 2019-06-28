@@ -1,29 +1,50 @@
 # Gradle
-# Build your Java project and run tests with Gradle using a Gradle wrapper script.
-# Add steps that analyze code, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/java
 
 trigger:
 - master
 
-pool:
-  vmImage: 'windows-2019'
+jobs:
+# Test on windows.
+- job: Test
+  pool:
+    vmImage: 'windows-2019'
+  steps:
+  - task: Gradle@2
+    inputs:
+      workingDirectory: ''
+      gradleWrapperFile: 'gradlew'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.11'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: true
+      testResultsFiles: '**/TEST-*.xml'
+      tasks: 'test'
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: 'JaCoCo'
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/reports/jacoco/test/jacocoTestReport.xml'
+      reportDirectory: '$(System.DefaultWorkingDirectory)/**/reports/jacoco/test/html'
+      failIfCoverageEmpty: true
 
-steps:
-- task: Gradle@2
-  inputs:
-    workingDirectory: ''
-    gradleWrapperFile: 'gradlew'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.11'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/TEST-*.xml'
-    tasks: 'build'
+# Build for all platforms.
+- template: build.yml
+  parameters:
+    name: Windows
+    platform: win
+    pool:
+      vmImage: 'windows-2019'
 
-- task: PublishCodeCoverageResults@1
-  inputs:
-    codeCoverageTool: 'JaCoCo'
-    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/reports/jacoco/test/jacocoTestReport.xml'
-    reportDirectory: '$(System.DefaultWorkingDirectory)/**/reports/jacoco/test/html'
-    failIfCoverageEmpty: true
+- template: build.yml
+  parameters:
+    name: Linux
+    platform: linux
+    pool:
+      vmImage: 'ubuntu-16.04'
+
+- template: build.yml
+  parameters:
+    name: MacOS
+    platform: mac
+    pool:
+      vmImage: 'macOS-10.14'
