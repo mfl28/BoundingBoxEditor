@@ -18,7 +18,7 @@ import java.io.File;
  * @see View
  */
 public class ImageFileExplorerView extends VBox implements View {
-    private static final String IMAGE_FILE_EXPLORER_STYLE = "image-file-explorer";
+    private static final String IMAGE_FILE_EXPLORER_ID = "image-file-explorer";
     private static final String IMAGE_FILE_EXPLORER_TABLE_TEXT = "Images";
     private static final String IMAGE_FILE_SEARCH_PROMPT_TEXT = "Search File";
     private static final String IMAGE_FILE_SEARCH_BOX_ID = "image-file-search-box";
@@ -38,7 +38,7 @@ public class ImageFileExplorerView extends VBox implements View {
                 createImageFileSearchBox(),
                 imageFileListView);
 
-        getStyleClass().add(IMAGE_FILE_EXPLORER_STYLE);
+        setId(IMAGE_FILE_EXPLORER_ID);
 
         setUpInternalListeners();
     }

@@ -434,21 +434,6 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-padding: 0;
 }
 
-.side-panel {
-    @include panel;
-    -fx-padding: 3px 5px 3px 5px;
-    -fx-pref-width: 260px;
-    -fx-min-width: 260px;
-    -fx-border-style: hidden hidden solid hidden;
-    -fx-border-color: $base-separator-line-color;
-    -fx-border-width: 2px;
-    -fx-spacing: 5px;
-
-    & > .label {
-        -fx-font-weight: bold;
-    }
-}
-
 .side-panel-box {
     @include panel;
     -fx-padding: 3px 5px 0 5px;
@@ -488,14 +473,14 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-background-color: $base-background-color;
 }
 
-.image-file-explorer {
+#image-file-explorer {
     -fx-background-color: $base-background-color;
     -fx-padding: 3px 0 0 0;
     -fx-pref-width: 260px;
     -fx-min-width: 260px;
     -fx-border-style: hidden hidden solid hidden;
     -fx-border-color: $base-separator-line-color;
-    -fx-border-width: 2px;
+    -fx-border-width: 0 0 2px 0;
     -fx-spacing: 5px;
 
     & > .label {
@@ -534,6 +519,8 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-background-color: $base-highlight-light-color;
     -fx-text-fill: $base-font-color;
     -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 4px;
     -fx-accent: $base-alt-highlight-color;
 }
 
@@ -556,6 +543,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
 #category-selector-top-panel {
     -fx-alignment: center;
+    -fx-padding: 0;
     -fx-spacing: 0;
 }
 
@@ -586,7 +574,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
 }
 
 #image-file-search-box {
-    -fx-padding: 0 5px 0 5px;
+    -fx-padding: 0 5px;
     -fx-spacing: 0;
     -fx-alignment: center;
 }
@@ -817,5 +805,11 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
 #tag-label {
     -fx-font-size: 12 pt;
+}
+
+#tag-box {
+    -fx-border-style: hidden hidden solid hidden;
+    -fx-border-color: $base-separator-line-color;
+    -fx-border-width: 2px;
 }
 

@@ -42,6 +42,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     private static final String SIDE_PANEL_BOX_STYLE = "side-panel-box";
     private static final String EDITORS_SPLIT_PANE_ID = "editors-split-pane";
     private static final String ADD_CATEGORY_BOX_ID = "add-category-box";
+    private static final String TAG_BOX_ID = "tag-box";
 
     private final TextField categorySearchField = new TextField();
     private final BoundingBoxCategoryTableView boundingBoxCategoryTable = new BoundingBoxCategoryTableView();
@@ -230,6 +231,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
         VBox.setVgrow(boundingBoxTagScrollPane, Priority.ALWAYS);
         tagBox.getStyleClass().add(SIDE_PANEL_BOX_STYLE);
+        tagBox.setId(TAG_BOX_ID);
 
         SplitPane.setResizableWithParent(tagBox, false);
         return tagBox;
