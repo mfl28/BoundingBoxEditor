@@ -1,0 +1,21 @@
+# GitHub Release task
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/github-release
+
+jobs:
+- job: GitHubRelease
+  displayName: 'GitHub'
+  condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/release-v') 
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - download: current
+    patterns: '**/boundingboxeditor-*.zip'
+  - task: GithubRelease@0
+    displayName: 'Create GitHub release'
+    inputs:
+      gitHubConnection: mfl28github
+      repositoryName: mfl28/BoundingBoxEditor
+      action: create
+      tagSource: auto
+      releaseNotesSource: input
+      assets: '$(Pipeline.Workspace)/**/*.zip'

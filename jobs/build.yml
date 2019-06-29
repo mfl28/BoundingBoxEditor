@@ -1,0 +1,25 @@
+# Job template
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates
+# Publishing build artifacts
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/publish-build-artifacts
+
+parameters:
+  name: ''
+  pool: ''
+  platform: ''
+
+jobs:
+- job: ${{ parameters.name }}
+  pool: ${{ parameters.pool }}
+  steps:
+    - task: Gradle@2
+      displayName: 'Create runtime image'
+      inputs:
+        gradleWrapperFile: 'gradlew'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.11'
+        jdkArchitectureOption: 'x64'
+        publishJUnitResults: false
+        tasks: 'jlinkZip'
+    - publish: '$(Build.SourcesDirectory)/build/distributions/boundingboxeditor-${{ parameters.platform }}.zip'
+      artifact: 'runtime-image-${{ parameters.platform }}' 

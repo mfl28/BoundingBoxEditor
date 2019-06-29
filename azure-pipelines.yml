@@ -1,50 +1,44 @@
-# Gradle
-# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+# Azure Pipeline
+# https://docs.microsoft.com/en-us/azure/devops/pipelines
 
 trigger:
-- master
+  branches:
+    include:
+    - master
+  tags:
+    include: 
+    - '*'
 
-jobs:
-# Test on windows.
-- job: Test
-  pool:
-    vmImage: 'windows-2019'
-  steps:
-  - task: Gradle@2
-    inputs:
-      workingDirectory: ''
-      gradleWrapperFile: 'gradlew'
-      javaHomeOption: 'JDKVersion'
-      jdkVersionOption: '1.11'
-      jdkArchitectureOption: 'x64'
-      publishJUnitResults: true
-      testResultsFiles: '**/TEST-*.xml'
-      tasks: 'test'
-  - task: PublishCodeCoverageResults@1
-    inputs:
-      codeCoverageTool: 'JaCoCo'
-      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/reports/jacoco/test/jacocoTestReport.xml'
-      reportDirectory: '$(System.DefaultWorkingDirectory)/**/reports/jacoco/test/html'
-      failIfCoverageEmpty: true
+stages:
+- stage: Build   
+  jobs:
+  - template: jobs/build.yml
+    parameters:
+      name: Windows
+      platform: win
+      pool:
+        vmImage: 'windows-2019'
 
-# Build for all platforms.
-- template: build.yml
-  parameters:
-    name: Windows
-    platform: win
-    pool:
-      vmImage: 'windows-2019'
+  - template: jobs/build.yml
+    parameters:
+      name: Linux
+      platform: linux
+      pool:
+        vmImage: 'ubuntu-16.04'
 
-- template: build.yml
-  parameters:
-    name: Linux
-    platform: linux
-    pool:
-      vmImage: 'ubuntu-16.04'
+  - template: jobs/build.yml
+    parameters:
+      name: MacOS
+      platform: mac
+      pool:
+        vmImage: 'macOS-10.14'
 
-- template: build.yml
-  parameters:
-    name: MacOS
-    platform: mac
-    pool:
-      vmImage: 'macOS-10.14'
+- stage: Test
+  dependsOn: Build
+  jobs:
+  - template: jobs/test.yml
+
+- stage: Release
+  dependsOn: Test
+  jobs:
+  - template: jobs/release.yml

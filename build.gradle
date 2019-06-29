@@ -5,7 +5,7 @@ buildscript {
 }
 
 plugins {
-    id 'java'
+    id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.7'
     id 'com.github.ben-manes.versions' version '0.21.0'
     id 'org.beryx.jlink' version '2.11.1'

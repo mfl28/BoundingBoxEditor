@@ -1,0 +1,29 @@
+# Gradle task
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/gradle
+# Publish Code Coverage Results task
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/test/publish-code-coverage-results
+
+jobs:
+- job: UITest
+  displayName: 'UI'
+  pool:
+    vmImage: 'windows-2019'
+  steps:
+  - task: Gradle@2
+    displayName: 'Gradle test'
+    inputs:
+      workingDirectory: ''
+      gradleWrapperFile: 'gradlew'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.11'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: true
+      testResultsFiles: '**/TEST-*.xml'
+      tasks: 'test'
+  - task: PublishCodeCoverageResults@1
+    displayName: 'Publish code coverage results'
+    inputs:
+      codeCoverageTool: 'JaCoCo'
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/reports/jacoco/test/jacocoTestReport.xml'
+      reportDirectory: '$(System.DefaultWorkingDirectory)/**/reports/jacoco/test/html'
+      failIfCoverageEmpty: true
