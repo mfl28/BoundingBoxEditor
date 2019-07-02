@@ -10,8 +10,6 @@ import javafx.stage.Stage;
 
 /**
  * The main app-class and entry point of the application.
- * <br><br/>
- * <h2>Bounding Box Editor</h2>
  * This is an application that allows a user to load images from an image-folder which can then be
  * annotated with bounding-boxes. It is furthermore possible to import and save image-annotation data.
  * Bounding-boxes drawn or imported by the user can be tagged (e.g.: difficult, truncated, pose: frontal,

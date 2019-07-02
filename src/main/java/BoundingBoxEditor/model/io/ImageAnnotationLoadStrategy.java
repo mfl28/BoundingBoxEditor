@@ -34,7 +34,7 @@ public interface ImageAnnotationLoadStrategy {
      * @param path     the path of the directory containing the image-annotation files
      * @param progress the progress-property that will be updated during the loading-operation
      * @return an {@link IOResult} containing information about the finished loading
-     * @throws IOException
+     * @throws IOException if the directory denoted by the path could not be opened
      */
     IOResult load(Model model, Path path, DoubleProperty progress) throws IOException;
 

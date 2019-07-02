@@ -33,7 +33,7 @@ public class ImageAnnotationLoader {
      * @param model                 the model-component of the program
      * @param annotationsFolderPath the path of the folder containing the image-annotation files
      * @return an {@link IOResult} containing information about the finished loading
-     * @throws IOException
+     * @throws IOException if the directory denoted by the path could not be opened
      */
     public IOResult load(final Model model, final Path annotationsFolderPath) throws IOException {
         return loadStrategy.load(model, annotationsFolderPath, progress);

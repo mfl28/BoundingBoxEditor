@@ -102,7 +102,7 @@ public class IOResult {
         /**
          * Set the filename of the file in the processing of which the error occurred.
          *
-         * @param fileName
+         * @param fileName the filename to set
          */
         public void setFileName(String fileName) {
             this.fileName.set(fileName);

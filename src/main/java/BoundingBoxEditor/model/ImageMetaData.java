@@ -27,6 +27,7 @@ public class ImageMetaData {
      * @param folderName  the name of the folder containing the image-file
      * @param imageWidth  the width of the image
      * @param imageHeight the height of the image
+     * @param imageDepth the depth (= number of channels) of the image
      */
     public ImageMetaData(String fileName, String folderName, double imageWidth, double imageHeight, int imageDepth) {
         this.fileName = fileName;
