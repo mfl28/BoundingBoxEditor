@@ -4,7 +4,7 @@
 jobs:
 - job: GitHubRelease
   displayName: 'GitHub'
-  condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/release-v') 
+  condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/v') 
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
