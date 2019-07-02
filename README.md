@@ -31,7 +31,7 @@ Annotations can be imported and saved from/to xml-files using the [Pascal VOC](h
 * ...
 
 ## Latest Release
-Download the latest release for your operating system. The files are zipped runtime images created with jlink and contain binaries to start the application on your system.
+Download the latest release for your operating system. The files are zipped runtime images created with jlink that contain binaries to start the application on your system.
 
 -*Table of releases*- \
 -*How to start the binary*-
@@ -56,7 +56,7 @@ gradlew run
 ```
 
 ## How to run the tests
-The project comes equipped with automatic UI-tests which use [TestFX](https://github.com/TestFX/TestFX) and the [JUnit 5](https://junit.org/junit5/) testing frameworks. Due to some used functionality in the implemented tests it is (currently) not possible to run the tests in headless mode, so hands-off your mouse while the tests run! ;-)
+The project comes equipped with automatic UI-tests which use [TestFX](https://github.com/TestFX/TestFX) and the [JUnit 5](https://junit.org/junit5/) testing frameworks. Due to some used functionality in the implemented tests it is (currently) not possible to run the tests in headless mode.
 
 To run the tests, use :
 ```bash
