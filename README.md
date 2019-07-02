@@ -30,11 +30,14 @@ Annotations can be imported and saved from/to xml-files using the [Pascal VOC](h
 * Supporting more input/output formats
 * ...
 
-## Latest Release
-Download the latest release for your operating system. The files are zipped runtime images created with jlink that contain binaries to start the application on your system.
+## Latest Release ![GitHub release](https://img.shields.io/github/release/mfl28/BoundingBoxEditor.svg)
+Download the latest release of *Bounding Box Editor* for your operating system from the links below. The files are zipped, custom runtime images (created using the [Badass JLink plugin](https://github.com/beryx/badass-jlink-plugin)) that contain binaries to start the application on your system.
 
--*Table of releases*- \
--*How to start the binary*-
+| OS            |
+| ------------- |
+| [Linux](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-linux.zip)        |
+| [MacOs](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-mac.zip)          |
+| [Windows](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-win.zip)        | 
 
 ## How to build the application
 The project uses [Gradle](https://gradle.org/) as build-system.
@@ -80,9 +83,6 @@ gradlew test
 
 ## License
 This project is licensed under GPL v3. See [LICENSE](LICENSE).
-
-
-
 
 
 
