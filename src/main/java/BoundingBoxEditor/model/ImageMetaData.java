@@ -27,7 +27,7 @@ public class ImageMetaData {
      * @param folderName  the name of the folder containing the image-file
      * @param imageWidth  the width of the image
      * @param imageHeight the height of the image
-     * @param imageDepth the depth (= number of channels) of the image
+     * @param imageDepth  the depth (= number of channels) of the image
      */
     public ImageMetaData(String fileName, String folderName, double imageWidth, double imageHeight, int imageDepth) {
         this.fileName = fileName;
@@ -95,6 +95,11 @@ public class ImageMetaData {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(fileName, folderName, imageWidth, imageHeight, imageDepth);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if(obj instanceof ImageMetaData) {
             ImageMetaData other = (ImageMetaData) obj;
@@ -102,11 +107,6 @@ public class ImageMetaData {
                     imageWidth == other.imageWidth && imageHeight == other.imageHeight;
         }
         return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(fileName, folderName, imageWidth, imageHeight, imageDepth);
     }
 
     @Override

@@ -29,6 +29,11 @@ class BoundingBoxTreeItem extends TreeItem<BoundingBoxView> {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(id, getValue(), getChildren());
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if(this == obj) {
             return true;
@@ -41,11 +46,6 @@ class BoundingBoxTreeItem extends TreeItem<BoundingBoxView> {
         BoundingBoxTreeItem other = (BoundingBoxTreeItem) obj;
 
         return id == other.id && getValue().equals(other.getValue()) && getChildren().equals(other.getChildren());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, getValue(), getChildren());
     }
 
     /**

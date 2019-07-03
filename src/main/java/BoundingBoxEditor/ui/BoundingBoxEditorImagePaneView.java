@@ -14,6 +14,7 @@ import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.ColorAdjust;
@@ -41,8 +42,8 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String IMAGE_PANE_ID = "image-pane-view";
     private static final String INITIALIZER_RECTANGLE_ID = "bounding-rectangle";
-    private static final int MAXIMUM_IMAGE_WIDTH = 2400;
-    private static final int MAXIMUM_IMAGE_HEIGHT = 1500;
+    private static final int MAXIMUM_IMAGE_WIDTH = 3200;
+    private static final int MAXIMUM_IMAGE_HEIGHT = 2000;
     private static final double ZOOM_SCALE_DELTA = 0.05;
 
     private final ImageView imageView = new ImageView();
@@ -57,7 +58,10 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
     private final Rectangle initializerRectangle = createInitializerRectangle();
     private final DragAnchor dragAnchor = new DragAnchor();
 
-    private StackPane contentPane = new StackPane(imageView, boundingBoxSceneGroup, initializerRectangle);
+    private final ProgressIndicator imageLoadingProgressIndicator = new ProgressIndicator();
+
+    private final StackPane contentPane = new StackPane(imageView, boundingBoxSceneGroup, initializerRectangle, imageLoadingProgressIndicator);
+
 
     /**
      * Creates a new image-pane UI-element responsible for displaying the currently selected image on which the
@@ -133,6 +137,15 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         currentBoundingBoxes.forEach(boundingBox -> boundingBox.setMouseTransparent(value));
         imageView.setCursor(value ? Cursor.OPEN_HAND : Cursor.DEFAULT);
         setPannable(value);
+    }
+
+    /**
+     * Returns the image loading progress indicator.
+     *
+     * @return the progress indicator
+     */
+    public ProgressIndicator getImageLoadingProgressIndicator() {
+        return imageLoadingProgressIndicator;
     }
 
     /**
@@ -341,7 +354,6 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
                 event.consume();
             }
         });
-
     }
 
     private boolean isMaximizeImageView() {

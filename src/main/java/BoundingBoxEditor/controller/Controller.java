@@ -271,16 +271,20 @@ public class Controller {
             switch(keyCode) {
                 case DOWN:
                 case D:
-                    navigationKeyDown.set(true);
                     if(model.imageFilesLoaded() && model.hasNextImageFile()) {
+                        navigationKeyDown.set(true);
                         onRegisterNextImageFileRequested();
+                    } else {
+                        navigationKeyDown.set(false);
                     }
                     break;
                 case UP:
                 case A:
-                    navigationKeyDown.set(true);
                     if(model.imageFilesLoaded() && model.hasPreviousImageFile()) {
+                        navigationKeyDown.set(true);
                         onRegisterPreviousImageFileRequested();
+                    } else {
+                        navigationKeyDown.set(false);
                     }
                     break;
                 case DELETE:
@@ -384,6 +388,7 @@ public class Controller {
 
     /**
      * Imports all valid image files in the provided directory into the program.
+     *
      * @param directory the directory containing the image files
      */
     void importAnnotationsFromDirectory(File directory) {
@@ -426,6 +431,7 @@ public class Controller {
 
     /**
      * Save all currently existing annotation data to the provided directory.
+     *
      * @param directory the directory to save to
      */
     void saveAnnotationsToDirectory(File directory) {
@@ -499,11 +505,15 @@ public class Controller {
     private void updateViewImageFiles() {
         view.reset();
 
-        view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingBoxes();
+        BoundingBoxEditorImagePaneView imagePane = view.getBoundingBoxEditorImagePane();
+        imagePane.removeAllCurrentBoundingBoxes();
+        imagePane.getImageLoadingProgressIndicator().setVisible(true);
 
         ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
                 key -> ImageMetaData.fromFile(model.getCurrentImageFile()));
         view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
+        view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
+
         stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
 
         BoundingBoxCategoryTableView boundingBoxCategoryTableView = view.getBoundingBoxCategoryTable();
@@ -573,6 +583,8 @@ public class Controller {
         return (observable, oldValue, newValue) -> {
             if(newValue.intValue() == 1) {
                 ImageAnnotation annotation = model.getCurrentImageAnnotation();
+                // Hide the progress spinner.
+                view.getBoundingBoxEditorImagePane().getImageLoadingProgressIndicator().setVisible(false);
 
                 if(annotation != null) {
                     view.loadBoundingBoxViewsFromAnnotation(annotation);
@@ -587,6 +599,8 @@ public class Controller {
         return (value, oldValue, newValue) -> {
             // Update selected item in image-file-list-view.
             view.getImageFileExplorer().getImageFileListView().getSelectionModel().select(newValue.intValue());
+            // Show the progress spinner.
+            view.getBoundingBoxEditorImagePane().getImageLoadingProgressIndicator().setVisible(true);
 
             final Image oldImage = view.getCurrentImage();
 
@@ -614,13 +628,14 @@ public class Controller {
             stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
 
             if(navigationKeyDown.get()) {
+                // If a navigation key is pressed, image loading is skipped (but the image file index is still updated).
+                // Once the navigation key is released the image corresponding to the file index at the point of the release
+                // will be loaded.
                 navigationKeyDown.removeListener(imageNavigationKeyPressedListener);
                 navigationKeyDown.addListener(imageNavigationKeyPressedListener);
             } else {
-                ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
-                        key -> ImageMetaData.fromFile(model.getCurrentImageFile()));
-                view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
-                view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
+                // Load the image corresponding to the current file index into the view-component.
+                updateViewImageFromModel();
             }
         };
     }
@@ -630,14 +645,19 @@ public class Controller {
             @Override
             public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
                 if(!newValue) {
-                    ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
-                            key -> ImageMetaData.fromFile(model.getCurrentImageFile()));
-                    view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
-                    view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
+                    // Load the image corresponding to the current file index into the view-component.
+                    updateViewImageFromModel();
                     navigationKeyDown.removeListener(this);
                 }
             }
         };
+    }
+
+    private void updateViewImageFromModel() {
+        ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
+                key -> ImageMetaData.fromFile(model.getCurrentImageFile()));
+        view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
+        view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
     }
 
     private ListChangeListener<BoundingBoxView> createBoundingBoxCountPerCategoryListener() {
