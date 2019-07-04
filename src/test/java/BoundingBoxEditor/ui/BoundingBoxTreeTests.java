@@ -139,6 +139,8 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(dummyCategoryTreeItem.getChildren().size(), CoreMatchers.equalTo(1));
         verifyThat(firstDummyChildTreeItem.getChildren().size(), CoreMatchers.equalTo(1));
         verifyThat(firstDummyChildTreeItem.getChildren().get(0), CoreMatchers.instanceOf(BoundingBoxCategoryTreeItem.class));
+        // The dragged item should be automatically selected after the completion of a successful drag.
+        verifyThat(thirdTestChildTreeItem.getValue().isSelected(), CoreMatchers.equalTo(true));
 
         final BoundingBoxCategoryTreeItem nestedTestCategoryTreeItem = (BoundingBoxCategoryTreeItem) firstDummyChildTreeItem.getChildren().get(0);
         verifyThat(nestedTestCategoryTreeItem.getBoundingBoxCategory(), CoreMatchers.equalTo(testCategoryTreeItem.getBoundingBoxCategory()));

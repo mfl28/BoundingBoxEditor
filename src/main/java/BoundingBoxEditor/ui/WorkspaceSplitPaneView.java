@@ -295,7 +295,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
                     TreeItem<BoundingBoxView> thisItem = cell.getTreeItem();
 
-                    // cannot drop on CategoryTreeItems
+                    // Cannot drop on CategoryTreeItems
                     if(thisItem instanceof BoundingBoxCategoryTreeItem) {
                         return;
                     }
@@ -316,28 +316,28 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                             ((BoundingBoxCategoryTreeItem) draggedItem).getBoundingBoxCategory() : draggedItem.getValue().getBoundingBoxCategory();
 
                     BoundingBoxTreeView boundingBoxExplorer = (BoundingBoxTreeView) treeView;
-                    // if the target is an empty cell, we add the dragged item to a (possibly new) category that is a child of the tree-root.
+                    // If the target is an empty cell, add the dragged item to a (possibly new) category that is a child of the tree-root.
                     if(thisItem == null) {
                         thisItem = boundingBoxExplorer.getRoot();
                     }
-                    // add to new location
+                    // Add to new location
                     BoundingBoxCategoryTreeItem newParentItem = boundingBoxExplorer.findParentCategoryTreeItemForCategory(thisItem, draggedItemCategory);
 
                     if(newParentItem == null) {
-                        // category does not exits in new location
+                        // Category does not exits in new location
                         if(draggedItem instanceof BoundingBoxCategoryTreeItem) {
-                            // full category is added:
+                            // Full category is added:
                             thisItem.getChildren().add(draggedItem);
                         } else {
-                            // create new Category part
+                            // Create new category part:
                             BoundingBoxCategoryTreeItem newCategoryParent = new BoundingBoxCategoryTreeItem(draggedItem.getValue().getBoundingBoxCategory());
                             newCategoryParent.attachBoundingBoxTreeItemChild((BoundingBoxTreeItem) draggedItem);
                             thisItem.getChildren().add(newCategoryParent);
                         }
                     } else {
-                        // category already exists:
+                        // Category already exists in new location
                         if(draggedItem instanceof BoundingBoxCategoryTreeItem) {
-                            // full category is added:
+                            // Full category is added:
                             for(TreeItem<BoundingBoxView> child : draggedItem.getChildren()) {
                                 newParentItem.attachBoundingBoxTreeItemChild((BoundingBoxTreeItem) child);
                             }
@@ -346,6 +346,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                             newParentItem.attachBoundingBoxTreeItemChild((BoundingBoxTreeItem) draggedItem);
                         }
                     }
+
+                    treeView.getSelectionModel().select(draggedItem);
 
                     event.setDropCompleted(true);
                     event.consume();
