@@ -28,6 +28,7 @@ Annotations can be imported and saved from/to xml-files using the [Pascal VOC](h
 * Marking of already annotated images in image files side-panel
 * Creating general polygonal bounding boxes
 * Supporting more input/output formats
+* Undo/Redo functionality
 * ...
 
 ## Latest Release ![GitHub release](https://img.shields.io/github/release/mfl28/BoundingBoxEditor.svg)
@@ -38,6 +39,9 @@ Download the latest release of *Bounding Box Editor* for your operating system f
 | [Linux](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-linux.zip)        |
 | [MacOs](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-mac.zip)          |
 | [Windows](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-win.zip)        | 
+
+## How to use the application
+Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) in the [Wiki](https://github.com/mfl28/BoundingBoxEditor/wiki) for a detailed guide to the usage of the application's main functions.
 
 ## How to build the application
 The project uses [Gradle](https://gradle.org/) as build-system.
