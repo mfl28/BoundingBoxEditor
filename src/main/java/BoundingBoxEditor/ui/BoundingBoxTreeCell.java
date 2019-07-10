@@ -1,5 +1,7 @@
 package BoundingBoxEditor.ui;
 
+import BoundingBoxEditor.controller.Controller;
+import BoundingBoxEditor.utils.UiUtils;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -21,7 +23,7 @@ import javafx.scene.text.Text;
  * @see TreeCell
  */
 class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
-    private static final String DELETE_CONTEXT_MENU_STYLE = "delete-context-menu";
+    private static final String DELETE_CONTEXT_MENU_ITEM_ID = "delete-context-menu";
     private static final String DELETE_BOUNDING_BOX_MENU_ITEM_TEXT = "Delete";
     private static final String NAME_TEXT_STYLE = "default-text";
     private static final String INFO_TEXT_ID = "info-text";
@@ -32,9 +34,9 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
     private static final String HIDE_BOUNDING_BOX_MENU_ITEM_TEXT = "Hide";
 
     private final BooleanProperty draggedOver = new SimpleBooleanProperty(false);
-    private final MenuItem deleteBoundingBoxMenuItem = new MenuItem(DELETE_BOUNDING_BOX_MENU_ITEM_TEXT);
-    private final MenuItem hideBoundingBoxMenuItem = new MenuItem(HIDE_BOUNDING_BOX_MENU_ITEM_TEXT);
-    private final ContextMenu contextMenu = new ContextMenu();
+    private final MenuItem deleteBoundingBoxMenuItem = createDeleteBoundingBoxMenuItem();
+    private final MenuItem hideBoundingBoxMenuItem = createHideBoundingBoxMenuItem();
+    private final ContextMenu contextMenu = new ContextMenu(hideBoundingBoxMenuItem, deleteBoundingBoxMenuItem);
     private final Text nameText = new Text();
     private final Text additionalInfoText = new Text();
     private final Region tagIconRegion = createTagIconRegion();
@@ -47,9 +49,6 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
      * or a {@link BoundingBoxTreeItem} in a {@link BoundingBoxTreeView}.
      */
     BoundingBoxTreeCell() {
-        contextMenu.getItems().addAll(hideBoundingBoxMenuItem, deleteBoundingBoxMenuItem);
-        deleteBoundingBoxMenuItem.setId(DELETE_CONTEXT_MENU_STYLE);
-
         nameText.getStyleClass().add(NAME_TEXT_STYLE);
         additionalInfoText.setId(INFO_TEXT_ID);
 
@@ -108,6 +107,21 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
      */
     MenuItem getDeleteBoundingBoxMenuItem() {
         return deleteBoundingBoxMenuItem;
+    }
+
+    private MenuItem createDeleteBoundingBoxMenuItem() {
+        CustomMenuItem deleteMenuItem = new CustomMenuItem(new Label(DELETE_BOUNDING_BOX_MENU_ITEM_TEXT));
+        deleteMenuItem.setId(DELETE_CONTEXT_MENU_ITEM_ID);
+        Tooltip.install(deleteMenuItem.getContent(),
+                UiUtils.createTooltip("", Controller.KEY_COMBINATIONS.deleteSelectedBoundingBox));
+        return deleteMenuItem;
+    }
+
+    private MenuItem createHideBoundingBoxMenuItem() {
+        CustomMenuItem hideMenuItem = new CustomMenuItem(new Label(HIDE_BOUNDING_BOX_MENU_ITEM_TEXT));
+        Tooltip.install(hideMenuItem.getContent(),
+                UiUtils.createTooltip("", Controller.KEY_COMBINATIONS.hideSelectedBoundingBox));
+        return hideMenuItem;
     }
 
     private void setUpInternalListeners() {

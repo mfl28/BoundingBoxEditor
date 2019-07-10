@@ -20,10 +20,7 @@ import javafx.concurrent.Task;
 import javafx.scene.Cursor;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
@@ -82,12 +79,10 @@ public class Controller {
     private final ListChangeListener<BoundingBoxView> boundingBoxCountPerCategoryListener = createBoundingBoxCountPerCategoryListener();
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
-    private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
-
     private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
     private final BooleanProperty navigateNextKeyPressed = new SimpleBooleanProperty(false);
-
     private String lastLoadedImageUrl;
+    private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
 
     /**
      * Creates a new controller object that is responsible for handling the application logic and
@@ -238,69 +233,46 @@ public class Controller {
             return;
         }
 
-        final KeyCode keyCode = event.getCode();
-
-        if(event.isControlDown()) {
-            // Handle Ctrl-* short-cuts
-            switch(keyCode) {
-                case F:
-                    if(event.isAltDown()) {
-                        view.getImageFileSearchField().requestFocus();
-                    } else {
-                        view.getCategorySearchField().requestFocus();
-                    }
-                    break;
-                case N:
-                    view.getBoundingBoxCategoryInputField().requestFocus();
-                    break;
-                case T:
-                    view.getTagInputField().requestFocus();
-                    break;
-                case H:
-                    if(event.isAltDown()) {
-                        view.getBoundingBoxTree().setToggleIconStateForAllTreeItems(false);
-                    } else {
-                        view.getBoundingBoxTree().setToggleIconStateForSelectedBoundingBoxTreeItem(false);
-                    }
-                    break;
-                case V:
-                    if(event.isAltDown()) {
-                        view.getBoundingBoxTree().setToggleIconStateForAllTreeItems(true);
-                    } else {
-                        view.getBoundingBoxTree().setToggleIconStateForSelectedBoundingBoxTreeItem(true);
-                    }
-                    break;
-                case R:
-                    view.getBoundingBoxEditorImagePane().resetImageViewSize();
-                    break;
-            }
-
+        if(event.isShortcutDown()) {
             view.getBoundingBoxEditorImagePane().setZoomableAndPannable(true);
-        } else {
-            // Handle normal shortcuts
-            switch(keyCode) {
-                case D:
-                    if(model.imageFilesLoaded() && model.hasNextImageFile()
-                            && !navigatePreviousKeyPressed.get()) {
-                        navigateNextKeyPressed.set(true);
-                        onRegisterNextImageFileRequested();
-                    } else {
-                        navigateNextKeyPressed.set(false);
-                    }
-                    break;
-                case A:
-                    if(model.imageFilesLoaded() && model.hasPreviousImageFile()
-                            && !navigateNextKeyPressed.get()) {
-                        navigatePreviousKeyPressed.set(true);
-                        onRegisterPreviousImageFileRequested();
-                    } else {
-                        navigatePreviousKeyPressed.set(false);
-                    }
-                    break;
-                case DELETE:
-                    view.removeSelectedTreeItemAndChildren();
-                    break;
+        }
+
+        if(KEY_COMBINATIONS.navigateNext.match(event)) {
+            if(model.imageFilesLoaded() && model.hasNextImageFile()
+                    && !navigatePreviousKeyPressed.get()) {
+                navigateNextKeyPressed.set(true);
+                onRegisterNextImageFileRequested();
+            } else {
+                navigateNextKeyPressed.set(false);
             }
+        } else if(KEY_COMBINATIONS.navigatePrevious.match(event)) {
+            if(model.imageFilesLoaded() && model.hasPreviousImageFile()
+                    && !navigateNextKeyPressed.get()) {
+                navigatePreviousKeyPressed.set(true);
+                onRegisterPreviousImageFileRequested();
+            } else {
+                navigatePreviousKeyPressed.set(false);
+            }
+        } else if(KEY_COMBINATIONS.deleteSelectedBoundingBox.match(event)) {
+            view.removeSelectedTreeItemAndChildren();
+        } else if(KEY_COMBINATIONS.focusCategorySearchField.match(event)) {
+            view.getCategorySearchField().requestFocus();
+        } else if(KEY_COMBINATIONS.focusFileSearchField.match(event)) {
+            view.getImageFileSearchField().requestFocus();
+        } else if(KEY_COMBINATIONS.focusCategoryNameTextField.match(event)) {
+            view.getBoundingBoxCategoryInputField().requestFocus();
+        } else if(KEY_COMBINATIONS.focusTagTextField.match(event)) {
+            view.getTagInputField().requestFocus();
+        } else if(KEY_COMBINATIONS.hideSelectedBoundingBox.match(event)) {
+            view.getBoundingBoxTree().setToggleIconStateForSelectedBoundingBoxTreeItem(false);
+        } else if(KEY_COMBINATIONS.hideAllBoundingBoxes.match(event)) {
+            view.getBoundingBoxTree().setToggleIconStateForAllTreeItems(false);
+        } else if(KEY_COMBINATIONS.showSelectedBoundingBox.match(event)) {
+            view.getBoundingBoxTree().setToggleIconStateForSelectedBoundingBoxTreeItem(true);
+        } else if(KEY_COMBINATIONS.showAllBoundingBoxes.match(event)) {
+            view.getBoundingBoxTree().setToggleIconStateForAllTreeItems(true);
+        } else if(KEY_COMBINATIONS.resetSizeAndCenterImage.match(event)) {
+            view.getBoundingBoxEditorImagePane().resetImageViewSize();
         }
     }
 
@@ -310,16 +282,14 @@ public class Controller {
      * @param event the short-cut key-event
      */
     public void onRegisterSceneKeyReleased(KeyEvent event) {
-        switch(event.getCode()) {
-            case A:
-                navigatePreviousKeyPressed.set(false);
-                break;
-            case D:
-                navigateNextKeyPressed.set(false);
-                break;
-            case CONTROL:
-                view.getBoundingBoxEditorImagePane().setZoomableAndPannable(false);
-                break;
+        if(event.getCode() == KeyCode.CONTROL || event.getCode() == KeyCode.META) {
+            view.getBoundingBoxEditorImagePane().setZoomableAndPannable(false);
+        }
+
+        if(KEY_COMBINATIONS.navigatePrevious.match(event)) {
+            navigatePreviousKeyPressed.set(false);
+        } else if(KEY_COMBINATIONS.navigateNext.match(event)) {
+            navigateNextKeyPressed.set(false);
         }
     }
 
@@ -703,5 +673,24 @@ public class Controller {
     private void loadPreferences() {
         Preferences preferences = Preferences.userNodeForPackage(getClass());
         stage.setMaximized(preferences.getBoolean("isMaximized", false));
+    }
+
+    /**
+     * Class containing
+     */
+    public static class KEY_COMBINATIONS {
+        public static final KeyCombination navigateNext = new KeyCodeCombination(KeyCode.D);
+        public static final KeyCombination navigatePrevious = new KeyCodeCombination(KeyCode.A);
+        public static final KeyCombination showAllBoundingBoxes = new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
+        public static final KeyCombination hideAllBoundingBoxes = new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
+        public static final KeyCombination showSelectedBoundingBox = new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination hideSelectedBoundingBox = new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN);
+
+        public static final KeyCombination resetSizeAndCenterImage = new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination focusCategoryNameTextField = new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination focusCategorySearchField = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination focusTagTextField = new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination focusFileSearchField = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
+        public static final KeyCombination deleteSelectedBoundingBox = new KeyCodeCombination(KeyCode.DELETE);
     }
 }

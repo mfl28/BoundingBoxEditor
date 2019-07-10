@@ -33,10 +33,8 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     private static final String CATEGORY_SELECTOR_TOP_PANEL_ID = "category-selector-top-panel";
     private static final String EXPAND_TREE_ITEMS_ICON_ID = "expand-tree-items-icon";
     private static final String COLLAPSE_TREE_ITEMS_ICON_ID = "collapse-tree-items-icon";
-    private static final String CATEGORY_NAME_FIELD_TOOLTIP = "(Ctrl+N to focus)";
-    private static final String CATEGORY_COLOR_PICKER_TOOLTIP = "Category Color";
+    private static final String CATEGORY_COLOR_PICKER_TOOLTIP_TEXT = "Category Color";
     private static final String ADD_CATEGORY_BUTTON_TOOLTIP = "Add new Category";
-    private static final String CATEGORY_SEARCH_FIELD_TOOLTIP = "(Ctrl+F to focus)";
     private static final String COLLAPSE_TREE_ITEMS_BUTTON_TOOLTIP = "Collapse All";
     private static final String EXPAND_TREE_ITEMS_BUTTON_TOOLTIP = "Expand All";
     private static final String SIDE_PANEL_BOX_STYLE = "side-panel-box";
@@ -239,20 +237,20 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
     private void setUpButtonsAndTextFields() {
         categoryNameTextField.setId(CATEGORY_INPUT_FIELD_ID);
-        categoryNameTextField.setTooltip(new Tooltip(EditorsSplitPaneView.CATEGORY_NAME_FIELD_TOOLTIP));
+        categoryNameTextField.setTooltip(UiUtils.createFocusTooltip(Controller.KEY_COMBINATIONS.focusCategoryNameTextField));
 
         categoryColorPicker.getStyleClass().add(BOUNDING_BOX_COLOR_PICKER_STYLE);
         categoryColorPicker.setValue(ColorUtils.createRandomColor());
-        categoryColorPicker.setTooltip(new Tooltip(CATEGORY_COLOR_PICKER_TOOLTIP));
+        categoryColorPicker.setTooltip(UiUtils.createTooltip(CATEGORY_COLOR_PICKER_TOOLTIP_TEXT));
 
         addCategoryButton.setId(ADD_BUTTON_ID);
-        addCategoryButton.setTooltip(new Tooltip(ADD_CATEGORY_BUTTON_TOOLTIP));
+        addCategoryButton.setTooltip(UiUtils.createTooltip(ADD_CATEGORY_BUTTON_TOOLTIP));
 
-        categorySearchField.setTooltip(new Tooltip(CATEGORY_SEARCH_FIELD_TOOLTIP));
+        categorySearchField.setTooltip(UiUtils.createFocusTooltip(Controller.KEY_COMBINATIONS.focusCategorySearchField));
 
-        collapseTreeItemsButton.setTooltip(new Tooltip(COLLAPSE_TREE_ITEMS_BUTTON_TOOLTIP));
+        collapseTreeItemsButton.setTooltip(UiUtils.createTooltip(COLLAPSE_TREE_ITEMS_BUTTON_TOOLTIP));
 
-        expandTreeItemsButton.setTooltip(new Tooltip(EXPAND_TREE_ITEMS_BUTTON_TOOLTIP));
+        expandTreeItemsButton.setTooltip(UiUtils.createTooltip(EXPAND_TREE_ITEMS_BUTTON_TOOLTIP));
     }
 
     private void setUpInternalListeners() {

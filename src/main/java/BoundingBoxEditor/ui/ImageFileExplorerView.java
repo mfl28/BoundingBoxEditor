@@ -1,9 +1,10 @@
 package BoundingBoxEditor.ui;
 
+import BoundingBoxEditor.controller.Controller;
+import BoundingBoxEditor.utils.UiUtils;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -24,7 +25,6 @@ public class ImageFileExplorerView extends VBox implements View {
     private static final String IMAGE_FILE_SEARCH_BOX_ID = "image-file-search-box";
     private static final String IMAGE_FILE_SEARCH_ICON_LABEL_ID = "search-icon-label";
     private static final String IMAGE_FILE_SEARCH_ICON_ID = "search-icon";
-    private static final String IMAGE_FILE_SEARCH_FIELD_TOOLTIP = "(Ctrl+Alt+F to focus)";
 
     private final TextField imageFileSearchField = new TextField();
     private final ImageFileListView imageFileListView = new ImageFileListView();
@@ -75,7 +75,7 @@ public class ImageFileExplorerView extends VBox implements View {
 
         imageFileSearchField.setPromptText(IMAGE_FILE_SEARCH_PROMPT_TEXT);
         imageFileSearchField.setFocusTraversable(false);
-        imageFileSearchField.setTooltip(new Tooltip(IMAGE_FILE_SEARCH_FIELD_TOOLTIP));
+        imageFileSearchField.setTooltip(UiUtils.createFocusTooltip(Controller.KEY_COMBINATIONS.focusFileSearchField));
 
         Region searchIcon = new Region();
         searchIcon.setId(IMAGE_FILE_SEARCH_ICON_ID);

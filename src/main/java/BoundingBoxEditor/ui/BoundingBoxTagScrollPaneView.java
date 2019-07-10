@@ -1,5 +1,7 @@
 package BoundingBoxEditor.ui;
 
+import BoundingBoxEditor.controller.Controller;
+import BoundingBoxEditor.utils.UiUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.ListChangeListener;
@@ -110,6 +112,7 @@ class BoundingBoxTagScrollPaneView extends ScrollPane implements View {
         TextField textField = new TextField();
         textField.setId(TAG_INPUT_FIELD_ID);
         textField.setPromptText(TEXT_FIELD_PROMPT_TEXT);
+        textField.setTooltip(UiUtils.createFocusTooltip(Controller.KEY_COMBINATIONS.focusTagTextField));
         // Will be enabled if a tag-list is registered with the tagLists-property.
         textField.setDisable(true);
 

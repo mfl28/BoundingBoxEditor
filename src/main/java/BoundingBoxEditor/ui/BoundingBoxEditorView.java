@@ -63,7 +63,7 @@ public class BoundingBoxEditorView extends BorderPane implements View {
         colorAdjust.contrastProperty().bind(boundingBoxEditorToolBar.getContrastSlider().valueProperty());
         colorAdjust.saturationProperty().bind(boundingBoxEditorToolBar.getSaturationSlider().valueProperty());
 
-        boundingBoxEditorToolBar.getResetImageSizeButton().setOnAction(event -> boundingBoxEditorImagePane.resetImageViewSize());
+        boundingBoxEditorToolBar.getResetSizeAndCenterImageButton().setOnAction(event -> boundingBoxEditorImagePane.resetImageViewSize());
 
         setOnMousePressed(event -> requestFocus());
     }
