@@ -19,7 +19,7 @@ Annotations can be imported and saved from/to xml-files using the [Pascal VOC](h
 
 ## Features
 * Saving of bounding box annotations in the  [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format
-* Importing of existing bounding box annotation data in Pascal VOC format, for example from [Google's VOC2012 dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)
+* Importing of existing bounding box annotation data in Pascal VOC format, for example from [Pascal VOC 2012 dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)
 * Nesting of bounding box labels (which is then reflected in the output xml-file)
 * Image files side-panel with thumbnails for easy and fast navigation including image-file search
 * Tagging of bounding boxes using tags defined in the Pascal VOC format (truncated, difficult, occluded, pose: *, action: *)
