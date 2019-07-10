@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * @see BoundingBoxView
  */
 public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
-    private static final double IMAGE_PADDING = 0; // 10.0
+    private static final double IMAGE_PADDING = 0;
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String IMAGE_PANE_ID = "image-pane-view";
     private static final String INITIALIZER_RECTANGLE_ID = "bounding-rectangle";
@@ -59,9 +59,9 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
     private final DragAnchor dragAnchor = new DragAnchor();
 
     private final ProgressIndicator imageLoadingProgressIndicator = new ProgressIndicator();
-
     private final StackPane contentPane = new StackPane(imageView, boundingBoxSceneGroup, initializerRectangle, imageLoadingProgressIndicator);
 
+    private boolean boundingBoxDrawingInProgress = false;
 
     /**
      * Creates a new image-pane UI-element responsible for displaying the currently selected image on which the
@@ -85,7 +85,7 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
 
     @Override
     public void connectToController(Controller controller) {
-        imageView.setOnMouseReleased(controller::onImageViewMouseReleasedEvent);
+        imageView.setOnMouseReleased(controller::onRegisterImageViewMouseReleasedEvent);
     }
 
     /**
@@ -146,6 +146,34 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
      */
     public ProgressIndicator getImageLoadingProgressIndicator() {
         return imageLoadingProgressIndicator;
+    }
+
+    /**
+     * Returns a boolean indicating that an image is currently registered and fully
+     * loaded.
+     *
+     * @return true if an image is registered and its loading progress is equal to 1, false otherwise
+     */
+    public boolean isImageFullyLoaded() {
+        Image image = getCurrentImage();
+
+        return image != null && image.getProgress() == 1.0;
+    }
+
+    /**
+     * Returns a boolean indicating that a bounding box is currently drawn by the user.
+     *
+     * @return the boolean value
+     */
+    public boolean isBoundingBoxDrawingInProgress() {
+        return boundingBoxDrawingInProgress;
+    }
+
+    /**
+     * Sets a boolean indicating that a bounding box is currently drawn by the user.
+     */
+    public void setBoundingBoxDrawingInProgress(boolean boundingBoxDrawingInProgress) {
+        this.boundingBoxDrawingInProgress = boundingBoxDrawingInProgress;
     }
 
     /**
@@ -297,7 +325,10 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         });
 
         imageView.setOnMousePressed(event -> {
-            if(!event.isControlDown() && event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
+            if(isImageFullyLoaded()
+                    && !event.isControlDown()
+                    && event.getButton().equals(MouseButton.PRIMARY)
+                    && isCategorySelected()) {
                 dragAnchor.setFromMouseEvent(event);
                 Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
 
@@ -307,13 +338,16 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
                 initializerRectangle.setHeight(0);
                 initializerRectangle.setStroke(selectedCategory.getValue().getColor());
                 initializerRectangle.setVisible(true);
+                boundingBoxDrawingInProgress = true;
             }
         });
 
         imageView.setOnMouseDragged(event -> {
-            if(event.isControlDown()) {
+            if(isImageFullyLoaded() && event.isControlDown()) {
                 imageView.setCursor(Cursor.CLOSED_HAND);
-            } else if(event.getButton().equals(MouseButton.PRIMARY) && isCategorySelected()) {
+            } else if(isImageFullyLoaded()
+                    && event.getButton().equals(MouseButton.PRIMARY)
+                    && isCategorySelected()) {
                 Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
                 Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
                         Math.min(clampedEventXY.getY(), dragAnchor.getY()));
@@ -326,7 +360,7 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         });
 
         contentPane.setOnScroll(event -> {
-            if(event.isControlDown()) {
+            if(isImageFullyLoaded() && event.isControlDown()) {
                 Bounds contentPaneBounds = contentPane.getLayoutBounds();
                 Bounds viewportBounds = getViewportBounds();
 

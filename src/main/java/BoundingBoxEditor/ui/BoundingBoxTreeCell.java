@@ -3,6 +3,7 @@ package BoundingBoxEditor.ui;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.css.PseudoClass;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -38,7 +39,8 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
     private final Text additionalInfoText = new Text();
     private final Region tagIconRegion = createTagIconRegion();
 
-    private final EventHandler<ContextMenuEvent> showContextMenu = createShowContextMenuEventHandler();
+    private final EventHandler<ContextMenuEvent> showContextMenuEventHandler = createShowContextMenuEventHandler();
+    private final ChangeListener<Boolean> boundingBoxVisibilityListener = createBoundingBoxVisibilityListener();
 
     /**
      * Creates a new tree-cell object responsible for the visual representation of a {@link BoundingBoxCategoryTreeItem}
@@ -60,7 +62,8 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
         BoundingBoxView oldItem = getItem();
         // If necessary remove the old item's context-menu event-handler.
         if(oldItem != null) {
-            oldItem.removeEventHandler(ContextMenuEvent.CONTEXT_MENU_REQUESTED, showContextMenu);
+            oldItem.removeEventHandler(ContextMenuEvent.CONTEXT_MENU_REQUESTED, showContextMenuEventHandler);
+            oldItem.visibleProperty().removeListener(boundingBoxVisibilityListener);
         }
 
         super.updateItem(newBoundingBoxView, empty);
@@ -72,6 +75,7 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
 
         if(empty || newBoundingBoxView == null) {
             setGraphic(null);
+            contextMenu.hide();
             setContextMenu(null);
             setDraggedOver(false);
         } else {
@@ -80,7 +84,10 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
             setContextMenu(contextMenu);
             // Register the contextMenu with the BoundingBoxView associated with the cell. This
             // allows to display the contextMenu by right-clicking on the bounding-box itself.
-            newBoundingBoxView.setOnContextMenuRequested(showContextMenu);
+            newBoundingBoxView.setOnContextMenuRequested(showContextMenuEventHandler);
+            // The context menu should be hidden when the BoundingBoxView associated with this cell
+            // is hidden.
+            newBoundingBoxView.visibleProperty().addListener(boundingBoxVisibilityListener);
         }
     }
 
@@ -186,5 +193,13 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
 
     private EventHandler<ContextMenuEvent> createShowContextMenuEventHandler() {
         return event -> contextMenu.show(getItem(), event.getScreenX(), event.getScreenY());
+    }
+
+    private ChangeListener<Boolean> createBoundingBoxVisibilityListener() {
+        return ((observable, oldValue, newValue) -> {
+            if(!newValue) {
+                contextMenu.hide();
+            }
+        });
     }
 }

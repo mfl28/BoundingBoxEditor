@@ -158,7 +158,7 @@ public class MainView extends BorderPane implements View {
             item.autoScaleWithBoundsAndInitialize(getBoundingBoxEditorImageView().boundsInParentProperty());
             item.setToggleGroup(boundingBoxSelectionToggleGroup);
         });
-        // temporarily switch off automatic adding of boundingBoxes to the explorer (those are already imported)
+        // Temporarily switch off automatic adding of boundingBoxes to the explorer (those are already imported)
         workspaceSplitPane.setTreeUpdateEnabled(false);
         getBoundingBoxEditorImagePane().setAllCurrentBoundingBoxes(boundingBoxes);
         workspaceSplitPane.setTreeUpdateEnabled(true);

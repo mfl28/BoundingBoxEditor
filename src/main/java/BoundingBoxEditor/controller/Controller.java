@@ -78,12 +78,16 @@ public class Controller {
     private final Stage stage;
     private final MainView view = new MainView();
     private final Model model = new Model();
+
     private final ListChangeListener<BoundingBoxView> boundingBoxCountPerCategoryListener = createBoundingBoxCountPerCategoryListener();
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
-    private final BooleanProperty navigationKeyDown = new SimpleBooleanProperty(false);
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
-    private String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
+
+    private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
+    private final BooleanProperty navigateNextKeyPressed = new SimpleBooleanProperty(false);
+
+    private String lastLoadedImageUrl;
 
     /**
      * Creates a new controller object that is responsible for handling the application logic and
@@ -228,6 +232,12 @@ public class Controller {
      * @param event the short-cut key-event
      */
     public void onRegisterSceneKeyPressed(KeyEvent event) {
+        // While the user is drawing a bounding box, all key-events will be ignored.
+        if(view.getBoundingBoxEditorImagePane().isBoundingBoxDrawingInProgress()) {
+            event.consume();
+            return;
+        }
+
         final KeyCode keyCode = event.getCode();
 
         if(event.isControlDown()) {
@@ -269,22 +279,22 @@ public class Controller {
         } else {
             // Handle normal shortcuts
             switch(keyCode) {
-                case DOWN:
                 case D:
-                    if(model.imageFilesLoaded() && model.hasNextImageFile()) {
-                        navigationKeyDown.set(true);
+                    if(model.imageFilesLoaded() && model.hasNextImageFile()
+                            && !navigatePreviousKeyPressed.get()) {
+                        navigateNextKeyPressed.set(true);
                         onRegisterNextImageFileRequested();
                     } else {
-                        navigationKeyDown.set(false);
+                        navigateNextKeyPressed.set(false);
                     }
                     break;
-                case UP:
                 case A:
-                    if(model.imageFilesLoaded() && model.hasPreviousImageFile()) {
-                        navigationKeyDown.set(true);
+                    if(model.imageFilesLoaded() && model.hasPreviousImageFile()
+                            && !navigateNextKeyPressed.get()) {
+                        navigatePreviousKeyPressed.set(true);
                         onRegisterPreviousImageFileRequested();
                     } else {
-                        navigationKeyDown.set(false);
+                        navigatePreviousKeyPressed.set(false);
                     }
                     break;
                 case DELETE:
@@ -302,10 +312,10 @@ public class Controller {
     public void onRegisterSceneKeyReleased(KeyEvent event) {
         switch(event.getCode()) {
             case A:
+                navigatePreviousKeyPressed.set(false);
+                break;
             case D:
-            case DOWN:
-            case UP:
-                navigationKeyDown.set(false);
+                navigateNextKeyPressed.set(false);
                 break;
             case CONTROL:
                 view.getBoundingBoxEditorImagePane().setZoomableAndPannable(false);
@@ -365,14 +375,18 @@ public class Controller {
      *
      * @param event the mouse-event
      */
-    public void onImageViewMouseReleasedEvent(MouseEvent event) {
-        if(event.getButton().equals(MouseButton.PRIMARY)) {
+    public void onRegisterImageViewMouseReleasedEvent(MouseEvent event) {
+        final BoundingBoxEditorImagePaneView imagePane = view.getBoundingBoxEditorImagePane();
+
+        if(imagePane.isImageFullyLoaded() && event.getButton().equals(MouseButton.PRIMARY)) {
             if(event.isControlDown()) {
                 view.getBoundingBoxEditorImageView().setCursor(Cursor.OPEN_HAND);
-            } else if(view.getBoundingBoxCategoryTable().isCategorySelected()) {
-                final ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap().get(model.getCurrentImageFileName());
+            } else if(view.getBoundingBoxCategoryTable().isCategorySelected() && imagePane.isBoundingBoxDrawingInProgress()) {
+                final ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap()
+                        .get(model.getCurrentImageFileName());
 
-                view.getBoundingBoxEditorImagePane().constructAndAddNewBoundingBox(imageMetaData);
+                imagePane.constructAndAddNewBoundingBox(imageMetaData);
+                imagePane.setBoundingBoxDrawingInProgress(false);
             }
         }
     }
@@ -621,18 +635,25 @@ public class Controller {
                     oldImage.cancel();
                 }
 
+                // Clears the current image from the view.
                 view.getBoundingBoxEditorImageView().setImage(null);
                 lastLoadedImageUrl = oldImage.getUrl();
             }
 
             stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
 
-            if(navigationKeyDown.get()) {
+            if(navigateNextKeyPressed.get() ^ navigatePreviousKeyPressed.get()) {
                 // If a navigation key is pressed, image loading is skipped (but the image file index is still updated).
                 // Once the navigation key is released the image corresponding to the file index at the point of the release
                 // will be loaded.
-                navigationKeyDown.removeListener(imageNavigationKeyPressedListener);
-                navigationKeyDown.addListener(imageNavigationKeyPressedListener);
+                if(navigatePreviousKeyPressed.get()) {
+                    navigatePreviousKeyPressed.removeListener(imageNavigationKeyPressedListener);
+                    navigatePreviousKeyPressed.addListener(imageNavigationKeyPressedListener);
+                } else {
+                    navigateNextKeyPressed.removeListener(imageNavigationKeyPressedListener);
+                    navigateNextKeyPressed.addListener(imageNavigationKeyPressedListener);
+                }
+
             } else {
                 // Load the image corresponding to the current file index into the view-component.
                 updateViewImageFromModel();
@@ -647,7 +668,7 @@ public class Controller {
                 if(!newValue) {
                     // Load the image corresponding to the current file index into the view-component.
                     updateViewImageFromModel();
-                    navigationKeyDown.removeListener(this);
+                    observable.removeListener(this);
                 }
             }
         };
@@ -683,5 +704,4 @@ public class Controller {
         Preferences preferences = Preferences.userNodeForPackage(getClass());
         stage.setMaximized(preferences.getBoolean("isMaximized", false));
     }
-
 }

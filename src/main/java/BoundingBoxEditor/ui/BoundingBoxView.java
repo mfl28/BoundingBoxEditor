@@ -42,14 +42,12 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
 
     private final DragAnchor dragAnchor = new DragAnchor();
     private final Property<Bounds> autoScaleBounds = new SimpleObjectProperty<>();
-    private final Property<Bounds> boundsInImage = new SimpleObjectProperty<>();
     private final Group nodeGroup = new Group(this);
-
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
     private final BooleanProperty highlighted = new SimpleBooleanProperty(false);
     private final ObjectProperty<ToggleGroup> toggleGroup = new SimpleObjectProperty<>();
-
     private final ObservableList<String> tags = FXCollections.observableArrayList();
+    private Bounds boundsInImage;
     private TreeItem<BoundingBoxView> treeItem;
     private BoundingBoxCategory boundingBoxCategory;
     private ImageMetaData imageMetaData;
@@ -363,19 +361,18 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
     }
 
     private void setBoundsInImage(Bounds boundsInImage) {
-        this.boundsInImage.setValue(boundsInImage);
+        this.boundsInImage = boundsInImage;
     }
 
     private void initializeFromBoundsInImage() {
-        Bounds boundsInImageValue = boundsInImage.getValue();
         Bounds confinementBoundsValue = autoScaleBounds.getValue();
         double imageWidth = imageMetaData.getImageWidth();
         double imageHeight = imageMetaData.getImageHeight();
 
-        setX(boundsInImageValue.getMinX() * confinementBoundsValue.getWidth() / imageWidth + confinementBoundsValue.getMinX());
-        setY(boundsInImageValue.getMinY() * confinementBoundsValue.getHeight() / imageHeight + confinementBoundsValue.getMinY());
-        setWidth(boundsInImageValue.getWidth() * confinementBoundsValue.getWidth() / imageWidth);
-        setHeight(boundsInImageValue.getHeight() * confinementBoundsValue.getHeight() / imageHeight);
+        setX(boundsInImage.getMinX() * confinementBoundsValue.getWidth() / imageWidth + confinementBoundsValue.getMinX());
+        setY(boundsInImage.getMinY() * confinementBoundsValue.getHeight() / imageHeight + confinementBoundsValue.getMinY());
+        setWidth(boundsInImage.getWidth() * confinementBoundsValue.getWidth() / imageWidth);
+        setHeight(boundsInImage.getHeight() * confinementBoundsValue.getHeight() / imageHeight);
     }
 
     private double getMaxX() {
