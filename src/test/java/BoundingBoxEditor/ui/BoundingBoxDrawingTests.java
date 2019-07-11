@@ -26,7 +26,9 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
     @Test
     void onOpeningNewImageFolder_WhenBoundingBoxesExist_ShouldResetCorrectly(FxRobot robot) throws TimeoutException {
         waitUntilCurrentImageIsLoaded();
-        enterNewCategory(robot, "Test");
+
+        String testCategoryName = "Test";
+        enterNewCategory(robot, testCategoryName);
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn("#next-button");
@@ -37,6 +39,8 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
+        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), CoreMatchers.equalTo(1));
+
         final BoundingBoxView drawnBoundingBox = mainView.getCurrentBoundingBoxes().get(0);
 
         robot.clickOn("#previous-button");
@@ -44,6 +48,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(0));
+        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), CoreMatchers.equalTo(1));
 
         robot.clickOn("#next-button");
         waitUntilCurrentImageIsLoaded();
@@ -51,6 +56,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingBoxes(), CoreMatchers.hasItem(drawnBoundingBox));
+        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), CoreMatchers.equalTo(1));
 
         Platform.runLater(() -> controller.loadImageFilesFromDirectory(
                 new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_2).getFile()))
@@ -62,13 +68,16 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(0));
+        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().size(), CoreMatchers.equalTo(0));
 
-        enterNewCategory(robot, "Test");
+        enterNewCategory(robot, testCategoryName);
         WaitForAsyncUtils.waitForFxEvents();
 
+        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().size(), CoreMatchers.equalTo(0));
         drawBoundingBox(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), CoreMatchers.equalTo(1));
+        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), CoreMatchers.equalTo(1));
     }
 }

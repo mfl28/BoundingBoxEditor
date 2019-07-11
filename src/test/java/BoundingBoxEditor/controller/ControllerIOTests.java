@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -49,6 +50,11 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         Assertions.assertTrue(Files.isDirectory(actualDir), "Actual files directory exists.");
 
+        final Map counts = model.getCategoryToAssignedBoundingBoxesCountMap();
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> Objects.equals(counts.get("Boat"), 2) && Objects.equals(counts.get("Sail"), 6) && Objects.equals(counts.get("Flag"), 1)),
+                "Correct bounding box per-category-counts read within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getBoundingBoxEditorImageView())
                 .press(KeyCode.CONTROL)
@@ -68,7 +74,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> Files.exists(actualFilePath)),
                 "Output-file was not created within " + TIMEOUT_DURATION_IN_SEC + " sec.");
-        
+
         // The output file should be exactly the same as the reference file.
         final File referenceFile = new File(getClass().getResource(REFERENCE_FILE_PATH).getFile());
         final byte[] referenceArray = Files.readAllBytes(referenceFile.toPath());

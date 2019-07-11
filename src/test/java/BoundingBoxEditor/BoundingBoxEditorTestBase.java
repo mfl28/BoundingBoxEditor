@@ -1,6 +1,7 @@
 package BoundingBoxEditor;
 
 import BoundingBoxEditor.controller.Controller;
+import BoundingBoxEditor.model.Model;
 import BoundingBoxEditor.ui.MainView;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
@@ -39,6 +40,7 @@ public class BoundingBoxEditorTestBase {
 
     protected Controller controller;
     protected MainView mainView;
+    protected Model model;
 
     protected static MenuItem getSubMenuItem(FxRobot robot, String menuText, String subMenuText) {
         MenuBar menuBar = robot.lookup("#main-menu-bar").query();
@@ -101,6 +103,7 @@ public class BoundingBoxEditorTestBase {
         Platform.setImplicitExit(false);
         controller = new Controller(stage);
         mainView = controller.getView();
+        model = controller.getModel();
         // To make sure that the window is on top of all other windows at the start.
         stage.setAlwaysOnTop(true);
 

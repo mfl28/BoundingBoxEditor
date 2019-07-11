@@ -371,6 +371,15 @@ public class Controller {
     }
 
     /**
+     * Returns the model component this controller operates on.
+     *
+     * @return the model
+     */
+    public Model getModel() {
+        return model;
+    }
+
+    /**
      * Imports all valid image files in the provided directory into the program.
      *
      * @param directory the directory containing the image files
@@ -491,6 +500,7 @@ public class Controller {
 
         BoundingBoxEditorImagePaneView imagePane = view.getBoundingBoxEditorImagePane();
         imagePane.removeAllCurrentBoundingBoxes();
+        view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
         imagePane.getImageLoadingProgressIndicator().setVisible(true);
 
         ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
@@ -510,8 +520,6 @@ public class Controller {
         ImageFileListView imageFileListView = view.getImageFileListView();
         imageFileListView.getSelectionModel().selectFirst();
         imageFileListView.scrollTo(0);
-
-        view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
     }
 
     private Service<IOResult> createSaveAnnotationsService(File saveDirectory) {
