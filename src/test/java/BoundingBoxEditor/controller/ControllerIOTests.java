@@ -30,7 +30,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
-        controller.loadImageFilesFromDirectory(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()));
+        controller.loadImageFiles(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()));
     }
 
     @Test
@@ -42,7 +42,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationsDirectory = new File(getClass().getResource(REFERENCE_ANNOTATIONS_PATH).getFile());
 
         // Load bounding-boxes defined in the reference annotation-file.
-        Platform.runLater(() -> controller.importAnnotationsFromDirectory(referenceAnnotationsDirectory));
+        Platform.runLater(() -> controller.new AnnotationLoaderService(referenceAnnotationsDirectory).startAndShowProgressDialog());
         WaitForAsyncUtils.waitForFxEvents();
 
         // Create temporary folder to save annotations to.
@@ -64,7 +64,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         // Save the annotations to the temporary folder.
-        Platform.runLater(() -> controller.saveAnnotationsToDirectory(actualDir.toFile()));
+        Platform.runLater(() -> controller.new AnnotationSaverService(actualDir.toFile()).startAndShowProgressDialog());
         WaitForAsyncUtils.waitForFxEvents();
 
         Path actualFilePath = actualDir.resolve(EXPECTED_FILE_NAME);

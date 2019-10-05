@@ -32,7 +32,7 @@ public class Model {
      * {@link ListOrderedMap} data-structure is used to preserve an order (in this case the input order) to
      * allow consistent iteration through the files.
      */
-    private ListOrderedMap<String, File> imageFileNameToFile;
+    private ListOrderedMap<String, File> imageFileNameToFile = new ListOrderedMap<>();
 
     /**
      * Maps the filenames of the currently loaded image-files onto corresponding {@link ImageMetaData} objects. Image-metadata for
@@ -94,7 +94,8 @@ public class Model {
      * @param imageFiles the new image-files
      */
     public void resetDataAndSetImageFiles(Collection<File> imageFiles) {
-        clearAnnotationAndCategoryData();
+        imageFileNameToMetaData.clear();
+        clearAnnotationData();
 
         imageFileNameToFile = ListOrderedMap.listOrderedMap(imageFiles.parallelStream()
                 .collect(LinkedHashMap::new, (map, item) -> map.put(item.getName(), item), Map::putAll));
@@ -311,8 +312,26 @@ public class Model {
      *
      * @return true if the model contains image-files, false otherwise
      */
-    public boolean imageFilesLoaded() {
-        return imageFileNameToFile != null && !imageFileNameToFile.isEmpty();
+    public boolean containsImageFiles() {
+        return !imageFileNameToFile.isEmpty();
+    }
+
+    /**
+     * Returns a boolean indicating if the model currently contains annotations.
+     *
+     * @return true if the model contains annotations, false otherwise
+     */
+    public boolean containsAnnotations() {
+        return !imageFileNameToAnnotation.isEmpty();
+    }
+
+    /**
+     * Returns a boolean indicating if the model currently contains bounding box categories.
+     *
+     * @return true if the model contains categories, false otherwise
+     */
+    public boolean containsCategories() {
+        return !boundingBoxCategories.isEmpty();
     }
 
     /**
@@ -338,6 +357,16 @@ public class Model {
         fileIndex.set(fileIndex.get() - 1);
     }
 
+    /**
+     * Clears all data relating to annotations (including created categories).
+     */
+    public void clearAnnotationData() {
+        imageFileNameToAnnotation.clear();
+
+        boundingBoxCategories.clear();
+        categoryToAssignedBoundingBoxesCount.clear();
+    }
+
     private void setUpInternalListeners() {
         nextImageFileExists.bind(fileIndex.lessThan(nrImageFilesProperty().subtract(1)));
         previousImageFileExists.bind(fileIndex.greaterThan(0));
@@ -354,13 +383,5 @@ public class Model {
                 }
             }
         });
-    }
-
-    private void clearAnnotationAndCategoryData() {
-        imageFileNameToMetaData.clear();
-        imageFileNameToAnnotation.clear();
-
-        boundingBoxCategories.clear();
-        categoryToAssignedBoundingBoxesCount.clear();
     }
 }

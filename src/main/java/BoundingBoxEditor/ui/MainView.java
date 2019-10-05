@@ -16,6 +16,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
 import org.controlsfx.dialog.ProgressDialog;
 
 import java.io.File;
@@ -65,6 +67,40 @@ public class MainView extends BorderPane implements View {
         alert.setContentText(content);
         alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alert.showAndWait();
+    }
+
+    /**
+     * Displays a a dialog with 'Yes', 'No' and 'Cancel' buttons and returns the chosen option.
+     *
+     * @param title   The title of the dialog window
+     * @param content The content text of the dialog window
+     * @return {@link ButtonBar.ButtonData}.YES/NO/CANCEL_CLOSE
+     */
+    public static ButtonBar.ButtonData displayYesNoCancelDialogAndGetResult(String title, String content) {
+        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
+                content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
+                new ButtonType("No", ButtonBar.ButtonData.NO), new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
+        dialog.setTitle(title);
+        dialog.setHeaderText(null);
+        dialog.setContentText(content);
+        dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        dialog.showAndWait();
+
+        return dialog.getResult().getButtonData();
+    }
+
+    /**
+     * Displays a directory chooser window and returns the chosen directory.
+     *
+     * @param title The title of the directory chooser window
+     * @param stage The stage on top of which the window will be shown
+     * @return The chosen directory, or null if the user closed the window without choosing.
+     */
+    public static File displayDirectoryChooserAndGetChoice(String title, Stage stage) {
+        final DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle(title);
+
+        return directoryChooser.showDialog(stage);
     }
 
     /**
@@ -176,6 +212,14 @@ public class MainView extends BorderPane implements View {
         if(selectedTreeItem != null) {
             workspaceSplitPane.removeBoundingBoxWithTreeItemRecursively(selectedTreeItem);
         }
+    }
+
+    /**
+     * Checks if the {@link BoundingBoxEditorImagePaneView}-member currently contains bounding boxes.
+     * @return true if there exist bounding boxes, false otherwise.
+     */
+    public boolean containsBoundingBoxViews() {
+        return !getCurrentBoundingBoxes().isEmpty();
     }
 
     /* Delegating Getters */

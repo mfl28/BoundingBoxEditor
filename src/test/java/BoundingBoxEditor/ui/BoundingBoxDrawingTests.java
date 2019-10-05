@@ -20,7 +20,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
-        controller.loadImageFilesFromDirectory(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()));
+        controller.loadImageFiles(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()));
     }
 
     @Test
@@ -58,7 +58,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingBoxes(), CoreMatchers.hasItem(drawnBoundingBox));
         verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), CoreMatchers.equalTo(1));
 
-        Platform.runLater(() -> controller.loadImageFilesFromDirectory(
+        Platform.runLater(() -> controller.loadImageFiles(
                 new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_2).getFile()))
         );
 

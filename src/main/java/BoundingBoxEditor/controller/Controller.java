@@ -18,13 +18,12 @@ import javafx.collections.ListChangeListener;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.scene.Cursor;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.Image;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import org.controlsfx.dialog.ProgressDialog;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,7 +60,7 @@ public class Controller {
     private static final String CATEGORY_DELETION_ERROR_DIALOG_TITLE = "Category Deletion Error";
     private static final String CATEGORY_DELETION_ERROR_DIALOG_CONTENT = "You cannot delete a category that has existing bounding-boxes assigned to it.";
 
-    private static final String DIRECTORY_CHOOSER_TITLE = "Choose an image folder";
+    private static final String IMAGE_FOLDER_CHOOSER_TITLE = "Choose an image folder";
     private static final String IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE = "Choose a folder containing image annotation files";
     private static final String APPLICATION_ICON_PATH = "/icons/app_icon.png";
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
@@ -72,6 +71,15 @@ public class Controller {
     private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
     private static final String ANNOTATION_IMPORT_ERROR_TITLE = "Annotation Import Error";
     private static final String ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT = "The folder does not contain any valid annotation files.";
+    private static final String LOADING_ANNOTATIONS_DIALOG_TITLE = "Loading";
+    private static final String LOADING_ANNOTATIONS_DIALOG_HEADER = "Loading annotations...";
+    private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE = "Open image folder";
+    private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT = "Opening a new image folder will remove any existing annotation data. " +
+            "Do you want to save the currently existing annotation data?";
+    private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE = "Import annotation data";
+    private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT = "Do you want to keep existing categories and annotation data?";
+    private static final String EXIT_APPLICATION_OPTION_DIALOG_TITLE = "Exit Application";
+    private static final String EXIT_APPLICATION_OPTION_DIALOG_CONTENT = "Do you want to save the existing annotation data?";
 
     private final Stage stage;
     private final MainView view = new MainView();
@@ -95,7 +103,10 @@ public class Controller {
         stage = mainStage;
         stage.setTitle(PROGRAM_NAME);
         stage.getIcons().add(new Image(getClass().getResource(APPLICATION_ICON_PATH).toExternalForm()));
-        stage.setOnCloseRequest(event -> onCloseStageRequested());
+        stage.setOnCloseRequest(event -> {
+            onRegisterExitAction();
+            event.consume();
+        });
 
         loadPreferences();
 
@@ -108,13 +119,28 @@ public class Controller {
      */
     public void onRegisterOpenImageFolderAction() {
         // TODO: when folder is changed: ask if the current categories should be kept or deleted
-        final DirectoryChooser imageFolderChooser = new DirectoryChooser();
-        imageFolderChooser.setTitle(DIRECTORY_CHOOSER_TITLE);
-
-        final File imageFolder = imageFolderChooser.showDialog(stage);
+        final File imageFolder = MainView.displayDirectoryChooserAndGetChoice(IMAGE_FOLDER_CHOOSER_TITLE, stage);
 
         if(imageFolder != null) {
-            loadImageFilesFromDirectory(imageFolder);
+            if(model.containsAnnotations() || view.containsBoundingBoxViews()) {
+                ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                        OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
+
+                if(answer == ButtonBar.ButtonData.YES) {
+                    final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage);
+
+                    if(saveDirectory != null) {
+                        AnnotationSaverService annotationSaverService = new AnnotationSaverService(saveDirectory);
+                        annotationSaverService.runOnSuccess(() -> loadImageFiles(imageFolder));
+                        annotationSaverService.startAndShowProgressDialog();
+                    }
+                    return;
+                } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
+                    return;
+                }
+            }
+
+            loadImageFiles(imageFolder);
         }
     }
 
@@ -124,7 +150,7 @@ public class Controller {
      *
      * @param imageFileDirectory the directory containing the image-files to be loaded
      */
-    public void loadImageFilesFromDirectory(File imageFileDirectory) {
+    public void loadImageFiles(File imageFileDirectory) {
         List<File> imageFiles;
 
         try {
@@ -152,19 +178,16 @@ public class Controller {
      * Handles the event of the user requesting to save the image annotations.
      */
     public void onRegisterSaveAnnotationsAction() {
-        if(model.getImageFileNameToAnnotationMap().isEmpty() && view.getCurrentBoundingBoxes().isEmpty()) {
+        if(!model.containsAnnotations() && !view.containsBoundingBoxViews()) {
             MainView.displayErrorAlert(SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE,
                     NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT);
             return;
         }
 
-        final DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE);
-
-        final File saveDirectory = directoryChooser.showDialog(stage);
+        final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage);
 
         if(saveDirectory != null) {
-            saveAnnotationsToDirectory(saveDirectory);
+            new AnnotationSaverService(saveDirectory).startAndShowProgressDialog();
         }
     }
 
@@ -172,13 +195,22 @@ public class Controller {
      * Handles the event of the user requesting to save the current image-annotations.
      */
     public void onRegisterImportAnnotationsAction() {
-        final DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle(IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE);
-
-        final File importDirectory = directoryChooser.showDialog(stage);
+        final File importDirectory = MainView.displayDirectoryChooserAndGetChoice(IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE, stage);
 
         if(importDirectory != null) {
-            importAnnotationsFromDirectory(importDirectory);
+            if(model.containsCategories()) {
+                ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE,
+                        IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT);
+
+                if(answer == ButtonBar.ButtonData.NO) {
+                    model.clearAnnotationData();
+                    view.reset();
+                } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
+                    return;
+                }
+            }
+
+            new AnnotationLoaderService(importDirectory).startAndShowProgressDialog();
         }
     }
 
@@ -220,6 +252,28 @@ public class Controller {
      * Handles the event of the user requesting to exit the application.
      */
     public void onRegisterExitAction() {
+        if(model.containsAnnotations() || view.containsBoundingBoxViews()) {
+            ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(EXIT_APPLICATION_OPTION_DIALOG_TITLE,
+                    EXIT_APPLICATION_OPTION_DIALOG_CONTENT);
+
+            if(answer == ButtonBar.ButtonData.YES) {
+                final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage);
+
+                if(saveDirectory != null) {
+                    AnnotationSaverService saverService = new AnnotationSaverService(saveDirectory);
+                    saverService.runOnSuccess(() -> {
+                        Preferences.userNodeForPackage(getClass()).putBoolean("isMaximized", stage.isMaximized());
+                        Platform.exit();
+                    });
+                    saverService.startAndShowProgressDialog();
+                }
+                return;
+            } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
+                return;
+            }
+        }
+
+        Preferences.userNodeForPackage(getClass()).putBoolean("isMaximized", stage.isMaximized());
         Platform.exit();
     }
 
@@ -240,7 +294,7 @@ public class Controller {
         }
 
         if(KEY_COMBINATIONS.navigateNext.match(event)) {
-            if(model.imageFilesLoaded() && model.hasNextImageFile()
+            if(model.containsImageFiles() && model.hasNextImageFile()
                     && !navigatePreviousKeyPressed.get()) {
                 navigateNextKeyPressed.set(true);
                 onRegisterNextImageFileRequested();
@@ -248,7 +302,7 @@ public class Controller {
                 navigateNextKeyPressed.set(false);
             }
         } else if(KEY_COMBINATIONS.navigatePrevious.match(event)) {
-            if(model.imageFilesLoaded() && model.hasPreviousImageFile()
+            if(model.containsImageFiles() && model.hasPreviousImageFile()
                     && !navigateNextKeyPressed.get()) {
                 navigatePreviousKeyPressed.set(true);
                 onRegisterPreviousImageFileRequested();
@@ -387,70 +441,6 @@ public class Controller {
         return model;
     }
 
-    /**
-     * Imports all valid image files in the provided directory into the program.
-     *
-     * @param directory the directory containing the image files
-     */
-    void importAnnotationsFromDirectory(File directory) {
-        // At first (if needed) update the model's bounding-box data from the bounding-boxes currently in view.
-        if(model.imageFilesLoaded()) {
-            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
-        }
-
-        Service<IOResult> loadService = createLoadAnnotationsService(directory);
-
-        ProgressDialog progressDialog = new ProgressDialog(loadService);
-        progressDialog.setTitle("Loading");
-        progressDialog.setHeaderText("Loading annotations...");
-
-        loadService.setOnSucceeded(event -> {
-            IOResult loadResult = loadService.getValue();
-
-            if(loadResult.getNrSuccessfullyProcessedItems() != 0) {
-                view.getStatusBar().setStatusEvent(new ImageAnnotationsImportingSuccessfulEvent(loadResult));
-            }
-
-            ImageAnnotation annotation = model.getCurrentImageAnnotation();
-
-            if(annotation != null) {
-                view.getBoundingBoxTree().reset();
-                view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
-                view.loadBoundingBoxViewsFromAnnotation(annotation);
-                view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
-            }
-
-            if(!loadResult.getErrorTableEntries().isEmpty()) {
-                MainView.displayIOResultErrorInfoAlert(loadResult);
-            } else if(loadResult.getNrSuccessfullyProcessedItems() == 0) {
-                MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE, ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
-            }
-        });
-
-        loadService.start();
-    }
-
-    /**
-     * Save all currently existing annotation data to the provided directory.
-     *
-     * @param directory the directory to save to
-     */
-    void saveAnnotationsToDirectory(File directory) {
-        // At first (if needed) update the model's bounding-box data from the bounding-boxes currently in view.
-        if(model.imageFilesLoaded()) {
-            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
-        }
-
-        final Service<IOResult> saveService = createSaveAnnotationsService(directory);
-        MainView.displayServiceProgressDialog(saveService, SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
-                SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
-        saveService.start();
-    }
-
-    private void onCloseStageRequested() {
-        Preferences.userNodeForPackage(getClass()).putBoolean("isMaximized", stage.isMaximized());
-    }
-
     private void setUpModelListeners() {
         view.getBoundingBoxEditor().getBoundingBoxEditorToolBar()
                 .getIndexLabel()
@@ -528,55 +518,6 @@ public class Controller {
         ImageFileListView imageFileListView = view.getImageFileListView();
         imageFileListView.getSelectionModel().selectFirst();
         imageFileListView.scrollTo(0);
-    }
-
-    private Service<IOResult> createSaveAnnotationsService(File saveDirectory) {
-        Service<IOResult> saveService = new Service<>() {
-            @Override
-            protected Task<IOResult> createTask() {
-                return new Task<>() {
-                    @Override
-                    protected IOResult call() {
-                        final ImageAnnotationSaver saver = new ImageAnnotationSaver(ImageAnnotationSaveStrategy.Type.PASCAL_VOC);
-
-                        saver.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
-
-                        return saver.save(model.getImageAnnotations(), Paths.get(saveDirectory.getPath()));
-                    }
-                };
-            }
-        };
-
-        saveService.setOnSucceeded(successEvent -> {
-            IOResult saveResult = saveService.getValue();
-
-            if(saveResult.getNrSuccessfullyProcessedItems() != 0) {
-                view.getStatusBar().setStatusEvent(new ImageAnnotationsSavingSuccessfulEvent(saveService.getValue()));
-            }
-
-            if(!saveResult.getErrorTableEntries().isEmpty()) {
-                MainView.displayIOResultErrorInfoAlert(saveResult);
-            }
-
-        });
-
-        return saveService;
-    }
-
-    private Service<IOResult> createLoadAnnotationsService(File loadDirectory) {
-        return new Service<>() {
-            @Override
-            protected Task<IOResult> createTask() {
-                return new Task<>() {
-                    @Override
-                    protected IOResult call() throws Exception {
-                        ImageAnnotationLoader loader = new ImageAnnotationLoader(ImageAnnotationLoadStrategy.Type.PASCAL_VOC);
-                        loader.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
-                        return loader.load(model, Paths.get(loadDirectory.getPath()));
-                    }
-                };
-            }
-        };
     }
 
     private ChangeListener<Number> createImageLoadingProgressListener() {
@@ -692,7 +633,23 @@ public class Controller {
     }
 
     /**
-     * Class containing
+     * Interface for chaining function calls after e.g. a service has completed successfully.
+     *
+     * @param <T> Runnable or Service
+     */
+    interface OnSuccessRunner<T> {
+        void runOnSuccess(T runnable);
+    }
+
+    /**
+     * An interface for starting a service and showing a progress dialog.
+     */
+    interface ProgressShower {
+        void startAndShowProgressDialog();
+    }
+
+    /**
+     * Class containing possible key-combinations.
      */
     public static class KEY_COMBINATIONS {
         public static final KeyCombination navigateNext = new KeyCodeCombination(KeyCode.D);
@@ -708,5 +665,135 @@ public class Controller {
         public static final KeyCombination focusTagTextField = new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination focusFileSearchField = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
         public static final KeyCombination deleteSelectedBoundingBox = new KeyCodeCombination(KeyCode.DELETE);
+    }
+
+    class AnnotationSaverService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
+        private File saveDirectory;
+
+        AnnotationSaverService(File saveDirectory) {
+            this.saveDirectory = saveDirectory;
+            setOnSucceeded(successEvent -> defaultOnSucceededHandler());
+        }
+
+        @Override
+        public void runOnSuccess(Runnable runnable) {
+            setOnSucceeded(successEvent -> {
+                defaultOnSucceededHandler();
+                runnable.run();
+            });
+        }
+
+        @Override
+        public void startAndShowProgressDialog() {
+            MainView.displayServiceProgressDialog(this, SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
+                    SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
+            start();
+        }
+
+        @Override
+        public void start() {
+            if(model.containsImageFiles()) {
+                model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
+            }
+
+            super.start();
+        }
+
+        @Override
+        protected Task<IOResult> createTask() {
+            return new Task<>() {
+                @Override
+                protected IOResult call() {
+                    final ImageAnnotationSaver saver = new ImageAnnotationSaver(ImageAnnotationSaveStrategy.Type.PASCAL_VOC);
+
+                    saver.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
+
+                    return saver.save(model.getImageAnnotations(), Paths.get(saveDirectory.getPath()));
+                }
+            };
+        }
+
+        private void defaultOnSucceededHandler() {
+            IOResult saveResult = getValue();
+
+            if(saveResult.getNrSuccessfullyProcessedItems() != 0) {
+                view.getStatusBar().setStatusEvent(new ImageAnnotationsSavingSuccessfulEvent(saveResult));
+            }
+
+            if(!saveResult.getErrorTableEntries().isEmpty()) {
+                MainView.displayIOResultErrorInfoAlert(saveResult);
+            }
+        }
+    }
+
+    class AnnotationLoaderService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
+        private File loadDirectory;
+
+        AnnotationLoaderService(File loadDirectory) {
+            this.loadDirectory = loadDirectory;
+
+            setOnSucceeded(successEvent -> defaultOnSuccessHandler());
+        }
+
+        @Override
+        public void runOnSuccess(Runnable runnable) {
+            setOnSucceeded(successEvent -> {
+                defaultOnSuccessHandler();
+                runnable.run();
+            });
+        }
+
+        @Override
+        public void startAndShowProgressDialog() {
+            MainView.displayServiceProgressDialog(this, LOADING_ANNOTATIONS_DIALOG_TITLE,
+                    LOADING_ANNOTATIONS_DIALOG_HEADER);
+            start();
+        }
+
+        @Override
+        public void start() {
+            if(model.containsImageFiles()) {
+                model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
+            }
+
+            super.start();
+        }
+
+        @Override
+        protected Task<IOResult> createTask() {
+            return new Task<>() {
+                @Override
+                protected IOResult call() throws Exception {
+                    ImageAnnotationLoader loader = new ImageAnnotationLoader(ImageAnnotationLoadStrategy.Type.PASCAL_VOC);
+                    loader.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
+                    return loader.load(model, Paths.get(loadDirectory.getPath()));
+                }
+            };
+        }
+
+        private void defaultOnSuccessHandler() {
+            IOResult loadResult = getValue();
+
+            if(loadResult.getNrSuccessfullyProcessedItems() != 0) {
+                view.getStatusBar().setStatusEvent(new ImageAnnotationsImportingSuccessfulEvent(loadResult));
+            }
+
+            ImageAnnotation annotation = model.getCurrentImageAnnotation();
+
+            if(annotation != null) {
+                view.getBoundingBoxTree().reset();
+                view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
+                view.loadBoundingBoxViewsFromAnnotation(annotation);
+                view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
+                view.getBoundingBoxCategoryTable().refresh();
+                view.getBoundingBoxTree().refresh();
+            }
+
+            if(!loadResult.getErrorTableEntries().isEmpty()) {
+                MainView.displayIOResultErrorInfoAlert(loadResult);
+            } else if(loadResult.getNrSuccessfullyProcessedItems() == 0) {
+                MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE, ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
+            }
+        }
     }
 }
