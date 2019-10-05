@@ -15,8 +15,6 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * The model-component of the program (MVC architecture pattern is used). Holds internal representations
@@ -60,13 +58,6 @@ public class Model {
      * Contains all currently existing {@link BoundingBoxCategory} objects.
      */
     private ObservableList<BoundingBoxCategory> boundingBoxCategories = FXCollections.observableArrayList();
-
-    /**
-     * Set containing the names of all currently existing bounding-box categories. This is
-     * used to enforce the uniqueness of category-names created by the user. This set and
-     * the boundingBoxCategories {@link ObservableList} are kept synchronized.
-     */
-    private Set<String> boundingBoxCategoryNames = ConcurrentHashMap.newKeySet();
 
     /**
      * Maps the name of a currently existing bounding-box category to the current number of existing bounding-box elements
@@ -325,15 +316,6 @@ public class Model {
     }
 
     /**
-     * Returns a set containing the names of the currently existing bounding-box categories.
-     *
-     * @return the category-name set
-     */
-    public Set<String> getBoundingBoxCategoryNames() {
-        return boundingBoxCategoryNames;
-    }
-
-    /**
      * Returns the the currently set image-files as an unmodifiable observable list.
      *
      * @return the image-file list
@@ -363,13 +345,12 @@ public class Model {
         boundingBoxCategories.addListener((ListChangeListener<BoundingBoxCategory>) c -> {
             while(c.next()) {
                 if(c.wasAdded()) {
-                    boundingBoxCategoryNames.addAll(c.getAddedSubList().stream()
-                            .map(BoundingBoxCategory::getName).collect(Collectors.toList()));
+                    c.getAddedSubList().forEach(item ->
+                            categoryToAssignedBoundingBoxesCount.put(item.getName(), 0));
                 }
 
                 if(c.wasRemoved()) {
-                    boundingBoxCategoryNames.removeAll(c.getRemoved().stream()
-                            .map(BoundingBoxCategory::getName).collect(Collectors.toList()));
+                    c.getRemoved().forEach(item -> categoryToAssignedBoundingBoxesCount.remove(item.getName()));
                 }
             }
         });
@@ -380,7 +361,6 @@ public class Model {
         imageFileNameToAnnotation.clear();
 
         boundingBoxCategories.clear();
-        boundingBoxCategoryNames.clear();
         categoryToAssignedBoundingBoxesCount.clear();
     }
 }

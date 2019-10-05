@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -193,7 +194,7 @@ public class Controller {
             return;
         }
 
-        if(model.getBoundingBoxCategoryNames().contains(categoryName)) {
+        if(model.getCategoryToAssignedBoundingBoxesCountMap().containsKey(categoryName)) {
             MainView.displayErrorAlert(CATEGORY_INPUT_ERROR_DIALOG_TITLE,
                     "The category \"" + categoryName + "\" already exists.");
             view.getBoundingBoxCategoryInputField().clear();
@@ -202,6 +203,7 @@ public class Controller {
 
         final Color categoryColor = view.getBoundingBoxCategoryColorPicker().getValue();
         model.getBoundingBoxCategories().add(new BoundingBoxCategory(categoryName, categoryColor));
+        model.getCategoryToAssignedBoundingBoxesCountMap().put(categoryName, 0);
 
         view.getBoundingBoxCategoryTable().getSelectionModel().selectLast();
         view.getBoundingBoxCategoryTable().scrollTo(view
@@ -320,22 +322,28 @@ public class Controller {
      * @see BoundingBoxEditor.ui.BoundingBoxCategoryTableView BoundingBoxCategoryTableView
      */
     public void onSelectorCellEditEvent(TableColumn.CellEditEvent<BoundingBoxCategory, String> event) {
-        if(event.getOldValue().equals(event.getNewValue())) {
+        String newName = event.getNewValue();
+        String oldName = event.getOldValue();
+
+        if(oldName.equals(newName)) {
             // Nothing to do if the new name is the same as the current one.
             return;
         }
 
         final BoundingBoxCategory boundingBoxCategory = event.getRowValue();
+        final Map<String, Integer> boundingBoxesPerCategoryNameMap = model.getCategoryToAssignedBoundingBoxesCountMap();
 
-        if(model.getBoundingBoxCategoryNames().contains(event.getNewValue())) {
+        if(boundingBoxesPerCategoryNameMap.containsKey(newName)) {
             MainView.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                    "The category \"" + boundingBoxCategory.getName() + "\" already exists.");
-            boundingBoxCategory.setName(event.getOldValue());
+                    "The category \"" + newName + "\" already exists.");
+            boundingBoxCategory.setName(oldName);
             event.getTableView().refresh();
         } else {
-            model.getBoundingBoxCategoryNames().remove(boundingBoxCategory.getName());
-            model.getBoundingBoxCategoryNames().add(event.getNewValue());
-            boundingBoxCategory.setName(event.getNewValue());
+            int assignedBoundingBoxesCount = boundingBoxesPerCategoryNameMap.get(oldName);
+            boundingBoxesPerCategoryNameMap.remove(oldName);
+
+            boundingBoxesPerCategoryNameMap.put(newName, assignedBoundingBoxesCount);
+            boundingBoxCategory.setName(newName);
         }
     }
 

@@ -73,7 +73,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, testCategoryName);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().size(), CoreMatchers.equalTo(0));
+        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), CoreMatchers.equalTo(0));
         drawBoundingBox(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
         WaitForAsyncUtils.waitForFxEvents();
 
