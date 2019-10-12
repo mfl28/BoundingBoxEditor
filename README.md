@@ -31,7 +31,7 @@ Annotations can be imported and saved from/to xml-files using the [Pascal VOC](h
 * Undo/Redo functionality
 * ...
 
-## Latest Release ![GitHub release](https://img.shields.io/github/release/mfl28/BoundingBoxEditor.svg)
+## Latest Release ![GitHub release](https://img.shields.io/github/v/release/mfl28/BoundingBoxEditor)
 Download the latest release of *Bounding Box Editor* for your operating system from the links below. The files are zipped, custom runtime images (created using the [Badass JLink plugin](https://github.com/beryx/badass-jlink-plugin)) that contain binaries to start the application on your system.
 
 | OS            |
