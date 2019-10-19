@@ -122,6 +122,10 @@ public class Controller {
         final File imageFolder = MainView.displayDirectoryChooserAndGetChoice(IMAGE_FOLDER_CHOOSER_TITLE, stage);
 
         if(imageFolder != null) {
+            if(model.containsImageFiles()) {
+                model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
+            }
+
             if(model.containsAnnotations() || view.containsBoundingBoxViews()) {
                 ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
                         OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
@@ -178,6 +182,10 @@ public class Controller {
      * Handles the event of the user requesting to save the image annotations.
      */
     public void onRegisterSaveAnnotationsAction() {
+        if(model.containsImageFiles()) {
+            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
+        }
+
         if(!model.containsAnnotations() && !view.containsBoundingBoxViews()) {
             MainView.displayErrorAlert(SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE,
                     NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT);
@@ -198,6 +206,10 @@ public class Controller {
         final File importDirectory = MainView.displayDirectoryChooserAndGetChoice(IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE, stage);
 
         if(importDirectory != null) {
+            if(model.containsImageFiles()) {
+                model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
+            }
+
             if(model.containsCategories()) {
                 ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE,
                         IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT);
@@ -252,6 +264,10 @@ public class Controller {
      * Handles the event of the user requesting to exit the application.
      */
     public void onRegisterExitAction() {
+        if(model.containsImageFiles()) {
+            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
+        }
+
         if(model.containsAnnotations() || view.containsBoundingBoxViews()) {
             ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(EXIT_APPLICATION_OPTION_DIALOG_TITLE,
                     EXIT_APPLICATION_OPTION_DIALOG_CONTENT);
@@ -691,15 +707,6 @@ public class Controller {
         }
 
         @Override
-        public void start() {
-            if(model.containsImageFiles()) {
-                model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
-            }
-
-            super.start();
-        }
-
-        @Override
         protected Task<IOResult> createTask() {
             return new Task<>() {
                 @Override
@@ -748,15 +755,6 @@ public class Controller {
             MainView.displayServiceProgressDialog(this, LOADING_ANNOTATIONS_DIALOG_TITLE,
                     LOADING_ANNOTATIONS_DIALOG_HEADER);
             start();
-        }
-
-        @Override
-        public void start() {
-            if(model.containsImageFiles()) {
-                model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
-            }
-
-            super.start();
         }
 
         @Override
