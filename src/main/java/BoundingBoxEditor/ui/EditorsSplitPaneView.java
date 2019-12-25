@@ -256,7 +256,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     private void setUpInternalListeners() {
         managedProperty().bind(visibleProperty());
 
-        categorySearchField.textProperty().addListener(((observable, oldValue, newValue) -> {
+        categorySearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null) {
                 boundingBoxCategoryTable.getItems().stream()
                         .filter(item -> item.getName().startsWith(newValue))
@@ -266,13 +266,13 @@ public class EditorsSplitPaneView extends SplitPane implements View {
                             boundingBoxCategoryTable.scrollTo(item);
                         });
             }
-        }));
+        });
 
-        categorySearchField.focusedProperty().addListener(((observable, oldValue, newValue) -> {
+        categorySearchField.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if(!newValue) {
                 categorySearchField.setText(null);
             }
-        }));
+        });
 
         expandTreeItemsButton.setOnAction(event -> boundingBoxTree.expandAllTreeItems());
 

@@ -536,6 +536,7 @@ public class Controller {
         imageFileListView.scrollTo(0);
     }
 
+    @SuppressWarnings("UnnecessaryLambda")
     private ChangeListener<Number> createImageLoadingProgressListener() {
         return (observable, oldValue, newValue) -> {
             if(newValue.intValue() == 1) {
@@ -552,6 +553,7 @@ public class Controller {
         };
     }
 
+    @SuppressWarnings("UnnecessaryLambda")
     private ChangeListener<Number> createSelectedFileIndexListener() {
         return (value, oldValue, newValue) -> {
             // Update selected item in image-file-list-view.
@@ -624,6 +626,7 @@ public class Controller {
         view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
     }
 
+    @SuppressWarnings("UnnecessaryLambda")
     private ListChangeListener<BoundingBoxView> createBoundingBoxCountPerCategoryListener() {
         return change -> {
             while(change.next()) {

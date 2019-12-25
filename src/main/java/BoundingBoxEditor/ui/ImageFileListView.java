@@ -51,7 +51,7 @@ public class ImageFileListView extends ListView<File> implements View {
     }
 
     private void setUpInternalListeners() {
-        itemsProperty().addListener(((observable, oldValue, newValue) -> {
+        itemsProperty().addListener((observable, oldValue, newValue) -> {
             if(!Objects.equals(newValue, oldValue)) {
                 imageCache.invalidateAll();
 
@@ -62,7 +62,7 @@ public class ImageFileListView extends ListView<File> implements View {
                             .collect(Collectors.toList()));
                 }
             }
-        }));
+        });
     }
 
     private class ImageGalleryCell extends ListCell<File> {

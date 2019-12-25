@@ -93,7 +93,7 @@ public class ImageFileExplorerView extends VBox implements View {
     private void setUpInternalListeners() {
         managedProperty().bind(visibleProperty());
 
-        imageFileSearchField.textProperty().addListener(((observable, oldValue, newValue) -> {
+        imageFileSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null) {
                 imageFileListView.getItems().stream()
                         .filter(item -> item.getName().startsWith(newValue))
@@ -108,7 +108,7 @@ public class ImageFileExplorerView extends VBox implements View {
                             imageFileListView.setFixedCellSize(0);
                         });
             }
-        }));
+        });
 
         imageFileSearchField.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if(!newValue) {

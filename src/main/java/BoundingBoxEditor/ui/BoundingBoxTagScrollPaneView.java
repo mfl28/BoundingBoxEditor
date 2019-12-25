@@ -127,6 +127,7 @@ class BoundingBoxTagScrollPaneView extends ScrollPane implements View {
         return flowPane;
     }
 
+    @SuppressWarnings("UnnecessaryLambda")
     private ListChangeListener<String> createTagsListener() {
         return change -> {
             while(change.next()) {

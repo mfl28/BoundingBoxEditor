@@ -4,6 +4,7 @@ import BoundingBoxEditor.ui.StatusEvents.StatusEvent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -33,7 +34,7 @@ public class StatusBarView extends HBox implements View {
      * @param statusEvent the status-event
      */
     public void setStatusEvent(StatusEvent statusEvent) {
-        timeStampLabel.setText(ZonedDateTime.now().toLocalTime().truncatedTo(ChronoUnit.MINUTES) + " - ");
+        timeStampLabel.setText(ZonedDateTime.now(ZoneId.systemDefault()).toLocalTime().truncatedTo(ChronoUnit.MINUTES) + " - ");
         eventMessageLabel.setText(statusEvent.getEventMessage());
     }
 }

@@ -216,6 +216,7 @@ public class MainView extends BorderPane implements View {
 
     /**
      * Checks if the {@link BoundingBoxEditorImagePaneView}-member currently contains bounding boxes.
+     *
      * @return true if there exist bounding boxes, false otherwise.
      */
     public boolean containsBoundingBoxViews() {
@@ -310,7 +311,7 @@ public class MainView extends BorderPane implements View {
         header.getViewMaximizeImagesItem().disableProperty().bind(workspaceSplitPane.visibleProperty().not());
         statusBar.visibleProperty().bind(workspaceSplitPane.visibleProperty());
 
-        header.getViewShowImagesPanelItem().selectedProperty().addListener(((observable, oldValue, newValue) -> {
+        header.getViewShowImagesPanelItem().selectedProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue) {
                 workspaceSplitPane.getItems().add(2, getImageFileExplorer());
                 workspaceSplitPane.applySavedDividerPositions();
@@ -318,12 +319,12 @@ public class MainView extends BorderPane implements View {
                 workspaceSplitPane.saveDividerPositions();
                 workspaceSplitPane.getItems().remove(getImageFileExplorer());
             }
-        }));
+        });
 
-        header.getViewMaximizeImagesItem().selectedProperty().addListener(((observable, oldValue, newValue) -> {
+        header.getViewMaximizeImagesItem().selectedProperty().addListener((observable, oldValue, newValue) -> {
             getBoundingBoxEditorImagePane().setMaximizeImageView(newValue);
             getBoundingBoxEditorImagePane().resetImageViewSize();
-        }));
+        });
     }
 
     private static void displayInfoAlert(String title, String header, String content, Node additionalInfoNode) {

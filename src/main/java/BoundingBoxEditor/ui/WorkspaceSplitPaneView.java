@@ -147,7 +147,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         getEditorsSplitPane().getBoundingBoxTree()
                 .getSelectionModel()
                 .selectedItemProperty()
-                .addListener(((observable, oldValue, newValue) -> {
+                .addListener((observable, oldValue, newValue) -> {
                     BoundingBoxTreeView boundingBoxTreeView = getEditorsSplitPane().getBoundingBoxTree();
 
                     if(oldValue instanceof BoundingBoxCategoryTreeItem) {
@@ -168,18 +168,18 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                         }
                     }
 
-                }));
+                });
 
         getBoundingBoxEditor().getBoundingBoxEditorImagePane()
                 .getBoundingBoxSelectionGroup()
                 .selectedToggleProperty()
-                .addListener(((observable, oldValue, newValue) -> {
+                .addListener((observable, oldValue, newValue) -> {
                     if(newValue != null) {
                         getEditorsSplitPane().getBoundingBoxTree()
                                 .getSelectionModel()
                                 .select(((BoundingBoxView) newValue).getTreeItem());
                     }
-                }));
+                });
 
         boundingBoxEditor.getBoundingBoxEditorImagePane()
                 .getCurrentBoundingBoxes().addListener((ListChangeListener<BoundingBoxView>) c -> {
@@ -260,7 +260,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
                     if(thisItem == null && ((draggedItem instanceof BoundingBoxCategoryTreeItem
                             && draggedItem.getParent().equals(treeView.getRoot()))
-                            || (draggedItem.getParent().getParent().equals(treeView.getRoot())))) {
+                            || draggedItem.getParent().getParent().equals(treeView.getRoot()))) {
                         return;
                     }
 

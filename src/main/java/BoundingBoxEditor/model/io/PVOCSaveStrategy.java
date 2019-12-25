@@ -18,6 +18,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -80,7 +81,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         return new IOResult(
                 IOResult.OperationType.ANNOTATION_SAVING,
                 annotations.size() - unParsedFileErrorMessages.size(),
-                TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS),
+                TimeUnit.MILLISECONDS.convert(Duration.ofNanos(duration)),
                 unParsedFileErrorMessages
         );
     }

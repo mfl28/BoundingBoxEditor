@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -82,7 +83,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             return new IOResult(
                     IOResult.OperationType.ANNOTATION_IMPORT,
                     imageAnnotations.size(),
-                    TimeUnit.MILLISECONDS.convert(estimatedTime, TimeUnit.NANOSECONDS),
+                    TimeUnit.MILLISECONDS.convert(Duration.ofNanos(estimatedTime)),
                     unParsedFileErrorMessages
             );
         }

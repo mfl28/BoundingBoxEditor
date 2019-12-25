@@ -240,7 +240,7 @@ public class BoundingBoxTreeView extends TreeView<BoundingBoxView> implements Vi
     }
 
     private static class BoundingBoxTreeItemIterator implements Iterator<TreeItem<BoundingBoxView>> {
-        private final Stack<TreeItem<BoundingBoxView>> stack = new Stack<>();
+        private final ArrayDeque<TreeItem<BoundingBoxView>> stack = new ArrayDeque<>();
 
         BoundingBoxTreeItemIterator(TreeItem<BoundingBoxView> root) {
             stack.push(root);

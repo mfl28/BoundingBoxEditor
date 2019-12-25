@@ -45,6 +45,7 @@ dependencies {
     // Caffeine https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
     compile 'com.github.ben-manes.caffeine:caffeine:2.7.0'
 
+    // Gradle plugin to use the error-prone compiler for Java https://github.com/tbroyer/gradle-errorprone-plugin
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'
 }
 

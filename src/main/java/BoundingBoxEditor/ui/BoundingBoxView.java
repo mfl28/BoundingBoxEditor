@@ -110,6 +110,11 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(boundingBoxCategory, imageMetaData, getX(), getY(), getWidth(), getHeight());
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if(this == obj) {
             return true;
@@ -323,11 +328,11 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
                         .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
                         .otherwise(Color.TRANSPARENT)));
 
-        selected.addListener(((observable, oldValue, newValue) -> {
+        selected.addListener((observable, oldValue, newValue) -> {
             if(newValue) {
                 highlighted.set(false);
             }
-        }));
+        });
     }
 
     private Bounds constructCurrentMoveBounds() {

@@ -131,11 +131,11 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
             }
         });
 
-        contextMenu.showingProperty().addListener(((observable, oldValue, newValue) -> {
+        contextMenu.showingProperty().addListener((observable, oldValue, newValue) -> {
             if(!isEmpty() && !newValue) {
                 setHighlightStatusIncludingChildren(false);
             }
-        }));
+        });
 
         setOnMouseExited(event -> {
             if(!isEmpty() && !contextMenu.isShowing()) {
@@ -155,7 +155,7 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
             if(getTreeItem() instanceof BoundingBoxCategoryTreeItem) {
                 ((BoundingBoxCategoryTreeItem) getTreeItem()).setIconToggledOn(false);
             } else {
-                ((BoundingBoxTreeItem) getTreeItem()).setIconToggledOn((false));
+                ((BoundingBoxTreeItem) getTreeItem()).setIconToggledOn(false);
             }
         });
     }
@@ -205,10 +205,12 @@ class BoundingBoxTreeCell extends TreeCell<BoundingBoxView> {
         return region;
     }
 
+    @SuppressWarnings("UnnecessaryLambda")
     private EventHandler<ContextMenuEvent> createShowContextMenuEventHandler() {
         return event -> contextMenu.show(getItem(), event.getScreenX(), event.getScreenY());
     }
 
+    @SuppressWarnings("UnnecessaryLambda")
     private ChangeListener<Boolean> createBoundingBoxVisibilityListener() {
         return ((observable, oldValue, newValue) -> {
             if(!newValue) {

@@ -104,7 +104,7 @@ public class ImageMetaData {
         if(obj instanceof ImageMetaData) {
             ImageMetaData other = (ImageMetaData) obj;
             return Objects.equals(fileName, other.fileName) && Objects.equals(folderName, other.folderName) &&
-                    imageWidth == other.imageWidth && imageHeight == other.imageHeight;
+                    imageWidth == other.imageWidth && imageHeight == other.imageHeight && imageDepth == other.imageDepth;
         }
         return false;
     }
