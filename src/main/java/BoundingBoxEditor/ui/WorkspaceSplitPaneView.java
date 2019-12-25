@@ -246,7 +246,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                         return;
                     }
 
-                    TreeItem thisItem = cell.getTreeItem();
+                    TreeItem<BoundingBoxView> thisItem = cell.getTreeItem();
 
                     if(draggedItem == null || draggedItem == thisItem || thisItem instanceof BoundingBoxCategoryTreeItem) {
                         return;
@@ -269,7 +269,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 });
 
                 cell.setOnDragEntered(event -> {
-                    TreeItem thisItem = cell.getTreeItem();
+                    TreeItem<BoundingBoxView> thisItem = cell.getTreeItem();
 
                     if(draggedItem == null || thisItem == null || draggedItem == thisItem
                             || thisItem instanceof BoundingBoxCategoryTreeItem

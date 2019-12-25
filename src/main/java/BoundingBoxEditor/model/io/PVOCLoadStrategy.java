@@ -283,12 +283,14 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return Integer.parseInt(intNode.getTextContent());
     }
 
+    @SuppressWarnings("serial")
     private static class AnnotationToNonExistentImageException extends RuntimeException {
         AnnotationToNonExistentImageException(String message) {
             super(message);
         }
     }
 
+    @SuppressWarnings("serial")
     private static class InvalidAnnotationFileFormatException extends RuntimeException {
         InvalidAnnotationFileFormatException(String message) {
             super(message);

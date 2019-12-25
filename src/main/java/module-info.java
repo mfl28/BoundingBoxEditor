@@ -11,5 +11,5 @@ module BoundingBoxEditor {
 
     opens BoundingBoxEditor.model to javafx.base;
     opens BoundingBoxEditor.model.io to javafx.base;
-    exports BoundingBoxEditor;
+    exports BoundingBoxEditor to javafx.graphics;
 }

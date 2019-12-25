@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  */
 public class BoundingBoxTreeView extends TreeView<BoundingBoxView> implements View {
     private static final int FIXED_CELL_SIZE = 20;
-    private VirtualFlow virtualFlow;
+    private VirtualFlow<?> virtualFlow;
 
     /**
      * Creates a new bounding-box tree UI-element.
@@ -83,7 +83,7 @@ public class BoundingBoxTreeView extends TreeView<BoundingBoxView> implements Vi
      * @param toggleState the toggle-icon-state to set
      */
     public void setToggleIconStateForSelectedBoundingBoxTreeItem(boolean toggleState) {
-        TreeItem selectedTreeItem = getSelectionModel().getSelectedItem();
+        TreeItem<BoundingBoxView> selectedTreeItem = getSelectionModel().getSelectedItem();
 
         if(selectedTreeItem instanceof BoundingBoxTreeItem) {
             ((BoundingBoxTreeItem) selectedTreeItem).setIconToggledOn(toggleState);
@@ -181,12 +181,12 @@ public class BoundingBoxTreeView extends TreeView<BoundingBoxView> implements Vi
 
     private void setUpInternalListeners() {
         skinProperty().addListener((observable, oldValue, newValue) -> {
-            if(newValue != null) {
-                TreeViewSkin skin = (TreeViewSkin) newValue;
-                List childNodes = skin.getChildren();
+            if(newValue instanceof TreeViewSkin) {
+                var skin = (TreeViewSkin<?>) newValue;
+                var childNodes = skin.getChildren();
 
                 if(childNodes != null && !childNodes.isEmpty()) {
-                    virtualFlow = (VirtualFlow) childNodes.get(0);
+                    virtualFlow = (VirtualFlow<?>) childNodes.get(0);
                 }
             }
         });

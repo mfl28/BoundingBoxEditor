@@ -150,7 +150,7 @@ public class MainView extends BorderPane implements View {
      * @param title   the title of the dialog-window
      * @param header  the header-text of the dialog-window
      */
-    public static void displayServiceProgressDialog(Service service, String title, String header) {
+    public static void displayServiceProgressDialog(Service<IOResult> service, String title, String header) {
         final ProgressDialog progressDialog = new ProgressDialog(service);
         progressDialog.setTitle(title);
         progressDialog.setHeaderText(header);
