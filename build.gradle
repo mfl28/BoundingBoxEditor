@@ -6,8 +6,8 @@ buildscript {
 
 plugins {
     id 'application'
-    id 'org.openjfx.javafxplugin' version '0.0.7'
-    id 'com.github.ben-manes.versions' version '0.21.0'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'com.github.ben-manes.versions' version '0.27.0'
     id 'org.beryx.jlink' version '2.17.0'
     id 'org.javamodularity.moduleplugin' version '1.5.0'
     id 'jacoco'
@@ -31,8 +31,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
 
     // TestFX (UI testing)
-    testCompile 'org.testfx:testfx-core:4.0.15-alpha'
-    testCompile 'org.testfx:testfx-junit5:4.0.15-alpha'
+    testCompile 'org.testfx:testfx-core:4.0.16-alpha'
+    testCompile 'org.testfx:testfx-junit5:4.0.16-alpha'
 
     // Commons Collections https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
     compile 'org.apache.commons:commons-collections4:4.4'
@@ -41,7 +41,7 @@ dependencies {
     compile 'org.apache.commons:commons-lang3:3.9'
 
     // ControlsFX https://mvnrepository.com/artifact/org.controlsfx/controlsfx
-    compile 'org.controlsfx:controlsfx:11.0.0'
+    compile 'org.controlsfx:controlsfx:11.0.1'
 
     // Caffeine https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
     compile 'com.github.ben-manes.caffeine:caffeine:2.8.0'
