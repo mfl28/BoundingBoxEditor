@@ -10,6 +10,10 @@ import javafx.scene.layout.Priority;
  * A class that comprises general ui utility-functions.
  */
 public class UiUtils {
+    private UiUtils() {
+        throw new IllegalStateException("UiUtils class");
+    }
+
     /***
      * Creates a pane that fills any available horizontal space
      * in it's parent.
@@ -51,9 +55,5 @@ public class UiUtils {
      */
     public static Tooltip createFocusTooltip(KeyCombination keyCombination) {
         return new Tooltip("(" + keyCombination.getDisplayText() + " to focus)");
-    }
-
-    private UiUtils() {
-        throw new IllegalStateException("UiUtils class");
     }
 }

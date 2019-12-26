@@ -9,6 +9,10 @@ import javafx.geometry.Point2D;
 public class MathUtils {
     private static final double DOUBLE_EQUAL_THRESHOLD = 1e-8;
 
+    private MathUtils() {
+        throw new IllegalStateException("MathUtils class");
+    }
+
     /***
      * Clamps a point 'point' inside the rectangle denoted by 'bounds'.
      * @param point the point to be clamped
@@ -52,9 +56,5 @@ public class MathUtils {
      */
     public static boolean doubleAlmostEqual(double a, double b) {
         return Math.abs(a - b) < DOUBLE_EQUAL_THRESHOLD;
-    }
-
-    private MathUtils() {
-        throw new IllegalStateException("MathUtils class");
     }
 }

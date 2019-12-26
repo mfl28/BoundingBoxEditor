@@ -31,22 +31,24 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
 
     // TestFX (UI testing)
-    testCompile 'org.testfx:testfx-core:4.0.16-alpha'
-    testCompile 'org.testfx:testfx-junit5:4.0.16-alpha'
+    testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
+    testImplementation 'org.testfx:testfx-junit5:4.0.16-alpha'
 
     // Commons Collections https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
-    compile 'org.apache.commons:commons-collections4:4.4'
+    implementation 'org.apache.commons:commons-collections4:4.4'
 
     // Commons Lang https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-    compile 'org.apache.commons:commons-lang3:3.9'
+    implementation 'org.apache.commons:commons-lang3:3.9'
 
     // ControlsFX https://mvnrepository.com/artifact/org.controlsfx/controlsfx
-    compile 'org.controlsfx:controlsfx:11.0.1'
+    implementation('org.controlsfx:controlsfx:11.0.1') {
+        exclude group: 'org.openjfx'
+    }
 
     // Caffeine https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
-    compile 'com.github.ben-manes.caffeine:caffeine:2.8.0'
+    implementation 'com.github.ben-manes.caffeine:caffeine:2.8.0'
 
-    // Gradle plugin to use the error-prone compiler for Java https://github.com/tbroyer/gradle-errorprone-plugin
+    // Gradle plugin to use the error-prone compiler https://github.com/tbroyer/gradle-errorprone-plugin
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'
 }
 
@@ -97,5 +99,9 @@ jlink {
     }
 
     imageZip = project.file("${buildDir}/distributions/boundingboxeditor-${javafx.platform.classifier}.zip")
+}
+
+task dist {
+    dependsOn clean, jlinkZip
 }
 

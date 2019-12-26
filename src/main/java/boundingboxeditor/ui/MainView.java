@@ -134,8 +134,7 @@ public class MainView extends BorderPane implements View {
         if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_IMPORT)) {
             MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE, "There were errors while loading annotations.",
                     ioResult.getErrorTableEntries().size() + " image-annotation file(s) could not be loaded.", errorTable);
-        }
-        else if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_SAVING)) {
+        } else if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_SAVING)) {
             MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE, "There were errors while saving annotations.",
                     ioResult.getErrorTableEntries().size() + " image-annotation file(s) could not be saved.", errorTable);
         }
