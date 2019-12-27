@@ -9,6 +9,11 @@ jobs:
   pool:
     vmImage: 'windows-2019'
   steps:
+  - task: SonarCloudPrepare@1
+    inputs:
+      SonarCloud: 'Sonarcloud'
+      organization: 'mfl28'
+      scannerMode: 'Other'
   - task: Gradle@2
     displayName: 'Gradle test'
     inputs:
@@ -19,6 +24,8 @@ jobs:
       jdkArchitectureOption: 'x64'
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
+      sonarQubeRunAnalysis: true
+      sqGradlePluginVersionChoice: 'build'
       tasks: 'test'
   - task: PublishCodeCoverageResults@1
     displayName: 'Publish code coverage results'
