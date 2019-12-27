@@ -7,6 +7,7 @@
 [![Build Status](https://dev.azure.com/mfl28/BoundingBoxEditor/_apis/build/status/mfl28.BoundingBoxEditor?branchName=master)](https://dev.azure.com/mfl28/BoundingBoxEditor/_build/latest?definitionId=1&branchName=master)
 ![Azure DevOps tests](https://img.shields.io/azure-devops/tests/mfl28/BoundingBoxEditor/1.svg)
 ![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/mfl28/BoundingBoxEditor/1.svg)
+[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java)
 
 This is a desktop application written in Java using the JavaFX application platform. It allows you to create image annotations using bounding box object-labels. 
 Annotations can be imported and saved from/to xml-files using the [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format. The saved annotation data can then further be used, e.g. as ground-truths in the training (and evaluation) of neural networks in order to perform object-detection tasks. How this can be done for any kind of labeled objects using Python and the [Pytorch](https://pytorch.org/) deep learning library is shown exemplarily in the [Humpback Whale Fluke Detection - Jupyter notebook](https://nbviewer.jupyter.org/github/mfl28/MachineLearning/blob/master/notebooks/Humpback_Whale_Fluke_Detection.ipynb) which you can find in my [Machine Learning repo](https://github.com/mfl28/MachineLearning).
