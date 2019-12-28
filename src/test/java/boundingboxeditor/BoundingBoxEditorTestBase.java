@@ -32,12 +32,11 @@ import java.util.concurrent.TimeoutException;
 
 @ExtendWith(ApplicationExtension.class)
 public class BoundingBoxEditorTestBase {
+    protected static final double DOUBLE_ERROR_TOLERANCE = 1e-8;
     private static final double INITIAL_WINDOW_SCALE = 0.75;
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
-
     protected static String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
     protected static String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
-
     protected Controller controller;
     protected MainView mainView;
     protected Model model;
@@ -70,7 +69,7 @@ public class BoundingBoxEditorTestBase {
                 .orElse(null);
     }
 
-    protected void drawBoundingBox(FxRobot robot, Point2D startPointRatios, Point2D endPointRatios) {
+    protected void moveRelativeToImageView(FxRobot robot, Point2D startPointRatios, Point2D endPointRatios) {
         Point2D startPoint = getScreenPointFromImageViewRatios(startPointRatios);
         Point2D endPoint = getScreenPointFromImageViewRatios(endPointRatios);
 
@@ -122,11 +121,18 @@ public class BoundingBoxEditorTestBase {
         FxToolkit.hideStage();
     }
 
-    private Point2D getScreenPointFromImageViewRatios(Point2D ratios) {
+    protected Point2D getScreenPointFromImageViewRatios(Point2D ratios) {
         final ImageView imageView = mainView.getBoundingBoxEditorImageView();
         final Bounds imageViewScreenBounds = imageView.localToScreen(imageView.getBoundsInLocal());
 
         return PointQueryUtils.atPositionFactors(imageViewScreenBounds, ratios);
+    }
+
+    protected Point2D getParentPointFromImageViewRatios(Point2D ratios) {
+        final ImageView imageView = mainView.getBoundingBoxEditorImageView();
+        final Bounds imageViewParentBounds = imageView.getBoundsInParent();
+
+        return PointQueryUtils.atPositionFactors(imageViewParentBounds, ratios);
     }
 
     private Scene createSceneFromParent(final Parent parent) {

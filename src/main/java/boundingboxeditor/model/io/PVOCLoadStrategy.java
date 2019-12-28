@@ -135,94 +135,92 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     private BoundingBoxData parseBoundingBoxElement(Element objectElement) {
         NodeList childElements = objectElement.getChildNodes();
 
-        String categoryName = "";
-        double xMin = Double.NaN;
-        double xMax = Double.NaN;
-        double yMin = Double.NaN;
-        double yMax = Double.NaN;
-        List<String> tags = new ArrayList<>();
-        List<BoundingBoxData> parts = new ArrayList<>();
+        BoundingBoxDataParseResult boxDataParseResult = new BoundingBoxDataParseResult();
 
         for(int i = 0; i != childElements.getLength(); ++i) {
             Node currentChild = childElements.item(i);
 
-            if(currentChild.getNodeType() != Node.ELEMENT_NODE) {
-                continue;
-            }
-
-            Element currentElement = (Element) currentChild;
-
-            switch(currentElement.getTagName()) {
-                case "name":
-                    categoryName = currentElement.getTextContent();
-
-                    if(categoryName == null || categoryName.isBlank()) {
-                        throw new InvalidAnnotationFileFormatException("Blank category-name");
-                    }
-
-                    break;
-                case "bndbox":
-                    xMin = parseDoubleElement(currentElement, "xmin");
-                    xMax = parseDoubleElement(currentElement, "xmax");
-                    yMin = parseDoubleElement(currentElement, "ymin");
-                    yMax = parseDoubleElement(currentElement, "ymax");
-                    break;
-                case "pose":
-                    String poseValue = currentElement.getTextContent();
-
-                    if(poseValue != null && !poseValue.equalsIgnoreCase("unspecified")) {
-                        tags.add("pose: " + poseValue.toLowerCase());
-                    }
-
-                    break;
-                case "truncated":
-                    if(Integer.parseInt(currentElement.getTextContent()) == 1) {
-                        tags.add("truncated");
-                    }
-
-                    break;
-                case "occluded":
-                    if(Integer.parseInt(currentElement.getTextContent()) == 1) {
-                        tags.add("occluded");
-                    }
-
-                    break;
-                case "difficult":
-                    if(Integer.parseInt(currentElement.getTextContent()) == 1) {
-                        tags.add("difficult");
-                    }
-
-                    break;
-                case "part":
-                    parts.add(parseBoundingBoxElement(currentElement));
-                    break;
-                case "actions":
-                    tags.addAll(parseActions(currentElement));
-                    break;
-                default: // Unknown tags are ignored!
+            if(currentChild.getNodeType() == Node.ELEMENT_NODE) {
+                parseBoundingBoxDataTag((Element) currentChild, boxDataParseResult);
             }
         }
 
-        if(categoryName.isEmpty()) {
+        if(boxDataParseResult.getCategoryName().isEmpty()) {
             throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + "name");
         }
 
-        if(Double.isNaN(xMin) || Double.isNaN(xMax) || Double.isNaN(yMin) || Double.isNaN(yMax)) {
+        if(boxDataParseResult.getxMin() == null || boxDataParseResult.getxMax() == null
+                || boxDataParseResult.getyMin() == null || boxDataParseResult.getyMax() == null) {
             throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + "bndbox");
         }
 
-        BoundingBoxCategory category = existingBoundingBoxCategories.computeIfAbsent(categoryName,
+        BoundingBoxCategory category = existingBoundingBoxCategories.computeIfAbsent(boxDataParseResult.getCategoryName(),
                 key -> new BoundingBoxCategory(key, ColorUtils.createRandomColor()));
 
         boundingBoxCountPerCategory.merge(category.getName(), 1, Integer::sum);
 
-        BoundingBoxData boundingBoxData = new BoundingBoxData(category, xMin, yMin, xMax, yMax, tags);
+        BoundingBoxData boundingBoxData = new BoundingBoxData(category, boxDataParseResult.getxMin(),
+                boxDataParseResult.getyMin(), boxDataParseResult.getxMax(),
+                boxDataParseResult.getyMax(), boxDataParseResult.getTags());
 
-        if(!parts.isEmpty()) {
-            boundingBoxData.setParts(parts);
+        if(!boxDataParseResult.getParts().isEmpty()) {
+            boundingBoxData.setParts(boxDataParseResult.getParts());
         }
 
         return boundingBoxData;
+    }
+
+    private void parseBoundingBoxDataTag(Element tagElement, BoundingBoxDataParseResult boxDataParseResult) {
+        switch(tagElement.getTagName()) {
+            case "name":
+                String categoryName = tagElement.getTextContent();
+
+                if(categoryName == null || categoryName.isBlank()) {
+                    throw new InvalidAnnotationFileFormatException("Blank category-name");
+                }
+
+                boxDataParseResult.setCategoryName(categoryName);
+                break;
+            case "bndbox":
+                boxDataParseResult.setxMin(parseDoubleElement(tagElement, "xmin"));
+                boxDataParseResult.setxMax(parseDoubleElement(tagElement, "xmax"));
+                boxDataParseResult.setyMin(parseDoubleElement(tagElement, "ymin"));
+                boxDataParseResult.setyMax(parseDoubleElement(tagElement, "ymax"));
+                break;
+            case "pose":
+                String poseValue = tagElement.getTextContent();
+
+                if(poseValue != null && !poseValue.equalsIgnoreCase("unspecified")) {
+                    boxDataParseResult.getTags().add("pose: " + poseValue.toLowerCase());
+                }
+
+                break;
+            case "truncated":
+                if(Integer.parseInt(tagElement.getTextContent()) == 1) {
+                    boxDataParseResult.getTags().add("truncated");
+                }
+
+                break;
+            case "occluded":
+                if(Integer.parseInt(tagElement.getTextContent()) == 1) {
+                    boxDataParseResult.getTags().add("occluded");
+                }
+
+                break;
+            case "difficult":
+                if(Integer.parseInt(tagElement.getTextContent()) == 1) {
+                    boxDataParseResult.getTags().add("difficult");
+                }
+
+                break;
+            case "part":
+                boxDataParseResult.getParts().add(parseBoundingBoxElement(tagElement));
+                break;
+            case "actions":
+                boxDataParseResult.getTags().addAll(parseActions(tagElement));
+                break;
+            default: // Unknown tags are ignored!
+        }
     }
 
     private List<String> parseActions(Element element) {
@@ -284,6 +282,66 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         }
 
         return Integer.parseInt(intNode.getTextContent());
+    }
+
+    private static class BoundingBoxDataParseResult {
+        private String categoryName;
+        private Double xMin;
+        private Double xMax;
+        private Double yMin;
+        private Double yMax;
+        private List<String> tags = new ArrayList<>();
+        private List<BoundingBoxData> parts = new ArrayList<>();
+
+
+        public String getCategoryName() {
+            return categoryName;
+        }
+
+        public void setCategoryName(String categoryName) {
+            this.categoryName = categoryName;
+        }
+
+        public Double getxMin() {
+            return xMin;
+        }
+
+        public void setxMin(Double xMin) {
+            this.xMin = xMin;
+        }
+
+        public Double getxMax() {
+            return xMax;
+        }
+
+        public void setxMax(Double xMax) {
+            this.xMax = xMax;
+        }
+
+        public Double getyMin() {
+            return yMin;
+        }
+
+        public void setyMin(Double yMin) {
+            this.yMin = yMin;
+        }
+
+        public Double getyMax() {
+            return yMax;
+        }
+
+        public void setyMax(Double yMax) {
+            this.yMax = yMax;
+        }
+
+        public List<String> getTags() {
+            return tags;
+        }
+
+
+        public List<BoundingBoxData> getParts() {
+            return parts;
+        }
     }
 
     @SuppressWarnings("serial")

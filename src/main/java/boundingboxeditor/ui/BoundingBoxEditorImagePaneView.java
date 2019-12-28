@@ -324,6 +324,11 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
             }
         });
 
+        setUpImageViewListeners();
+        setUpContentPaneListeners();
+    }
+
+    private void setUpImageViewListeners() {
         imageView.setOnMousePressed(event -> {
             if(isImageFullyLoaded()
                     && !event.isControlDown()
@@ -358,7 +363,9 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
                 initializerRectangle.setHeight(Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
             }
         });
+    }
 
+    private void setUpContentPaneListeners() {
         contentPane.setOnScroll(event -> {
             if(isImageFullyLoaded() && event.isControlDown()) {
                 Bounds contentPaneBounds = contentPane.getLayoutBounds();

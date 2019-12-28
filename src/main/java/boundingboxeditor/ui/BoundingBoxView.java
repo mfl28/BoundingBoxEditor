@@ -17,6 +17,7 @@ import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.TreeItem;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
@@ -463,153 +464,167 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
                 event.consume();
             });
 
-            final BoundingBoxView rectangle = BoundingBoxView.this;
-
             switch(compassPoint) {
                 case NW:
-                    setOnMouseDragged(event -> {
-                        if(event.getButton().equals(MouseButton.PRIMARY)) {
-                            final Bounds parentBounds = rectangle.autoScaleBounds.getValue();
-                            final Bounds bounds = new BoundingBox(parentBounds.getMinX(), parentBounds.getMinY(),
-                                    getRectangleMaxX() - parentBounds.getMinX(),
-                                    getRectangleMaxY() - parentBounds.getMinY());
-
-                            final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
-
-                            rectangle.setX(clampedEventXY.getX());
-                            rectangle.setY(clampedEventXY.getY());
-                            rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));
-                            rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMaxY()));
-                        }
-
-                        event.consume();
-                    });
+                    setOnMouseDragged(this::handleMouseDraggedNW);
                     break;
                 case N:
-                    setOnMouseDragged(event -> {
-                        if(event.getButton().equals(MouseButton.PRIMARY)) {
-                            final Bounds parentBounds = rectangle.autoScaleBounds.getValue();
-                            final Bounds bounds = new BoundingBox(rectangle.getX(), parentBounds.getMinY(),
-                                    rectangle.getWidth(), getRectangleMaxY() - parentBounds.getMinY());
-
-                            final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
-
-                            rectangle.setY(clampedEventXY.getY());
-                            rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMaxY()));
-                        }
-
-                        event.consume();
-                    });
+                    setOnMouseDragged(this::handleMouseDraggedN);
                     break;
                 case NE:
-                    setOnMouseDragged(event -> {
-                        if(event.getButton().equals(MouseButton.PRIMARY)) {
-                            final Bounds parentBounds = rectangle.autoScaleBounds.getValue();
-                            final Bounds bounds = new BoundingBox(rectangle.getX(), parentBounds.getMinY(),
-                                    parentBounds.getMaxX() - rectangle.getX(),
-                                    getRectangleMaxY() - parentBounds.getMinY());
-
-                            final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
-
-                            rectangle.setY(clampedEventXY.getY());
-                            rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
-                            rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMaxY()));
-                        }
-
-                        event.consume();
-                    });
+                    setOnMouseDragged(this::handleMouseDraggedNE);
                     break;
                 case E:
-                    setOnMouseDragged(event -> {
-                        if(event.getButton().equals(MouseButton.PRIMARY)) {
-                            final Bounds parentBounds = rectangle.autoScaleBounds.getValue();
-                            final Bounds bounds = new BoundingBox(rectangle.getX(), rectangle.getY(),
-                                    parentBounds.getMaxX() - rectangle.getX(), rectangle.getHeight());
-                            final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
-
-                            rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
-                        }
-
-                        event.consume();
-                    });
+                    setOnMouseDragged(this::handleMouseDraggedE);
                     break;
                 case SE:
-                    setOnMouseDragged(event -> {
-                        if(event.getButton().equals(MouseButton.PRIMARY)) {
-                            final Bounds parentBounds = rectangle.autoScaleBounds.getValue();
-                            final Bounds bounds = new BoundingBox(rectangle.getX(), rectangle.getY(),
-                                    parentBounds.getMaxX() - rectangle.getX(),
-                                    parentBounds.getMaxY() - rectangle.getY());
-
-                            final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
-
-                            rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
-                            rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
-                        }
-
-                        event.consume();
-                    });
+                    setOnMouseDragged(this::handleMouseDraggedSE);
                     break;
                 case S:
-                    setOnMouseDragged(event -> {
-                        if(event.getButton().equals(MouseButton.PRIMARY)) {
-                            final Bounds parentBounds = rectangle.autoScaleBounds.getValue();
-                            final Bounds bounds = new BoundingBox(rectangle.getX(), rectangle.getY(),
-                                    rectangle.getWidth(),
-                                    parentBounds.getMaxY() - rectangle.getY());
-
-                            final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
-
-                            rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
-                        }
-
-                        event.consume();
-                    });
+                    setOnMouseDragged(this::handleMouseDraggedS);
                     break;
                 case SW:
-                    setOnMouseDragged(event -> {
-                        if(event.getButton().equals(MouseButton.PRIMARY)) {
-                            final Bounds parentBounds = rectangle.autoScaleBounds.getValue();
-                            final Bounds bounds = new BoundingBox(parentBounds.getMinX(), rectangle.getY(),
-                                    getRectangleMaxX() - parentBounds.getMinX(),
-                                    parentBounds.getMaxY() - rectangle.getY());
-
-                            final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
-
-                            rectangle.setX(clampedEventXY.getX());
-                            rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));
-                            rectangle.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
-                        }
-
-                        event.consume();
-                    });
+                    setOnMouseDragged(this::handleMouseDraggedSW);
                     break;
                 case W:
-                    setOnMouseDragged(event -> {
-                        if(event.getButton().equals(MouseButton.PRIMARY)) {
-                            final Bounds parentBounds = rectangle.autoScaleBounds.getValue();
-                            final Bounds bounds = new BoundingBox(parentBounds.getMinX(), rectangle.getY(),
-                                    getRectangleMaxX() - parentBounds.getMinX(),
-                                    rectangle.getHeight());
-
-                            final Point2D eventXY = new Point2D(event.getX(), event.getY());
-                            final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
-
-                            rectangle.setX(clampedEventXY.getX());
-                            rectangle.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));
-                        }
-
-                        event.consume();
-                    });
+                    setOnMouseDragged(this::handleMouseDraggedW);
                     break;
             }
+        }
+
+        private void handleMouseDraggedNW(MouseEvent event) {
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
+                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds bounds = new BoundingBox(parentBounds.getMinX(), parentBounds.getMinY(),
+                        getRectangleMaxX() - parentBounds.getMinX(),
+                        getRectangleMaxY() - parentBounds.getMinY());
+
+                final Point2D eventXY = new Point2D(event.getX(), event.getY());
+                final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
+
+                BoundingBoxView.this.setX(clampedEventXY.getX());
+                BoundingBoxView.this.setY(clampedEventXY.getY());
+                BoundingBoxView.this.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));
+                BoundingBoxView.this.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMaxY()));
+            }
+
+            event.consume();
+        }
+
+        private void handleMouseDraggedN(MouseEvent event) {
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
+                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), parentBounds.getMinY(),
+                        BoundingBoxView.this.getWidth(), getRectangleMaxY() - parentBounds.getMinY());
+
+                final Point2D eventXY = new Point2D(event.getX(), event.getY());
+                final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
+
+                BoundingBoxView.this.setY(clampedEventXY.getY());
+                BoundingBoxView.this.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMaxY()));
+            }
+
+            event.consume();
+        }
+
+        private void handleMouseDraggedNE(MouseEvent event) {
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
+                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), parentBounds.getMinY(),
+                        parentBounds.getMaxX() - BoundingBoxView.this.getX(),
+                        getRectangleMaxY() - parentBounds.getMinY());
+
+                final Point2D eventXY = new Point2D(event.getX(), event.getY());
+                final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
+
+                BoundingBoxView.this.setY(clampedEventXY.getY());
+                BoundingBoxView.this.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
+                BoundingBoxView.this.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMaxY()));
+            }
+
+            event.consume();
+        }
+
+        private void handleMouseDraggedE(MouseEvent event) {
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
+                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), BoundingBoxView.this.getY(),
+                        parentBounds.getMaxX() - BoundingBoxView.this.getX(), BoundingBoxView.this.getHeight());
+                final Point2D eventXY = new Point2D(event.getX(), event.getY());
+                final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
+
+                BoundingBoxView.this.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
+            }
+
+            event.consume();
+        }
+
+        private void handleMouseDraggedSE(MouseEvent event) {
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
+                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), BoundingBoxView.this.getY(),
+                        parentBounds.getMaxX() - BoundingBoxView.this.getX(),
+                        parentBounds.getMaxY() - BoundingBoxView.this.getY());
+
+                final Point2D eventXY = new Point2D(event.getX(), event.getY());
+                final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
+
+                BoundingBoxView.this.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMinX()));
+                BoundingBoxView.this.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
+            }
+
+            event.consume();
+        }
+
+        private void handleMouseDraggedS(MouseEvent event) {
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
+                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), BoundingBoxView.this.getY(),
+                        BoundingBoxView.this.getWidth(),
+                        parentBounds.getMaxY() - BoundingBoxView.this.getY());
+
+                final Point2D eventXY = new Point2D(event.getX(), event.getY());
+                final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
+
+                BoundingBoxView.this.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
+            }
+
+            event.consume();
+        }
+
+        private void handleMouseDraggedSW(MouseEvent event) {
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
+                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds bounds = new BoundingBox(parentBounds.getMinX(), BoundingBoxView.this.getY(),
+                        getRectangleMaxX() - parentBounds.getMinX(),
+                        parentBounds.getMaxY() - BoundingBoxView.this.getY());
+
+                final Point2D eventXY = new Point2D(event.getX(), event.getY());
+                final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
+
+                BoundingBoxView.this.setX(clampedEventXY.getX());
+                BoundingBoxView.this.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));
+                BoundingBoxView.this.setHeight(Math.abs(clampedEventXY.getY() - bounds.getMinY()));
+            }
+
+            event.consume();
+        }
+
+        private void handleMouseDraggedW(MouseEvent event) {
+            if(event.getButton().equals(MouseButton.PRIMARY)) {
+                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds bounds = new BoundingBox(parentBounds.getMinX(), BoundingBoxView.this.getY(),
+                        getRectangleMaxX() - parentBounds.getMinX(),
+                        BoundingBoxView.this.getHeight());
+
+                final Point2D eventXY = new Point2D(event.getX(), event.getY());
+                final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
+
+                BoundingBoxView.this.setX(clampedEventXY.getX());
+                BoundingBoxView.this.setWidth(Math.abs(clampedEventXY.getX() - bounds.getMaxX()));
+            }
+
+            event.consume();
         }
     }
 }

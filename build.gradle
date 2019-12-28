@@ -30,9 +30,13 @@ dependencies {
     // Junit (Unit testing)
     testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
 
-    // TestFX (UI testing)
-    testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
-    testImplementation 'org.testfx:testfx-junit5:4.0.16-alpha'
+    // TestFx UI TesTing // https://mvnrepository.com/artifact/org.testfx/testfx-junit5
+    testImplementation('org.testfx:testfx-junit5:4.0.16-alpha') {
+        exclude group: 'org.hamcrest'
+    }
+
+    // Hamcrest https://mvnrepository.com/artifact/org.hamcrest/hamcrest
+    testImplementation 'org.hamcrest:hamcrest:2.2'
 
     // Commons Collections https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
     implementation 'org.apache.commons:commons-collections4:4.4'

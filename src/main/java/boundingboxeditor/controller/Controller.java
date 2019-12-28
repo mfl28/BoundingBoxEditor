@@ -310,21 +310,9 @@ public class Controller {
         }
 
         if(KeyCombinations.navigateNext.match(event)) {
-            if(model.containsImageFiles() && model.hasNextImageFile()
-                    && !navigatePreviousKeyPressed.get()) {
-                navigateNextKeyPressed.set(true);
-                onRegisterNextImageFileRequested();
-            } else {
-                navigateNextKeyPressed.set(false);
-            }
+            handleNavigateNextKeyPressed();
         } else if(KeyCombinations.navigatePrevious.match(event)) {
-            if(model.containsImageFiles() && model.hasPreviousImageFile()
-                    && !navigateNextKeyPressed.get()) {
-                navigatePreviousKeyPressed.set(true);
-                onRegisterPreviousImageFileRequested();
-            } else {
-                navigatePreviousKeyPressed.set(false);
-            }
+            handleNavigatePreviousKeyPressed();
         } else if(KeyCombinations.deleteSelectedBoundingBox.match(event)) {
             view.removeSelectedTreeItemAndChildren();
         } else if(KeyCombinations.focusCategorySearchField.match(event)) {
@@ -455,6 +443,26 @@ public class Controller {
      */
     public Model getModel() {
         return model;
+    }
+
+    private void handleNavigateNextKeyPressed() {
+        if(model.containsImageFiles() && model.hasNextImageFile()
+                && !navigatePreviousKeyPressed.get()) {
+            navigateNextKeyPressed.set(true);
+            onRegisterNextImageFileRequested();
+        } else {
+            navigateNextKeyPressed.set(false);
+        }
+    }
+
+    private void handleNavigatePreviousKeyPressed() {
+        if(model.containsImageFiles() && model.hasPreviousImageFile()
+                && !navigateNextKeyPressed.get()) {
+            navigatePreviousKeyPressed.set(true);
+            onRegisterPreviousImageFileRequested();
+        } else {
+            navigatePreviousKeyPressed.set(false);
+        }
     }
 
     private void setUpModelListeners() {

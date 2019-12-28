@@ -50,7 +50,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         Assertions.assertTrue(Files.isDirectory(actualDir), "Actual files directory exists.");
 
-        final Map counts = model.getCategoryToAssignedBoundingBoxesCountMap();
+        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingBoxesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> Objects.equals(counts.get("Boat"), 2) && Objects.equals(counts.get("Sail"), 6) && Objects.equals(counts.get("Flag"), 1)),
                 "Correct bounding box per-category-counts read within " + TIMEOUT_DURATION_IN_SEC + " sec.");

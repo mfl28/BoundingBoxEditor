@@ -36,7 +36,7 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
 
         /* ----Drawing---- */
         // Draw first bounding-box.
-        drawBoundingBox(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
         WaitForAsyncUtils.waitForFxEvents();
 
         final List<TreeItem<BoundingBoxView>> topLevelTreeItems = mainView.getBoundingBoxTree().getRoot().getChildren();
@@ -58,7 +58,7 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(firstTestChildTreeItem.getValue().isSelected(), CoreMatchers.equalTo(true));
 
         // Draw second bounding-box.
-        drawBoundingBox(robot, new Point2D(0.6, 0.25), new Point2D(0.85, 0.5));
+        moveRelativeToImageView(robot, new Point2D(0.6, 0.25), new Point2D(0.85, 0.5));
         WaitForAsyncUtils.waitForFxEvents();
         // Still there should be only one category...
         verifyThat(topLevelTreeItems.size(), CoreMatchers.equalTo(1));
@@ -104,7 +104,7 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
 
         /* ----Nesting---- */
         // Draw another bounding-box belonging to the Test-category.
-        drawBoundingBox(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
         WaitForAsyncUtils.waitForFxEvents();
 
         final BoundingBoxTreeItem thirdTestChildTreeItem = (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(2);
@@ -116,7 +116,7 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getBoundingBoxCategoryTable().getSelectedCategory().getName(), CoreMatchers.equalTo("Dummy"));
 
         // Draw a bounding-box belonging to the Dummy-category
-        drawBoundingBox(robot, new Point2D(0.6, 0.6), new Point2D(0.85, 0.85));
+        moveRelativeToImageView(robot, new Point2D(0.6, 0.6), new Point2D(0.85, 0.85));
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(topLevelTreeItems.size(), CoreMatchers.equalTo(2));

@@ -29,7 +29,6 @@ public class BoundingBoxEditorApp extends Application {
         launch(args);
     }
 
-
     @Override
     public void start(Stage primaryStage) {
         final Controller controller = new Controller(primaryStage);
