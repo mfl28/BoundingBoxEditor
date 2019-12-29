@@ -4,6 +4,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Responsible for holding information about a finished IO-operation (e.g. loading or
@@ -142,6 +143,27 @@ public class IOResult {
          */
         public StringProperty errorDescriptionProperty() {
             return errorDescription;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(fileName.get(), errorDescription.get());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if(this == o) {
+                return true;
+            }
+
+            if(!(o instanceof ErrorInfoEntry)) {
+                return false;
+            }
+
+            ErrorInfoEntry that = (ErrorInfoEntry) o;
+
+            return Objects.equals(fileName.get(), that.fileName.get()) &&
+                    Objects.equals(errorDescription.get(), that.errorDescription.get());
         }
     }
 }

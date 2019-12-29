@@ -39,6 +39,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     private Set<String> fileNamesToLoad;
     private Map<String, BoundingBoxCategory> existingBoundingBoxCategories;
     private Map<String, Integer> boundingBoxCountPerCategory;
+    private List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages;
 
     @Override
     public IOResult load(Model model, Path path, DoubleProperty progress) throws IOException {
@@ -55,7 +56,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                     .map(Path::toFile)
                     .collect(Collectors.toList());
 
-            List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
+            unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
             int totalNrOfFiles = annotationFiles.size();
             AtomicInteger nrProcessedFiles = new AtomicInteger(0);
@@ -101,7 +102,12 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             throw new AnnotationToNonExistentImageException("The image file does not belong to the currently loaded images.");
         }
 
-        List<BoundingBoxData> boundingBoxData = parseBoundingBoxData(document);
+        List<BoundingBoxData> boundingBoxData = parseBoundingBoxData(document, file.getName());
+
+        if(boundingBoxData.isEmpty()) {
+            // No image annotation will be constructed if it does not contain any bounding boxes.
+            return null;
+        }
 
         return new ImageAnnotation(imageMetaData, boundingBoxData);
     }
@@ -116,36 +122,37 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return new ImageMetaData(fileName, folderName, width, height, depth);
     }
 
-    private List<BoundingBoxData> parseBoundingBoxData(Document document) {
+    private List<BoundingBoxData> parseBoundingBoxData(Document document, String filename) {
         NodeList objectElements = document.getElementsByTagName("object");
 
-        List<BoundingBoxData> boundingBoxData = new ArrayList<>();
+        List<BoundingBoxData> boundingBoxDataList = new ArrayList<>();
 
         for(int i = 0; i != objectElements.getLength(); ++i) {
             Node objectNode = objectElements.item(i);
 
             if(objectNode.getNodeType() == Node.ELEMENT_NODE) {
-                boundingBoxData.add(parseBoundingBoxElement((Element) objectNode));
+                try {
+                    BoundingBoxData boundingBoxData = parseBoundingBoxElement((Element) objectNode, filename);
+                    boundingBoxDataList.add(boundingBoxData);
+                } catch(InvalidAnnotationFileFormatException e) {
+                    unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(filename, e.getMessage()));
+                }
             }
         }
 
-        return boundingBoxData;
+        return boundingBoxDataList;
     }
 
-    private BoundingBoxData parseBoundingBoxElement(Element objectElement) {
+    private BoundingBoxData parseBoundingBoxElement(Element objectElement, String filename) {
         NodeList childElements = objectElement.getChildNodes();
 
         BoundingBoxDataParseResult boxDataParseResult = new BoundingBoxDataParseResult();
 
-        for(int i = 0; i != childElements.getLength(); ++i) {
-            Node currentChild = childElements.item(i);
+        // At first, parse all child elements except parts. In this way if errors occur,
+        // no parts will be parsed.
+        parseNonPartElements(childElements, boxDataParseResult);
 
-            if(currentChild.getNodeType() == Node.ELEMENT_NODE) {
-                parseBoundingBoxDataTag((Element) currentChild, boxDataParseResult);
-            }
-        }
-
-        if(boxDataParseResult.getCategoryName().isEmpty()) {
+        if(boxDataParseResult.getCategoryName() == null) {
             throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + "name");
         }
 
@@ -163,6 +170,9 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 boxDataParseResult.getyMin(), boxDataParseResult.getxMax(),
                 boxDataParseResult.getyMax(), boxDataParseResult.getTags());
 
+        // Now parse parts.
+        parsePartElements(childElements, boxDataParseResult, filename);
+
         if(!boxDataParseResult.getParts().isEmpty()) {
             boundingBoxData.setParts(boxDataParseResult.getParts());
         }
@@ -176,7 +186,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 String categoryName = tagElement.getTextContent();
 
                 if(categoryName == null || categoryName.isBlank()) {
-                    throw new InvalidAnnotationFileFormatException("Blank category-name");
+                    throw new InvalidAnnotationFileFormatException("Blank object name");
                 }
 
                 boxDataParseResult.setCategoryName(categoryName);
@@ -213,13 +223,46 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 }
 
                 break;
-            case "part":
-                boxDataParseResult.getParts().add(parseBoundingBoxElement(tagElement));
-                break;
             case "actions":
                 boxDataParseResult.getTags().addAll(parseActions(tagElement));
                 break;
             default: // Unknown tags are ignored!
+        }
+    }
+
+    private void parsePart(Element tagElement, BoundingBoxDataParseResult boxDataParseResult, String filename) {
+        try {
+            boxDataParseResult.getParts().add(parseBoundingBoxElement(tagElement, filename));
+        } catch(InvalidAnnotationFileFormatException e) {
+            unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(filename, e.getMessage()));
+        }
+    }
+
+    private void parseNonPartElements(NodeList childElements, BoundingBoxDataParseResult boxDataParseResult) {
+        for(int i = 0; i != childElements.getLength(); ++i) {
+            Node currentChild = childElements.item(i);
+
+            if(currentChild.getNodeType() == Node.ELEMENT_NODE) {
+                Element currentElement = (Element) currentChild;
+
+                if(!currentElement.getTagName().equals("part")) {
+                    parseBoundingBoxDataTag((Element) currentChild, boxDataParseResult);
+                }
+            }
+        }
+    }
+
+    private void parsePartElements(NodeList childElements, BoundingBoxDataParseResult boxDataParseResult, String filename) {
+        for(int i = 0; i != childElements.getLength(); ++i) {
+            Node currentChild = childElements.item(i);
+
+            if(currentChild.getNodeType() == Node.ELEMENT_NODE) {
+                Element currentElement = (Element) currentChild;
+
+                if(currentElement.getTagName().equals("part")) {
+                    parsePart((Element) currentChild, boxDataParseResult, filename);
+                }
+            }
         }
     }
 

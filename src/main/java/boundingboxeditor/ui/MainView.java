@@ -112,31 +112,37 @@ public class MainView extends BorderPane implements View {
     public static void displayIOResultErrorInfoAlert(IOResult ioResult) {
         TableView<IOResult.ErrorInfoEntry> errorTable = new TableView<>();
         TableColumn<IOResult.ErrorInfoEntry, String> fileNameColumn = new TableColumn<>("File");
+        TableColumn<IOResult.ErrorInfoEntry, String> errorDescriptionColumn = new TableColumn<>("Error");
 
-        TableColumn<IOResult.ErrorInfoEntry, String> problemColumn = new TableColumn<>("Error");
         errorTable.getColumns().add(fileNameColumn);
-        errorTable.getColumns().add(problemColumn);
+        errorTable.getColumns().add(errorDescriptionColumn);
         errorTable.setEditable(false);
         errorTable.setMaxWidth(Double.MAX_VALUE);
         errorTable.setMaxHeight(Double.MAX_VALUE);
 
         fileNameColumn.setCellValueFactory(new PropertyValueFactory<>("fileName"));
-        fileNameColumn.setMaxWidth(150);
-        fileNameColumn.setMinWidth(100);
-        problemColumn.setCellValueFactory(new PropertyValueFactory<>("errorDescription"));
-        problemColumn.setSortable(false);
+
+        errorDescriptionColumn.setCellValueFactory(new PropertyValueFactory<>("errorDescription"));
+        errorDescriptionColumn.setSortable(false);
         errorTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         errorTable.setItems(FXCollections.observableArrayList(ioResult.getErrorTableEntries()));
         errorTable.getSortOrder().add(fileNameColumn);
         errorTable.sort();
 
+        long numErrorEntries = ioResult.getErrorTableEntries().stream()
+                .map(IOResult.ErrorInfoEntry::getFileName)
+                .distinct()
+                .count();
+
         if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_IMPORT)) {
             MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE, "There were errors while loading annotations.",
-                    ioResult.getErrorTableEntries().size() + " image-annotation file(s) could not be loaded.", errorTable);
+                    "Some bounding boxes could not be loaded from " + numErrorEntries + " image-annotation file"
+                            + (numErrorEntries > 1 ? "s" : "") + ".", errorTable);
         } else if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_SAVING)) {
             MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE, "There were errors while saving annotations.",
-                    ioResult.getErrorTableEntries().size() + " image-annotation file(s) could not be saved.", errorTable);
+                    numErrorEntries + " image-annotation file"
+                            + (numErrorEntries > 1 ? "s" : "") + " could not be saved.", errorTable);
         }
     }
 

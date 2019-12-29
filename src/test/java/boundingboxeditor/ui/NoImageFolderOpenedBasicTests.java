@@ -4,13 +4,15 @@ import boundingboxeditor.BoundingBoxEditorTestBase;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.testfx.api.FxAssert.verifyThat;
 
 class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
@@ -46,8 +48,7 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        Stage errorAlertStage = getTopModalStage(robot, "Save Error");
-        assertNotNull(errorAlertStage);
+        verifyThat(getTopModalStage(robot, "Save Error"), Matchers.notNullValue());
 
         robot.clickOn("OK");
 

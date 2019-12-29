@@ -37,4 +37,13 @@ public class StatusBarView extends HBox implements View {
         timeStampLabel.setText(ZonedDateTime.now(ZoneId.systemDefault()).toLocalTime().truncatedTo(ChronoUnit.MINUTES) + " - ");
         eventMessageLabel.setText(statusEvent.getEventMessage());
     }
+
+    /**
+     * Gets the currently displayed event message.
+     *
+     * @return the event message string
+     */
+    public String getCurrentEventMessage() {
+        return eventMessageLabel.getText();
+    }
 }
