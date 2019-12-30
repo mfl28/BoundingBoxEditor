@@ -122,30 +122,39 @@ public class Controller {
         final File imageFolder = MainView.displayDirectoryChooserAndGetChoice(IMAGE_FOLDER_CHOOSER_TITLE, stage);
 
         if(imageFolder != null) {
-            if(model.containsImageFiles()) {
-                model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
-            }
-
-            if(model.containsAnnotations() || view.containsBoundingBoxViews()) {
-                ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                        OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
-
-                if(answer == ButtonBar.ButtonData.YES) {
-                    final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage);
-
-                    if(saveDirectory != null) {
-                        AnnotationSaverService annotationSaverService = new AnnotationSaverService(saveDirectory);
-                        annotationSaverService.runOnSuccess(() -> loadImageFiles(imageFolder));
-                        annotationSaverService.startAndShowProgressDialog();
-                    }
-                    return;
-                } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
-                    return;
-                }
-            }
-
-            loadImageFiles(imageFolder);
+            initiateImageFolderLoading(imageFolder);
         }
+    }
+
+    /**
+     * Initiates the loading of image files from a provided folder.
+     *
+     * @param imageFolder the folder containing the image files to load
+     */
+    public void initiateImageFolderLoading(File imageFolder) {
+        if(model.containsImageFiles()) {
+            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
+        }
+
+        if(model.containsAnnotations() || view.containsBoundingBoxViews()) {
+            ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                    OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
+
+            if(answer == ButtonBar.ButtonData.YES) {
+                final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage);
+
+                if(saveDirectory != null) {
+                    AnnotationSaverService annotationSaverService = new AnnotationSaverService(saveDirectory);
+                    annotationSaverService.runOnSuccess(() -> loadImageFiles(imageFolder));
+                    annotationSaverService.startAndShowProgressDialog();
+                }
+                return;
+            } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
+                return;
+            }
+        }
+
+        loadImageFiles(imageFolder);
     }
 
     /**
@@ -206,24 +215,37 @@ public class Controller {
         final File importDirectory = MainView.displayDirectoryChooserAndGetChoice(IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE, stage);
 
         if(importDirectory != null) {
-            if(model.containsImageFiles()) {
-                model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
-            }
-
-            if(model.containsCategories()) {
-                ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE,
-                        IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT);
-
-                if(answer == ButtonBar.ButtonData.NO) {
-                    model.clearAnnotationData();
-                    view.reset();
-                } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
-                    return;
-                }
-            }
-
-            new AnnotationLoaderService(importDirectory).startAndShowProgressDialog();
+            initiateAnnotationFolderImport(importDirectory);
         }
+    }
+
+    /**
+     * Initiates the import of image files from a folder.
+     *
+     * @param importFolder the folder containing the image files to load
+     */
+    public void initiateAnnotationFolderImport(File importFolder) {
+        if(model.containsImageFiles()) {
+            model.updateCurrentBoundingBoxData(view.extractCurrentBoundingBoxData());
+        }
+
+        if(model.containsCategories()) {
+            ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE,
+                    IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT);
+
+            if(answer == ButtonBar.ButtonData.NO) {
+                model.clearAnnotationData();
+                view.reset();
+                view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingBoxes();
+                // Reset all 'assigned bounding box states' in image file explorer.
+                view.getImageFileListView().getItems().forEach(item -> item.setHasAssignedBoundingBoxes(false));
+
+            } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
+                return;
+            }
+        }
+
+        new AnnotationLoaderService(importFolder).startAndShowProgressDialog();
     }
 
     /**
@@ -537,7 +559,7 @@ public class Controller {
         boundingBoxCategoryTableView.getSelectionModel().selectFirst();
 
         ImageFileExplorerView imageFileExplorerView = view.getImageFileExplorer();
-        imageFileExplorerView.setImageFiles(model.getImageFilesAsObservableList());
+        imageFileExplorerView.setImageFiles(model.getImageFiles());
 
         ImageFileListView imageFileListView = view.getImageFileListView();
         imageFileListView.getSelectionModel().selectFirst();
@@ -578,7 +600,7 @@ public class Controller {
                 // the old image was fully loaded.
                 if(oldImage.getProgress() == 1.0) {
                     // update model bounding-box-data from previous image:
-                    model.updateBoundingBoxDataAtFileIndex(oldValue.intValue(), view.getBoundingBoxTree().extractCurrentBoundingBoxData());
+                    model.updateBoundingBoxDataAtFileIndex(oldValue.intValue(), view.extractCurrentBoundingBoxData());
                     // remove old image's bounding boxes
                     view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
                     view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingBoxes();
@@ -791,6 +813,8 @@ public class Controller {
                 view.getStatusBar().setStatusEvent(new ImageAnnotationsImportingSuccessfulEvent(loadResult));
             }
 
+            updateViewFileExplorerFileInfoElements();
+
             ImageAnnotation annotation = model.getCurrentImageAnnotation();
 
             if(annotation != null) {
@@ -806,6 +830,18 @@ public class Controller {
                 MainView.displayIOResultErrorInfoAlert(loadResult);
             } else if(loadResult.getNrSuccessfullyProcessedItems() == 0) {
                 MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE, ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
+            }
+        }
+
+        private void updateViewFileExplorerFileInfoElements() {
+            final Map<String, ImageAnnotation> fileNameToAnnotationMap = model.getImageFileNameToAnnotationMap();
+
+            for(ImageFileListView.FileInfo fileInfo : view.getImageFileListView().getItems()) {
+                ImageAnnotation annotation = fileNameToAnnotationMap.get(fileInfo.getFile().getName());
+
+                if(annotation != null && !annotation.getBoundingBoxData().isEmpty()) {
+                    fileInfo.setHasAssignedBoundingBoxes(true);
+                }
             }
         }
     }

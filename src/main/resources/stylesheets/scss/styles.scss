@@ -2,19 +2,20 @@
 @import 'icon_svg_paths';
 
 // Base colors
-$base-background-color:             $nord0;
-$base-background-light-color:       $nord1;
-$base-highlight-color:              $nord2;
-$base-highlight-light-color:        $nord3;
-$base-font-color:                   $nord4;
-$base-font-light-color:             $nord5;
-$base-font-highlight-color:         $nord6;
-$base-accent-color:                 $nord7;
-$base-alt-accent-color:             $nord8;
-$base-alt-highlight-light-color:    $nord9;
-$base-alt-highlight-color:          $nord10;
-$base-colorful-component-color:     $nord11;
-$base-alt-colorful-component-color: $nord12;
+$base-background-color:               $nord0;
+$base-background-light-color:         $nord1;
+$base-highlight-color:                $nord2;
+$base-highlight-light-color:          $nord3;
+$base-font-color:                     $nord4;
+$base-font-light-color:               $nord5;
+$base-font-highlight-color:           $nord6;
+$base-accent-color:                   $nord7;
+$base-alt-accent-color:               $nord8;
+$base-alt-highlight-light-color:      $nord9;
+$base-alt-highlight-color:            $nord10;
+$base-colorful-component-color:       $nord11;
+$base-alt-colorful-component-color:   $nord12;
+$base-alt-colorful-component-color-2: $nord13;
 
 $base-separator-line-color: derive($base-background-color, -15%);
 
@@ -27,6 +28,11 @@ $base-separator-line-color: derive($base-background-color, -15%);
 // General Templates
 @mixin panel {
     -fx-background-color: $base-background-color;
+}
+
+@mixin side-panel {
+    -fx-pref-width: 230px;
+    -fx-min-width: 230px;
 }
 
 @mixin menu-label {
@@ -436,9 +442,8 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
 .side-panel-box {
     @include panel;
+    @include side-panel;
     -fx-padding: 3px 5px 0 5px;
-    -fx-pref-width: 260px;
-    -fx-min-width: 260px;
     -fx-spacing: 5px;
 
     & > .label {
@@ -474,10 +479,9 @@ $base-separator-line-color: derive($base-background-color, -15%);
 }
 
 #image-file-explorer {
+    @include side-panel;
     -fx-background-color: $base-background-color;
     -fx-padding: 3px 0 0 0;
-    -fx-pref-width: 260px;
-    -fx-min-width: 260px;
     -fx-border-style: hidden hidden solid hidden;
     -fx-border-color: $base-separator-line-color;
     -fx-border-width: 0 0 2px 0;
@@ -485,6 +489,16 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
     & > .label {
         -fx-padding: 0 5px 0 5px;
+        -fx-font-weight: bold;
+    }
+}
+
+#image-file-info-cell:has-assigned-bounding-boxes {
+    -fx-text-fill: $base-font-color;
+    -fx-font-weight: normal;
+
+    &:has-assigned-bounding-boxes {
+        -fx-text-fill: $base-alt-colorful-component-color-2;
         -fx-font-weight: bold;
     }
 }
@@ -528,6 +542,11 @@ $base-separator-line-color: derive($base-background-color, -15%);
     & .text-field {
         -fx-padding: 0;
     }
+}
+
+#category-input-field {
+    -fx-min-width: 50px;
+    -fx-pref-width: 120px;
 }
 
 #bounding-box-editor-toolbox {

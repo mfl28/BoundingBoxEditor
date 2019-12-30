@@ -5,6 +5,7 @@ import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
@@ -12,6 +13,7 @@ import org.testfx.matcher.control.TableViewMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.testfx.api.FxAssert.verifyThat;
@@ -31,16 +33,27 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, testCategoryName);
         WaitForAsyncUtils.waitForFxEvents();
 
+        verifyThat(mainView.getImageFileListView().getSelectionModel()
+                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(false));
+
         robot.clickOn("#next-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getImageFileListView().getSelectionModel()
+                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(false));
 
         // Draw a bounding box.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
         WaitForAsyncUtils.waitForFxEvents();
 
+        int drawnBoundingBoxFileIndex = model.getCurrentFileIndex();
+
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
         verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), Matchers.equalTo(1));
+
+        verifyThat(mainView.getImageFileListView().getSelectionModel()
+                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
 
         final BoundingBoxView drawnBoundingBox = mainView.getCurrentBoundingBoxes().get(0);
 
@@ -51,6 +64,12 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(0));
         verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
+        verifyThat(mainView.getImageFileListView().getSelectionModel()
+                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(false));
+
+        verifyThat(mainView.getImageFileListView().getItems().get(drawnBoundingBoxFileIndex)
+                .isHasAssignedBoundingBoxes(), Matchers.is(true));
+
         robot.clickOn("#next-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
@@ -58,6 +77,9 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.hasItem(drawnBoundingBox));
         verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), Matchers.equalTo(1));
+
+        verifyThat(mainView.getImageFileListView().getSelectionModel()
+                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
 
         final BoundingBoxView boundingBoxView = mainView.getCurrentBoundingBoxes().get(0);
 
@@ -83,17 +105,29 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(boundingBoxView.getWidth(), Matchers.closeTo(boundingBoxWidth, DOUBLE_ERROR_TOLERANCE));
         verifyThat(boundingBoxView.getHeight(), Matchers.closeTo(boundingBoxHeight, DOUBLE_ERROR_TOLERANCE));
 
-        Platform.runLater(() -> controller.loadImageFiles(
-                new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_2).getFile()))
-        );
-
+        Platform.runLater(() -> controller.initiateImageFolderLoading(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_2).getFile())));
         WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Open image folder") != null),
+                "Expected info dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        verifyThat(getTopModalStage(robot, "Open image folder"), Matchers.notNullValue());
+
+        // Do not save existing bounding box annotations.
+        robot.clickOn("No");
+        WaitForAsyncUtils.waitForFxEvents();
+
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(0));
         verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().size(), Matchers.equalTo(0));
+
+        verifyThat(mainView.getImageFileListView().getItems()
+                        .stream().noneMatch(ImageFileListView.FileInfo::isHasAssignedBoundingBoxes),
+                Matchers.is(true));
 
         enterNewCategory(robot, testCategoryName);
         WaitForAsyncUtils.waitForFxEvents();

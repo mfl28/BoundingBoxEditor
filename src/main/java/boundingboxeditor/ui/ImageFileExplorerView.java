@@ -2,6 +2,7 @@ package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
 import boundingboxeditor.utils.UiUtils;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -11,6 +12,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * UI-element that contains the controls to view, select and search image-files.
@@ -48,8 +51,14 @@ public class ImageFileExplorerView extends VBox implements View {
      *
      * @param imageFiles the list of image-files
      */
-    public void setImageFiles(ObservableList<File> imageFiles) {
-        imageFileListView.setItems(imageFiles);
+    public void setImageFiles(List<File> imageFiles) {
+        ObservableList<ImageFileListView.FileInfo> imageInfoItems = FXCollections.unmodifiableObservableList(
+                FXCollections.observableList(imageFiles.stream()
+                        .map(ImageFileListView.FileInfo::new)
+                        .collect(Collectors.toList()))
+        );
+
+        imageFileListView.setItems(imageInfoItems);
     }
 
     /**
@@ -96,12 +105,12 @@ public class ImageFileExplorerView extends VBox implements View {
         imageFileSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null) {
                 imageFileListView.getItems().stream()
-                        .filter(item -> item.getName().startsWith(newValue))
+                        .filter(item -> item.getFile().getName().startsWith(newValue))
                         .findAny()
                         .ifPresent(item -> {
                             // We have to temporarily set a fixed cell size, otherwise
                             // the scroll-to point will not be calculated correctly.
-                            imageFileListView.setFixedCellSize(150);
+                            imageFileListView.setFixedCellSize(ImageFileListView.REQUESTED_IMAGE_HEIGHT);
                             imageFileListView.getSelectionModel().select(item);
                             imageFileListView.scrollTo(item);
                             // Disable fixed cell-size.

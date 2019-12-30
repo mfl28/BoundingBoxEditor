@@ -2,7 +2,13 @@ package boundingboxeditor.ui;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.BooleanPropertyBase;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.css.PseudoClass;
+import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.OverrunStyle;
@@ -22,9 +28,9 @@ import java.util.stream.Collectors;
  * @see ListView
  * @see View
  */
-public class ImageFileListView extends ListView<File> implements View {
-    private static final double REQUESTED_IMAGE_WIDTH = 150;
-    private static final double REQUESTED_IMAGE_HEIGHT = 150;
+public class ImageFileListView extends ListView<ImageFileListView.FileInfo> implements View {
+    static final double REQUESTED_IMAGE_WIDTH = 205;
+    static final double REQUESTED_IMAGE_HEIGHT = 205;
     private static final int IMAGE_CACHE_SIZE = 500;
 
     private final LoadingCache<String, Image> imageCache = Caffeine.newBuilder()
@@ -37,7 +43,7 @@ public class ImageFileListView extends ListView<File> implements View {
     ImageFileListView() {
         VBox.setVgrow(this, Priority.ALWAYS);
 
-        setCellFactory(listView -> new ImageCell());
+        setCellFactory(listView -> new ImageFileInfoCell());
         setFocusTraversable(false);
 
         setUpInternalListeners();
@@ -58,35 +64,87 @@ public class ImageFileListView extends ListView<File> implements View {
                 if(newValue != null && newValue.size() <= IMAGE_CACHE_SIZE) {
                     // Triggers loading of the new images into the cache.
                     imageCache.getAll(newValue.stream()
-                            .map(file -> file.toURI().toString())
+                            .map(fileInfo -> fileInfo.getFile().toURI().toString())
                             .collect(Collectors.toList()));
                 }
             }
         });
     }
 
-    private class ImageCell extends ListCell<File> {
-        final ImageView imageView = new ImageView();
+    public static class FileInfo {
+        private final File file;
+        private final BooleanProperty hasAssignedBoundingBoxes = new SimpleBooleanProperty(false);
 
-        ImageCell() {
+        public FileInfo(File file) {
+            this.file = file;
+        }
+
+        public File getFile() {
+            return file;
+        }
+
+        public boolean isHasAssignedBoundingBoxes() {
+            return hasAssignedBoundingBoxes.get();
+        }
+
+        public void setHasAssignedBoundingBoxes(boolean hasAssignedBoundingBoxes) {
+            this.hasAssignedBoundingBoxes.set(hasAssignedBoundingBoxes);
+        }
+
+        public BooleanProperty hasAssignedBoundingBoxesProperty() {
+            return hasAssignedBoundingBoxes;
+        }
+    }
+
+    private class ImageFileInfoCell extends ListCell<FileInfo> {
+        private static final String IMAGE_FILE_INFO_CELL_ID = "image-file-info-cell";
+        private static final String HAS_ASSIGNED_BOUNDING_BOXES_CLASS_NAME = "has-assigned-bounding-boxes";
+        private final PseudoClass hasAssignedBoundingBoxesClass = PseudoClass.getPseudoClass(HAS_ASSIGNED_BOUNDING_BOXES_CLASS_NAME);
+        private final ImageView imageView = new ImageView();
+
+        private final BooleanProperty hasAssignedBoundingBoxes = new BooleanPropertyBase(true) {
+            @Override
+            public Object getBean() {
+                return ImageFileInfoCell.this;
+            }
+
+            @Override
+            public String getName() {
+                return HAS_ASSIGNED_BOUNDING_BOXES_CLASS_NAME;
+            }
+
+            @Override
+            protected void invalidated() {
+                pseudoClassStateChanged(hasAssignedBoundingBoxesClass, get());
+            }
+        };
+
+        ImageFileInfoCell() {
             setTextOverrun(OverrunStyle.CENTER_WORD_ELLIPSIS);
             prefWidthProperty().bind(ImageFileListView.this.widthProperty().subtract(30));
             setMaxWidth(Region.USE_PREF_SIZE);
             imageView.setCache(true);
             imageView.setCacheHint(CacheHint.SPEED);
+
+            setContentDisplay(ContentDisplay.TOP);
+            setAlignment(Pos.CENTER);
+
+            pseudoClassStateChanged(hasAssignedBoundingBoxesClass, false);
+            setId(IMAGE_FILE_INFO_CELL_ID);
         }
 
         @Override
-        protected void updateItem(File item, boolean empty) {
+        protected void updateItem(FileInfo item, boolean empty) {
             super.updateItem(item, empty);
 
             if(empty || item == null) {
                 imageView.setImage(null);
                 setGraphic(null);
                 setText(null);
+                hasAssignedBoundingBoxes.unbind();
             } else {
                 Image currentImage = imageView.getImage();
-                String fileURI = item.toURI().toString();
+                String fileURI = item.getFile().toURI().toString();
                 // Invalidate cache-object and cancel image-loading in case of a currently loading, not-selected image,
                 // that is not the same as the updated image.
                 if(currentImage != null && !currentImage.getUrl().equals(fileURI)
@@ -100,7 +158,9 @@ public class ImageFileListView extends ListView<File> implements View {
                     setGraphic(imageView);
                     imageView.setImage(imageCache.get(fileURI));
                 }
-                setText(item.getName());
+                setText(item.getFile().getName());
+
+                hasAssignedBoundingBoxes.bind(item.hasAssignedBoundingBoxesProperty());
             }
         }
     }

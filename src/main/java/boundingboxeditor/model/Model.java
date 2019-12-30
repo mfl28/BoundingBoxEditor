@@ -335,12 +335,12 @@ public class Model {
     }
 
     /**
-     * Returns the the currently set image-files as an unmodifiable observable list.
+     * Returns the the currently set image-files as an unmodifiable list.
      *
      * @return the image-file list
      */
-    public ObservableList<File> getImageFilesAsObservableList() {
-        return FXCollections.unmodifiableObservableList(FXCollections.observableList(imageFileNameToFile.valueList()));
+    public List<File> getImageFiles() {
+        return Collections.unmodifiableList(imageFileNameToFile.valueList());
     }
 
     /**

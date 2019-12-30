@@ -35,6 +35,7 @@ public class BoundingBoxEditorTestBase {
     protected static final double DOUBLE_ERROR_TOLERANCE = 1e-8;
     private static final double INITIAL_WINDOW_SCALE = 0.75;
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
+    protected static int TIMEOUT_DURATION_IN_SEC = 10;
     protected static String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
     protected static String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
     protected Controller controller;

@@ -6,7 +6,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
@@ -97,7 +96,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, null);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(getTopModalStage(robot, "Category Creation Error"), CoreMatchers.notNullValue());
+        verifyThat(getTopModalStage(robot, "Category Creation Error"), Matchers.notNullValue());
 
         robot.clickOn("OK");
         WaitForAsyncUtils.waitForFxEvents();
@@ -115,7 +114,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, "Test");
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(getTopModalStage(robot, "Category Creation Error"), CoreMatchers.notNullValue());
+        verifyThat(getTopModalStage(robot, "Category Creation Error"), Matchers.notNullValue());
 
         robot.clickOn("OK");
         WaitForAsyncUtils.waitForFxEvents();
@@ -136,13 +135,13 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, "Test");
         WaitForAsyncUtils.waitForFxEvents();
         // There should be no error message
-        verifyThat(getTopModalStage(robot, "Category Creation Error"), CoreMatchers.nullValue());
+        verifyThat(getTopModalStage(robot, "Category Creation Error"), Matchers.nullValue());
 
         // Renaming a category to a name that already exits
         robot.clickOn("Test").write("Dummy").push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(getTopModalStage(robot, "Category Creation Error"), CoreMatchers.notNullValue());
+        verifyThat(getTopModalStage(robot, "Category Creation Error"), Matchers.notNullValue());
 
         robot.clickOn("OK");
 
@@ -150,6 +149,6 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         robot.clickOn("#delete-button").clickOn("#delete-button");
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
+        verifyThat(mainView.getBoundingBoxCategoryTable(), TableViewMatchers.hasNumRows(0));
     }
 }

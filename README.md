@@ -13,20 +13,20 @@ This is a desktop application written in Java using the JavaFX application platf
 Annotations can be imported and saved from/to xml-files using the [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format. The saved annotation data can then further be used, e.g. as ground-truths in the training (and evaluation) of neural networks in order to perform object-detection tasks. How this can be done for any kind of labeled objects using Python and the [Pytorch](https://pytorch.org/) deep learning library is shown exemplarily in the [Humpback Whale Fluke Detection - Jupyter notebook](https://nbviewer.jupyter.org/github/mfl28/MachineLearning/blob/master/notebooks/Humpback_Whale_Fluke_Detection.ipynb) which you can find in my [Machine Learning repo](https://github.com/mfl28/MachineLearning).
 
 <p align="center">
-  <img src="demo-media/demo_v1_0_0.png" align="center">
+  <img src="demo-media/demo_v1_2_0.png" align="center">
   </br>
-  <em>Demo screenshot of release v1.0.0.</em>
+  <em>Demo screenshot of release v1.2.0.</em>
 </p>
 
-## Features
+## Main Features
+* Creating bounding box annotations for objects in images
 * Saving of bounding box annotations in the  [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format
-* Importing of existing bounding box annotation data in Pascal VOC format, for example from [Pascal VOC 2012 dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)
+* Importing of existing bounding box annotation data in Pascal VOC format (for example from [Pascal VOC 2012 dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)) including format validation and error reporting
 * Nesting of bounding box labels (which is then reflected in the output xml-file)
 * Image files side-panel with thumbnails for easy and fast navigation including image-file search
 * Tagging of bounding boxes using tags defined in the Pascal VOC format (truncated, difficult, occluded, pose: *, action: *)
 * Color-coded object categories
 ### Planned future features
-* Marking of already annotated images in image files side-panel
 * Creating general polygonal bounding boxes
 * Supporting more input/output formats
 * Undo/Redo functionality

@@ -220,6 +220,9 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         @Override
         public void onChanged(Change<? extends BoundingBoxView> c) {
             while(c.next()) {
+                final ImageFileListView.FileInfo currentSelectedItem = imageFileExplorer.getImageFileListView()
+                        .getSelectionModel().getSelectedItem();
+
                 if(c.wasAdded()) {
                     List<? extends BoundingBoxView> addedItems = c.getAddedSubList();
 
@@ -228,10 +231,19 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                     if(treeUpdateEnabled) {
                         editorsSplitPane.getBoundingBoxTree().addTreeItemsFromBoundingBoxViews(addedItems);
                     }
+
+                    currentSelectedItem.setHasAssignedBoundingBoxes(true);
                 }
 
                 if(c.wasRemoved()) {
                     boundingBoxEditor.getBoundingBoxEditorImagePane().removeBoundingBoxViewsFromSceneGroup(c.getRemoved());
+
+                    if(boundingBoxEditor.getBoundingBoxEditorImagePane().getCurrentBoundingBoxes().isEmpty() &&
+                            boundingBoxEditor.getBoundingBoxEditorImagePane().getCurrentImage().getUrl().equals(
+                                    currentSelectedItem.getFile().toURI().toString())
+                    ) {
+                        currentSelectedItem.setHasAssignedBoundingBoxes(false);
+                    }
                 }
             }
         }
