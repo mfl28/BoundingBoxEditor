@@ -12,7 +12,7 @@ import java.util.Objects;
 /**
  * Represents the category (e.g. "Person", "Car" etc.) a bounding-box belongs to.
  */
-public class BoundingBoxCategory {
+public class ObjectCategory {
     private final StringProperty name;
     private final ObjectProperty<Color> color;
 
@@ -23,7 +23,7 @@ public class BoundingBoxCategory {
      * @param color the color used for the visual representation of
      *              the bounding-box category in the program.
      */
-    public BoundingBoxCategory(String name, Color color) {
+    public ObjectCategory(String name, Color color) {
         this.name = new SimpleStringProperty(name);
         this.color = new SimpleObjectProperty<>(color);
     }
@@ -57,11 +57,11 @@ public class BoundingBoxCategory {
             return true;
         }
 
-        if(!(other instanceof BoundingBoxCategory)) {
+        if(!(other instanceof ObjectCategory)) {
             return false;
         }
 
-        final BoundingBoxCategory otherCategory = (BoundingBoxCategory) other;
+        final ObjectCategory otherCategory = (ObjectCategory) other;
         return otherCategory.getName().equals(this.getName()) && otherCategory.getColor().equals(this.getColor());
     }
 

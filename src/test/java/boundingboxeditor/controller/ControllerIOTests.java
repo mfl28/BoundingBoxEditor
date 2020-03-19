@@ -64,13 +64,13 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         Assertions.assertTrue(Files.isDirectory(actualDir), "Actual files directory does not exist.");
 
-        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingBoxesCountMap();
+        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> Objects.equals(counts.get("Boat"), 2) && Objects.equals(counts.get("Sail"), 6) && Objects.equals(counts.get("Flag"), 1)),
                 "Correct bounding box per-category-counts were not read within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().size(), Matchers.equalTo(3));
-        verifyThat(model.getBoundingBoxCategories(), Matchers.hasSize(3));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3));
+        verifyThat(model.getObjectCategories(), Matchers.hasSize(3));
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> mainView.getImageFileListView().getSelectionModel().getSelectedItem().isHasAssignedBoundingBoxes()),
@@ -159,7 +159,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         Assertions.assertDoesNotThrow(() -> robot.clickOn("OK"));
         WaitForAsyncUtils.waitForFxEvents();
 
-        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingBoxesCountMap();
+        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> Objects.equals(counts.get("Boat"), 1) && Objects.equals(counts.get("Sail"), 6) && counts.get("Flag") == null),
                 "Correct bounding box per-category-counts were not read within " + TIMEOUT_DURATION_IN_SEC + " sec.");
@@ -217,8 +217,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         Assertions.assertDoesNotThrow(() -> robot.clickOn("OK"));
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().isEmpty(), Matchers.is(true));
-        verifyThat(model.getBoundingBoxCategories(), Matchers.empty());
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().isEmpty(), Matchers.is(true));
+        verifyThat(model.getObjectCategories(), Matchers.empty());
         verifyThat(model.getImageAnnotations(), Matchers.empty());
         verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.empty());
 
@@ -269,13 +269,13 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         // All previously existing bounding boxes should have been removed, only
         // the newly imported ones should exist.
-        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingBoxesCountMap();
+        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> Objects.equals(counts.get("Boat"), 2) && Objects.equals(counts.get("Sail"), 6) && Objects.equals(counts.get("Flag"), 1)),
                 "Correct bounding box per-category-counts were not read within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().size(), Matchers.equalTo(3));
-        verifyThat(model.getBoundingBoxCategories(), Matchers.hasSize(3));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3));
+        verifyThat(model.getObjectCategories(), Matchers.hasSize(3));
         verifyThat(model.getImageAnnotations(), Matchers.hasSize(1));
         verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.empty());
         verifyThat(mainView.getBoundingBoxTree().getRoot().getChildren().size(), Matchers.equalTo(0));
@@ -299,14 +299,14 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
 
         // ... but there should be additional categories and bounding boxes in the model.
-        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingBoxesCountMap();
+        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> Objects.equals(counts.get("Boat"), 2) && Objects.equals(counts.get("Sail"), 6)
                         && Objects.equals(counts.get("Flag"), 1) && Objects.equals(counts.get("Test"), 1)),
                 "Correct bounding box per-category-counts were not read within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().size(), Matchers.equalTo(4));
-        verifyThat(model.getBoundingBoxCategories(), Matchers.hasSize(4));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(4));
+        verifyThat(model.getObjectCategories(), Matchers.hasSize(4));
         verifyThat(model.getImageAnnotations(), Matchers.hasSize(2));
 
         verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingBoxes(),
@@ -323,12 +323,12 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         for(int i = 0; i != 3; ++i) {
-            NodeQuery nodeQuery = robot.from(mainView.getBoundingBoxCategoryTable()).lookup("#delete-button").nth(1);
+            NodeQuery nodeQuery = robot.from(mainView.getObjectCategoryTable()).lookup("#delete-button").nth(1);
             robot.clickOn((Node) nodeQuery.query(), MouseButton.PRIMARY);
         }
 
-        verifyThat(mainView.getBoundingBoxCategoryTable(), TableViewMatchers.hasNumRows(1));
-        verifyThat(mainView.getBoundingBoxCategoryTable().getItems().get(0).getName(), Matchers.equalTo("Test"));
+        verifyThat(mainView.getObjectCategoryTable(), TableViewMatchers.hasNumRows(1));
+        verifyThat(mainView.getObjectCategoryTable().getItems().get(0).getName(), Matchers.equalTo("Test"));
 
         robot.clickOn("#next-button");
         waitUntilCurrentImageIsLoaded();

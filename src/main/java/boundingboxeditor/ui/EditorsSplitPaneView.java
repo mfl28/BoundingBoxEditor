@@ -1,6 +1,7 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
+import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.utils.ColorUtils;
 import boundingboxeditor.utils.UiUtils;
 import javafx.geometry.Orientation;
@@ -82,7 +83,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
     /**
      * Returns the button which allows the user to add a
-     * {@link boundingboxeditor.model.BoundingBoxCategory BoundingBoxCategory}.
+     * {@link ObjectCategory BoundingBoxCategory}.
      *
      * @return the button
      */
@@ -103,9 +104,9 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
     @Override
     public void connectToController(Controller controller) {
-        addCategoryButton.setOnAction(action -> controller.onRegisterAddBoundingBoxCategoryAction());
+        addCategoryButton.setOnAction(action -> controller.onRegisterAddObjectCategoryAction());
         boundingBoxCategoryTable.connectToController(controller);
-        categoryNameTextField.setOnAction(action -> controller.onRegisterAddBoundingBoxCategoryAction());
+        categoryNameTextField.setOnAction(action -> controller.onRegisterAddObjectCategoryAction());
     }
 
     @Override
@@ -281,7 +282,9 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
         boundingBoxTree.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue instanceof BoundingBoxTreeItem) {
-                boundingBoxTagScrollPane.setTags(newValue.getValue().getTags());
+                boundingBoxTagScrollPane.setTags(((BoundingBoxView) newValue.getValue()).getTags());
+            } else if(newValue instanceof BoundingPolygonTreeItem) {
+                boundingBoxTagScrollPane.setTags(((BoundingPolygonView) newValue.getValue()).getTags());
             } else {
                 boundingBoxTagScrollPane.setTags(null);
             }

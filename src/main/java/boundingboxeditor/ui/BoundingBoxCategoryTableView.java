@@ -1,7 +1,7 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
-import boundingboxeditor.model.BoundingBoxCategory;
+import boundingboxeditor.model.ObjectCategory;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -14,13 +14,13 @@ import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Color;
 
 /**
- * The bounding-box category-table UI-element. Shows information about the currently existing {@link BoundingBoxCategory} objects
+ * The bounding-box category-table UI-element. Shows information about the currently existing {@link ObjectCategory} objects
  * such as color and name. Each category row-entry in the table also includes a button to delete the corresponding category.
  *
  * @see TableView
  * @see View
  */
-public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory> implements View {
+public class BoundingBoxCategoryTableView extends TableView<ObjectCategory> implements View {
     private static final String PLACEHOLDER_TEXT = "No categories";
     private static final String TABLE_NAME_COLUMN_FACTORY_NAME = "name";
     private static final String TABLE_VIEW_STYLE = "no-header-table-view";
@@ -30,9 +30,9 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
     private static final String NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET = BoundingBoxCategoryTableView.class
             .getResource("/stylesheets/css/noCustomColorsPalette.css").toExternalForm();
 
-    private final TableColumn<BoundingBoxCategory, BoundingBoxCategory> deleteColumn = createDeleteColumn();
-    private final TableColumn<BoundingBoxCategory, Color> colorColumn = createColorColumn();
-    private final TableColumn<BoundingBoxCategory, String> nameColumn = createNameColumn();
+    private final TableColumn<ObjectCategory, ObjectCategory> deleteColumn = createDeleteColumn();
+    private final TableColumn<ObjectCategory, Color> colorColumn = createColorColumn();
+    private final TableColumn<ObjectCategory, String> nameColumn = createNameColumn();
 
     private final ColorPicker categoryColorPicker = new ColorPicker();
     private final MenuItem colorChangeItem = new MenuItem("Color", categoryColorPicker);
@@ -66,7 +66,7 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
      *
      * @return the table column
      */
-    public TableColumn<BoundingBoxCategory, BoundingBoxCategory> getDeleteColumn() {
+    public TableColumn<ObjectCategory, ObjectCategory> getDeleteColumn() {
         return deleteColumn;
     }
 
@@ -84,7 +84,7 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
      *
      * @return the selected category
      */
-    public BoundingBoxCategory getSelectedCategory() {
+    public ObjectCategory getSelectedCategory() {
         return getSelectionModel().getSelectedItem();
     }
 
@@ -105,8 +105,8 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
         });
     }
 
-    private TableColumn<BoundingBoxCategory, Color> createColorColumn() {
-        final TableColumn<BoundingBoxCategory, Color> tableColumn = new TableColumn<>();
+    private TableColumn<ObjectCategory, Color> createColorColumn() {
+        final TableColumn<ObjectCategory, Color> tableColumn = new TableColumn<>();
         tableColumn.setMinWidth(TABLE_VIEW_COLOR_COLUMN_WIDTH);
         tableColumn.setMaxWidth(TABLE_VIEW_COLOR_COLUMN_WIDTH);
         tableColumn.setCellFactory(factory -> new ColorTableCell());
@@ -114,8 +114,8 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
         return tableColumn;
     }
 
-    private TableColumn<BoundingBoxCategory, String> createNameColumn() {
-        final TableColumn<BoundingBoxCategory, String> tableColumn = new TableColumn<>();
+    private TableColumn<ObjectCategory, String> createNameColumn() {
+        final TableColumn<ObjectCategory, String> tableColumn = new TableColumn<>();
         tableColumn.setCellValueFactory(new PropertyValueFactory<>(TABLE_NAME_COLUMN_FACTORY_NAME));
         bindNameColumnWidth();
 
@@ -153,8 +153,8 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
         skinProperty().addListener(skinChangeListener);
     }
 
-    private TableColumn<BoundingBoxCategory, BoundingBoxCategory> createDeleteColumn() {
-        final TableColumn<BoundingBoxCategory, BoundingBoxCategory> tableColumn = new TableColumn<>();
+    private TableColumn<ObjectCategory, ObjectCategory> createDeleteColumn() {
+        final TableColumn<ObjectCategory, ObjectCategory> tableColumn = new TableColumn<>();
         tableColumn.setMinWidth(TABLE_VIEW_DELETE_COLUMN_WIDTH);
         tableColumn.setMaxWidth(TABLE_VIEW_DELETE_COLUMN_WIDTH);
         tableColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
@@ -162,7 +162,7 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
         return tableColumn;
     }
 
-    private static class ColorTableCell extends TableCell<BoundingBoxCategory, Color> {
+    private static class ColorTableCell extends TableCell<ObjectCategory, Color> {
         @Override
         protected void updateItem(Color item, boolean empty) {
             super.updateItem(item, empty);
@@ -174,7 +174,7 @@ public class BoundingBoxCategoryTableView extends TableView<BoundingBoxCategory>
                 setGraphic(null);
                 setBackground(null);
             } else {
-                final BoundingBoxCategory categoryItem = getTableRow().getItem();
+                final ObjectCategory categoryItem = getTableRow().getItem();
 
                 if(categoryItem != null) {
                     backgroundProperty().bind(Bindings.createObjectBinding(() ->

@@ -65,6 +65,14 @@ public class BoundingBoxEditorView extends BorderPane implements View {
 
         boundingBoxEditorToolBar.getResetSizeAndCenterImageButton().setOnAction(event -> boundingBoxEditorImagePane.resetImageViewSize());
 
+        boundingBoxEditorToolBar.getBoxModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue) {
+                boundingBoxEditorImagePane.setDrawingMode(BoundingBoxEditorImagePaneView.DrawingMode.BOX);
+            } else {
+                boundingBoxEditorImagePane.setDrawingMode(BoundingBoxEditorImagePaneView.DrawingMode.POLYGON);
+            }
+        });
+
         setOnMousePressed(event -> requestFocus());
     }
 }

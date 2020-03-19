@@ -51,6 +51,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String BOUNDING_BOX_PART_NAME = "part";
     private static final String ACTIONS_TAG_NAME = "actions";
     private static final String IMAGE_DEPTH_ELEMENT_NAME = "depth";
+    private static final String BOUNDING_POLYGON_SIZE_GROUP_NAME = "polygon";
     private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
     private Path saveFolderPath;
@@ -96,8 +97,16 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         appendHeaderFromImageAnnotationDataElement(document, annotationElement, dataElement);
 
-        dataElement.getBoundingBoxData().forEach(boundingBox ->
-                annotationElement.appendChild(createXmlElementFromBoundingBox(document, BOUNDING_BOX_ENTRY_ELEMENT_NAME, boundingBox)));
+        dataElement.getBoundingShapeData().forEach(boundingShape ->
+        {
+            if(boundingShape instanceof BoundingBoxData) {
+                annotationElement.appendChild(createXmlElementFromBoundingBox(document,
+                        BOUNDING_BOX_ENTRY_ELEMENT_NAME, (BoundingBoxData) boundingShape));
+            } else if(boundingShape instanceof BoundingPolygonData) {
+                annotationElement.appendChild(createXmlElementFromBoundingPolygon(document,
+                        BOUNDING_BOX_ENTRY_ELEMENT_NAME, (BoundingPolygonData) boundingShape));
+            }
+        });
 
         DOMSource domSource = new DOMSource(document);
 
@@ -175,7 +184,32 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         // add parts
         boundingBox.getParts().forEach(part ->
-                element.appendChild(createXmlElementFromBoundingBox(document, BOUNDING_BOX_PART_NAME, part)));
+        {
+            if(part instanceof BoundingBoxData) {
+                element.appendChild(createXmlElementFromBoundingBox(document,
+                        BOUNDING_BOX_PART_NAME, (BoundingBoxData) part));
+            } else if(part instanceof BoundingPolygonData) {
+                element.appendChild(createXmlElementFromBoundingPolygon(document,
+                        BOUNDING_BOX_PART_NAME, (BoundingPolygonData) part));
+            }
+        });
+
+        return element;
+    }
+
+    private Element createXmlElementFromBoundingPolygon(final Document document, String elementName, final BoundingPolygonData boundingPolygon) {
+        final Element element = document.createElement(elementName);
+        element.appendChild(createStringValueElement(document, BOUNDING_BOX_CATEGORY_NAME, boundingPolygon.getCategoryName()));
+
+        final Element polygon = document.createElement(BOUNDING_POLYGON_SIZE_GROUP_NAME);
+        element.appendChild(polygon);
+
+        List<Double> polygonPoints = boundingPolygon.getPointsInImage();
+
+        for(int i = 0; i < polygonPoints.size(); i += 2) {
+            polygon.appendChild(createDoubleValueElement(document, "x", polygonPoints.get(i)));
+            polygon.appendChild(createDoubleValueElement(document, "y", polygonPoints.get(i + 1)));
+        }
 
         return element;
     }

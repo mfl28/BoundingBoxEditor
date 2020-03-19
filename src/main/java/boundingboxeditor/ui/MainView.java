@@ -1,7 +1,7 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
-import boundingboxeditor.model.io.BoundingBoxData;
+import boundingboxeditor.model.io.BoundingShapeData;
 import boundingboxeditor.model.io.IOResult;
 import boundingboxeditor.model.io.ImageAnnotation;
 import javafx.collections.FXCollections;
@@ -18,6 +18,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.tuple.Pair;
 import org.controlsfx.dialog.ProgressDialog;
 
 import java.io.File;
@@ -190,19 +191,29 @@ public class MainView extends BorderPane implements View {
      * @param annotation the image-annotation to load from
      */
     public void loadBoundingBoxViewsFromAnnotation(ImageAnnotation annotation) {
-        List<BoundingBoxView> boundingBoxes = getBoundingBoxTree().extractBoundingBoxViewsAndBuildTreeFromAnnotation(annotation);
+        Pair<List<BoundingBoxView>, List<BoundingPolygonView>> boundingViews = getBoundingBoxTree()
+                .extractViewsAndBuildTreeFromAnnotation(annotation);
         ToggleGroup boundingBoxSelectionToggleGroup = getBoundingBoxEditorImagePane().getBoundingBoxSelectionGroup();
 
-        boundingBoxes.forEach(item -> {
+        boundingViews.getLeft().forEach(item -> {
             item.autoScaleWithBoundsAndInitialize(getBoundingBoxEditorImageView().boundsInParentProperty());
             item.setToggleGroup(boundingBoxSelectionToggleGroup);
         });
+
+        boundingViews.getRight().forEach(item -> {
+            item.autoScaleWithBoundsAndInitialize(getBoundingBoxEditorImageView().boundsInParentProperty());
+            item.setToggleGroup(boundingBoxSelectionToggleGroup);
+        });
+
         // Temporarily switch off automatic adding of boundingBoxes to the explorer (those are already imported)
         workspaceSplitPane.setTreeUpdateEnabled(false);
-        getBoundingBoxEditorImagePane().setAllCurrentBoundingBoxes(boundingBoxes);
+        getBoundingBoxEditorImagePane().setAllCurrentBoundingBoxes(boundingViews.getLeft());
+        getBoundingBoxEditorImagePane().setAllCurrentBoundingPolygons(boundingViews.getRight());
         workspaceSplitPane.setTreeUpdateEnabled(true);
         // Expand all tree-items in the bounding-box tree-view.
         workspaceSplitPane.getEditorsSplitPane().getBoundingBoxTree().expandAllTreeItems();
+        // Immediately after loading, no object should be selected.
+        boundingBoxSelectionToggleGroup.selectToggle(null);
     }
 
     /**
@@ -210,7 +221,7 @@ public class MainView extends BorderPane implements View {
      * which are of type {@link BoundingBoxTreeItem}, the associated {@link BoundingBoxView} objects are removed as well.
      */
     public void removeSelectedTreeItemAndChildren() {
-        final TreeItem<BoundingBoxView> selectedTreeItem = getBoundingBoxTree().getSelectionModel().getSelectedItem();
+        final TreeItem<Object> selectedTreeItem = getBoundingBoxTree().getSelectionModel().getSelectedItem();
 
         if(selectedTreeItem != null) {
             workspaceSplitPane.removeBoundingBoxWithTreeItemRecursively(selectedTreeItem);
@@ -224,6 +235,10 @@ public class MainView extends BorderPane implements View {
      */
     public boolean containsBoundingBoxViews() {
         return !getCurrentBoundingBoxes().isEmpty();
+    }
+
+    public boolean containsBoundingPolygonViews() {
+        return !getCurrentBoundingPolygons().isEmpty();
     }
 
     /* Delegating Getters */
@@ -272,20 +287,24 @@ public class MainView extends BorderPane implements View {
         return header.getFileImportAnnotationsItem();
     }
 
-    public BoundingBoxCategoryTableView getBoundingBoxCategoryTable() {
+    public BoundingBoxCategoryTableView getObjectCategoryTable() {
         return workspaceSplitPane.getEditorsSplitPane().getBoundingBoxCategoryTable();
     }
 
-    public TextField getBoundingBoxCategoryInputField() {
+    public TextField getObjectCategoryInputField() {
         return workspaceSplitPane.getEditorsSplitPane().getCategoryNameTextField();
     }
 
-    public ColorPicker getBoundingBoxCategoryColorPicker() {
+    public ColorPicker getObjectCategoryColorPicker() {
         return workspaceSplitPane.getEditorsSplitPane().getCategoryColorPicker();
     }
 
     public ObservableList<BoundingBoxView> getCurrentBoundingBoxes() {
         return workspaceSplitPane.getBoundingBoxEditor().getBoundingBoxEditorImagePane().getCurrentBoundingBoxes();
+    }
+
+    public ObservableList<BoundingPolygonView> getCurrentBoundingPolygons() {
+        return workspaceSplitPane.getBoundingBoxEditor().getBoundingBoxEditorImagePane().getCurrentBoundingPolygons();
     }
 
     public StatusBarView getStatusBar() {
@@ -296,8 +315,8 @@ public class MainView extends BorderPane implements View {
         return workspaceSplitPane.getEditorsSplitPane().getCategorySearchField();
     }
 
-    public List<BoundingBoxData> extractCurrentBoundingBoxData() {
-        return getBoundingBoxTree().extractCurrentBoundingBoxData();
+    public List<BoundingShapeData> extractCurrentBoundingShapeData() {
+        return getBoundingBoxTree().extractCurrentBoundingShapeData();
     }
 
     public TextField getTagInputField() {

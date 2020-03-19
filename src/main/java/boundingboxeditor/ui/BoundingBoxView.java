@@ -1,8 +1,9 @@
 package boundingboxeditor.ui;
 
-import boundingboxeditor.model.BoundingBoxCategory;
 import boundingboxeditor.model.ImageMetaData;
+import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.model.io.BoundingBoxData;
+import boundingboxeditor.model.io.BoundingShapeData;
 import boundingboxeditor.utils.MathUtils;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
@@ -35,10 +36,9 @@ import java.util.stream.Collectors;
  * @see Rectangle
  * @see View
  */
-public class BoundingBoxView extends Rectangle implements View, Toggle {
+public class BoundingBoxView extends Rectangle implements View, Toggle, BoundingShapeDataConvertible {
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
-    private static final BoundingBoxView NULL_BOUNDING_BOX_VIEW = new BoundingBoxView();
     private static final String BOUNDING_BOX_VIEW_ID = "bounding-rectangle";
 
     private final DragAnchor dragAnchor = new DragAnchor();
@@ -49,22 +49,22 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
     private final ObjectProperty<ToggleGroup> toggleGroup = new SimpleObjectProperty<>();
     private final ObservableList<String> tags = FXCollections.observableArrayList();
     private Bounds boundsInImage;
-    private TreeItem<BoundingBoxView> treeItem;
-    private BoundingBoxCategory boundingBoxCategory;
+    private TreeItem<Object> treeItem;
+    private ObjectCategory objectCategory;
     private ImageMetaData imageMetaData;
 
     /**
      * Creates a new bounding-box UI-element, which takes the shape of a rectangle that is resizable
      * and movable by the user.
      *
-     * @param boundingBoxCategory the category this bounding-box will be assigned to
-     * @param imageMetaData       the image-meta data of the image, this bounding-box will be displayed on (this
-     *                            contains the original size of the image which is needed when transforming the visual bounding-box component
-     *                            into the data component represented by the {@link BoundingBoxData} class)
+     * @param objectCategory the category this bounding-box will be assigned to
+     * @param imageMetaData  the image-meta data of the image, this bounding-box will be displayed on (this
+     *                       contains the original size of the image which is needed when transforming the visual bounding-box component
+     *                       into the data component represented by the {@link BoundingBoxData} class)
      */
-    public BoundingBoxView(BoundingBoxCategory boundingBoxCategory, ImageMetaData imageMetaData) {
+    public BoundingBoxView(ObjectCategory objectCategory, ImageMetaData imageMetaData) {
         this.imageMetaData = imageMetaData;
-        this.boundingBoxCategory = boundingBoxCategory;
+        this.objectCategory = objectCategory;
 
         setManaged(false);
         setFill(Color.TRANSPARENT);
@@ -112,7 +112,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
 
     @Override
     public int hashCode() {
-        return Objects.hash(boundingBoxCategory, imageMetaData, getX(), getY(), getWidth(), getHeight());
+        return Objects.hash(objectCategory, imageMetaData, getX(), getY(), getWidth(), getHeight());
     }
 
     @Override
@@ -127,7 +127,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
 
         BoundingBoxView other = (BoundingBoxView) obj;
 
-        return Objects.equals(boundingBoxCategory, other.boundingBoxCategory) && Objects.equals(imageMetaData, other.imageMetaData)
+        return Objects.equals(objectCategory, other.objectCategory) && Objects.equals(imageMetaData, other.imageMetaData)
                 && MathUtils.doubleAlmostEqual(getX(), other.getX()) && MathUtils.doubleAlmostEqual(getY(), other.getY())
                 && MathUtils.doubleAlmostEqual(getWidth(), other.getWidth()) && MathUtils.doubleAlmostEqual(getHeight(), other.getHeight());
     }
@@ -135,16 +135,27 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
     @Override
     public String toString() {
         return "BoundingBoxView[x=" + getX() + ", y=" + getY() + ", width=" + getWidth() + ", height=" + getHeight()
-                + ", fill=" + getFill() + ", category=" + boundingBoxCategory + ", image-metadata=" + imageMetaData + "]";
+                + ", fill=" + getFill() + ", category=" + objectCategory + ", image-metadata=" + imageMetaData + "]";
     }
 
     /**
-     * Returns the associated {@link BoundingBoxCategory} object.
+     * Returns the associated {@link ObjectCategory} object.
      *
-     * @return the {@link BoundingBoxCategory} object
+     * @return the {@link ObjectCategory} object
      */
-    public BoundingBoxCategory getBoundingBoxCategory() {
-        return boundingBoxCategory;
+    public ObjectCategory getObjectCategory() {
+        return objectCategory;
+    }
+
+    /**
+     * Extracts a {@link BoundingBoxData} object used to store the 'blueprint' of this {@link BoundingBoxView}
+     * object and returns it.
+     *
+     * @return the {@link  BoundingBoxData} object
+     */
+    @Override
+    public BoundingShapeData toBoundingShapeData() {
+        return new BoundingBoxData(objectCategory, getImageRelativeBounds(), tags);
     }
 
     /**
@@ -157,16 +168,6 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
         setY(initializer.getY());
         setWidth(initializer.getWidth());
         setHeight(initializer.getHeight());
-    }
-
-    /**
-     * Extracts a {@link BoundingBoxData} object used to store the 'blueprint' of this {@link BoundingBoxView}
-     * object and returns it.
-     *
-     * @return the {@link  BoundingBoxData} object
-     */
-    BoundingBoxData toBoundingBoxData() {
-        return new BoundingBoxData(boundingBoxCategory, getImageRelativeBounds(), tags);
     }
 
     /**
@@ -183,14 +184,14 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
      *
      * @return the {@link TreeItem} object
      */
-    TreeItem<BoundingBoxView> getTreeItem() {
+    TreeItem<Object> getTreeItem() {
         return treeItem;
     }
 
     /**
      * Sets the associated {@link TreeItem} object.
      */
-    void setTreeItem(TreeItem<BoundingBoxView> treeItem) {
+    void setTreeItem(TreeItem<Object> treeItem) {
         this.treeItem = treeItem;
     }
 
@@ -232,17 +233,6 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
         this.autoScaleBounds.bind(autoScaleBounds);
         initializeFromBoundsInImage();
         addAutoScaleListener();
-    }
-
-    /**
-     * Returns a static 'empty' dummy-{@link BoundingBoxView} object. This is only used
-     * to pass the necessary {@link BoundingBoxView} object to a {@link BoundingBoxCategoryTreeItem}
-     * for it nor to be considered 'empty' by the {@link BoundingBoxTreeView}.
-     *
-     * @return the dummy object
-     */
-    static BoundingBoxView getDummy() {
-        return NULL_BOUNDING_BOX_VIEW;
     }
 
     /**
@@ -321,7 +311,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle {
                         .otherwise(Bindings.min(widthProperty(), heightProperty()))
         );
 
-        strokeProperty().bind(boundingBoxCategory.colorProperty());
+        strokeProperty().bind(objectCategory.colorProperty());
 
         fillProperty().bind(Bindings.when(selectedProperty())
                 .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY), strokeProperty()))

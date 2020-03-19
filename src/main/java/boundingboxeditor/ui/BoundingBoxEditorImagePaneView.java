@@ -1,8 +1,8 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
-import boundingboxeditor.model.BoundingBoxCategory;
 import boundingboxeditor.model.ImageMetaData;
+import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.utils.MathUtils;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -21,6 +21,7 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -51,17 +52,20 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
     private final ColorAdjust colorAdjust = new ColorAdjust();
 
     private final Group boundingBoxSceneGroup = new Group();
+    private final Group boundingPolygonSceneGroup = new Group();
     private final ToggleGroup boundingBoxSelectionGroup = new ToggleGroup();
     private final ObservableList<BoundingBoxView> currentBoundingBoxes = FXCollections.observableArrayList();
-    private final ObjectProperty<BoundingBoxCategory> selectedCategory = new SimpleObjectProperty<>(null);
+    private final ObservableList<BoundingPolygonView> currentBoundingPolygons = FXCollections.observableArrayList();
+    private final ObjectProperty<ObjectCategory> selectedCategory = new SimpleObjectProperty<>(null);
 
     private final Rectangle initializerRectangle = createInitializerRectangle();
     private final DragAnchor dragAnchor = new DragAnchor();
 
     private final ProgressIndicator imageLoadingProgressIndicator = new ProgressIndicator();
-    private final StackPane contentPane = new StackPane(imageView, boundingBoxSceneGroup, initializerRectangle, imageLoadingProgressIndicator);
-
+    private final StackPane contentPane = new StackPane(imageView, boundingBoxSceneGroup, boundingPolygonSceneGroup, initializerRectangle, imageLoadingProgressIndicator);
     private boolean boundingBoxDrawingInProgress = false;
+    private BoundingPolygonView currentPolygon;
+    private DrawingMode drawingMode = DrawingMode.BOX;
 
     /**
      * Creates a new image-pane UI-element responsible for displaying the currently selected image on which the
@@ -78,6 +82,7 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         setHbarPolicy(ScrollBarPolicy.NEVER);
 
         boundingBoxSceneGroup.setManaged(false);
+        boundingPolygonSceneGroup.setManaged(false);
 
         setUpImageView();
         setUpInternalListeners();
@@ -86,6 +91,16 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
     @Override
     public void connectToController(Controller controller) {
         imageView.setOnMouseReleased(controller::onRegisterImageViewMouseReleasedEvent);
+        imageView.setOnMousePressed(controller::onRegisterImageViewMousePressedEvent);
+    }
+
+    public DrawingMode getDrawingMode() {
+        return drawingMode;
+    }
+
+    public void setDrawingMode(DrawingMode drawingMode) {
+        currentPolygon = null;
+        this.drawingMode = drawingMode;
     }
 
     /**
@@ -113,6 +128,10 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         currentBoundingBoxes.clear();
     }
 
+    public void removeAllCurrentBoundingPolygons() {
+        currentBoundingPolygons.clear();
+    }
+
     /**
      * Resets the image-view size. Sets to maximum currently possible size if isMaximizeImageView()
      * returns true, otherwise sets the image-view to the size closest to actual image-size while
@@ -135,6 +154,7 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
      */
     public void setZoomableAndPannable(boolean value) {
         currentBoundingBoxes.forEach(boundingBox -> boundingBox.setMouseTransparent(value));
+        currentBoundingPolygons.forEach(boundingPolygon -> boundingPolygon.setMouseTransparent(value));
         imageView.setCursor(value ? Cursor.OPEN_HAND : Cursor.DEFAULT);
         setPannable(value);
     }
@@ -176,6 +196,51 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         this.boundingBoxDrawingInProgress = boundingBoxDrawingInProgress;
     }
 
+    public void initializeBoundingRectangle(MouseEvent event) {
+        dragAnchor.setFromMouseEvent(event);
+        Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
+
+        initializerRectangle.setX(parentCoordinates.getX());
+        initializerRectangle.setY(parentCoordinates.getY());
+        initializerRectangle.setWidth(0);
+        initializerRectangle.setHeight(0);
+        initializerRectangle.setStroke(selectedCategory.getValue().getColor());
+        initializerRectangle.setVisible(true);
+        boundingBoxDrawingInProgress = true;
+    }
+
+    public void initializeBoundingPolygon(MouseEvent event, ImageMetaData currentImageMetaData) {
+        if(currentPolygon == null) {
+            currentPolygon = new BoundingPolygonView(selectedCategory.get(), currentImageMetaData);
+            currentBoundingPolygons.add(currentPolygon);
+
+            currentPolygon.autoScaleWithBounds(imageView.boundsInParentProperty());
+            currentPolygon.setToggleGroup(boundingBoxSelectionGroup);
+
+            boundingBoxSelectionGroup.selectToggle(currentPolygon);
+
+            currentPolygon.setMouseTransparent(true);
+            currentPolygon.setVisible(true);
+        }
+        Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
+        currentPolygon.appendNode(parentCoordinates.getX(), parentCoordinates.getY());
+    }
+
+    public void finalizeBoundingPolygon() {
+        if(currentPolygon != null) {
+            currentPolygon.setMouseTransparent(false);
+            currentPolygon = null;
+        }
+    }
+
+    public boolean isCategorySelected() {
+        return selectedCategory.get() != null;
+    }
+
+    public DragAnchor getDragAnchor() {
+        return dragAnchor;
+    }
+
     /**
      * Removes all provided {@link BoundingBoxView} objects from the list
      * of current {@link BoundingBoxView} objects.
@@ -184,6 +249,10 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
      */
     void removeAllFromCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
         currentBoundingBoxes.removeAll(boundingBoxes);
+    }
+
+    void removeAllFromCurrentBoundingPolygons(Collection<BoundingPolygonView> boundingPolygons) {
+        currentBoundingPolygons.removeAll(boundingPolygons);
     }
 
     /**
@@ -196,6 +265,10 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         currentBoundingBoxes.setAll(boundingBoxes);
     }
 
+    void setAllCurrentBoundingPolygons(Collection<BoundingPolygonView> boundingPolygons) {
+        currentBoundingPolygons.setAll(boundingPolygons);
+    }
+
     /**
      * Adds the provided {@link BoundingBoxView} objects to the boundingBoxSceneGroup which is
      * a node in the scene-graph. Should only be called from within a change-listener registered
@@ -206,6 +279,19 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
     void addBoundingBoxViewsToSceneGroup(Collection<? extends BoundingBoxView> boundingBoxes) {
         boundingBoxSceneGroup.getChildren().addAll(boundingBoxes.stream()
                 .map(BoundingBoxView::getNodeGroup)
+                .collect(Collectors.toList()));
+    }
+
+    /**
+     * Adds the provided {@link BoundingPolygonView} objects to the boundingPolygonSceneGroup which is
+     * a node in the scene-graph. Should only be called from within a change-listener registered
+     * to currentBoundingPolygons.
+     *
+     * @param boundingPolygonViews the objects to add
+     */
+    void addBoundingPolygonViewsToSceneGroup(Collection<? extends BoundingPolygonView> boundingPolygonViews) {
+        boundingPolygonSceneGroup.getChildren().addAll(boundingPolygonViews.stream()
+                .map(BoundingPolygonView::getNodeGroup)
                 .collect(Collectors.toList()));
     }
 
@@ -223,6 +309,19 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
     }
 
     /**
+     * Removes the provided {@link BoundingPolygonView} objects from a the boundingBoxSceneGroup which is
+     * a node in the scene-graph. Should only be called from within a change-listener registered
+     * to currentBoundingBoxes.
+     *
+     * @param boundingPolygons the objects to remove
+     */
+    void removeBoundingPolygonViewsFromSceneGroup(Collection<? extends BoundingPolygonView> boundingPolygons) {
+        boundingPolygonSceneGroup.getChildren().removeAll(boundingPolygons.stream()
+                .map(BoundingPolygonView::getNodeGroup)
+                .collect(Collectors.toList()));
+    }
+
+    /**
      * Updates the displayed image from a provided image-{@link File}.
      *
      * @param imageFile the file of the new image
@@ -235,6 +334,7 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         imageView.setImage(new Image(imageFile.toURI().toString(),
                 dimension.getWidth(), dimension.getHeight(), true, true, true));
 
+        currentPolygon = null;
         resetImageViewSize();
     }
 
@@ -258,11 +358,20 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
     }
 
     /**
-     * Returns the property of the currently selected {@link BoundingBoxCategory}.
+     * Returns the {@link ObservableList} of current {@link BoundingPolygonView} objects.
+     *
+     * @return the list
+     */
+    ObservableList<BoundingPolygonView> getCurrentBoundingPolygons() {
+        return currentBoundingPolygons;
+    }
+
+    /**
+     * Returns the property of the currently selected {@link ObjectCategory}.
      *
      * @return the property
      */
-    ObjectProperty<BoundingBoxCategory> selectedCategoryProperty() {
+    ObjectProperty<ObjectCategory> selectedCategoryProperty() {
         return selectedCategory;
     }
 
@@ -329,38 +438,22 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
     }
 
     private void setUpImageViewListeners() {
-        imageView.setOnMousePressed(event -> {
-            if(isImageFullyLoaded()
-                    && !event.isControlDown()
-                    && event.getButton().equals(MouseButton.PRIMARY)
-                    && isCategorySelected()) {
-                dragAnchor.setFromMouseEvent(event);
-                Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
-
-                initializerRectangle.setX(parentCoordinates.getX());
-                initializerRectangle.setY(parentCoordinates.getY());
-                initializerRectangle.setWidth(0);
-                initializerRectangle.setHeight(0);
-                initializerRectangle.setStroke(selectedCategory.getValue().getColor());
-                initializerRectangle.setVisible(true);
-                boundingBoxDrawingInProgress = true;
-            }
-        });
-
         imageView.setOnMouseDragged(event -> {
             if(isImageFullyLoaded() && event.isControlDown()) {
                 imageView.setCursor(Cursor.CLOSED_HAND);
             } else if(isImageFullyLoaded()
                     && event.getButton().equals(MouseButton.PRIMARY)
                     && isCategorySelected()) {
-                Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
-                Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
-                        Math.min(clampedEventXY.getY(), dragAnchor.getY()));
+                if(drawingMode == DrawingMode.BOX) {
+                    Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
+                    Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
+                            Math.min(clampedEventXY.getY(), dragAnchor.getY()));
 
-                initializerRectangle.setX(parentCoordinates.getX());
-                initializerRectangle.setY(parentCoordinates.getY());
-                initializerRectangle.setWidth(Math.abs(clampedEventXY.getX() - dragAnchor.getX()));
-                initializerRectangle.setHeight(Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
+                    initializerRectangle.setX(parentCoordinates.getX());
+                    initializerRectangle.setY(parentCoordinates.getY());
+                    initializerRectangle.setWidth(Math.abs(clampedEventXY.getX() - dragAnchor.getX()));
+                    initializerRectangle.setHeight(Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
+                }
             }
         });
     }
@@ -418,10 +511,6 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         return Math.max(0, getHeight() - 2 * IMAGE_PADDING);
     }
 
-    private boolean isCategorySelected() {
-        return selectedCategory.get() != null;
-    }
-
     private Rectangle createInitializerRectangle() {
         Rectangle initializer = new Rectangle();
         initializer.setManaged(false);
@@ -438,4 +527,6 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
             return new Dimension2D(0, Math.min(height, MAXIMUM_IMAGE_HEIGHT));
         }
     }
+
+    public enum DrawingMode {BOX, POLYGON}
 }

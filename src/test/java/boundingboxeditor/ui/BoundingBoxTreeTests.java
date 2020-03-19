@@ -39,23 +39,23 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
         WaitForAsyncUtils.waitForFxEvents();
 
-        final List<TreeItem<BoundingBoxView>> topLevelTreeItems = mainView.getBoundingBoxTree().getRoot().getChildren();
+        final List<TreeItem<Object>> topLevelTreeItems = mainView.getBoundingBoxTree().getRoot().getChildren();
 
         verifyThat(topLevelTreeItems.size(), Matchers.equalTo(1));
-        verifyThat(topLevelTreeItems.get(0), Matchers.instanceOf(BoundingBoxCategoryTreeItem.class));
+        verifyThat(topLevelTreeItems.get(0), Matchers.instanceOf(ObjectCategoryTreeItem.class));
 
-        final BoundingBoxCategoryTreeItem testCategoryTreeItem = (BoundingBoxCategoryTreeItem) topLevelTreeItems.get(0);
+        final ObjectCategoryTreeItem testCategoryTreeItem = (ObjectCategoryTreeItem) topLevelTreeItems.get(0);
         verifyThat(mainView.getBoundingBoxTree().getRow(testCategoryTreeItem), Matchers.equalTo(0));
-        verifyThat(testCategoryTreeItem.getBoundingBoxCategory().getName(), Matchers.equalTo("Test"));
+        verifyThat(testCategoryTreeItem.getObjectCategory().getName(), Matchers.equalTo("Test"));
         verifyThat(testCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
         verifyThat(testCategoryTreeItem.getChildren().get(0), Matchers.instanceOf(BoundingBoxTreeItem.class));
 
         final BoundingBoxTreeItem firstTestChildTreeItem = (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(0);
 
-        verifyThat(firstTestChildTreeItem.getValue().getBoundingBoxCategory(),
-                Matchers.equalTo(testCategoryTreeItem.getBoundingBoxCategory()));
+        verifyThat(((BoundingBoxView) firstTestChildTreeItem.getValue()).getObjectCategory(),
+                Matchers.equalTo(testCategoryTreeItem.getObjectCategory()));
         verifyThat(firstTestChildTreeItem.getId(), Matchers.equalTo(1));
-        verifyThat(firstTestChildTreeItem.getValue().isSelected(), Matchers.equalTo(true));
+        verifyThat(((BoundingBoxView) firstTestChildTreeItem.getValue()).isSelected(), Matchers.equalTo(true));
 
         // Draw second bounding-box.
         moveRelativeToImageView(robot, new Point2D(0.6, 0.25), new Point2D(0.85, 0.5));
@@ -68,27 +68,27 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(testCategoryTreeItem.getChildren().size(), Matchers.equalTo(2));
 
         verifyThat(testCategoryTreeItem.getChildren().get(0), Matchers.equalTo(firstTestChildTreeItem));
-        verifyThat(firstTestChildTreeItem.getValue().isSelected(), Matchers.equalTo(false));
+        verifyThat(((BoundingBoxView) firstTestChildTreeItem.getValue()).isSelected(), Matchers.equalTo(false));
 
         final BoundingBoxTreeItem secondTestChildTreeItem = (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(1);
 
-        verifyThat(secondTestChildTreeItem.getValue().getBoundingBoxCategory(),
-                Matchers.equalTo(testCategoryTreeItem.getBoundingBoxCategory()));
+        verifyThat(((BoundingBoxView) secondTestChildTreeItem.getValue()).getObjectCategory(),
+                Matchers.equalTo(testCategoryTreeItem.getObjectCategory()));
         verifyThat(secondTestChildTreeItem.getId(), Matchers.equalTo(2));
-        verifyThat(secondTestChildTreeItem.getValue().isSelected(), Matchers.equalTo(true));
+        verifyThat(((BoundingBoxView) secondTestChildTreeItem.getValue()).isSelected(), Matchers.equalTo(true));
 
         /* ----Hiding And Showing---- */
         // Hide first bounding-box by right-clicking.
         robot.rightClickOn("Test 1").clickOn("Hide");
 
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.equalTo(false));
-        verifyThat(firstTestChildTreeItem.getValue(), NodeMatchers.isInvisible());
+        verifyThat((BoundingBoxView) firstTestChildTreeItem.getValue(), NodeMatchers.isInvisible());
 
         // Hide second bounding-box by right-clicking.
         robot.rightClickOn("Test 2").clickOn("Hide");
 
         verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.equalTo(false));
-        verifyThat(secondTestChildTreeItem.getValue(), NodeMatchers.isInvisible());
+        verifyThat((BoundingBoxView) secondTestChildTreeItem.getValue(), NodeMatchers.isInvisible());
 
         // Now the parent-category-item's square-icon should be toggled off (because all children are toggled-off.
         verifyThat(testCategoryTreeItem.isIconToggledOn(), Matchers.equalTo(false));
@@ -98,9 +98,9 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(testCategoryTreeItem.isIconToggledOn(), Matchers.equalTo(true));
         // This should toggle on all child-items.
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.equalTo(true));
-        verifyThat(firstTestChildTreeItem.getValue(), NodeMatchers.isVisible());
+        verifyThat((BoundingBoxView) firstTestChildTreeItem.getValue(), NodeMatchers.isVisible());
         verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.equalTo(true));
-        verifyThat(secondTestChildTreeItem.getValue(), NodeMatchers.isVisible());
+        verifyThat((BoundingBoxView) secondTestChildTreeItem.getValue(), NodeMatchers.isVisible());
 
         /* ----Nesting---- */
         // Draw another bounding-box belonging to the Test-category.
@@ -113,7 +113,7 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, "Dummy");
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getBoundingBoxCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Dummy"));
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Dummy"));
 
         // Draw a bounding-box belonging to the Dummy-category
         moveRelativeToImageView(robot, new Point2D(0.6, 0.6), new Point2D(0.85, 0.85));
@@ -121,15 +121,15 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
 
         verifyThat(topLevelTreeItems.size(), Matchers.equalTo(2));
         verifyThat(topLevelTreeItems.get(0), Matchers.equalTo(testCategoryTreeItem));
-        verifyThat(topLevelTreeItems.get(1), Matchers.instanceOf(BoundingBoxCategoryTreeItem.class));
+        verifyThat(topLevelTreeItems.get(1), Matchers.instanceOf(ObjectCategoryTreeItem.class));
 
-        final BoundingBoxCategoryTreeItem dummyCategoryTreeItem = (BoundingBoxCategoryTreeItem) topLevelTreeItems.get(1);
-        verifyThat(dummyCategoryTreeItem.getBoundingBoxCategory().getName(), Matchers.equalTo("Dummy"));
+        final ObjectCategoryTreeItem dummyCategoryTreeItem = (ObjectCategoryTreeItem) topLevelTreeItems.get(1);
+        verifyThat(dummyCategoryTreeItem.getObjectCategory().getName(), Matchers.equalTo("Dummy"));
         verifyThat(dummyCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
 
         final BoundingBoxTreeItem firstDummyChildTreeItem = (BoundingBoxTreeItem) dummyCategoryTreeItem.getChildren().get(0);
         verifyThat(firstDummyChildTreeItem.getId(), Matchers.equalTo(1));
-        verifyThat(firstDummyChildTreeItem.getValue().isSelected(), Matchers.equalTo(true));
+        verifyThat(((BoundingBoxView) firstDummyChildTreeItem.getValue()).isSelected(), Matchers.equalTo(true));
 
         // Make the third child of the Test-category a nested part of the first item of the Dummy-category.
         robot.moveTo("Test 3").press(MouseButton.PRIMARY).moveTo("Dummy 1").release(MouseButton.PRIMARY);
@@ -138,12 +138,12 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(testCategoryTreeItem.getChildren().size(), Matchers.equalTo(2));
         verifyThat(dummyCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
         verifyThat(firstDummyChildTreeItem.getChildren().size(), Matchers.equalTo(1));
-        verifyThat(firstDummyChildTreeItem.getChildren().get(0), Matchers.instanceOf(BoundingBoxCategoryTreeItem.class));
+        verifyThat(firstDummyChildTreeItem.getChildren().get(0), Matchers.instanceOf(ObjectCategoryTreeItem.class));
         // The dragged item should be automatically selected after the completion of a successful drag.
-        verifyThat(thirdTestChildTreeItem.getValue().isSelected(), Matchers.equalTo(true));
+        verifyThat(((BoundingBoxView) thirdTestChildTreeItem.getValue()).isSelected(), Matchers.equalTo(true));
 
-        final BoundingBoxCategoryTreeItem nestedTestCategoryTreeItem = (BoundingBoxCategoryTreeItem) firstDummyChildTreeItem.getChildren().get(0);
-        verifyThat(nestedTestCategoryTreeItem.getBoundingBoxCategory(), Matchers.equalTo(testCategoryTreeItem.getBoundingBoxCategory()));
+        final ObjectCategoryTreeItem nestedTestCategoryTreeItem = (ObjectCategoryTreeItem) firstDummyChildTreeItem.getChildren().get(0);
+        verifyThat(nestedTestCategoryTreeItem.getObjectCategory(), Matchers.equalTo(testCategoryTreeItem.getObjectCategory()));
         verifyThat(nestedTestCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
         verifyThat(nestedTestCategoryTreeItem.getChildren().get(0), Matchers.equalTo(thirdTestChildTreeItem));
 
@@ -161,15 +161,15 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
         // The old tree should have been exactly reconstructed.
-        final List<TreeItem<BoundingBoxView>> newTopLevelTreeItems = mainView.getBoundingBoxTree().getRoot().getChildren();
+        final List<TreeItem<Object>> newTopLevelTreeItems = mainView.getBoundingBoxTree().getRoot().getChildren();
         verifyThat(newTopLevelTreeItems, Matchers.equalTo(topLevelTreeItems));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
 
         /* ----Deleting---- */
-        final BoundingBoxCategoryTreeItem newTestCategoryTreeItem = (BoundingBoxCategoryTreeItem) newTopLevelTreeItems.get(0);
-        final BoundingBoxCategoryTreeItem newDummyCategoryTreeItem = (BoundingBoxCategoryTreeItem) newTopLevelTreeItems.get(1);
+        final ObjectCategoryTreeItem newTestCategoryTreeItem = (ObjectCategoryTreeItem) newTopLevelTreeItems.get(0);
+        final ObjectCategoryTreeItem newDummyCategoryTreeItem = (ObjectCategoryTreeItem) newTopLevelTreeItems.get(1);
         final BoundingBoxTreeItem newFirstTestChildTreeItem = (BoundingBoxTreeItem) newTestCategoryTreeItem.getChildren().get(0);
         final BoundingBoxTreeItem newSecondTestChildTreeItem = (BoundingBoxTreeItem) newTestCategoryTreeItem.getChildren().get(1);
 
@@ -182,7 +182,8 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         // ...but one less Test-children.
         verifyThat(newTestCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
 
-        verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.not(Matchers.hasItem(newFirstTestChildTreeItem.getValue())));
+        verifyThat(mainView.getCurrentBoundingBoxes(),
+                Matchers.not(Matchers.hasItem((BoundingBoxView) newFirstTestChildTreeItem.getValue())));
         // After the first bounding-box and its tree-item was deleted, the (formerly) second tree-item's id should have been updated.
         verifyThat(newSecondTestChildTreeItem.getId(), Matchers.equalTo(1));
 
@@ -190,11 +191,12 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
                 .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
 
         // Delete second Test-bounding-box via the context-menu on the element itself.
-        robot.rightClickOn(newSecondTestChildTreeItem.getValue()).clickOn("Delete");
+        robot.rightClickOn((BoundingBoxView) newSecondTestChildTreeItem.getValue()).clickOn("Delete");
         WaitForAsyncUtils.waitForFxEvents();
         // Now just the Dummy-category item should be left.
         verifyThat(mainView.getBoundingBoxTree().getRoot().getChildren().size(), Matchers.equalTo(1));
-        verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.not(Matchers.hasItem(newSecondTestChildTreeItem.getValue())));
+        verifyThat(mainView.getCurrentBoundingBoxes(),
+                Matchers.not(Matchers.hasItem((BoundingBoxView) newSecondTestChildTreeItem.getValue())));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));

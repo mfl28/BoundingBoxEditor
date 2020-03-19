@@ -1,10 +1,9 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.BoundingBoxCategory;
+import boundingboxeditor.model.ObjectCategory;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -15,11 +14,8 @@ import java.util.List;
  *
  * @see BoundingBoxData#setParts(List)
  */
-public class BoundingBoxData {
-    private final BoundingBoxCategory category;
+public class BoundingBoxData extends BoundingShapeData {
     private final Bounds boundsInImage;
-    private final List<String> tags;
-    private List<BoundingBoxData> parts = Collections.emptyList();
 
     /**
      * Creates a new object to store the "blueprint" of a {@link boundingboxeditor.ui.BoundingBoxView BoundingBoxView}.
@@ -29,10 +25,9 @@ public class BoundingBoxData {
      *                        (considering the image's original measurements)
      * @param tags            the tags that are registered for the bounding-box
      */
-    public BoundingBoxData(BoundingBoxCategory category, Bounds rectangleBounds, List<String> tags) {
-        this.category = category;
+    public BoundingBoxData(ObjectCategory category, Bounds rectangleBounds, List<String> tags) {
+        super(category, tags);
         this.boundsInImage = rectangleBounds;
-        this.tags = tags;
     }
 
     /**
@@ -47,28 +42,9 @@ public class BoundingBoxData {
      * @param yMax     the y-coordinate of the lower right corner of the bounding-box
      * @param tags     the tags that are registered for the bounding-box
      */
-    BoundingBoxData(BoundingBoxCategory category, double xMin, double yMin, double xMax, double yMax, List<String> tags) {
-        this.category = category;
+    BoundingBoxData(ObjectCategory category, double xMin, double yMin, double xMax, double yMax, List<String> tags) {
+        super(category, tags);
         this.boundsInImage = new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin);
-        this.tags = tags;
-    }
-
-    /**
-     * Returns the name of the category of the bounding-box.
-     *
-     * @return the category name
-     */
-    public String getCategoryName() {
-        return category.getName();
-    }
-
-    /**
-     * Returns the category of the bounding-box.
-     *
-     * @return the category
-     */
-    public BoundingBoxCategory getCategory() {
-        return category;
     }
 
     /**
@@ -119,33 +95,6 @@ public class BoundingBoxData {
      */
     public Bounds getBoundsInImage() {
         return boundsInImage;
-    }
-
-    /**
-     * Returns a list of the tags that are registered with the bounding-box.
-     *
-     * @return the tags
-     */
-    public List<String> getTags() {
-        return tags;
-    }
-
-    /**
-     * Returns the {@link BoundingBoxData}-objects that are registered as nested parts of the bounding-box.
-     *
-     * @return the parts
-     */
-    public List<BoundingBoxData> getParts() {
-        return parts;
-    }
-
-    /**
-     * Registers {@link BoundingBoxData}-objects as nested parts of the bounding-box.
-     *
-     * @param parts the BoundingBoxData-objects to be registered
-     */
-    public void setParts(List<BoundingBoxData> parts) {
-        this.parts = parts;
     }
 }
 

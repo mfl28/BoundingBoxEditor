@@ -49,6 +49,10 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
 
     private final IconButton showBoundingBoxesButton = new IconButton("show-bounding-boxes-icon", IconButton.IconType.BACKGROUND);
     private final IconButton hideBoundingBoxesButton = new IconButton("hide-bounding-boxes-icon", IconButton.IconType.BACKGROUND);
+    private final ToggleButton boxModeButton = new ToggleButton("Box");
+    private final ToggleButton polygonModeButton = new ToggleButton("Polygon");
+    private final ToggleGroup modeToggleGroup = new ToggleGroup();
+
     private final IconButton resetSizeAndCenterImageButton = new IconButton("reset-image-size-icon", IconButton.IconType.BACKGROUND);
 
     private final Button nextButton = new IconButton(NEXT_BUTTON_ICON_ID, IconButton.IconType.GRAPHIC);
@@ -74,6 +78,9 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
     BoundingBoxEditorToolBarView() {
         getItems().addAll(
                 boundingBoxToolBox,
+                new Label("Mode: "),
+                boxModeButton,
+                polygonModeButton,
                 UiUtils.createHSpacer(),
                 previousButton,
                 indexLabel,
@@ -103,6 +110,10 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
      */
     public Label getIndexLabel() {
         return indexLabel;
+    }
+
+    public ToggleButton getBoxModeButton() {
+        return boxModeButton;
     }
 
     /**
@@ -241,6 +252,11 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
                 Controller.KeyCombinations.hideAllBoundingBoxes));
         resetSizeAndCenterImageButton.setTooltip(UiUtils.createTooltip(RESET_IMAGE_SIZE_BUTTON_TOOLTIP,
                 Controller.KeyCombinations.resetSizeAndCenterImage));
+
+        boxModeButton.setToggleGroup(modeToggleGroup);
+        polygonModeButton.setToggleGroup(modeToggleGroup);
+
+        modeToggleGroup.selectToggle(boxModeButton);
     }
 
     private void setUpInternalListeners() {

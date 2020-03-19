@@ -1,8 +1,8 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.BoundingBoxCategory;
 import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.Model;
+import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.utils.ColorUtils;
 import javafx.beans.property.DoubleProperty;
 import org.w3c.dom.Document;
@@ -35,10 +35,15 @@ import java.util.stream.Stream;
 public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final boolean INCLUDE_SUBDIRECTORIES = false;
     private static final String MISSING_ELEMENT_PREFIX = "Missing element: ";
+    private static final String INVALID_OBJECT_ELEMENT_DUPL_ERROR = "Invalid \"object\"-element: " +
+            "Contains \"bndbox\"- and \"polygon\"-elements.";
+    private static final String INVALID_OBJECT_ELEMENT_MISSING_ERROR = "Invalid \"object\"-element: " +
+            "Missing \"bndbox\"- or \"polygon\"-element.";
+    private static final String INVALID_POLYGON_ELEMENT_ERROR = "Invalid \"polygon\"-element.";
     private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     private Set<String> fileNamesToLoad;
-    private Map<String, BoundingBoxCategory> existingBoundingBoxCategories;
-    private Map<String, Integer> boundingBoxCountPerCategory;
+    private Map<String, ObjectCategory> existingObjectCategories;
+    private Map<String, Integer> boundingShapeCountPerCategory;
     private List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages;
 
     @Override
@@ -46,9 +51,9 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         long startTime = System.nanoTime();
 
         this.fileNamesToLoad = model.getImageFileNameSet();
-        this.boundingBoxCountPerCategory = new ConcurrentHashMap<>(model.getCategoryToAssignedBoundingBoxesCountMap());
-        this.existingBoundingBoxCategories = new ConcurrentHashMap<>(model.getBoundingBoxCategories().stream()
-                .collect(Collectors.toMap(BoundingBoxCategory::getName, Function.identity())));
+        this.boundingShapeCountPerCategory = new ConcurrentHashMap<>(model.getCategoryToAssignedBoundingShapesCountMap());
+        this.existingObjectCategories = new ConcurrentHashMap<>(model.getObjectCategories().stream()
+                .collect(Collectors.toMap(ObjectCategory::getName, Function.identity())));
 
         try(Stream<Path> fileStream = Files.walk(path, INCLUDE_SUBDIRECTORIES ? Integer.MAX_VALUE : 1)) {
             List<File> annotationFiles = fileStream
@@ -76,8 +81,8 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
-            model.getBoundingBoxCategories().setAll(existingBoundingBoxCategories.values());
-            model.getCategoryToAssignedBoundingBoxesCountMap().putAll(boundingBoxCountPerCategory);
+            model.getObjectCategories().setAll(existingObjectCategories.values());
+            model.getCategoryToAssignedBoundingShapesCountMap().putAll(boundingShapeCountPerCategory);
             model.updateImageAnnotations(imageAnnotations);
 
             long estimatedTime = System.nanoTime() - startTime;
@@ -102,7 +107,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             throw new AnnotationToNonExistentImageException("The image file does not belong to the currently loaded images.");
         }
 
-        List<BoundingBoxData> boundingBoxData = parseBoundingBoxData(document, file.getName());
+        List<BoundingShapeData> boundingBoxData = parseBoundingBoxData(document, file.getName());
 
         if(boundingBoxData.isEmpty()) {
             // No image annotation will be constructed if it does not contain any bounding boxes.
@@ -122,31 +127,31 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return new ImageMetaData(fileName, folderName, width, height, depth);
     }
 
-    private List<BoundingBoxData> parseBoundingBoxData(Document document, String filename) {
+    private List<BoundingShapeData> parseBoundingBoxData(Document document, String filename) throws InvalidAnnotationFileFormatException {
         NodeList objectElements = document.getElementsByTagName("object");
 
-        List<BoundingBoxData> boundingBoxDataList = new ArrayList<>();
+        List<BoundingShapeData> boundingShapeData = new ArrayList<>();
 
         for(int i = 0; i != objectElements.getLength(); ++i) {
             Node objectNode = objectElements.item(i);
 
             if(objectNode.getNodeType() == Node.ELEMENT_NODE) {
                 try {
-                    BoundingBoxData boundingBoxData = parseBoundingBoxElement((Element) objectNode, filename);
-                    boundingBoxDataList.add(boundingBoxData);
+                    BoundingShapeData boundingBoxData = parseBoundingShapeElement((Element) objectNode, filename);
+                    boundingShapeData.add(boundingBoxData);
                 } catch(InvalidAnnotationFileFormatException e) {
                     unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(filename, e.getMessage()));
                 }
             }
         }
 
-        return boundingBoxDataList;
+        return boundingShapeData;
     }
 
-    private BoundingBoxData parseBoundingBoxElement(Element objectElement, String filename) {
+    private BoundingShapeData parseBoundingShapeElement(Element objectElement, String filename) {
         NodeList childElements = objectElement.getChildNodes();
 
-        BoundingBoxDataParseResult boxDataParseResult = new BoundingBoxDataParseResult();
+        BoundingShapeDataParseResult boxDataParseResult = new BoundingShapeDataParseResult();
 
         // At first, parse all child elements except parts. In this way if errors occur,
         // no parts will be parsed.
@@ -156,31 +161,49 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + "name");
         }
 
-        if(boxDataParseResult.getxMin() == null || boxDataParseResult.getxMax() == null
-                || boxDataParseResult.getyMin() == null || boxDataParseResult.getyMax() == null) {
-            throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + "bndbox");
+        if(boxDataParseResult.isBoundingBox() && boxDataParseResult.isBoundingPolygon()) {
+            throw new InvalidAnnotationFileFormatException(INVALID_OBJECT_ELEMENT_DUPL_ERROR);
+        } else if(!boxDataParseResult.isBoundingBox() && !boxDataParseResult.isBoundingPolygon()) {
+            throw new InvalidAnnotationFileFormatException(INVALID_OBJECT_ELEMENT_MISSING_ERROR);
+        } else if(boxDataParseResult.isBoundingBox()) {
+            if(boxDataParseResult.getxMin() == null || boxDataParseResult.getxMax() == null
+                    || boxDataParseResult.getyMin() == null || boxDataParseResult.getyMax() == null) {
+                throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + "bndbox");
+            }
+        } else {
+            if(boxDataParseResult.getPoints() == null) {
+                throw new InvalidAnnotationFileFormatException(INVALID_POLYGON_ELEMENT_ERROR);
+            }
         }
 
-        BoundingBoxCategory category = existingBoundingBoxCategories.computeIfAbsent(boxDataParseResult.getCategoryName(),
-                key -> new BoundingBoxCategory(key, ColorUtils.createRandomColor()));
 
-        boundingBoxCountPerCategory.merge(category.getName(), 1, Integer::sum);
+        ObjectCategory category = existingObjectCategories.computeIfAbsent(boxDataParseResult.getCategoryName(),
+                key -> new ObjectCategory(key, ColorUtils.createRandomColor()));
 
-        BoundingBoxData boundingBoxData = new BoundingBoxData(category, boxDataParseResult.getxMin(),
-                boxDataParseResult.getyMin(), boxDataParseResult.getxMax(),
-                boxDataParseResult.getyMax(), boxDataParseResult.getTags());
+        boundingShapeCountPerCategory.merge(category.getName(), 1, Integer::sum);
+
+        BoundingShapeData boundingShapeData;
+
+        if(boxDataParseResult.isBoundingBox()) {
+            boundingShapeData = new BoundingBoxData(category, boxDataParseResult.getxMin(),
+                    boxDataParseResult.getyMin(), boxDataParseResult.getxMax(),
+                    boxDataParseResult.getyMax(), boxDataParseResult.getTags());
+        } else {
+            boundingShapeData = new BoundingPolygonData(category, boxDataParseResult.getPoints(),
+                    boxDataParseResult.getTags());
+        }
 
         // Now parse parts.
         parsePartElements(childElements, boxDataParseResult, filename);
 
         if(!boxDataParseResult.getParts().isEmpty()) {
-            boundingBoxData.setParts(boxDataParseResult.getParts());
+            boundingShapeData.setParts(boxDataParseResult.getParts());
         }
 
-        return boundingBoxData;
+        return boundingShapeData;
     }
 
-    private void parseBoundingBoxDataTag(Element tagElement, BoundingBoxDataParseResult boxDataParseResult) {
+    private void parseBoundingShapeDataTag(Element tagElement, BoundingShapeDataParseResult boxDataParseResult) {
         switch(tagElement.getTagName()) {
             case "name":
                 String categoryName = tagElement.getTextContent();
@@ -192,10 +215,15 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 boxDataParseResult.setCategoryName(categoryName);
                 break;
             case "bndbox":
+                boxDataParseResult.setBoundingBox(true);
                 boxDataParseResult.setxMin(parseDoubleElement(tagElement, "xmin"));
                 boxDataParseResult.setxMax(parseDoubleElement(tagElement, "xmax"));
                 boxDataParseResult.setyMin(parseDoubleElement(tagElement, "ymin"));
                 boxDataParseResult.setyMax(parseDoubleElement(tagElement, "ymax"));
+                break;
+            case "polygon":
+                boxDataParseResult.setBoundingPolygon(true);
+                boxDataParseResult.setPoints(parsePointList(tagElement));
                 break;
             case "pose":
                 String poseValue = tagElement.getTextContent();
@@ -230,15 +258,15 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         }
     }
 
-    private void parsePart(Element tagElement, BoundingBoxDataParseResult boxDataParseResult, String filename) {
+    private void parsePart(Element tagElement, BoundingShapeDataParseResult boxDataParseResult, String filename) {
         try {
-            boxDataParseResult.getParts().add(parseBoundingBoxElement(tagElement, filename));
+            boxDataParseResult.getParts().add(parseBoundingShapeElement(tagElement, filename));
         } catch(InvalidAnnotationFileFormatException e) {
             unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(filename, e.getMessage()));
         }
     }
 
-    private void parseNonPartElements(NodeList childElements, BoundingBoxDataParseResult boxDataParseResult) {
+    private void parseNonPartElements(NodeList childElements, BoundingShapeDataParseResult boxDataParseResult) {
         for(int i = 0; i != childElements.getLength(); ++i) {
             Node currentChild = childElements.item(i);
 
@@ -246,13 +274,13 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 Element currentElement = (Element) currentChild;
 
                 if(!currentElement.getTagName().equals("part")) {
-                    parseBoundingBoxDataTag((Element) currentChild, boxDataParseResult);
+                    parseBoundingShapeDataTag((Element) currentChild, boxDataParseResult);
                 }
             }
         }
     }
 
-    private void parsePartElements(NodeList childElements, BoundingBoxDataParseResult boxDataParseResult, String filename) {
+    private void parsePartElements(NodeList childElements, BoundingShapeDataParseResult boxDataParseResult, String filename) {
         for(int i = 0; i != childElements.getLength(); ++i) {
             Node currentChild = childElements.item(i);
 
@@ -297,7 +325,25 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return textNode.getTextContent();
     }
 
-    private double parseDoubleElement(Document document, String tagName) {
+    private List<Double> parsePointList(Element element) throws InvalidAnnotationFileFormatException {
+        NodeList xNodes = element.getElementsByTagName("x");
+        NodeList yNodes = element.getElementsByTagName("y");
+
+        if(xNodes.getLength() == 0 || yNodes.getLength() == 0 || xNodes.getLength() != yNodes.getLength()) {
+            throw new InvalidAnnotationFileFormatException("Invalid polygon element.");
+        }
+
+        List<Double> points = new ArrayList<>();
+
+        for(int i = 0; i != xNodes.getLength(); ++i) {
+            points.add(Double.parseDouble(xNodes.item(i).getTextContent()));
+            points.add(Double.parseDouble(yNodes.item(i).getTextContent()));
+        }
+
+        return points;
+    }
+
+    private double parseDoubleElement(Document document, String tagName) throws InvalidAnnotationFileFormatException {
         Node doubleNode = document.getElementsByTagName(tagName).item(0);
 
         if(doubleNode == null) {
@@ -327,14 +373,17 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return Integer.parseInt(intNode.getTextContent());
     }
 
-    private static class BoundingBoxDataParseResult {
+    private static class BoundingShapeDataParseResult {
         private String categoryName;
         private Double xMin;
         private Double xMax;
         private Double yMin;
         private Double yMax;
         private List<String> tags = new ArrayList<>();
-        private List<BoundingBoxData> parts = new ArrayList<>();
+        private List<BoundingShapeData> parts = new ArrayList<>();
+        private List<Double> points = null;
+        private boolean isBoundingBox = false;
+        private boolean isBoundingPolygon = false;
 
 
         public String getCategoryName() {
@@ -381,9 +430,40 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             return tags;
         }
 
+        public void setTags(List<String> tags) {
+            this.tags = tags;
+        }
 
-        public List<BoundingBoxData> getParts() {
+        public List<BoundingShapeData> getParts() {
             return parts;
+        }
+
+        public void setParts(List<BoundingShapeData> parts) {
+            this.parts = parts;
+        }
+
+        public List<Double> getPoints() {
+            return points;
+        }
+
+        public void setPoints(List<Double> points) {
+            this.points = points;
+        }
+
+        public boolean isBoundingBox() {
+            return isBoundingBox;
+        }
+
+        public void setBoundingBox(boolean boundingBox) {
+            isBoundingBox = boundingBox;
+        }
+
+        public boolean isBoundingPolygon() {
+            return isBoundingPolygon;
+        }
+
+        public void setBoundingPolygon(boolean boundingPolygon) {
+            isBoundingPolygon = boundingPolygon;
         }
     }
 

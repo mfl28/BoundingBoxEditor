@@ -2,6 +2,7 @@ package boundingboxeditor.model.io;
 
 import boundingboxeditor.model.ImageMetaData;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,35 +11,44 @@ import java.util.List;
  */
 public class ImageAnnotation {
     private final ImageMetaData imageMetaData;
-    private List<BoundingBoxData> boundingBoxData;
+    private List<BoundingShapeData> boundingShapeData = new ArrayList<>();
 
     /**
      * Creates a new image-annotation
      *
-     * @param imageMetaData   the metadata of the annotated image
-     * @param boundingBoxData the data of the bounding-boxes assigned to the image
+     * @param imageMetaData the metadata of the annotated image
      */
-    public ImageAnnotation(ImageMetaData imageMetaData, List<BoundingBoxData> boundingBoxData) {
+    public ImageAnnotation(ImageMetaData imageMetaData) {
         this.imageMetaData = imageMetaData;
-        this.boundingBoxData = boundingBoxData;
     }
+
+    /**
+     * Creates a new image-annotation
+     *
+     * @param imageMetaData the metadata of the annotated image
+     */
+    public ImageAnnotation(ImageMetaData imageMetaData, List<BoundingShapeData> boundingShapeData) {
+        this.imageMetaData = imageMetaData;
+        this.boundingShapeData = boundingShapeData;
+    }
+
 
     /**
      * Returns the annotation's bounding-box data.
      *
      * @return list of data of bounding-boxes
      */
-    public List<BoundingBoxData> getBoundingBoxData() {
-        return boundingBoxData;
+    public List<BoundingShapeData> getBoundingShapeData() {
+        return boundingShapeData;
     }
 
     /**
      * Sets the annotation's bounding-box data.
      *
-     * @param boundingBoxData the list of data of bounding-boxes to set
+     * @param boundingShapeData the list of data of bounding-boxes to set
      */
-    public void setBoundingBoxData(List<BoundingBoxData> boundingBoxData) {
-        this.boundingBoxData = boundingBoxData;
+    public void setBoundingShapeData(List<BoundingShapeData> boundingShapeData) {
+        this.boundingShapeData = boundingShapeData;
     }
 
     /**

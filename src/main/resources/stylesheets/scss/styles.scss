@@ -289,6 +289,35 @@ $base-separator-line-color: derive($base-background-color, -15%);
     }
 }
 
+.tool-bar .toggle-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: $base-font-color;
+    -fx-background-insets: 0;
+
+    &:focused,
+    &:armed {
+        @extend .toggle-button;
+    }
+
+    &:hover {
+        -fx-background-color: $base-highlight-color;
+        -fx-text-fill: $base-font-highlight-color;
+        -fx-background-insets: 0;
+    }
+
+    &:selected {
+        -fx-background-color: $base-alt-accent-color;
+        -fx-text-fill: $base-background-color;
+        -fx-background-insets: 0;
+    }
+
+    &:pressed {
+        -fx-background-color: $base-highlight-light-color;
+        -fx-text-fill: $base-font-highlight-color;
+        -fx-background-insets: 0;
+    }
+}
+
 // --Icons--
 #previous-button-icon {
     @include large-icon;
@@ -358,6 +387,14 @@ $base-separator-line-color: derive($base-background-color, -15%);
 }
 
 #toggle-square {
+    -fx-opacity: 0.3;
+
+    &:toggled-on {
+        -fx-opacity: 1.0;
+    }
+}
+
+#toggle-polygon {
     -fx-opacity: 0.3;
 
     &:toggled-on {

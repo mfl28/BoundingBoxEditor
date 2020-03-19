@@ -1,6 +1,6 @@
 package boundingboxeditor.model;
 
-import boundingboxeditor.model.io.BoundingBoxData;
+import boundingboxeditor.model.io.BoundingShapeData;
 import boundingboxeditor.model.io.ImageAnnotation;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -55,15 +55,15 @@ public class Model {
     private Map<String, ImageAnnotation> imageFileNameToAnnotation = new HashMap<>();
 
     /**
-     * Contains all currently existing {@link BoundingBoxCategory} objects.
+     * Contains all currently existing {@link ObjectCategory} objects.
      */
-    private ObservableList<BoundingBoxCategory> boundingBoxCategories = FXCollections.observableArrayList();
+    private ObservableList<ObjectCategory> objectCategories = FXCollections.observableArrayList();
 
     /**
      * Maps the name of a currently existing bounding-box category to the current number of existing bounding-box elements
      * assigned to the category.
      */
-    private Map<String, Integer> categoryToAssignedBoundingBoxesCount = new HashMap<>();
+    private Map<String, Integer> categoryToAssignedBoundingShapesCount = new HashMap<>();
 
     private IntegerProperty fileIndex = new SimpleIntegerProperty(0);
     private IntegerProperty nrImageFiles = new SimpleIntegerProperty(0);
@@ -107,31 +107,28 @@ public class Model {
     /**
      * Convenience method to update the currently selected image-file annotation's bounding-box data.
      *
-     * @param boundingBoxes the new bounding-box data
+     * @param boundingShapeData the new bounding-shape data elements
      */
-    public void updateCurrentBoundingBoxData(List<BoundingBoxData> boundingBoxes) {
-        updateBoundingBoxDataAtFileIndex(fileIndex.get(), boundingBoxes);
+    public void updateCurrentBoundingShapeData(List<BoundingShapeData> boundingShapeData) {
+        updateBoundingShapeDataAtFileIndex(fileIndex.get(), boundingShapeData);
     }
 
     /**
      * Creates or updates the {@link ImageAnnotation} associated with the image-file at the provided index using
      * new bounding-box data.
      *
-     * @param fileIndex     the index of the image-file whose annotation should be created/updated
-     * @param boundingBoxes the new bounding-box data
+     * @param fileIndex         the index of the image-file whose annotation should be created/updated
+     * @param boundingShapeData the new bounding-shape data elements
      */
-    public void updateBoundingBoxDataAtFileIndex(int fileIndex, List<BoundingBoxData> boundingBoxes) {
+    public void updateBoundingShapeDataAtFileIndex(int fileIndex, List<BoundingShapeData> boundingShapeData) {
         String fileName = imageFileNameToFile.get(fileIndex);
 
-        if(!boundingBoxes.isEmpty()) {
-            ImageAnnotation imageAnnotation = imageFileNameToAnnotation.get(fileName);
+        ImageAnnotation imageAnnotation = imageFileNameToAnnotation.getOrDefault(fileName,
+                new ImageAnnotation(imageFileNameToMetaData.get(fileName)));
 
-            if(imageAnnotation == null) {
-                ImageMetaData metaData = imageFileNameToMetaData.get(fileName);
-                imageFileNameToAnnotation.put(fileName, new ImageAnnotation(metaData, boundingBoxes));
-            } else {
-                imageAnnotation.setBoundingBoxData(boundingBoxes);
-            }
+        if(!boundingShapeData.isEmpty()) {
+            imageAnnotation.setBoundingShapeData(boundingShapeData);
+            imageFileNameToAnnotation.put(fileName, imageAnnotation);
         } else {
             imageFileNameToAnnotation.remove(fileName);
         }
@@ -153,7 +150,7 @@ public class Model {
             if(imageAnnotation == null) {
                 imageFileNameToAnnotation.put(annotation.getImageFileName(), annotation);
             } else {
-                imageAnnotation.getBoundingBoxData().addAll(annotation.getBoundingBoxData());
+                imageAnnotation.getBoundingShapeData().addAll(annotation.getBoundingShapeData());
             }
         });
     }
@@ -218,8 +215,8 @@ public class Model {
      *
      * @return the mapping
      */
-    public Map<String, Integer> getCategoryToAssignedBoundingBoxesCountMap() {
-        return categoryToAssignedBoundingBoxesCount;
+    public Map<String, Integer> getCategoryToAssignedBoundingShapesCountMap() {
+        return categoryToAssignedBoundingShapesCount;
     }
 
     /**
@@ -232,12 +229,12 @@ public class Model {
     }
 
     /**
-     * Returns an observable list of the {@link BoundingBoxCategory} objects.
+     * Returns an observable list of the {@link ObjectCategory} objects.
      *
      * @return the list of bounding-box categories
      */
-    public ObservableList<BoundingBoxCategory> getBoundingBoxCategories() {
-        return boundingBoxCategories;
+    public ObservableList<ObjectCategory> getObjectCategories() {
+        return objectCategories;
     }
 
     /**
@@ -331,7 +328,7 @@ public class Model {
      * @return true if the model contains categories, false otherwise
      */
     public boolean containsCategories() {
-        return !boundingBoxCategories.isEmpty();
+        return !objectCategories.isEmpty();
     }
 
     /**
@@ -363,23 +360,23 @@ public class Model {
     public void clearAnnotationData() {
         imageFileNameToAnnotation.clear();
 
-        boundingBoxCategories.clear();
-        categoryToAssignedBoundingBoxesCount.clear();
+        objectCategories.clear();
+        categoryToAssignedBoundingShapesCount.clear();
     }
 
     private void setUpInternalListeners() {
         nextImageFileExists.bind(fileIndex.lessThan(nrImageFilesProperty().subtract(1)));
         previousImageFileExists.bind(fileIndex.greaterThan(0));
 
-        boundingBoxCategories.addListener((ListChangeListener<BoundingBoxCategory>) c -> {
+        objectCategories.addListener((ListChangeListener<ObjectCategory>) c -> {
             while(c.next()) {
                 if(c.wasAdded()) {
                     c.getAddedSubList().forEach(item ->
-                            categoryToAssignedBoundingBoxesCount.put(item.getName(), 0));
+                            categoryToAssignedBoundingShapesCount.put(item.getName(), 0));
                 }
 
                 if(c.wasRemoved()) {
-                    c.getRemoved().forEach(item -> categoryToAssignedBoundingBoxesCount.remove(item.getName()));
+                    c.getRemoved().forEach(item -> categoryToAssignedBoundingShapesCount.remove(item.getName()));
                 }
             }
         });

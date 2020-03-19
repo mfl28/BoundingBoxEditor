@@ -1,6 +1,6 @@
 package boundingboxeditor.ui;
 
-import boundingboxeditor.model.BoundingBoxCategory;
+import boundingboxeditor.model.ObjectCategory;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ListChangeListener;
@@ -10,29 +10,29 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * A tree-item representing an existing {@link BoundingBoxCategory} in a {@link BoundingBoxTreeCell} of a {@link BoundingBoxTreeView}.
+ * A tree-item representing an existing {@link ObjectCategory} in a {@link BoundingBoxTreeCell} of a {@link BoundingBoxTreeView}.
  *
  * @see TreeItem
  */
-class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
+class ObjectCategoryTreeItem extends TreeItem<Object> {
     private static final double TOGGLE_ICON_SIDE_LENGTH = 9.5;
 
     private final ToggleSquare toggleIcon = new ToggleSquare(TOGGLE_ICON_SIDE_LENGTH);
     private final IntegerProperty nrToggledOnChildren = new SimpleIntegerProperty(0);
-    private final BoundingBoxCategory boundingBoxCategory;
+    private final ObjectCategory objectCategory;
 
     /**
-     * Creates a new tree-item representing a {@link BoundingBoxCategory} in a {@link BoundingBoxTreeCell} that is part of
+     * Creates a new tree-item representing a {@link ObjectCategory} in a {@link BoundingBoxTreeCell} that is part of
      * a {@link BoundingBoxTreeView}.
      *
-     * @param boundingBoxCategory the {@link BoundingBoxCategory} that should be associated with the tree-item
+     * @param objectCategory the {@link ObjectCategory} that should be associated with the tree-item
      */
-    BoundingBoxCategoryTreeItem(BoundingBoxCategory boundingBoxCategory) {
+    ObjectCategoryTreeItem(ObjectCategory objectCategory) {
         // TreeItems require a non-null value-item for them not to be considered 'empty', therefore
         // a static 'dummy'-object of type BoundingBoxView is passed to every BoundingBoxCategoryTreeItem.
-        super(BoundingBoxView.getDummy());
+        super(objectCategory);
 
-        this.boundingBoxCategory = boundingBoxCategory;
+        this.objectCategory = objectCategory;
         setGraphic(toggleIcon);
 
         setUpInternalListeners();
@@ -40,7 +40,7 @@ class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(boundingBoxCategory, getChildren());
+        return Objects.hash(getValue(), getChildren());
     }
 
     @Override
@@ -49,22 +49,22 @@ class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
             return true;
         }
 
-        if(!(obj instanceof BoundingBoxCategoryTreeItem)) {
+        if(!(obj instanceof ObjectCategoryTreeItem)) {
             return false;
         }
 
-        BoundingBoxCategoryTreeItem other = (BoundingBoxCategoryTreeItem) obj;
+        ObjectCategoryTreeItem other = (ObjectCategoryTreeItem) obj;
 
-        return boundingBoxCategory.equals(other.boundingBoxCategory) && getChildren().equals(other.getChildren());
+        return objectCategory.equals(other.objectCategory) && getChildren().equals(other.getChildren());
     }
 
     /**
-     * Returns the {@link BoundingBoxCategory} object associated with the tree-item.
+     * Returns the {@link ObjectCategory} object associated with the tree-item.
      *
      * @return the bounding-box category
      */
-    BoundingBoxCategory getBoundingBoxCategory() {
-        return boundingBoxCategory;
+    ObjectCategory getObjectCategory() {
+        return objectCategory;
     }
 
     /**
@@ -78,6 +78,11 @@ class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
         getChildren().remove(child);
     }
 
+    void detachBoundingPolygonTreeItemChild(BoundingPolygonTreeItem child) {
+        detachChildId(child.getId());
+        getChildren().remove(child);
+    }
+
     /**
      * Attaches a new {@link BoundingBoxTreeItem} to the end of the list of children and assigns it
      * an appropriate id.
@@ -87,6 +92,17 @@ class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
     void attachBoundingBoxTreeItemChild(BoundingBoxTreeItem boundingBoxTreeItem) {
         boundingBoxTreeItem.setId(getChildren().size() + 1);
         getChildren().add(boundingBoxTreeItem);
+    }
+
+    /**
+     * Attaches a new {@link BoundingBoxTreeItem} to the end of the list of children and assigns it
+     * an appropriate id.
+     *
+     * @param boundingPolygonTreeItem the {@link BoundingBoxTreeItem} to attach
+     */
+    void attachBoundingPolygonTreeItemChild(BoundingPolygonTreeItem boundingPolygonTreeItem) {
+        boundingPolygonTreeItem.setId(getChildren().size() + 1);
+        getChildren().add(boundingPolygonTreeItem);
     }
 
     /**
@@ -106,8 +122,12 @@ class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
     void setIconToggledOn(boolean toggledOn) {
         toggleIcon.setToggledOn(toggledOn);
 
-        for(TreeItem<BoundingBoxView> child : getChildren()) {
-            ((BoundingBoxTreeItem) child).setIconToggledOn(toggledOn);
+        for(TreeItem<Object> child : getChildren()) {
+            if(child instanceof BoundingBoxTreeItem) {
+                ((BoundingBoxTreeItem) child).setIconToggledOn(toggledOn);
+            } else if(child instanceof BoundingPolygonTreeItem) {
+                ((BoundingPolygonTreeItem) child).setIconToggledOn(toggledOn);
+            }
         }
     }
 
@@ -128,20 +148,25 @@ class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
     }
 
     private void setUpInternalListeners() {
-        toggleIcon.fillProperty().bind(boundingBoxCategory.colorProperty());
+        toggleIcon.fillProperty().bind(((ObjectCategory) getValue()).colorProperty());
 
         toggleIcon.setOnMousePressed(event -> {
             setIconToggledOn(!isIconToggledOn());
             event.consume();
         });
 
-        getChildren().addListener((ListChangeListener<TreeItem<BoundingBoxView>>) c -> {
+        getChildren().addListener((ListChangeListener<TreeItem<Object>>) c -> {
             while(c.next()) {
                 int numToggledChildrenToAdd = c.getAddedSize();
-                int numToggledChildrenToRemove = (int) c.getRemoved().stream()
-                        .map(item -> (BoundingBoxTreeItem) item)
-                        .filter(BoundingBoxTreeItem::isIconToggledOn)
-                        .count();
+
+                int numToggledChildrenToRemove = 0;
+
+                for(TreeItem<Object> treeItem : c.getRemoved()) {
+                    if((treeItem instanceof BoundingBoxTreeItem && ((BoundingBoxTreeItem) treeItem).isIconToggledOn()) ||
+                            (treeItem instanceof BoundingPolygonTreeItem && ((BoundingPolygonTreeItem) treeItem).isIconToggledOn())) {
+                        numToggledChildrenToRemove++;
+                    }
+                }
 
                 nrToggledOnChildren.setValue(nrToggledOnChildren.get() + numToggledChildrenToAdd - numToggledChildrenToRemove);
             }
@@ -157,9 +182,13 @@ class BoundingBoxCategoryTreeItem extends TreeItem<BoundingBoxView> {
     }
 
     private void detachChildId(int id) {
-        List<TreeItem<BoundingBoxView>> children = getChildren();
+        List<TreeItem<Object>> children = getChildren();
         for(int i = id; i < children.size(); ++i) {
-            ((BoundingBoxTreeItem) children.get(i)).setId(i);
+            if(children.get(i) instanceof BoundingBoxTreeItem) {
+                ((BoundingBoxTreeItem) children.get(i)).setId(i);
+            } else if(children.get(i) instanceof BoundingPolygonTreeItem) {
+                ((BoundingPolygonTreeItem) children.get(i)).setId(i);
+            }
         }
     }
 }

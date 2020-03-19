@@ -50,7 +50,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         int drawnBoundingBoxFileIndex = model.getCurrentFileIndex();
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), Matchers.equalTo(1));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
@@ -62,7 +62,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(0));
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), Matchers.equalTo(1));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(false));
@@ -76,7 +76,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.hasItem(drawnBoundingBox));
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), Matchers.equalTo(1));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
@@ -123,7 +123,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(0));
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().size(), Matchers.equalTo(0));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(0));
 
         verifyThat(mainView.getImageFileListView().getItems()
                         .stream().noneMatch(ImageFileListView.FileInfo::isHasAssignedBoundingBoxes),
@@ -132,12 +132,12 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, testCategoryName);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), Matchers.equalTo(0));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(0));
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
-        verifyThat(model.getCategoryToAssignedBoundingBoxesCountMap().get(testCategoryName), Matchers.equalTo(1));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         final BoundingBoxView boundingBoxView3 = mainView.getCurrentBoundingBoxes().get(0);
         double preResizeMaxX = boundingBoxView3.getX() + boundingBoxView3.getWidth();

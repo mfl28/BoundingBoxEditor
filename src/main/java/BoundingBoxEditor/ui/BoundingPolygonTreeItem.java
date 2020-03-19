@@ -4,25 +4,20 @@ import javafx.scene.control.TreeItem;
 
 import java.util.Objects;
 
-/**
- * A tree-item representing an existing {@link BoundingBoxView} in a {@link BoundingBoxTreeCell} of a {@link BoundingBoxTreeView}.
- *
- * @see TreeItem
- */
-class BoundingBoxTreeItem extends TreeItem<Object> {
-    private static final double TOGGLE_ICON_SIDE_LENGTH = 9.5;
+public class BoundingPolygonTreeItem extends TreeItem<Object> {
+    private static final double TOGGLE_ICON_SIDE_LENGTH = 11;
 
-    private final ToggleSquare toggleIcon = new ToggleSquare(TOGGLE_ICON_SIDE_LENGTH);
+    private final TogglePolygon toggleIcon = new TogglePolygon(TOGGLE_ICON_SIDE_LENGTH);
     private int id = 1;
 
     /**
      * Creates a new tree-item representing a {@link BoundingBoxView} in a {@link BoundingBoxTreeCell} that is part of
      * a {@link BoundingBoxTreeView}.
      *
-     * @param boundingBoxView the {@link BoundingBoxView} that should be associated with the tree-item
+     * @param boundingPolygon the {@link BoundingBoxView} that should be associated with the tree-item
      */
-    BoundingBoxTreeItem(BoundingBoxView boundingBoxView) {
-        super(boundingBoxView);
+    BoundingPolygonTreeItem(BoundingPolygonView boundingPolygon) {
+        super(boundingPolygon);
         setGraphic(toggleIcon);
 
         setUpInternalListeners();
@@ -39,11 +34,11 @@ class BoundingBoxTreeItem extends TreeItem<Object> {
             return true;
         }
 
-        if(!(obj instanceof BoundingBoxTreeItem)) {
+        if(!(obj instanceof BoundingPolygonTreeItem)) {
             return false;
         }
 
-        BoundingBoxTreeItem other = (BoundingBoxTreeItem) obj;
+        BoundingPolygonTreeItem other = (BoundingPolygonTreeItem) obj;
 
         return id == other.id && getValue().equals(other.getValue()) && getChildren().equals(other.getChildren());
     }
@@ -77,12 +72,7 @@ class BoundingBoxTreeItem extends TreeItem<Object> {
 
         toggleIcon.setToggledOn(toggledOn);
 
-        ((BoundingBoxView) getValue()).setVisible(toggledOn);
-        // A BoundingBoxTreeItem either does not have any children, or
-        // every child is an instance of BoundingBoxCategoryTreeItem.
-        for(TreeItem<Object> child : getChildren()) {
-            ((ObjectCategoryTreeItem) child).setIconToggledOn(toggledOn);
-        }
+        ((BoundingPolygonView) getValue()).setVisible(toggledOn);
     }
 
     /**
@@ -108,7 +98,7 @@ class BoundingBoxTreeItem extends TreeItem<Object> {
     }
 
     private void setUpInternalListeners() {
-        toggleIcon.fillProperty().bind(((BoundingBoxView) getValue()).getObjectCategory().colorProperty());
+        toggleIcon.fillProperty().bind(((BoundingPolygonView) getValue()).getObjectCategory().colorProperty());
 
         toggleIcon.setOnMousePressed(event -> {
             setIconToggledOn(!isIconToggledOn());

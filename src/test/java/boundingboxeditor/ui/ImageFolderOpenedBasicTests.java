@@ -149,6 +149,6 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         robot.clickOn("#delete-button").clickOn("#delete-button");
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getBoundingBoxCategoryTable(), TableViewMatchers.hasNumRows(0));
+        verifyThat(mainView.getObjectCategoryTable(), TableViewMatchers.hasNumRows(0));
     }
 }
