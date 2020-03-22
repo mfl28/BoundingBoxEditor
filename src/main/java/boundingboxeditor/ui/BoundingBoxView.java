@@ -374,7 +374,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
     private enum CompassPoint {NW, N, NE, E, SE, S, SW, W}
 
     private class ResizeHandle extends Rectangle {
-        private static final double SIDE_LENGTH = 8.0;
+        private static final double SIDE_LENGTH = 9.5;
 
         private final CompassPoint compassPoint;
         private final DragAnchor dragAnchor = new DragAnchor();

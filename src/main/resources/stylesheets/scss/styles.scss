@@ -402,6 +402,22 @@ $base-separator-line-color: derive($base-background-color, -15%);
     }
 }
 
+#bounding-polygon {
+    -fx-stroke-width: 2px;
+    -fx-stroke-line-join: round;
+
+    &:editing {
+        -fx-stroke-width: 3px;
+    }
+}
+
+#vertex-handle {
+    &:editing {
+        -fx-stroke: $base-font-color;
+        -fx-stroke-width: 2px;
+    }
+}
+
 #expand-tree-items-icon {
     @include large-icon;
     -fx-background-color: $base-font-color;

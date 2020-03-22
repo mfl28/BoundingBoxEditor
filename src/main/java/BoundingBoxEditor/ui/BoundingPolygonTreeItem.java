@@ -5,14 +5,14 @@ import javafx.scene.control.TreeItem;
 import java.util.Objects;
 
 public class BoundingPolygonTreeItem extends TreeItem<Object> {
-    private static final double TOGGLE_ICON_SIDE_LENGTH = 11;
+    private static final double TOGGLE_ICON_SIDE_LENGTH = 10;
 
     private final TogglePolygon toggleIcon = new TogglePolygon(TOGGLE_ICON_SIDE_LENGTH);
     private int id = 1;
 
     /**
-     * Creates a new tree-item representing a {@link BoundingBoxView} in a {@link BoundingBoxTreeCell} that is part of
-     * a {@link BoundingBoxTreeView}.
+     * Creates a new tree-item representing a {@link BoundingBoxView} in a {@link BoundingShapeTreeCell} that is part of
+     * a {@link ObjectTreeView}.
      *
      * @param boundingPolygon the {@link BoundingBoxView} that should be associated with the tree-item
      */

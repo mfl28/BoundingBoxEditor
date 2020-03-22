@@ -5,26 +5,26 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.layout.BorderPane;
 
 /**
- * Represents a UI-element containing the {@link BoundingBoxEditorImagePaneView} object on which the user can draw/edit
+ * Represents a UI-element containing the {@link EditorImagePaneView} object on which the user can draw/edit
  * {@link BoundingBoxView} objects. Furthermore this element contains controls to navigate and edit
  * images.
  *
  * @see BorderPane
  * @see View
- * @see BoundingBoxEditorToolBarView
+ * @see EditorToolBarView
  */
-public class BoundingBoxEditorView extends BorderPane implements View {
+public class EditorView extends BorderPane implements View {
     private static final String BOUNDING_BOX_EDITOR_VIEW_ID = "bounding-box-editor-view";
 
-    private final BoundingBoxEditorToolBarView boundingBoxEditorToolBar = new BoundingBoxEditorToolBarView();
-    private final BoundingBoxEditorImagePaneView boundingBoxEditorImagePane = new BoundingBoxEditorImagePaneView();
+    private final EditorToolBarView boundingBoxEditorToolBar = new EditorToolBarView();
+    private final EditorImagePaneView boundingBoxEditorImagePane = new EditorImagePaneView();
 
     /**
-     * Creates a new bounding-box-editor view UI-element containing the {@link BoundingBoxEditorImagePaneView} object on which the user can draw/edit
+     * Creates a new bounding-box-editor view UI-element containing the {@link EditorImagePaneView} object on which the user can draw/edit
      * {@link BoundingBoxView} objects. Furthermore this element contains controls to navigate and edit
      * images.
      */
-    BoundingBoxEditorView() {
+    EditorView() {
         setTop(boundingBoxEditorToolBar);
         setCenter(boundingBoxEditorImagePane);
         setId(BOUNDING_BOX_EDITOR_VIEW_ID);
@@ -38,7 +38,7 @@ public class BoundingBoxEditorView extends BorderPane implements View {
      *
      * @return the toolbar
      */
-    public BoundingBoxEditorToolBarView getBoundingBoxEditorToolBar() {
+    public EditorToolBarView getEditorToolBar() {
         return boundingBoxEditorToolBar;
     }
 
@@ -53,7 +53,7 @@ public class BoundingBoxEditorView extends BorderPane implements View {
      *
      * @return the image-pane
      */
-    BoundingBoxEditorImagePaneView getBoundingBoxEditorImagePane() {
+    EditorImagePaneView getEditorImagePane() {
         return boundingBoxEditorImagePane;
     }
 
@@ -65,11 +65,12 @@ public class BoundingBoxEditorView extends BorderPane implements View {
 
         boundingBoxEditorToolBar.getResetSizeAndCenterImageButton().setOnAction(event -> boundingBoxEditorImagePane.resetImageViewSize());
 
-        boundingBoxEditorToolBar.getBoxModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
-            if(newValue) {
-                boundingBoxEditorImagePane.setDrawingMode(BoundingBoxEditorImagePaneView.DrawingMode.BOX);
+        boundingBoxEditorToolBar.getRectangleModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
+            boundingBoxEditorImagePane.finalizeBoundingPolygon();
+            if(Boolean.TRUE.equals(newValue)) {
+                boundingBoxEditorImagePane.setDrawingMode(EditorImagePaneView.DrawingMode.BOX);
             } else {
-                boundingBoxEditorImagePane.setDrawingMode(BoundingBoxEditorImagePaneView.DrawingMode.POLYGON);
+                boundingBoxEditorImagePane.setDrawingMode(EditorImagePaneView.DrawingMode.POLYGON);
             }
         });
 

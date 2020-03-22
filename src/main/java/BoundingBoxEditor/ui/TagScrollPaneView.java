@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * @see ScrollPane
  * @see View
  */
-class BoundingBoxTagScrollPaneView extends ScrollPane implements View {
+class TagScrollPaneView extends ScrollPane implements View {
     private static final String TEXT_FIELD_PROMPT_TEXT = "New tag";
     private static final String TAG_INPUT_FIELD_ID = "tag-input-field";
     private static final String TAG_EDITOR_SCROLL_PANE_ID = "tag-editor-scroll-pane";
@@ -33,7 +33,7 @@ class BoundingBoxTagScrollPaneView extends ScrollPane implements View {
     /**
      * Creates a new tag-scroll-pane UI-element.
      */
-    BoundingBoxTagScrollPaneView() {
+    TagScrollPaneView() {
         setContent(tagFlowPane);
         setId(TAG_EDITOR_SCROLL_PANE_ID);
         setFitToWidth(true);

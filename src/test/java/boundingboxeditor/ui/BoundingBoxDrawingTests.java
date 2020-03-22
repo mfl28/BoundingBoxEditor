@@ -1,6 +1,7 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
+import boundingboxeditor.utils.MathUtils;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.stage.Stage;
@@ -34,14 +35,14 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(false));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
 
         robot.clickOn("#next-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(false));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
 
         // Draw a bounding box.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
@@ -53,7 +54,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         final BoundingBoxView drawnBoundingBox = mainView.getCurrentBoundingBoxes().get(0);
 
@@ -65,10 +66,10 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(false));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
 
         verifyThat(mainView.getImageFileListView().getItems().get(drawnBoundingBoxFileIndex)
-                .isHasAssignedBoundingBoxes(), Matchers.is(true));
+                .isHasAssignedBoundingShapes(), Matchers.is(true));
 
         robot.clickOn("#next-button");
         waitUntilCurrentImageIsLoaded();
@@ -79,7 +80,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         final BoundingBoxView boundingBoxView = mainView.getCurrentBoundingBoxes().get(0);
 
@@ -90,20 +91,20 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         Point2D imageViewRelativePointTopLeft = getParentPointFromImageViewRatios(new Point2D(0.0, 0.0));
-        verifyThat(boundingBoxView.getX(), Matchers.closeTo(imageViewRelativePointTopLeft.getX(), DOUBLE_ERROR_TOLERANCE));
-        verifyThat(boundingBoxView.getY(), Matchers.closeTo(imageViewRelativePointTopLeft.getY(), DOUBLE_ERROR_TOLERANCE));
-        verifyThat(boundingBoxView.getWidth(), Matchers.closeTo(boundingBoxWidth, DOUBLE_ERROR_TOLERANCE));
-        verifyThat(boundingBoxView.getHeight(), Matchers.closeTo(boundingBoxHeight, DOUBLE_ERROR_TOLERANCE));
+        verifyThat(boundingBoxView.getX(), Matchers.closeTo(imageViewRelativePointTopLeft.getX(), MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        verifyThat(boundingBoxView.getY(), Matchers.closeTo(imageViewRelativePointTopLeft.getY(), MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        verifyThat(boundingBoxView.getWidth(), Matchers.closeTo(boundingBoxWidth, MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        verifyThat(boundingBoxView.getHeight(), Matchers.closeTo(boundingBoxHeight, MathUtils.DOUBLE_EQUAL_THRESHOLD));
 
         // Move bounding box to bottom right corner.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(1.0, 1.0));
         WaitForAsyncUtils.waitForFxEvents();
 
         Point2D imageViewRelativePointBottomRight = getParentPointFromImageViewRatios(new Point2D(1.0, 1.0));
-        verifyThat(boundingBoxView.getX() + boundingBoxView.getWidth(), Matchers.closeTo(imageViewRelativePointBottomRight.getX(), DOUBLE_ERROR_TOLERANCE));
-        verifyThat(boundingBoxView.getY() + boundingBoxView.getHeight(), Matchers.closeTo(imageViewRelativePointBottomRight.getY(), DOUBLE_ERROR_TOLERANCE));
-        verifyThat(boundingBoxView.getWidth(), Matchers.closeTo(boundingBoxWidth, DOUBLE_ERROR_TOLERANCE));
-        verifyThat(boundingBoxView.getHeight(), Matchers.closeTo(boundingBoxHeight, DOUBLE_ERROR_TOLERANCE));
+        verifyThat(boundingBoxView.getX() + boundingBoxView.getWidth(), Matchers.closeTo(imageViewRelativePointBottomRight.getX(), MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        verifyThat(boundingBoxView.getY() + boundingBoxView.getHeight(), Matchers.closeTo(imageViewRelativePointBottomRight.getY(), MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        verifyThat(boundingBoxView.getWidth(), Matchers.closeTo(boundingBoxWidth, MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        verifyThat(boundingBoxView.getHeight(), Matchers.closeTo(boundingBoxHeight, MathUtils.DOUBLE_EQUAL_THRESHOLD));
 
         Platform.runLater(() -> controller.initiateImageFolderLoading(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_2).getFile())));
         WaitForAsyncUtils.waitForFxEvents();
@@ -126,7 +127,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(0));
 
         verifyThat(mainView.getImageFileListView().getItems()
-                        .stream().noneMatch(ImageFileListView.FileInfo::isHasAssignedBoundingBoxes),
+                        .stream().noneMatch(ImageFileListView.FileInfo::isHasAssignedBoundingShapes),
                 Matchers.is(true));
 
         enterNewCategory(robot, testCategoryName);
@@ -148,10 +149,10 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         imageViewRelativePointTopLeft = getParentPointFromImageViewRatios(new Point2D(0.0, 0.0));
-        verifyThat(boundingBoxView3.getX(), Matchers.closeTo(imageViewRelativePointTopLeft.getX(), DOUBLE_ERROR_TOLERANCE));
-        verifyThat(boundingBoxView3.getY(), Matchers.closeTo(imageViewRelativePointTopLeft.getY(), DOUBLE_ERROR_TOLERANCE));
-        verifyThat(boundingBoxView3.getX() + boundingBoxView3.getWidth(), Matchers.closeTo(preResizeMaxX, DOUBLE_ERROR_TOLERANCE));
-        verifyThat(boundingBoxView3.getY() + boundingBoxView3.getHeight(), Matchers.closeTo(preResizeMaxY, DOUBLE_ERROR_TOLERANCE));
+        verifyThat(boundingBoxView3.getX(), Matchers.closeTo(imageViewRelativePointTopLeft.getX(), MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        verifyThat(boundingBoxView3.getY(), Matchers.closeTo(imageViewRelativePointTopLeft.getY(), MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        verifyThat(boundingBoxView3.getX() + boundingBoxView3.getWidth(), Matchers.closeTo(preResizeMaxX, MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        verifyThat(boundingBoxView3.getY() + boundingBoxView3.getHeight(), Matchers.closeTo(preResizeMaxY, MathUtils.DOUBLE_EQUAL_THRESHOLD));
 
         // Try to exit application:
         robot.clickOn("File").clickOn("Exit");

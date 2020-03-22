@@ -5,7 +5,7 @@ import javafx.scene.control.TreeItem;
 import java.util.Objects;
 
 /**
- * A tree-item representing an existing {@link BoundingBoxView} in a {@link BoundingBoxTreeCell} of a {@link BoundingBoxTreeView}.
+ * A tree-item representing an existing {@link BoundingBoxView} in a {@link BoundingShapeTreeCell} of a {@link ObjectTreeView}.
  *
  * @see TreeItem
  */
@@ -16,8 +16,8 @@ class BoundingBoxTreeItem extends TreeItem<Object> {
     private int id = 1;
 
     /**
-     * Creates a new tree-item representing a {@link BoundingBoxView} in a {@link BoundingBoxTreeCell} that is part of
-     * a {@link BoundingBoxTreeView}.
+     * Creates a new tree-item representing a {@link BoundingBoxView} in a {@link BoundingShapeTreeCell} that is part of
+     * a {@link ObjectTreeView}.
      *
      * @param boundingBoxView the {@link BoundingBoxView} that should be associated with the tree-item
      */
@@ -79,7 +79,7 @@ class BoundingBoxTreeItem extends TreeItem<Object> {
 
         ((BoundingBoxView) getValue()).setVisible(toggledOn);
         // A BoundingBoxTreeItem either does not have any children, or
-        // every child is an instance of BoundingBoxCategoryTreeItem.
+        // every child is an instance of ObjectCategoryTreeItem.
         for(TreeItem<Object> child : getChildren()) {
             ((ObjectCategoryTreeItem) child).setIconToggledOn(toggledOn);
         }

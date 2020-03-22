@@ -5,7 +5,7 @@ import boundingboxeditor.model.ObjectCategory;
 import java.util.Collections;
 import java.util.List;
 
-public class BoundingShapeData {
+public abstract class BoundingShapeData {
     private final ObjectCategory category;
     private final List<String> tags;
     private List<BoundingShapeData> parts = Collections.emptyList();
@@ -59,4 +59,6 @@ public class BoundingShapeData {
     public void setParts(List<BoundingShapeData> parts) {
         this.parts = parts;
     }
+
+    public abstract <T> T accept(BoundingBoxShapeDataVisitor<T> visitor);
 }

@@ -96,6 +96,11 @@ public class BoundingBoxData extends BoundingShapeData {
     public Bounds getBoundsInImage() {
         return boundsInImage;
     }
+
+    @Override
+    public <T> T accept(BoundingBoxShapeDataVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
 }
 
 

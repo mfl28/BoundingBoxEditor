@@ -2,10 +2,7 @@ package boundingboxeditor.ui;
 
 import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
-import boundingboxeditor.model.io.BoundingBoxData;
-import boundingboxeditor.model.io.BoundingPolygonData;
-import boundingboxeditor.model.io.BoundingShapeData;
-import boundingboxeditor.model.io.ImageAnnotation;
+import boundingboxeditor.model.io.*;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.skin.TreeViewSkin;
@@ -21,7 +18,7 @@ import java.util.stream.Collectors;
 
 /**
  * The bounding-box tree UI-element. Shows information about the currently existing {@link BoundingBoxView} objects
- * in {@link BoundingBoxTreeCell}s.
+ * in {@link BoundingShapeTreeCell}s.
  * {@link BoundingBoxView} objects are grouped by their category and nested objects are displayed in a hierarchical
  * fashion. Any path running from the root of the tree downwards consists of alternating {@link ObjectCategoryTreeItem} and
  * {@link BoundingBoxTreeItem} objects in that order, i.e.: root, category-item, bounding-box-item, category-item, ...
@@ -29,14 +26,14 @@ import java.util.stream.Collectors;
  * @see TreeView
  * @see View
  */
-public class BoundingBoxTreeView extends TreeView<Object> implements View {
+public class ObjectTreeView extends TreeView<Object> implements View {
     private static final int FIXED_CELL_SIZE = 20;
     private VirtualFlow<?> virtualFlow;
 
     /**
      * Creates a new bounding-box tree UI-element.
      */
-    BoundingBoxTreeView() {
+    ObjectTreeView() {
         VBox.setVgrow(this, Priority.ALWAYS);
 
         setRoot(new TreeItem<>());
@@ -88,7 +85,7 @@ public class BoundingBoxTreeView extends TreeView<Object> implements View {
      *
      * @param toggleState the toggle-icon-state to set
      */
-    public void setToggleIconStateForSelectedBoundingBoxTreeItem(boolean toggleState) {
+    public void setToggleIconStateForSelectedObjectTreeItem(boolean toggleState) {
         TreeItem<Object> selectedTreeItem = getSelectionModel().getSelectedItem();
 
         if(selectedTreeItem instanceof BoundingBoxTreeItem) {
@@ -128,7 +125,8 @@ public class BoundingBoxTreeView extends TreeView<Object> implements View {
      */
     Pair<List<BoundingBoxView>, List<BoundingPolygonView>> extractViewsAndBuildTreeFromAnnotation(ImageAnnotation annotation) {
         ImageMetaData metaData = annotation.getImageMetaData();
-        annotation.getBoundingShapeData().forEach(boundingShapeData -> constructTreeFromBoundingShapeData(getRoot(), boundingShapeData, metaData));
+        annotation.getBoundingShapeData().forEach(boundingShapeData ->
+                boundingShapeData.accept(new TreeItemGenerator(getRoot(), boundingShapeData, metaData)));
 
         List<BoundingBoxView> boundingBoxViews = IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot())).stream()
                 .filter(treeItem -> treeItem instanceof BoundingBoxTreeItem)
@@ -139,7 +137,6 @@ public class BoundingBoxTreeView extends TreeView<Object> implements View {
                 .filter(treeItem -> treeItem instanceof BoundingPolygonTreeItem)
                 .map(item -> (BoundingPolygonView) item.getValue())
                 .collect(Collectors.toList());
-
 
         return new ImmutablePair<>(boundingBoxViews, boundingPolygonViews);
     }
@@ -194,7 +191,7 @@ public class BoundingBoxTreeView extends TreeView<Object> implements View {
     }
 
     /**
-     * Returns the first {@link ObjectCategoryTreeItem} whose category is equal to the provided boundingBoxCategory
+     * Returns the first {@link ObjectCategoryTreeItem} whose category is equal to the provided objectCategory
      * searching from the provided searchRoot downward.
      *
      * @param searchRoot     the start tree-item to search from
@@ -256,35 +253,6 @@ public class BoundingBoxTreeView extends TreeView<Object> implements View {
         }
     }
 
-    private void constructTreeFromBoundingShapeData(TreeItem<Object> root, BoundingShapeData boundingShapeData, ImageMetaData metaData) {
-        ObjectCategoryTreeItem objectCategoryTreeItem = findParentCategoryTreeItemForCategory(root, boundingShapeData.getCategory());
-
-        if(objectCategoryTreeItem == null) {
-            objectCategoryTreeItem = new ObjectCategoryTreeItem(boundingShapeData.getCategory());
-            root.getChildren().add(objectCategoryTreeItem);
-        }
-
-        if(boundingShapeData instanceof BoundingBoxData) {
-            BoundingBoxData boundingBoxData = (BoundingBoxData) boundingShapeData;
-
-            BoundingBoxView newBoundingBoxView = BoundingBoxView.fromData(boundingBoxData, metaData);
-            BoundingBoxTreeItem newTreeItem = new BoundingBoxTreeItem(newBoundingBoxView);
-            newBoundingBoxView.setTreeItem(newTreeItem);
-
-            objectCategoryTreeItem.attachBoundingBoxTreeItemChild(newTreeItem);
-            boundingShapeData.getParts().forEach(part -> constructTreeFromBoundingShapeData(newTreeItem, part, metaData));
-        } else if(boundingShapeData instanceof BoundingPolygonData) {
-            BoundingPolygonData boundingPolygonData = (BoundingPolygonData) boundingShapeData;
-
-            BoundingPolygonView newBoundingPolygonView = BoundingPolygonView.fromData(boundingPolygonData, metaData);
-            BoundingPolygonTreeItem newTreeItem = new BoundingPolygonTreeItem(newBoundingPolygonView);
-            newBoundingPolygonView.setTreeItem(newTreeItem);
-
-            objectCategoryTreeItem.attachBoundingPolygonTreeItemChild(newTreeItem);
-            boundingShapeData.getParts().forEach(part -> constructTreeFromBoundingShapeData(newTreeItem, part, metaData));
-        }
-    }
-
     private BoundingShapeData treeItemToBoundingShapeData(TreeItem<Object> treeItem) {
         if(!(treeItem.getValue() instanceof BoundingShapeDataConvertible)) {
             throw new IllegalStateException("Invalid tree item class type.");
@@ -328,6 +296,53 @@ public class BoundingBoxTreeView extends TreeView<Object> implements View {
             nextItem.getChildren().forEach(stack::push);
 
             return nextItem;
+        }
+    }
+
+    private class TreeItemGenerator implements BoundingBoxShapeDataVisitor<Object> {
+        TreeItem<Object> root;
+        BoundingShapeData boundingShapeData;
+        ImageMetaData metaData;
+
+        public TreeItemGenerator(TreeItem<Object> root, BoundingShapeData boundingShapeData, ImageMetaData metaData) {
+            this.root = root;
+            this.boundingShapeData = boundingShapeData;
+            this.metaData = metaData;
+        }
+
+        @Override
+        public TreeItem<Object> visit(BoundingBoxData boundingBoxData) {
+            ObjectCategoryTreeItem objectCategoryTreeItem = findObjectCategoryTreeItem();
+            BoundingBoxView newBoundingBoxView = BoundingBoxView.fromData(boundingBoxData, metaData);
+            BoundingBoxTreeItem newTreeItem = new BoundingBoxTreeItem(newBoundingBoxView);
+            newBoundingBoxView.setTreeItem(newTreeItem);
+
+            objectCategoryTreeItem.attachBoundingBoxTreeItemChild(newTreeItem);
+            boundingShapeData.getParts().forEach(part -> part.accept(new TreeItemGenerator(newTreeItem, part, metaData)));
+            return null;
+        }
+
+        @Override
+        public TreeItem<Object> visit(BoundingPolygonData boundingPolygonData) {
+            ObjectCategoryTreeItem objectCategoryTreeItem = findObjectCategoryTreeItem();
+            BoundingPolygonView newBoundingPolygonView = BoundingPolygonView.fromData(boundingPolygonData, metaData);
+            BoundingPolygonTreeItem newTreeItem = new BoundingPolygonTreeItem(newBoundingPolygonView);
+            newBoundingPolygonView.setTreeItem(newTreeItem);
+
+            objectCategoryTreeItem.attachBoundingPolygonTreeItemChild(newTreeItem);
+            boundingShapeData.getParts().forEach(part -> part.accept(new TreeItemGenerator(newTreeItem, part, metaData)));
+            return null;
+        }
+
+        private ObjectCategoryTreeItem findObjectCategoryTreeItem() {
+            ObjectCategoryTreeItem objectCategoryTreeItem = findParentCategoryTreeItemForCategory(root, boundingShapeData.getCategory());
+
+            if(objectCategoryTreeItem == null) {
+                objectCategoryTreeItem = new ObjectCategoryTreeItem(boundingShapeData.getCategory());
+                root.getChildren().add(objectCategoryTreeItem);
+            }
+
+            return objectCategoryTreeItem;
         }
     }
 }

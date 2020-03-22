@@ -20,14 +20,14 @@ import javafx.scene.paint.Color;
  * @see TableView
  * @see View
  */
-public class BoundingBoxCategoryTableView extends TableView<ObjectCategory> implements View {
+public class ObjectCategoryTableView extends TableView<ObjectCategory> implements View {
     private static final String PLACEHOLDER_TEXT = "No categories";
     private static final String TABLE_NAME_COLUMN_FACTORY_NAME = "name";
     private static final String TABLE_VIEW_STYLE = "no-header-table-view";
     private static final int TABLE_VIEW_COLOR_COLUMN_WIDTH = 5;
     private static final int TABLE_VIEW_DELETE_COLUMN_WIDTH = 18;
     private static final String BOUNDING_BOX_CATEGORY_TABLE_VIEW_ID = "category-selector";
-    private static final String NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET = BoundingBoxCategoryTableView.class
+    private static final String NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET = ObjectCategoryTableView.class
             .getResource("/stylesheets/css/noCustomColorsPalette.css").toExternalForm();
 
     private final TableColumn<ObjectCategory, ObjectCategory> deleteColumn = createDeleteColumn();
@@ -41,7 +41,7 @@ public class BoundingBoxCategoryTableView extends TableView<ObjectCategory> impl
     /**
      * Creates a new bounding-box category table UI-element.
      */
-    BoundingBoxCategoryTableView() {
+    ObjectCategoryTableView() {
         getColumns().add(colorColumn);
         getColumns().add(nameColumn);
         getColumns().add(deleteColumn);

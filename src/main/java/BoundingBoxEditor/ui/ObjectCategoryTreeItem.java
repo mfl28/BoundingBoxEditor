@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * A tree-item representing an existing {@link ObjectCategory} in a {@link BoundingBoxTreeCell} of a {@link BoundingBoxTreeView}.
+ * A tree-item representing an existing {@link ObjectCategory} in a {@link BoundingShapeTreeCell} of a {@link ObjectTreeView}.
  *
  * @see TreeItem
  */
@@ -22,14 +22,14 @@ class ObjectCategoryTreeItem extends TreeItem<Object> {
     private final ObjectCategory objectCategory;
 
     /**
-     * Creates a new tree-item representing a {@link ObjectCategory} in a {@link BoundingBoxTreeCell} that is part of
-     * a {@link BoundingBoxTreeView}.
+     * Creates a new tree-item representing a {@link ObjectCategory} in a {@link BoundingShapeTreeCell} that is part of
+     * a {@link ObjectTreeView}.
      *
      * @param objectCategory the {@link ObjectCategory} that should be associated with the tree-item
      */
     ObjectCategoryTreeItem(ObjectCategory objectCategory) {
         // TreeItems require a non-null value-item for them not to be considered 'empty', therefore
-        // a static 'dummy'-object of type BoundingBoxView is passed to every BoundingBoxCategoryTreeItem.
+        // a static 'dummy'-object of type BoundingBoxView is passed to every ObjectCategoryTreeItem.
         super(objectCategory);
 
         this.objectCategory = objectCategory;

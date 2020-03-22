@@ -127,7 +127,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return new ImageMetaData(fileName, folderName, width, height, depth);
     }
 
-    private List<BoundingShapeData> parseBoundingBoxData(Document document, String filename) throws InvalidAnnotationFileFormatException {
+    private List<BoundingShapeData> parseBoundingBoxData(Document document, String filename) {
         NodeList objectElements = document.getElementsByTagName("object");
 
         List<BoundingShapeData> boundingShapeData = new ArrayList<>();
@@ -325,7 +325,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return textNode.getTextContent();
     }
 
-    private List<Double> parsePointList(Element element) throws InvalidAnnotationFileFormatException {
+    private List<Double> parsePointList(Element element) {
         NodeList xNodes = element.getElementsByTagName("x");
         NodeList yNodes = element.getElementsByTagName("y");
 
@@ -343,7 +343,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return points;
     }
 
-    private double parseDoubleElement(Document document, String tagName) throws InvalidAnnotationFileFormatException {
+    private double parseDoubleElement(Document document, String tagName) {
         Node doubleNode = document.getElementsByTagName(tagName).item(0);
 
         if(doubleNode == null) {

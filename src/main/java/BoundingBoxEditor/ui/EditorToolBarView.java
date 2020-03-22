@@ -9,9 +9,9 @@ import javafx.scene.layout.HBox;
 
 /**
  * Represents a UI-element containing navigation and image-settings controls as
- * part of a {@link BoundingBoxEditorView} object.
+ * part of a {@link EditorView} object.
  */
-public class BoundingBoxEditorToolBarView extends ToolBar implements View {
+public class EditorToolBarView extends ToolBar implements View {
     private static final String NEXT_BUTTON_ID = "next-button";
     private static final String NEXT_BUTTON_ICON_ID = "next-button-icon";
     private static final String PREVIOUS_BUTTON_ID = "previous-button";
@@ -49,7 +49,7 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
 
     private final IconButton showBoundingBoxesButton = new IconButton("show-bounding-boxes-icon", IconButton.IconType.BACKGROUND);
     private final IconButton hideBoundingBoxesButton = new IconButton("hide-bounding-boxes-icon", IconButton.IconType.BACKGROUND);
-    private final ToggleButton boxModeButton = new ToggleButton("Box");
+    private final ToggleButton rectangleModeButton = new ToggleButton("Rectangle");
     private final ToggleButton polygonModeButton = new ToggleButton("Polygon");
     private final ToggleGroup modeToggleGroup = new ToggleGroup();
 
@@ -68,6 +68,8 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
     private final Label saturationLabel = new Label();
     private final Button resetAllButton = new Button(RESET_ALL_BUTTON_TEXT);
 
+    private final HBox drawingModeToolBox = new HBox(rectangleModeButton, polygonModeButton);
+    private final HBox symmetryBox = new HBox();
     private final HBox boundingBoxToolBox = new HBox(hideBoundingBoxesButton, showBoundingBoxesButton);
     private final HBox imageSettingsToolBox = new HBox(resetSizeAndCenterImageButton, createImageSettingsButton());
 
@@ -75,17 +77,16 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
      * Creates a new tool-bar containing controls to navigate images
      * and change image and bounding-box related settings.
      */
-    BoundingBoxEditorToolBarView() {
+    EditorToolBarView() {
         getItems().addAll(
                 boundingBoxToolBox,
-                new Label("Mode: "),
-                boxModeButton,
-                polygonModeButton,
+                drawingModeToolBox,
                 UiUtils.createHSpacer(),
                 previousButton,
                 indexLabel,
                 nextButton,
                 UiUtils.createHSpacer(),
+                symmetryBox,
                 imageSettingsToolBox
         );
 
@@ -112,8 +113,12 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
         return indexLabel;
     }
 
-    public ToggleButton getBoxModeButton() {
-        return boxModeButton;
+    public ToggleButton getRectangleModeButton() {
+        return rectangleModeButton;
+    }
+
+    public ToggleButton getPolygonModeButton() {
+        return polygonModeButton;
     }
 
     /**
@@ -253,10 +258,15 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
         resetSizeAndCenterImageButton.setTooltip(UiUtils.createTooltip(RESET_IMAGE_SIZE_BUTTON_TOOLTIP,
                 Controller.KeyCombinations.resetSizeAndCenterImage));
 
-        boxModeButton.setToggleGroup(modeToggleGroup);
+        rectangleModeButton.setToggleGroup(modeToggleGroup);
         polygonModeButton.setToggleGroup(modeToggleGroup);
 
-        modeToggleGroup.selectToggle(boxModeButton);
+        rectangleModeButton.setTooltip(UiUtils.createTooltip("Select rectangle drawing-mode",
+                Controller.KeyCombinations.selectRectangleDrawingMode));
+        polygonModeButton.setTooltip(UiUtils.createTooltip("Select polygon drawing-mode",
+                Controller.KeyCombinations.selectPolygonDrawingMode));
+
+        modeToggleGroup.selectToggle(rectangleModeButton);
     }
 
     private void setUpInternalListeners() {
@@ -288,5 +298,7 @@ public class BoundingBoxEditorToolBarView extends ToolBar implements View {
 
         boundingBoxToolBox.prefWidthProperty().bind(Bindings.max(boundingBoxToolBox.widthProperty(), imageSettingsToolBox.widthProperty()));
         imageSettingsToolBox.prefWidthProperty().bind(Bindings.max(boundingBoxToolBox.widthProperty(), imageSettingsToolBox.widthProperty()));
+
+        symmetryBox.prefWidthProperty().bind(drawingModeToolBox.widthProperty());
     }
 }

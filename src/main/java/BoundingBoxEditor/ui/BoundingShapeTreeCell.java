@@ -17,13 +17,13 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 
 /**
- * Represents a tree-cell in a {@link BoundingBoxTreeView}. Instances of this class are either associated
+ * Represents a tree-cell in a {@link ObjectTreeView}. Instances of this class are either associated
  * with a {@link ObjectCategoryTreeItem} or a {@link BoundingBoxTreeItem} and are responsible for the
- * visual representation of these items in the {@link BoundingBoxTreeView}.
+ * visual representation of these items in the {@link ObjectTreeView}.
  *
  * @see TreeCell
  */
-class BoundingBoxTreeCell extends TreeCell<Object> {
+class BoundingShapeTreeCell extends TreeCell<Object> {
     private static final String DELETE_CONTEXT_MENU_ITEM_ID = "delete-context-menu";
     private static final String DELETE_BOUNDING_BOX_MENU_ITEM_TEXT = "Delete";
     private static final String NAME_TEXT_STYLE = "default-text";
@@ -47,9 +47,9 @@ class BoundingBoxTreeCell extends TreeCell<Object> {
 
     /**
      * Creates a new tree-cell object responsible for the visual representation of a {@link ObjectCategoryTreeItem}
-     * or a {@link BoundingBoxTreeItem} in a {@link BoundingBoxTreeView}.
+     * or a {@link BoundingBoxTreeItem} in a {@link ObjectTreeView}.
      */
-    BoundingBoxTreeCell() {
+    BoundingShapeTreeCell() {
         nameText.getStyleClass().add(NAME_TEXT_STYLE);
         additionalInfoText.setId(INFO_TEXT_ID);
 
@@ -119,7 +119,7 @@ class BoundingBoxTreeCell extends TreeCell<Object> {
      *
      * @return the menu-item
      */
-    MenuItem getDeleteBoundingBoxMenuItem() {
+    MenuItem getDeleteBoundingShapeMenuItem() {
         return deleteBoundingBoxMenuItem;
     }
 

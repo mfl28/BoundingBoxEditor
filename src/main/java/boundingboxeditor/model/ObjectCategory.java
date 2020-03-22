@@ -10,7 +10,7 @@ import java.util.Objects;
 
 
 /**
- * Represents the category (e.g. "Person", "Car" etc.) a bounding-box belongs to.
+ * Represents the category (e.g. "Person", "Car" etc.) an annotated object belongs to.
  */
 public class ObjectCategory {
     private final StringProperty name;
@@ -21,7 +21,7 @@ public class ObjectCategory {
      *
      * @param name  the name of the bounding-box category.
      * @param color the color used for the visual representation of
-     *              the bounding-box category in the program.
+     *              the category in the program.
      */
     public ObjectCategory(String name, Color color) {
         this.name = new SimpleStringProperty(name);
@@ -67,11 +67,11 @@ public class ObjectCategory {
 
     @Override
     public String toString() {
-        return "BoundingBoxCategory[name=" + name.get() + ", color=" + color.get() + "]";
+        return "ObjectCategory[name=" + name.get() + ", color=" + color.get() + "]";
     }
 
     /**
-     * Returns the name of the bounding-box category.
+     * Returns the name of the object category.
      *
      * @return the name
      */
@@ -80,7 +80,7 @@ public class ObjectCategory {
     }
 
     /**
-     * Sets the name of the bounding-box category.
+     * Sets the name of the object category.
      *
      * @param name the name to set.
      */
@@ -89,7 +89,7 @@ public class ObjectCategory {
     }
 
     /**
-     * Returns the color used for the visual representation of the bounding-box category.
+     * Returns the color used for the visual representation of the object category.
      *
      * @return the color
      */
@@ -98,7 +98,7 @@ public class ObjectCategory {
     }
 
     /**
-     * Sets the color used for the visual representation of the bounding-box category.
+     * Sets the color used for the visual representation of the object category.
      *
      * @param color the color to set
      */

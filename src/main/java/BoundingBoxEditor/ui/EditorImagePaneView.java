@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * @see View
  * @see BoundingBoxView
  */
-public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
+public class EditorImagePaneView extends ScrollPane implements View {
     private static final double IMAGE_PADDING = 0;
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String IMAGE_PANE_ID = "image-pane-view";
@@ -71,7 +71,7 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
      * Creates a new image-pane UI-element responsible for displaying the currently selected image on which the
      * user can draw bounding-boxes.
      */
-    BoundingBoxEditorImagePaneView() {
+    EditorImagePaneView() {
         setId(IMAGE_PANE_ID);
 
         setContent(contentPane);
@@ -99,7 +99,6 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
     }
 
     public void setDrawingMode(DrawingMode drawingMode) {
-        currentPolygon = null;
         this.drawingMode = drawingMode;
     }
 
@@ -224,11 +223,13 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
         }
         Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
         currentPolygon.appendNode(parentCoordinates.getX(), parentCoordinates.getY());
+        currentPolygon.setEditing(true);
     }
 
     public void finalizeBoundingPolygon() {
         if(currentPolygon != null) {
             currentPolygon.setMouseTransparent(false);
+            currentPolygon.setEditing(false);
             currentPolygon = null;
         }
     }
@@ -443,17 +444,16 @@ public class BoundingBoxEditorImagePaneView extends ScrollPane implements View {
                 imageView.setCursor(Cursor.CLOSED_HAND);
             } else if(isImageFullyLoaded()
                     && event.getButton().equals(MouseButton.PRIMARY)
-                    && isCategorySelected()) {
-                if(drawingMode == DrawingMode.BOX) {
-                    Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
-                    Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
-                            Math.min(clampedEventXY.getY(), dragAnchor.getY()));
+                    && isCategorySelected()
+                    && drawingMode == DrawingMode.BOX) {
+                Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
+                Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
+                        Math.min(clampedEventXY.getY(), dragAnchor.getY()));
 
-                    initializerRectangle.setX(parentCoordinates.getX());
-                    initializerRectangle.setY(parentCoordinates.getY());
-                    initializerRectangle.setWidth(Math.abs(clampedEventXY.getX() - dragAnchor.getX()));
-                    initializerRectangle.setHeight(Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
-                }
+                initializerRectangle.setX(parentCoordinates.getX());
+                initializerRectangle.setY(parentCoordinates.getY());
+                initializerRectangle.setWidth(Math.abs(clampedEventXY.getX() - dragAnchor.getX()));
+                initializerRectangle.setHeight(Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
             }
         });
     }

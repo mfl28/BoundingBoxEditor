@@ -5,7 +5,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 
 /**
- * A {@link TableCell} used in a {@link BoundingBoxCategoryTableView}, which contains the user-controls to delete
+ * A {@link TableCell} used in a {@link ObjectCategoryTableView}, which contains the user-controls to delete
  * a {@link ObjectCategory} object.
  */
 public class ObjectCategoryDeleteTableCell extends TableCell<ObjectCategory, ObjectCategory> {

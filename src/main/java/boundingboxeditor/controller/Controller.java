@@ -137,7 +137,7 @@ public class Controller {
             model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
         }
 
-        if(model.containsAnnotations() || view.containsBoundingBoxViews()) {
+        if(model.containsAnnotations() || view.containsBoundingBoxViews() || view.containsBoundingPolygonViews()) {
             ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
                     OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
 
@@ -196,7 +196,7 @@ public class Controller {
             model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
         }
 
-        if(!model.containsAnnotations() && !view.containsBoundingBoxViews()) {
+        if(!model.containsAnnotations() && !view.containsBoundingBoxViews() && !view.containsBoundingPolygonViews()) {
             MainView.displayErrorAlert(SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE,
                     NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT);
             return;
@@ -293,7 +293,7 @@ public class Controller {
             model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
         }
 
-        if(model.containsAnnotations() || view.containsBoundingBoxViews()) {
+        if(model.containsAnnotations() || view.containsBoundingBoxViews() || view.containsBoundingPolygonViews()) {
             ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(EXIT_APPLICATION_OPTION_DIALOG_TITLE,
                     EXIT_APPLICATION_OPTION_DIALOG_CONTENT);
 
@@ -349,15 +349,19 @@ public class Controller {
         } else if(KeyCombinations.focusTagTextField.match(event)) {
             view.getTagInputField().requestFocus();
         } else if(KeyCombinations.hideSelectedBoundingBox.match(event)) {
-            view.getBoundingBoxTree().setToggleIconStateForSelectedBoundingBoxTreeItem(false);
+            view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(false);
         } else if(KeyCombinations.hideAllBoundingBoxes.match(event)) {
-            view.getBoundingBoxTree().setToggleIconStateForAllTreeItems(false);
+            view.getObjectTree().setToggleIconStateForAllTreeItems(false);
         } else if(KeyCombinations.showSelectedBoundingBox.match(event)) {
-            view.getBoundingBoxTree().setToggleIconStateForSelectedBoundingBoxTreeItem(true);
+            view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(true);
         } else if(KeyCombinations.showAllBoundingBoxes.match(event)) {
-            view.getBoundingBoxTree().setToggleIconStateForAllTreeItems(true);
+            view.getObjectTree().setToggleIconStateForAllTreeItems(true);
         } else if(KeyCombinations.resetSizeAndCenterImage.match(event)) {
             view.getBoundingBoxEditorImagePane().resetImageViewSize();
+        } else if(KeyCombinations.selectRectangleDrawingMode.match(event)) {
+            view.getBoundingBoxEditor().getEditorToolBar().getRectangleModeButton().setSelected(true);
+        } else if(KeyCombinations.selectPolygonDrawingMode.match(event)) {
+            view.getBoundingBoxEditor().getEditorToolBar().getPolygonModeButton().setSelected(true);
         }
     }
 
@@ -402,7 +406,7 @@ public class Controller {
      * will be displayed and the edit will be reverted.
      *
      * @param event the edit event
-     * @see boundingboxeditor.ui.BoundingBoxCategoryTableView BoundingBoxCategoryTableView
+     * @see boundingboxeditor.ui.ObjectCategoryTableView
      */
     public void onSelectorCellEditEvent(TableColumn.CellEditEvent<ObjectCategory, String> event) {
         String newName = event.getNewValue();
@@ -437,11 +441,11 @@ public class Controller {
      * @param event the mouse-event
      */
     public void onRegisterImageViewMouseReleasedEvent(MouseEvent event) {
-        final BoundingBoxEditorImagePaneView imagePane = view.getBoundingBoxEditorImagePane();
+        final EditorImagePaneView imagePane = view.getBoundingBoxEditorImagePane();
 
         if(imagePane.isImageFullyLoaded() && event.getButton().equals(MouseButton.PRIMARY)) {
             if(event.isControlDown()) {
-                view.getBoundingBoxEditorImageView().setCursor(Cursor.OPEN_HAND);
+                view.getEditorImageView().setCursor(Cursor.OPEN_HAND);
             } else if(view.getObjectCategoryTable().isCategorySelected() && imagePane.isBoundingBoxDrawingInProgress()) {
                 final ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap()
                         .get(model.getCurrentImageFileName());
@@ -459,21 +463,21 @@ public class Controller {
      * @param event the mouse-event
      */
     public void onRegisterImageViewMousePressedEvent(MouseEvent event) {
-        BoundingBoxEditorImagePaneView imagePaneView = view.getBoundingBoxEditorImagePane();
+        EditorImagePaneView imagePaneView = view.getBoundingBoxEditorImagePane();
 
         if(imagePaneView.isImageFullyLoaded()
                 && !event.isControlDown()
                 && imagePaneView.isCategorySelected()) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
-                if(imagePaneView.getDrawingMode() == BoundingBoxEditorImagePaneView.DrawingMode.BOX) {
+                if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.BOX) {
                     imagePaneView.initializeBoundingRectangle(event);
-                } else if(imagePaneView.getDrawingMode() == BoundingBoxEditorImagePaneView.DrawingMode.POLYGON) {
+                } else if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
                     ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap()
                             .get(model.getCurrentImageFileName());
                     imagePaneView.initializeBoundingPolygon(event, imageMetaData);
                 }
             } else if(event.getButton().equals(MouseButton.SECONDARY)
-                    && imagePaneView.getDrawingMode() == BoundingBoxEditorImagePaneView.DrawingMode.POLYGON) {
+                    && imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
                 imagePaneView.finalizeBoundingPolygon();
             }
         }
@@ -518,7 +522,7 @@ public class Controller {
     }
 
     private void setUpModelListeners() {
-        view.getBoundingBoxEditor().getBoundingBoxEditorToolBar()
+        view.getBoundingBoxEditor().getEditorToolBar()
                 .getIndexLabel()
                 .textProperty()
                 .bind(model.fileIndexProperty().add(1).asString()
@@ -572,7 +576,7 @@ public class Controller {
     private void updateViewImageFiles() {
         view.reset();
 
-        BoundingBoxEditorImagePaneView imagePane = view.getBoundingBoxEditorImagePane();
+        EditorImagePaneView imagePane = view.getBoundingBoxEditorImagePane();
         imagePane.removeAllCurrentBoundingBoxes();
         imagePane.removeAllCurrentBoundingPolygons();
         view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
@@ -586,9 +590,9 @@ public class Controller {
 
         stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
 
-        BoundingBoxCategoryTableView boundingBoxCategoryTableView = view.getObjectCategoryTable();
-        boundingBoxCategoryTableView.setItems(model.getObjectCategories());
-        boundingBoxCategoryTableView.getSelectionModel().selectFirst();
+        ObjectCategoryTableView objectCategoryTableView = view.getObjectCategoryTable();
+        objectCategoryTableView.setItems(model.getObjectCategories());
+        objectCategoryTableView.getSelectionModel().selectFirst();
 
         ImageFileExplorerView imageFileExplorerView = view.getImageFileExplorer();
         imageFileExplorerView.setImageFiles(model.getImageFiles());
@@ -607,7 +611,7 @@ public class Controller {
                 view.getBoundingBoxEditorImagePane().getImageLoadingProgressIndicator().setVisible(false);
 
                 if(annotation != null) {
-                    view.loadBoundingBoxViewsFromAnnotation(annotation);
+                    view.loadBoundingShapeViewsFromAnnotation(annotation);
                 }
 
                 view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
@@ -640,13 +644,13 @@ public class Controller {
                     view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingBoxes();
                     view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingPolygons();
                     // Prevents javafx-bug with uncleared items in tree-view when switching between images.
-                    view.getBoundingBoxTree().reset();
+                    view.getObjectTree().reset();
                 } else {
                     oldImage.cancel();
                 }
 
                 // Clears the current image from the view.
-                view.getBoundingBoxEditorImageView().setImage(null);
+                view.getEditorImageView().setImage(null);
                 lastLoadedImageUrl = oldImage.getUrl();
             }
 
@@ -769,6 +773,8 @@ public class Controller {
         public static final KeyCombination focusTagTextField = new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination focusFileSearchField = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
         public static final KeyCombination deleteSelectedBoundingBox = new KeyCodeCombination(KeyCode.DELETE);
+        public static final KeyCombination selectRectangleDrawingMode = new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination selectPolygonDrawingMode = new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
 
         private KeyCombinations() {
             throw new IllegalStateException("Key Combination Class");
@@ -873,14 +879,14 @@ public class Controller {
             ImageAnnotation annotation = model.getCurrentImageAnnotation();
 
             if(annotation != null) {
-                view.getBoundingBoxTree().reset();
+                view.getObjectTree().reset();
                 view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
                 view.getCurrentBoundingPolygons().removeListener(boundingPolygonViewListChangeListener);
-                view.loadBoundingBoxViewsFromAnnotation(annotation);
+                view.loadBoundingShapeViewsFromAnnotation(annotation);
                 view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
                 view.getCurrentBoundingPolygons().addListener(boundingPolygonViewListChangeListener);
                 view.getObjectCategoryTable().refresh();
-                view.getBoundingBoxTree().refresh();
+                view.getObjectTree().refresh();
             }
 
             if(!loadResult.getErrorTableEntries().isEmpty()) {

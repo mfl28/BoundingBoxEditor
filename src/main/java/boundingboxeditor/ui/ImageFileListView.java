@@ -83,7 +83,7 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
             return file;
         }
 
-        public boolean isHasAssignedBoundingBoxes() {
+        public boolean isHasAssignedBoundingShapes() {
             return hasAssignedBoundingBoxes.get();
         }
 

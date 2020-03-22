@@ -15,4 +15,9 @@ public class BoundingPolygonData extends BoundingShapeData {
     public List<Double> getPointsInImage() {
         return pointsInImage;
     }
+
+    @Override
+    public <T> T accept(BoundingBoxShapeDataVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
 }

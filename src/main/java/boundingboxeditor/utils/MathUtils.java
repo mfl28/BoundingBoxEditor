@@ -7,7 +7,7 @@ import javafx.geometry.Point2D;
  * A class that comprises mathematical utility-functions.
  */
 public class MathUtils {
-    private static final double DOUBLE_EQUAL_THRESHOLD = 1e-8;
+    public static final double DOUBLE_EQUAL_THRESHOLD = 1e-8;
 
     private MathUtils() {
         throw new IllegalStateException("MathUtils class");

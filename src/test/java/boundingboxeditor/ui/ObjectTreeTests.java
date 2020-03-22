@@ -18,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
-class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
+class ObjectTreeTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
@@ -39,13 +39,13 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
         WaitForAsyncUtils.waitForFxEvents();
 
-        final List<TreeItem<Object>> topLevelTreeItems = mainView.getBoundingBoxTree().getRoot().getChildren();
+        final List<TreeItem<Object>> topLevelTreeItems = mainView.getObjectTree().getRoot().getChildren();
 
         verifyThat(topLevelTreeItems.size(), Matchers.equalTo(1));
         verifyThat(topLevelTreeItems.get(0), Matchers.instanceOf(ObjectCategoryTreeItem.class));
 
         final ObjectCategoryTreeItem testCategoryTreeItem = (ObjectCategoryTreeItem) topLevelTreeItems.get(0);
-        verifyThat(mainView.getBoundingBoxTree().getRow(testCategoryTreeItem), Matchers.equalTo(0));
+        verifyThat(mainView.getObjectTree().getRow(testCategoryTreeItem), Matchers.equalTo(0));
         verifyThat(testCategoryTreeItem.getObjectCategory().getName(), Matchers.equalTo("Test"));
         verifyThat(testCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
         verifyThat(testCategoryTreeItem.getChildren().get(0), Matchers.instanceOf(BoundingBoxTreeItem.class));
@@ -153,7 +153,7 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
         // Now the tree-should be empty, as no bounding-boxes have been created for the current image.
-        verifyThat(mainView.getBoundingBoxTree().getRoot().getChildren().size(), Matchers.equalTo(0));
+        verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0));
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(0));
 
         // Switch back to the previous image.
@@ -161,11 +161,11 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
         // The old tree should have been exactly reconstructed.
-        final List<TreeItem<Object>> newTopLevelTreeItems = mainView.getBoundingBoxTree().getRoot().getChildren();
+        final List<TreeItem<Object>> newTopLevelTreeItems = mainView.getObjectTree().getRoot().getChildren();
         verifyThat(newTopLevelTreeItems, Matchers.equalTo(topLevelTreeItems));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         /* ----Deleting---- */
         final ObjectCategoryTreeItem newTestCategoryTreeItem = (ObjectCategoryTreeItem) newTopLevelTreeItems.get(0);
@@ -188,28 +188,28 @@ class BoundingBoxTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(newSecondTestChildTreeItem.getId(), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         // Delete second Test-bounding-box via the context-menu on the element itself.
         robot.rightClickOn((BoundingBoxView) newSecondTestChildTreeItem.getValue()).clickOn("Delete");
         WaitForAsyncUtils.waitForFxEvents();
         // Now just the Dummy-category item should be left.
-        verifyThat(mainView.getBoundingBoxTree().getRoot().getChildren().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingBoxes(),
                 Matchers.not(Matchers.hasItem((BoundingBoxView) newSecondTestChildTreeItem.getValue())));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         // Delete Dummy-category-item. This should delete all children recursively.
         robot.rightClickOn(newDummyCategoryTreeItem.getGraphic()).clickOn("Delete");
         WaitForAsyncUtils.waitForFxEvents();
         // Now the tree-view should be empty (besides the invisible root-item).
-        verifyThat(mainView.getBoundingBoxTree().getRoot().getChildren().size(), Matchers.equalTo(0));
+        verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0));
         // There should be no remaining bounding-boxes.
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(0));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(false));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
     }
 }

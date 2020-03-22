@@ -3,6 +3,7 @@ package boundingboxeditor;
 import boundingboxeditor.controller.Controller;
 import boundingboxeditor.model.Model;
 import boundingboxeditor.ui.MainView;
+import boundingboxeditor.utils.MathUtils;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -18,6 +19,8 @@ import javafx.scene.input.MouseButton;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -27,12 +30,14 @@ import org.testfx.framework.junit5.Start;
 import org.testfx.util.PointQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @ExtendWith(ApplicationExtension.class)
 public class BoundingBoxEditorTestBase {
-    protected static final double DOUBLE_ERROR_TOLERANCE = 1e-8;
+    protected static final double RATIO_EQUAL_THRESHOLD = 1e-2;
     private static final double INITIAL_WINDOW_SCALE = 0.75;
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
     protected static int TIMEOUT_DURATION_IN_SEC = 10;
@@ -70,6 +75,20 @@ public class BoundingBoxEditorTestBase {
                 .orElse(null);
     }
 
+    protected static Matcher<Double[]> doubleListCloseTo(Double[] list) {
+        List<Matcher<? super Double>> matchers = new ArrayList<>();
+        for(double d : list)
+            matchers.add(Matchers.closeTo(d, MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        return Matchers.arrayContaining(matchers);
+    }
+
+    protected static Matcher<Double[]> ratioListCloseTo(Double[] list) {
+        List<Matcher<? super Double>> matchers = new ArrayList<>();
+        for(double d : list)
+            matchers.add(Matchers.closeTo(d, RATIO_EQUAL_THRESHOLD));
+        return Matchers.arrayContaining(matchers);
+    }
+
     protected void moveRelativeToImageView(FxRobot robot, Point2D startPointRatios, Point2D endPointRatios) {
         Point2D startPoint = getScreenPointFromImageViewRatios(startPointRatios);
         Point2D endPoint = getScreenPointFromImageViewRatios(endPointRatios);
@@ -78,6 +97,12 @@ public class BoundingBoxEditorTestBase {
                 .press(MouseButton.PRIMARY)
                 .moveTo(endPoint)
                 .release(MouseButton.PRIMARY);
+    }
+
+    protected void moveAndClickRelativeToImageView(FxRobot robot, Point2D... points) {
+        for(Point2D point : points) {
+            robot.moveTo(getScreenPointFromImageViewRatios(point)).clickOn(MouseButton.PRIMARY);
+        }
     }
 
     protected void enterNewCategory(FxRobot robot, String categoryName) {
@@ -123,15 +148,22 @@ public class BoundingBoxEditorTestBase {
     }
 
     protected Point2D getScreenPointFromImageViewRatios(Point2D ratios) {
-        final ImageView imageView = mainView.getBoundingBoxEditorImageView();
+        final ImageView imageView = mainView.getEditorImageView();
         final Bounds imageViewScreenBounds = imageView.localToScreen(imageView.getBoundsInLocal());
 
         return PointQueryUtils.atPositionFactors(imageViewScreenBounds, ratios);
     }
 
     protected Point2D getParentPointFromImageViewRatios(Point2D ratios) {
-        final ImageView imageView = mainView.getBoundingBoxEditorImageView();
+        final ImageView imageView = mainView.getEditorImageView();
         final Bounds imageViewParentBounds = imageView.getBoundsInParent();
+
+        return PointQueryUtils.atPositionFactors(imageViewParentBounds, ratios);
+    }
+
+    protected Point2D getLocalPointFromImageViewRatios(Point2D ratios) {
+        final ImageView imageView = mainView.getEditorImageView();
+        final Bounds imageViewParentBounds = imageView.getBoundsInLocal();
 
         return PointQueryUtils.atPositionFactors(imageViewParentBounds, ratios);
     }

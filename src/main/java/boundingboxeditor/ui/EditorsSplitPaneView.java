@@ -1,7 +1,6 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
-import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.utils.ColorUtils;
 import boundingboxeditor.utils.UiUtils;
 import javafx.geometry.Orientation;
@@ -44,16 +43,16 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     private static final String TAG_BOX_ID = "tag-box";
 
     private final TextField categorySearchField = new TextField();
-    private final BoundingBoxCategoryTableView boundingBoxCategoryTable = new BoundingBoxCategoryTableView();
+    private final ObjectCategoryTableView objectCategoryTable = new ObjectCategoryTableView();
     private final ColorPicker categoryColorPicker = new ColorPicker();
     private final TextField categoryNameTextField = new TextField();
     private final Button addCategoryButton = new Button(BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT);
 
-    private final BoundingBoxTreeView boundingBoxTree = new BoundingBoxTreeView();
+    private final ObjectTreeView objectTree = new ObjectTreeView();
     private final IconButton expandTreeItemsButton = new IconButton(EXPAND_TREE_ITEMS_ICON_ID, IconButton.IconType.BACKGROUND);
     private final IconButton collapseTreeItemsButton = new IconButton(COLLAPSE_TREE_ITEMS_ICON_ID, IconButton.IconType.BACKGROUND);
 
-    private final BoundingBoxTagScrollPaneView boundingBoxTagScrollPane = new BoundingBoxTagScrollPaneView();
+    private final TagScrollPaneView boundingBoxTagScrollPane = new TagScrollPaneView();
 
     /**
      * Creates a new panel containing UI-components responsible for interactions
@@ -62,7 +61,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     EditorsSplitPaneView() {
         getItems().addAll(
                 createCategorySelectorBox(),
-                createBoundingBoxExplorerBox(),
+                createObjectExplorerBox(),
                 createTagBox()
         );
 
@@ -83,7 +82,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
     /**
      * Returns the button which allows the user to add a
-     * {@link ObjectCategory BoundingBoxCategory}.
+     * {@link boundingboxeditor.model.ObjectCategory}.
      *
      * @return the button
      */
@@ -92,37 +91,37 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     }
 
     /**
-     * Returns the {@link BoundingBoxTreeView} object which is responsible
+     * Returns the {@link ObjectTreeView} object which is responsible
      * for displaying currently existing bounding-boxes. It also provides
      * functionality to interact with the displayed bounding-boxes.
      *
      * @return the bounding-box tree
      */
-    public BoundingBoxTreeView getBoundingBoxTree() {
-        return boundingBoxTree;
+    public ObjectTreeView getObjectTree() {
+        return objectTree;
     }
 
     @Override
     public void connectToController(Controller controller) {
         addCategoryButton.setOnAction(action -> controller.onRegisterAddObjectCategoryAction());
-        boundingBoxCategoryTable.connectToController(controller);
+        objectCategoryTable.connectToController(controller);
         categoryNameTextField.setOnAction(action -> controller.onRegisterAddObjectCategoryAction());
     }
 
     @Override
     public void reset() {
-        boundingBoxTree.reset();
+        objectTree.reset();
     }
 
     /**
-     * Returns the {@link BoundingBoxCategoryTableView} object which is responsible for
+     * Returns the {@link ObjectCategoryTableView} object which is responsible for
      * displaying the currently existing bounding-box categories. It also provides
      * functionality to interact with the displayed categories.
      *
      * @return the bounding-box category table
      */
-    BoundingBoxCategoryTableView getBoundingBoxCategoryTable() {
-        return boundingBoxCategoryTable;
+    ObjectCategoryTableView getObjectCategoryTable() {
+        return objectCategoryTable;
     }
 
     /**
@@ -200,23 +199,23 @@ public class EditorsSplitPaneView extends SplitPane implements View {
         VBox categorySelectorBox = new VBox(
                 new Label(CLASS_SELECTOR_LABEL_TEXT),
                 createCategorySelectorTopPanel(),
-                boundingBoxCategoryTable,
+                objectCategoryTable,
                 createAddCategoryControlBox()
         );
 
-        VBox.setVgrow(boundingBoxCategoryTable, Priority.ALWAYS);
+        VBox.setVgrow(objectCategoryTable, Priority.ALWAYS);
         categorySelectorBox.getStyleClass().add(SIDE_PANEL_BOX_STYLE);
 
         return categorySelectorBox;
     }
 
-    private VBox createBoundingBoxExplorerBox() {
+    private VBox createObjectExplorerBox() {
         VBox boundingBoxExplorerBox = new VBox(
                 createBoundingBoxExplorerTopPanel(),
-                boundingBoxTree
+                objectTree
         );
 
-        VBox.setVgrow(boundingBoxTree, Priority.ALWAYS);
+        VBox.setVgrow(objectTree, Priority.ALWAYS);
         boundingBoxExplorerBox.getStyleClass().add(SIDE_PANEL_BOX_STYLE);
 
         return boundingBoxExplorerBox;
@@ -259,12 +258,12 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
         categorySearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null) {
-                boundingBoxCategoryTable.getItems().stream()
+                objectCategoryTable.getItems().stream()
                         .filter(item -> item.getName().startsWith(newValue))
                         .findAny()
                         .ifPresent(item -> {
-                            boundingBoxCategoryTable.getSelectionModel().select(item);
-                            boundingBoxCategoryTable.scrollTo(item);
+                            objectCategoryTable.getSelectionModel().select(item);
+                            objectCategoryTable.scrollTo(item);
                         });
             }
         });
@@ -275,12 +274,12 @@ public class EditorsSplitPaneView extends SplitPane implements View {
             }
         });
 
-        expandTreeItemsButton.setOnAction(event -> boundingBoxTree.expandAllTreeItems());
+        expandTreeItemsButton.setOnAction(event -> objectTree.expandAllTreeItems());
 
         collapseTreeItemsButton.setOnAction(event ->
-                boundingBoxTree.getRoot().getChildren().forEach(child -> child.setExpanded(false)));
+                objectTree.getRoot().getChildren().forEach(child -> child.setExpanded(false)));
 
-        boundingBoxTree.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+        objectTree.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue instanceof BoundingBoxTreeItem) {
                 boundingBoxTagScrollPane.setTags(((BoundingBoxView) newValue.getValue()).getTags());
             } else if(newValue instanceof BoundingPolygonTreeItem) {

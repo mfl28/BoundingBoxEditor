@@ -73,11 +73,11 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getObjectCategories(), Matchers.hasSize(3));
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> mainView.getImageFileListView().getSelectionModel().getSelectedItem().isHasAssignedBoundingBoxes()),
+                () -> mainView.getImageFileListView().getSelectionModel().getSelectedItem().isHasAssignedBoundingShapes()),
                 "Correct file explorer file info status was not set within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         // Zoom a bit to change the image-view size.
-        robot.moveTo(mainView.getBoundingBoxEditorImageView())
+        robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.CONTROL)
                 .scroll(-30)
                 .release(KeyCode.CONTROL);
@@ -248,7 +248,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         final BoundingBoxView drawnBoundingBox = mainView.getCurrentBoundingBoxes().get(0);
 
@@ -278,12 +278,12 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getObjectCategories(), Matchers.hasSize(3));
         verifyThat(model.getImageAnnotations(), Matchers.hasSize(1));
         verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.empty());
-        verifyThat(mainView.getBoundingBoxTree().getRoot().getChildren().size(), Matchers.equalTo(0));
+        verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(false));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
 
-        verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingBoxes(),
+        verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingShapes(),
                 Matchers.is(true));
     }
 
@@ -296,7 +296,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.hasItem(drawnBoundingBox));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         // ... but there should be additional categories and bounding boxes in the model.
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
@@ -309,7 +309,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getObjectCategories(), Matchers.hasSize(4));
         verifyThat(model.getImageAnnotations(), Matchers.hasSize(2));
 
-        verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingBoxes(),
+        verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingShapes(),
                 Matchers.is(true));
 
         // Remove the imported Annotations manually to reset for next test.
@@ -317,7 +317,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.rightClickOn(mainView.getBoundingBoxTree().getRoot().getChildren().get(0).getGraphic())
+        robot.rightClickOn(mainView.getObjectTree().getRoot().getChildren().get(0).getGraphic())
                 .clickOn("Delete");
 
         WaitForAsyncUtils.waitForFxEvents();
@@ -343,7 +343,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.hasItem(drawnBoundingBox));
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingBoxes(), Matchers.is(true));
+                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
     }
 
     private void importAnnotationAndClickDialogOption(FxRobot robot, File annotationFile, String userChoice) {
