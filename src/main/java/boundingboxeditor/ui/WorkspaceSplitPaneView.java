@@ -4,10 +4,7 @@ import boundingboxeditor.controller.Controller;
 import boundingboxeditor.model.ObjectCategory;
 import javafx.collections.ListChangeListener;
 import javafx.scene.SnapshotParameters;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TreeCell;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Transform;
@@ -111,16 +108,9 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
         if(treeItem instanceof ObjectCategoryTreeItem) {
             treeItem.getParent().getChildren().remove(treeItem);
-        } else if(treeItem instanceof BoundingBoxTreeItem) {
+        } else if(treeItem instanceof BoundingShapeTreeItem) {
             ObjectCategoryTreeItem parentTreeItem = (ObjectCategoryTreeItem) treeItem.getParent();
-            parentTreeItem.detachBoundingBoxTreeItemChild((BoundingBoxTreeItem) treeItem);
-
-            if(parentTreeItem.getChildren().isEmpty()) {
-                parentTreeItem.getParent().getChildren().remove(parentTreeItem);
-            }
-        } else if(treeItem instanceof BoundingPolygonTreeItem) {
-            ObjectCategoryTreeItem parentTreeItem = (ObjectCategoryTreeItem) treeItem.getParent();
-            parentTreeItem.detachBoundingPolygonTreeItemChild((BoundingPolygonTreeItem) treeItem);
+            parentTreeItem.detachBoundingShapeTreeItemChild((BoundingShapeTreeItem) treeItem);
 
             if(parentTreeItem.getChildren().isEmpty()) {
                 parentTreeItem.getParent().getChildren().remove(parentTreeItem);
@@ -171,36 +161,22 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
                     if(oldValue instanceof ObjectCategoryTreeItem) {
                         for(TreeItem<Object> child : oldValue.getChildren()) {
-                            if(child instanceof BoundingBoxTreeItem) {
-                                ((BoundingBoxView) child.getValue()).setHighlighted(false);
-                            } else if(child instanceof BoundingPolygonTreeItem) {
-                                ((BoundingPolygonView) child.getValue()).setHighlighted(false);
-                            }
+                            ((BoundingShapeTreeItem) child).setHighlightShape(false);
                         }
                     }
 
-                    if(newValue instanceof BoundingBoxTreeItem) {
-                        objectTreeView.keepTreeItemInView(newValue);
-
+                    if(newValue instanceof ObjectCategoryTreeItem) {
                         getEditor().getEditorImagePane()
-                                .getBoundingBoxSelectionGroup().selectToggle((BoundingBoxView) newValue.getValue());
-                    } else if(newValue instanceof ObjectCategoryTreeItem) {
-                        getEditor().getEditorImagePane()
-                                .getBoundingBoxSelectionGroup().selectToggle(null);
+                                .getBoundingShapeSelectionGroup().selectToggle(null);
 
                         for(TreeItem<Object> child : newValue.getChildren()) {
-                            if(child instanceof BoundingBoxTreeItem) {
-                                ((BoundingBoxView) child.getValue()).setHighlighted(true);
-                            } else if(child instanceof BoundingPolygonTreeItem) {
-                                ((BoundingPolygonView) child.getValue()).setHighlighted(true);
-                            }
+                            ((BoundingShapeTreeItem) child).setHighlightShape(true);
                         }
-                    } else if(newValue instanceof BoundingPolygonTreeItem) {
+                    } else if(newValue instanceof BoundingShapeTreeItem) {
                         objectTreeView.keepTreeItemInView(newValue);
                         getEditor().getEditorImagePane()
-                                .getBoundingBoxSelectionGroup().selectToggle((BoundingPolygonView) newValue.getValue());
+                                .getBoundingShapeSelectionGroup().selectToggle((Toggle) newValue.getValue());
                     }
-
                 });
     }
 
@@ -212,19 +188,13 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         });
 
         editor.getEditorImagePane()
-                .getBoundingBoxSelectionGroup()
+                .getBoundingShapeSelectionGroup()
                 .selectedToggleProperty()
                 .addListener((observable, oldValue, newValue) -> {
-                    if(newValue != null) {
-                        if(newValue instanceof BoundingBoxView) {
-                            getEditorsSplitPane().getObjectTree()
-                                    .getSelectionModel()
-                                    .select(((BoundingBoxView) newValue).getTreeItem());
-                        } else if(newValue instanceof BoundingPolygonView) {
-                            getEditorsSplitPane().getObjectTree()
-                                    .getSelectionModel()
-                                    .select(((BoundingPolygonView) newValue).getTreeItem());
-                        }
+                    if(newValue instanceof BoundingShapeViewable) {
+                        getEditorsSplitPane().getObjectTree()
+                                .getSelectionModel()
+                                .select(((BoundingShapeViewable) newValue).getViewData().getTreeItem());
                     }
                 });
 
@@ -439,17 +409,15 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         private void detachDraggedItemFromParent() {
             TreeItem<Object> draggedItemParent = draggedItem.getParent();
 
-            if(draggedItemParent instanceof ObjectCategoryTreeItem) {
-                if(draggedItem instanceof BoundingBoxTreeItem) {
-                    ((ObjectCategoryTreeItem) draggedItemParent).detachBoundingBoxTreeItemChild((BoundingBoxTreeItem) draggedItem);
-                } else if(draggedItem instanceof BoundingPolygonTreeItem) {
-                    ((ObjectCategoryTreeItem) draggedItemParent).detachBoundingPolygonTreeItemChild((BoundingPolygonTreeItem) draggedItem);
-                }
+            if(draggedItemParent instanceof ObjectCategoryTreeItem
+                    && draggedItem instanceof BoundingShapeTreeItem) {
+                ((ObjectCategoryTreeItem) draggedItemParent).detachBoundingShapeTreeItemChild((BoundingShapeTreeItem) draggedItem);
             } else {
                 draggedItemParent.getChildren().remove(draggedItem);
             }
 
-            if(draggedItemParent instanceof ObjectCategoryTreeItem && draggedItemParent.getChildren().isEmpty()) {
+            if(draggedItemParent instanceof ObjectCategoryTreeItem
+                    && draggedItemParent.getChildren().isEmpty()) {
                 draggedItemParent.getParent().getChildren().remove(draggedItemParent);
             }
         }
@@ -461,11 +429,10 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 draggedItemCategory = ((ObjectCategoryTreeItem) draggedItem).getObjectCategory();
             } else if(draggedItem instanceof BoundingBoxTreeItem) {
                 draggedItemCategory = ((BoundingBoxView) draggedItem.getValue()).getObjectCategory();
-            } else {
-                if(!(draggedItem instanceof BoundingPolygonTreeItem)) {
-                    throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
-                }
+            } else if(draggedItem instanceof BoundingPolygonTreeItem) {
                 draggedItemCategory = ((BoundingPolygonView) draggedItem.getValue()).getObjectCategory();
+            } else {
+                throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
             }
 
             ObjectTreeView boundingBoxExplorer = (ObjectTreeView) treeView;
@@ -484,31 +451,26 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 } else if(draggedItem instanceof BoundingBoxTreeItem) {
                     // Create new category part:
                     ObjectCategoryTreeItem newCategoryParent = new ObjectCategoryTreeItem(((BoundingBoxView) draggedItem.getValue()).getObjectCategory());
-                    newCategoryParent.attachBoundingBoxTreeItemChild((BoundingBoxTreeItem) draggedItem);
+                    newCategoryParent.attachBoundingShapeTreeItemChild((BoundingBoxTreeItem) draggedItem);
+                    targetItem.getChildren().add(newCategoryParent);
+                } else if(draggedItem instanceof BoundingPolygonTreeItem) {
+                    ObjectCategoryTreeItem newCategoryParent = new ObjectCategoryTreeItem(((BoundingPolygonView) draggedItem.getValue()).getObjectCategory());
+                    newCategoryParent.attachBoundingShapeTreeItemChild((BoundingPolygonTreeItem) draggedItem);
                     targetItem.getChildren().add(newCategoryParent);
                 } else {
-                    if(!(draggedItem instanceof BoundingPolygonTreeItem)) {
-                        throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
-                    }
-                    ObjectCategoryTreeItem newCategoryParent = new ObjectCategoryTreeItem(((BoundingPolygonView) draggedItem.getValue()).getObjectCategory());
-                    newCategoryParent.attachBoundingPolygonTreeItemChild((BoundingPolygonTreeItem) draggedItem);
-                    targetItem.getChildren().add(newCategoryParent);
+                    throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
                 }
             } else {
                 // Category already exists in new location
                 if(draggedItem instanceof ObjectCategoryTreeItem) {
                     // Full category is added:
                     for(TreeItem<Object> child : draggedItem.getChildren()) {
-                        newParentItem.attachBoundingBoxTreeItemChild((BoundingBoxTreeItem) child);
+                        newParentItem.attachBoundingShapeTreeItemChild((BoundingShapeTreeItem) child);
                     }
-
-                } else if(draggedItem instanceof BoundingBoxTreeItem) {
-                    newParentItem.attachBoundingBoxTreeItemChild((BoundingBoxTreeItem) draggedItem);
+                } else if(draggedItem instanceof BoundingShapeTreeItem) {
+                    newParentItem.attachBoundingShapeTreeItemChild((BoundingShapeTreeItem) draggedItem);
                 } else {
-                    if(!(draggedItem instanceof BoundingPolygonTreeItem)) {
-                        throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
-                    }
-                    newParentItem.attachBoundingPolygonTreeItemChild((BoundingPolygonTreeItem) draggedItem);
+                    throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
                 }
             }
         }

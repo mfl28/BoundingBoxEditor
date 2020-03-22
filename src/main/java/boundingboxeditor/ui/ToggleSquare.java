@@ -11,10 +11,10 @@ import javafx.scene.shape.Rectangle;
  *
  * @see Rectangle
  */
-class ToggleSquare extends Rectangle {
+class ToggleSquare extends Rectangle implements Toggleable {
     private static final String TOGGLED_ON_PSEUDO_CLASS_NAME = "toggled-on";
-    private static final String TOGGLE_SQUARE_ID = "toggle-square";
     private static final PseudoClass TOGGLED_ON_PSEUDO_CLASS = PseudoClass.getPseudoClass(TOGGLED_ON_PSEUDO_CLASS_NAME);
+    private static final String TOGGLE_SQUARE_ID = "toggle-square";
 
     private final BooleanProperty toggledOn = createToggledOnProperty();
 
@@ -36,7 +36,8 @@ class ToggleSquare extends Rectangle {
      *
      * @return the toggled-on property
      */
-    BooleanProperty toggledOnProperty() {
+    @Override
+    public BooleanProperty toggledOnProperty() {
         return toggledOn;
     }
 
@@ -45,7 +46,8 @@ class ToggleSquare extends Rectangle {
      *
      * @return true if the square is currently toggled-on, false otherwise
      */
-    boolean isToggledOn() {
+    @Override
+    public boolean isToggledOn() {
         return toggledOn.get();
     }
 
@@ -54,7 +56,8 @@ class ToggleSquare extends Rectangle {
      *
      * @param toggledOn true sets the toggle-state to on, otherwise to off
      */
-    void setToggledOn(boolean toggledOn) {
+    @Override
+    public void setToggledOn(boolean toggledOn) {
         this.toggledOn.set(toggledOn);
     }
 

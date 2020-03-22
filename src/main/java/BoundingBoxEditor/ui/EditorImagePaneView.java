@@ -53,7 +53,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     private final Group boundingBoxSceneGroup = new Group();
     private final Group boundingPolygonSceneGroup = new Group();
-    private final ToggleGroup boundingBoxSelectionGroup = new ToggleGroup();
+    private final ToggleGroup boundingShapeSelectionGroup = new ToggleGroup();
     private final ObservableList<BoundingBoxView> currentBoundingBoxes = FXCollections.observableArrayList();
     private final ObservableList<BoundingPolygonView> currentBoundingPolygons = FXCollections.observableArrayList();
     private final ObjectProperty<ObjectCategory> selectedCategory = new SimpleObjectProperty<>(null);
@@ -113,10 +113,10 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
         newBoundingBox.setCoordinatesAndSizeFromInitializer(initializerRectangle);
         newBoundingBox.autoScaleWithBounds(imageView.boundsInParentProperty());
-        newBoundingBox.setToggleGroup(boundingBoxSelectionGroup);
+        newBoundingBox.setToggleGroup(boundingShapeSelectionGroup);
 
         currentBoundingBoxes.add(newBoundingBox);
-        boundingBoxSelectionGroup.selectToggle(newBoundingBox);
+        boundingShapeSelectionGroup.selectToggle(newBoundingBox);
         initializerRectangle.setVisible(false);
     }
 
@@ -214,9 +214,9 @@ public class EditorImagePaneView extends ScrollPane implements View {
             currentBoundingPolygons.add(currentPolygon);
 
             currentPolygon.autoScaleWithBounds(imageView.boundsInParentProperty());
-            currentPolygon.setToggleGroup(boundingBoxSelectionGroup);
+            currentPolygon.setToggleGroup(boundingShapeSelectionGroup);
 
-            boundingBoxSelectionGroup.selectToggle(currentPolygon);
+            boundingShapeSelectionGroup.selectToggle(currentPolygon);
 
             currentPolygon.setMouseTransparent(true);
             currentPolygon.setVisible(true);
@@ -345,8 +345,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
      *
      * @return the toggle-group
      */
-    ToggleGroup getBoundingBoxSelectionGroup() {
-        return boundingBoxSelectionGroup;
+    ToggleGroup getBoundingShapeSelectionGroup() {
+        return boundingShapeSelectionGroup;
     }
 
     /**

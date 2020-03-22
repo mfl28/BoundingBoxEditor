@@ -68,41 +68,25 @@ class ObjectCategoryTreeItem extends TreeItem<Object> {
     }
 
     /**
-     * Detaches a specific {@link BoundingBoxTreeItem} child from the tree-item and updates the ids of
+     * Detaches a specific {@link BoundingShapeTreeItem} child from the tree-item and updates the ids of
      * all subsequent children.
      *
      * @param child the child to detach
      */
-    void detachBoundingBoxTreeItemChild(BoundingBoxTreeItem child) {
-        detachChildId(child.getId());
-        getChildren().remove(child);
-    }
-
-    void detachBoundingPolygonTreeItemChild(BoundingPolygonTreeItem child) {
+    void detachBoundingShapeTreeItemChild(BoundingShapeTreeItem child) {
         detachChildId(child.getId());
         getChildren().remove(child);
     }
 
     /**
-     * Attaches a new {@link BoundingBoxTreeItem} to the end of the list of children and assigns it
+     * Attaches a new {@link BoundingShapeTreeItem} to the end of the list of children and assigns it
      * an appropriate id.
      *
-     * @param boundingBoxTreeItem the {@link BoundingBoxTreeItem} to attach
+     * @param boundingBoxShapeTreeItem the {@link BoundingShapeTreeItem} to attach
      */
-    void attachBoundingBoxTreeItemChild(BoundingBoxTreeItem boundingBoxTreeItem) {
-        boundingBoxTreeItem.setId(getChildren().size() + 1);
-        getChildren().add(boundingBoxTreeItem);
-    }
-
-    /**
-     * Attaches a new {@link BoundingBoxTreeItem} to the end of the list of children and assigns it
-     * an appropriate id.
-     *
-     * @param boundingPolygonTreeItem the {@link BoundingBoxTreeItem} to attach
-     */
-    void attachBoundingPolygonTreeItemChild(BoundingPolygonTreeItem boundingPolygonTreeItem) {
-        boundingPolygonTreeItem.setId(getChildren().size() + 1);
-        getChildren().add(boundingPolygonTreeItem);
+    void attachBoundingShapeTreeItemChild(BoundingShapeTreeItem boundingBoxShapeTreeItem) {
+        boundingBoxShapeTreeItem.setId(getChildren().size() + 1);
+        getChildren().add(boundingBoxShapeTreeItem);
     }
 
     /**

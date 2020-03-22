@@ -193,7 +193,7 @@ public class MainView extends BorderPane implements View {
     public void loadBoundingShapeViewsFromAnnotation(ImageAnnotation annotation) {
         Pair<List<BoundingBoxView>, List<BoundingPolygonView>> boundingViews = getObjectTree()
                 .extractViewsAndBuildTreeFromAnnotation(annotation);
-        ToggleGroup boundingBoxSelectionToggleGroup = getBoundingBoxEditorImagePane().getBoundingBoxSelectionGroup();
+        ToggleGroup boundingBoxSelectionToggleGroup = getBoundingBoxEditorImagePane().getBoundingShapeSelectionGroup();
 
         boundingViews.getLeft().forEach(item -> {
             item.autoScaleWithBoundsAndInitialize(getEditorImageView().boundsInParentProperty());

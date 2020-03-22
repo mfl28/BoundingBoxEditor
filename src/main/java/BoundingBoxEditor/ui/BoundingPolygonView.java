@@ -28,24 +28,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class BoundingPolygonView extends Polygon implements View, Toggle, BoundingShapeDataConvertible {
+public class BoundingPolygonView extends Polygon implements
+        View, Toggle, BoundingShapeDataConvertible, BoundingShapeViewable {
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
     private static final String BOUNDING_POLYGON_ID = "bounding-polygon";
     private static final String EDITING_PSEUDO_CLASS_NAME = "editing";
     private static final PseudoClass EDITING_PSEUDO_CLASS = PseudoClass.getPseudoClass(EDITING_PSEUDO_CLASS_NAME);
-    private final Property<Bounds> autoScaleBounds = new SimpleObjectProperty<>();
-    private final BooleanProperty selected = new SimpleBooleanProperty(false);
-    private final BooleanProperty highlighted = new SimpleBooleanProperty(false);
-    private final ObjectProperty<ToggleGroup> toggleGroup = new SimpleObjectProperty<>();
+
+    private final BoundingShapeViewData boundingShapeViewData;
+
     private final BooleanProperty editing = createEditingProperty();
-    private final ObservableList<String> tags = FXCollections.observableArrayList();
     private ObservableList<VertexHandle> vertexHandles = FXCollections.observableArrayList();
-    private Group nodeGroup = new Group(this);
     private List<Double> pointsInImage = Collections.emptyList();
-    private ImageMetaData imageMetaData;
-    private ObjectCategory objectCategory;
-    private TreeItem<Object> treeItem;
 
     /**
      * Creates a new bounding-box UI-element, which takes the shape of a rectangle that is resizable
@@ -57,15 +52,14 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
      *                       into the data component represented by the {@link BoundingBoxData} class)
      */
     public BoundingPolygonView(ObjectCategory objectCategory, ImageMetaData imageMetaData) {
-        this.imageMetaData = imageMetaData;
-        this.objectCategory = objectCategory;
+        this.boundingShapeViewData = new BoundingShapeViewData(this, objectCategory, imageMetaData);
 
         setManaged(false);
         setFill(Color.TRANSPARENT);
         setId(BOUNDING_POLYGON_ID);
         setStrokeWidth(2.0);
 
-        nodeGroup.setManaged(false);
+        boundingShapeViewData.getNodeGroup().setManaged(false);
         pseudoClassStateChanged(EDITING_PSEUDO_CLASS, false);
         setUpInternalListeners();
     }
@@ -75,58 +69,58 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
     }
 
     public ObjectCategory getObjectCategory() {
-        return objectCategory;
+        return boundingShapeViewData.getObjectCategory();
     }
 
     public Group getNodeGroup() {
-        return nodeGroup;
+        return boundingShapeViewData.getNodeGroup();
     }
 
     public BooleanProperty highlightedProperty() {
-        return highlighted;
+        return boundingShapeViewData.highlightedProperty();
     }
 
     public boolean isHighlighted() {
-        return highlighted.get();
+        return boundingShapeViewData.isHighlighted();
     }
 
     public void setHighlighted(boolean highlighted) {
-        this.highlighted.set(highlighted);
+        boundingShapeViewData.setHighlighted(highlighted);
     }
 
     @Override
     public ToggleGroup getToggleGroup() {
-        return toggleGroup.get();
+        return boundingShapeViewData.getToggleGroup();
     }
 
     @Override
     public void setToggleGroup(ToggleGroup toggleGroup) {
-        this.toggleGroup.setValue(toggleGroup);
+        boundingShapeViewData.setToggleGroup(toggleGroup);
     }
 
     @Override
     public ObjectProperty<ToggleGroup> toggleGroupProperty() {
-        return toggleGroup;
+        return boundingShapeViewData.toggleGroupProperty();
     }
 
     @Override
     public boolean isSelected() {
-        return selected.get();
+        return boundingShapeViewData.isSelected();
     }
 
     @Override
     public void setSelected(boolean selected) {
-        this.selected.set(selected);
+        boundingShapeViewData.setSelected(selected);
     }
 
     @Override
     public BooleanProperty selectedProperty() {
-        return selected;
+        return boundingShapeViewData.selectedProperty();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectCategory, imageMetaData, pointsInImage);
+        return Objects.hash(boundingShapeViewData, pointsInImage);
     }
 
     @Override
@@ -141,8 +135,7 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
 
         BoundingPolygonView other = (BoundingPolygonView) obj;
 
-        if(!Objects.equals(objectCategory, other.objectCategory) ||
-                !Objects.equals(imageMetaData, other.imageMetaData) ||
+        if(!Objects.equals(boundingShapeViewData, other.boundingShapeViewData) ||
                 pointsInImage.size() != other.pointsInImage.size()) {
             return false;
         }
@@ -176,7 +169,8 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
      */
     @Override
     public BoundingShapeData toBoundingShapeData() {
-        return new BoundingPolygonData(objectCategory, getImageRelativePoints(), tags);
+        return new BoundingPolygonData(boundingShapeViewData.getObjectCategory(),
+                getImageRelativePoints(), boundingShapeViewData.getTags());
     }
 
     /**
@@ -185,7 +179,12 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
      * @return the {@link ImageMetaData} object
      */
     public ImageMetaData getImageMetaData() {
-        return imageMetaData;
+        return boundingShapeViewData.getImageMetaData();
+    }
+
+    @Override
+    public BoundingShapeViewData getViewData() {
+        return boundingShapeViewData;
     }
 
     /**
@@ -193,15 +192,15 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
      *
      * @return the {@link TreeItem} object
      */
-    TreeItem<Object> getTreeItem() {
-        return treeItem;
+    BoundingShapeTreeItem getTreeItem() {
+        return boundingShapeViewData.getTreeItem();
     }
 
     /**
      * Sets the associated {@link TreeItem} object.
      */
-    void setTreeItem(TreeItem<Object> treeItem) {
-        this.treeItem = treeItem;
+    void setTreeItem(BoundingShapeTreeItem treeItem) {
+        boundingShapeViewData.setTreeItem(treeItem);
     }
 
     /**
@@ -227,7 +226,7 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
      * @param autoScaleBounds the auto-scale-bounds property used to anchor this {@link BoundingBoxView} object
      */
     void autoScaleWithBounds(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
-        this.autoScaleBounds.bind(autoScaleBounds);
+        boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
         addAutoScaleListener();
     }
 
@@ -237,7 +236,7 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
      * @return the tags
      */
     ObservableList<String> getTags() {
-        return tags;
+        return boundingShapeViewData.getTags();
     }
 
     /**
@@ -248,16 +247,16 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
      * @param autoScaleBounds the bounds-property to scale with
      */
     void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
-        this.autoScaleBounds.bind(autoScaleBounds);
+        boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
         initializeFromBoundsInImage();
         addAutoScaleListener();
     }
 
     List<Double> getImageRelativePoints() {
-        final Bounds imageViewBounds = autoScaleBounds.getValue();
+        final Bounds imageViewBounds = boundingShapeViewData.autoScaleBounds().getValue();
 
-        double widthScaleFactor = imageMetaData.getImageWidth() / imageViewBounds.getWidth();
-        double heightScaleFactor = imageMetaData.getImageHeight() / imageViewBounds.getHeight();
+        double widthScaleFactor = boundingShapeViewData.getImageMetaData().getImageWidth() / imageViewBounds.getWidth();
+        double heightScaleFactor = boundingShapeViewData.getImageMetaData().getImageHeight() / imageViewBounds.getHeight();
 
         List<Double> imageRelativePoints = new ArrayList<>(getPoints().size());
 
@@ -273,23 +272,23 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
         List<Double> result = getImageRelativePoints();
 
         for(int i = 0; i < result.size(); i += 2) {
-            result.set(i, result.get(i) / imageMetaData.getImageWidth());
-            result.set(i + 1, result.get(i + 1) / imageMetaData.getImageHeight());
+            result.set(i, result.get(i) / boundingShapeViewData.getImageMetaData().getImageWidth());
+            result.set(i + 1, result.get(i + 1) / boundingShapeViewData.getImageMetaData().getImageHeight());
         }
 
         return result;
     }
 
     private void setUpInternalListeners() {
-        strokeProperty().bind(objectCategory.colorProperty());
+        strokeProperty().bind(boundingShapeViewData.getObjectCategory().colorProperty());
 
         fillProperty().bind(Bindings.when(selectedProperty())
                 .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY), strokeProperty()))
-                .otherwise(Bindings.when(highlighted)
+                .otherwise(Bindings.when(boundingShapeViewData.highlightedProperty())
                         .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
                         .otherwise(Color.TRANSPARENT)));
 
-        nodeGroup.viewOrderProperty().bind(viewOrderProperty());
+        boundingShapeViewData.getNodeGroup().viewOrderProperty().bind(viewOrderProperty());
 
         vertexHandles.addListener((ListChangeListener<VertexHandle>) c -> {
             while(c.next()) {
@@ -303,7 +302,7 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
                         }
                     }
 
-                    nodeGroup.getChildren().addAll(c.getAddedSubList());
+                    boundingShapeViewData.getNodeGroup().getChildren().addAll(c.getAddedSubList());
                 }
 
                 if(c.wasRemoved()) {
@@ -316,14 +315,14 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
                         }
                     }
 
-                    nodeGroup.getChildren().removeAll(c.getRemoved());
+                    boundingShapeViewData.getNodeGroup().getChildren().removeAll(c.getRemoved());
                 }
             }
         });
 
         setOnMouseEntered(event -> {
             if(!isSelected()) {
-                highlighted.set(true);
+                boundingShapeViewData.setHighlighted(true);
             }
 
             event.consume();
@@ -331,7 +330,7 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
 
         setOnMouseExited(event -> {
             if(!isSelected()) {
-                highlighted.set(false);
+                boundingShapeViewData.setHighlighted(false);
             }
         });
 
@@ -342,17 +341,17 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
             }
         });
 
-        selected.addListener((observable, oldValue, newValue) -> {
+        boundingShapeViewData.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if(Boolean.TRUE.equals(newValue)) {
-                highlighted.set(false);
+                boundingShapeViewData.setHighlighted(false);
             }
         });
     }
 
     private void initializeFromBoundsInImage() {
-        Bounds confinementBoundsValue = autoScaleBounds.getValue();
-        double imageWidth = imageMetaData.getImageWidth();
-        double imageHeight = imageMetaData.getImageHeight();
+        Bounds confinementBoundsValue = boundingShapeViewData.autoScaleBounds().getValue();
+        double imageWidth = boundingShapeViewData.getImageMetaData().getImageWidth();
+        double imageHeight = boundingShapeViewData.getImageMetaData().getImageHeight();
 
         vertexHandles.clear();
 
@@ -363,7 +362,7 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
     }
 
     private void addAutoScaleListener() {
-        autoScaleBounds.addListener((observable, oldValue, newValue) -> {
+        boundingShapeViewData.autoScaleBounds().addListener((observable, oldValue, newValue) -> {
             double xScaleFactor = newValue.getWidth() / oldValue.getWidth();
             double yScaleFactor = newValue.getHeight() / oldValue.getHeight();
 
@@ -426,7 +425,7 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
             setOnMouseDragged(mouseEvent -> {
                 if(mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
                     Point2D newXY = new Point2D(mouseEvent.getX() - dragAnchor.getX(), mouseEvent.getY() - dragAnchor.getY());
-                    Point2D newXYConfined = MathUtils.clampWithinBounds(newXY, autoScaleBounds.getValue());
+                    Point2D newXYConfined = MathUtils.clampWithinBounds(newXY, boundingShapeViewData.autoScaleBounds().getValue());
 
                     setCenterX(newXYConfined.getX());
                     setCenterY(newXYConfined.getY());
@@ -448,11 +447,11 @@ public class BoundingPolygonView extends Polygon implements View, Toggle, Boundi
             visibleProperty().bind(BoundingPolygonView.this.visibleProperty().and(BoundingPolygonView.this.selectedProperty().or(BoundingPolygonView.this.editingProperty())));
 
             centerXProperty().addListener((observableValue, oldNumber, newNumber) ->
-                BoundingPolygonView.this.getPoints().set(pointIndex, newNumber.doubleValue())
+                    BoundingPolygonView.this.getPoints().set(pointIndex, newNumber.doubleValue())
             );
 
             centerYProperty().addListener((observableValue, oldNumber, newNumber) ->
-                BoundingPolygonView.this.getPoints().set(pointIndex + 1, newNumber.doubleValue())
+                    BoundingPolygonView.this.getPoints().set(pointIndex + 1, newNumber.doubleValue())
             );
 
             editing.bind(BoundingPolygonView.this.editing);

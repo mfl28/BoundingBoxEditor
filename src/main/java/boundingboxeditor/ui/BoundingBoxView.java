@@ -6,8 +6,10 @@ import boundingboxeditor.model.io.BoundingBoxData;
 import boundingboxeditor.model.io.BoundingShapeData;
 import boundingboxeditor.utils.MathUtils;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.*;
-import javafx.collections.FXCollections;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -36,22 +38,16 @@ import java.util.stream.Collectors;
  * @see Rectangle
  * @see View
  */
-public class BoundingBoxView extends Rectangle implements View, Toggle, BoundingShapeDataConvertible {
+public class BoundingBoxView extends Rectangle implements
+        View, Toggle, BoundingShapeDataConvertible, BoundingShapeViewable {
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
     private static final String BOUNDING_BOX_VIEW_ID = "bounding-rectangle";
 
+    private final BoundingShapeViewData boundingShapeViewData;
+
     private final DragAnchor dragAnchor = new DragAnchor();
-    private final Property<Bounds> autoScaleBounds = new SimpleObjectProperty<>();
-    private final Group nodeGroup = new Group(this);
-    private final BooleanProperty selected = new SimpleBooleanProperty(false);
-    private final BooleanProperty highlighted = new SimpleBooleanProperty(false);
-    private final ObjectProperty<ToggleGroup> toggleGroup = new SimpleObjectProperty<>();
-    private final ObservableList<String> tags = FXCollections.observableArrayList();
     private Bounds boundsInImage;
-    private TreeItem<Object> treeItem;
-    private ObjectCategory objectCategory;
-    private ImageMetaData imageMetaData;
 
     /**
      * Creates a new bounding-box UI-element, which takes the shape of a rectangle that is resizable
@@ -63,56 +59,52 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
      *                       into the data component represented by the {@link BoundingBoxData} class)
      */
     public BoundingBoxView(ObjectCategory objectCategory, ImageMetaData imageMetaData) {
-        this.imageMetaData = imageMetaData;
-        this.objectCategory = objectCategory;
+        this.boundingShapeViewData = new BoundingShapeViewData(this, objectCategory, imageMetaData);
 
         setManaged(false);
         setFill(Color.TRANSPARENT);
         setId(BOUNDING_BOX_VIEW_ID);
 
-        nodeGroup.setManaged(false);
-        nodeGroup.getChildren().addAll(createResizeHandles());
+        boundingShapeViewData.getNodeGroup().setManaged(false);
+        boundingShapeViewData.getNodeGroup().getChildren().addAll(createResizeHandles());
 
         addMoveFunctionality();
         setUpInternalListeners();
     }
 
-    private BoundingBoxView() {
-    }
-
     @Override
     public ToggleGroup getToggleGroup() {
-        return toggleGroup.get();
+        return boundingShapeViewData.getToggleGroup();
     }
 
     @Override
     public void setToggleGroup(ToggleGroup toggleGroup) {
-        this.toggleGroup.set(toggleGroup);
+        boundingShapeViewData.setToggleGroup(toggleGroup);
     }
 
     @Override
     public ObjectProperty<ToggleGroup> toggleGroupProperty() {
-        return toggleGroup;
+        return boundingShapeViewData.toggleGroupProperty();
     }
 
     @Override
     public boolean isSelected() {
-        return selected.get();
+        return boundingShapeViewData.isSelected();
     }
 
     @Override
     public void setSelected(boolean selected) {
-        this.selected.set(selected);
+        boundingShapeViewData.setSelected(selected);
     }
 
     @Override
     public BooleanProperty selectedProperty() {
-        return selected;
+        return boundingShapeViewData.selectedProperty();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectCategory, imageMetaData, getX(), getY(), getWidth(), getHeight());
+        return Objects.hash(boundingShapeViewData, getX(), getY(), getWidth(), getHeight());
     }
 
     @Override
@@ -127,7 +119,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
 
         BoundingBoxView other = (BoundingBoxView) obj;
 
-        return Objects.equals(objectCategory, other.objectCategory) && Objects.equals(imageMetaData, other.imageMetaData)
+        return Objects.equals(boundingShapeViewData, other.boundingShapeViewData)
                 && MathUtils.doubleAlmostEqual(getX(), other.getX()) && MathUtils.doubleAlmostEqual(getY(), other.getY())
                 && MathUtils.doubleAlmostEqual(getWidth(), other.getWidth()) && MathUtils.doubleAlmostEqual(getHeight(), other.getHeight());
     }
@@ -135,7 +127,8 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
     @Override
     public String toString() {
         return "BoundingBoxView[x=" + getX() + ", y=" + getY() + ", width=" + getWidth() + ", height=" + getHeight()
-                + ", fill=" + getFill() + ", category=" + objectCategory + ", image-metadata=" + imageMetaData + "]";
+                + ", fill=" + getFill() + ", category=" + boundingShapeViewData.getObjectCategory()
+                + ", image-metadata=" + boundingShapeViewData.getImageMetaData() + "]";
     }
 
     /**
@@ -144,7 +137,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
      * @return the {@link ObjectCategory} object
      */
     public ObjectCategory getObjectCategory() {
-        return objectCategory;
+        return boundingShapeViewData.getObjectCategory();
     }
 
     /**
@@ -155,7 +148,12 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
      */
     @Override
     public BoundingShapeData toBoundingShapeData() {
-        return new BoundingBoxData(objectCategory, getImageRelativeBounds(), tags);
+        return new BoundingBoxData(boundingShapeViewData.getObjectCategory(), getImageRelativeBounds(), boundingShapeViewData.getTags());
+    }
+
+    @Override
+    public BoundingShapeViewData getViewData() {
+        return boundingShapeViewData;
     }
 
     /**
@@ -176,7 +174,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
      * @return the tags
      */
     ObservableList<String> getTags() {
-        return tags;
+        return boundingShapeViewData.getTags();
     }
 
     /**
@@ -185,14 +183,14 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
      * @return the {@link TreeItem} object
      */
     TreeItem<Object> getTreeItem() {
-        return treeItem;
+        return boundingShapeViewData.getTreeItem();
     }
 
     /**
      * Sets the associated {@link TreeItem} object.
      */
-    void setTreeItem(TreeItem<Object> treeItem) {
-        this.treeItem = treeItem;
+    void setTreeItem(BoundingShapeTreeItem treeItem) {
+        boundingShapeViewData.setTreeItem(treeItem);
     }
 
     /**
@@ -202,7 +200,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
      * @param autoScaleBounds the auto-scale-bounds property used to anchor this {@link BoundingBoxView} object
      */
     void autoScaleWithBounds(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
-        this.autoScaleBounds.bind(autoScaleBounds);
+        this.boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
         addAutoScaleListener();
     }
 
@@ -230,7 +228,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
      * @param autoScaleBounds the bounds-property to scale with
      */
     void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
-        this.autoScaleBounds.bind(autoScaleBounds);
+        this.boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
         initializeFromBoundsInImage();
         addAutoScaleListener();
     }
@@ -243,7 +241,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
      * @return the group
      */
     Group getNodeGroup() {
-        return nodeGroup;
+        return boundingShapeViewData.getNodeGroup();
     }
 
     /**
@@ -252,7 +250,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
      * @param highlighted true to set highlighting on, otherwise off
      */
     void setHighlighted(boolean highlighted) {
-        this.highlighted.set(highlighted);
+        boundingShapeViewData.setHighlighted(highlighted);
     }
 
     private List<ResizeHandle> createResizeHandles() {
@@ -265,22 +263,22 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
         setOnMouseEntered(event -> {
             setCursor(Cursor.MOVE);
 
-            if(!isSelected()) {
-                highlighted.set(true);
+            if(!boundingShapeViewData.isSelected()) {
+                boundingShapeViewData.getHighlighted().set(true);
             }
 
             event.consume();
         });
 
         setOnMouseExited(event -> {
-            if(!isSelected()) {
-                highlighted.set(false);
+            if(!boundingShapeViewData.isSelected()) {
+                boundingShapeViewData.getHighlighted().set(false);
             }
         });
 
         setOnMousePressed(event -> {
             if(!event.isControlDown()) {
-                getToggleGroup().selectToggle(this);
+                boundingShapeViewData.getToggleGroup().selectToggle(this);
 
                 if(event.getButton().equals(MouseButton.PRIMARY)) {
                     dragAnchor.setCoordinates(event.getX() - getX(), event.getY() - getY());
@@ -305,38 +303,38 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
     }
 
     private void setUpInternalListeners() {
-        nodeGroup.viewOrderProperty().bind(
-                Bindings.when(selectedProperty())
+        boundingShapeViewData.getNodeGroup().viewOrderProperty().bind(
+                Bindings.when(boundingShapeViewData.selectedProperty())
                         .then(0)
                         .otherwise(Bindings.min(widthProperty(), heightProperty()))
         );
 
-        strokeProperty().bind(objectCategory.colorProperty());
+        strokeProperty().bind(boundingShapeViewData.getObjectCategory().colorProperty());
 
-        fillProperty().bind(Bindings.when(selectedProperty())
+        fillProperty().bind(Bindings.when(boundingShapeViewData.selectedProperty())
                 .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY), strokeProperty()))
-                .otherwise(Bindings.when(highlighted)
+                .otherwise(Bindings.when(boundingShapeViewData.getHighlighted())
                         .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
                         .otherwise(Color.TRANSPARENT)));
 
-        selected.addListener((observable, oldValue, newValue) -> {
+        boundingShapeViewData.getSelected().addListener((observable, oldValue, newValue) -> {
             if(Boolean.TRUE.equals(newValue)) {
-                highlighted.set(false);
+                boundingShapeViewData.getHighlighted().set(false);
             }
         });
     }
 
     private Bounds constructCurrentMoveBounds() {
-        final Bounds confinementBoundsValue = autoScaleBounds.getValue();
+        final Bounds confinementBoundsValue = boundingShapeViewData.autoScaleBounds().getValue();
         return new BoundingBox(confinementBoundsValue.getMinX(), confinementBoundsValue.getMinY(),
                 confinementBoundsValue.getWidth() - getWidth(), confinementBoundsValue.getHeight() - getHeight());
     }
 
     private Bounds getImageRelativeBounds() {
-        final Bounds imageViewBounds = autoScaleBounds.getValue();
+        final Bounds imageViewBounds = boundingShapeViewData.autoScaleBounds().getValue();
 
-        double widthScaleFactor = imageMetaData.getImageWidth() / imageViewBounds.getWidth();
-        double heightScaleFactor = imageMetaData.getImageHeight() / imageViewBounds.getHeight();
+        double widthScaleFactor = boundingShapeViewData.getImageMetaData().getImageWidth() / imageViewBounds.getWidth();
+        double heightScaleFactor = boundingShapeViewData.getImageMetaData().getImageHeight() / imageViewBounds.getHeight();
 
         double xMinRelative = (getX() - imageViewBounds.getMinX()) * widthScaleFactor;
         double yMinRelative = (getY() - imageViewBounds.getMinY()) * heightScaleFactor;
@@ -347,7 +345,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
     }
 
     private void addAutoScaleListener() {
-        autoScaleBounds.addListener((observable, oldValue, newValue) -> {
+        boundingShapeViewData.autoScaleBounds().addListener((observable, oldValue, newValue) -> {
             setWidth(getWidth() * newValue.getWidth() / oldValue.getWidth());
             setHeight(getHeight() * newValue.getHeight() / oldValue.getHeight());
 
@@ -361,9 +359,9 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
     }
 
     private void initializeFromBoundsInImage() {
-        Bounds confinementBoundsValue = autoScaleBounds.getValue();
-        double imageWidth = imageMetaData.getImageWidth();
-        double imageHeight = imageMetaData.getImageHeight();
+        Bounds confinementBoundsValue = boundingShapeViewData.autoScaleBounds().getValue();
+        double imageWidth = boundingShapeViewData.getImageMetaData().getImageWidth();
+        double imageHeight = boundingShapeViewData.getImageMetaData().getImageHeight();
 
         setX(boundsInImage.getMinX() * confinementBoundsValue.getWidth() / imageWidth + confinementBoundsValue.getMinX());
         setY(boundsInImage.getMinY() * confinementBoundsValue.getHeight() / imageHeight + confinementBoundsValue.getMinY());
@@ -484,7 +482,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
 
         private void handleMouseDraggedNW(MouseEvent event) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
-                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(parentBounds.getMinX(), parentBounds.getMinY(),
                         getRectangleMaxX() - parentBounds.getMinX(),
                         getRectangleMaxY() - parentBounds.getMinY());
@@ -503,7 +501,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
 
         private void handleMouseDraggedN(MouseEvent event) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
-                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), parentBounds.getMinY(),
                         BoundingBoxView.this.getWidth(), getRectangleMaxY() - parentBounds.getMinY());
 
@@ -519,7 +517,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
 
         private void handleMouseDraggedNE(MouseEvent event) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
-                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), parentBounds.getMinY(),
                         parentBounds.getMaxX() - BoundingBoxView.this.getX(),
                         getRectangleMaxY() - parentBounds.getMinY());
@@ -537,7 +535,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
 
         private void handleMouseDraggedE(MouseEvent event) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
-                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), BoundingBoxView.this.getY(),
                         parentBounds.getMaxX() - BoundingBoxView.this.getX(), BoundingBoxView.this.getHeight());
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
@@ -551,7 +549,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
 
         private void handleMouseDraggedSE(MouseEvent event) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
-                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), BoundingBoxView.this.getY(),
                         parentBounds.getMaxX() - BoundingBoxView.this.getX(),
                         parentBounds.getMaxY() - BoundingBoxView.this.getY());
@@ -568,7 +566,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
 
         private void handleMouseDraggedS(MouseEvent event) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
-                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), BoundingBoxView.this.getY(),
                         BoundingBoxView.this.getWidth(),
                         parentBounds.getMaxY() - BoundingBoxView.this.getY());
@@ -584,7 +582,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
 
         private void handleMouseDraggedSW(MouseEvent event) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
-                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(parentBounds.getMinX(), BoundingBoxView.this.getY(),
                         getRectangleMaxX() - parentBounds.getMinX(),
                         parentBounds.getMaxY() - BoundingBoxView.this.getY());
@@ -602,7 +600,7 @@ public class BoundingBoxView extends Rectangle implements View, Toggle, Bounding
 
         private void handleMouseDraggedW(MouseEvent event) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
-                final Bounds parentBounds = BoundingBoxView.this.autoScaleBounds.getValue();
+                final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(parentBounds.getMinX(), BoundingBoxView.this.getY(),
                         getRectangleMaxX() - parentBounds.getMinX(),
                         BoundingBoxView.this.getHeight());

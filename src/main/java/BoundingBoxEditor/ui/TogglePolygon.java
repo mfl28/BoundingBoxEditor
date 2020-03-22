@@ -6,10 +6,10 @@ import javafx.css.PseudoClass;
 import javafx.scene.shape.Polygon;
 
 
-public class TogglePolygon extends Polygon {
+public class TogglePolygon extends Polygon implements Toggleable {
     private static final String TOGGLED_ON_PSEUDO_CLASS_NAME = "toggled-on";
-    private static final String TOGGLE_SQUARE_ID = "toggle-polygon";
     private static final PseudoClass TOGGLED_ON_PSEUDO_CLASS = PseudoClass.getPseudoClass(TOGGLED_ON_PSEUDO_CLASS_NAME);
+    private static final String TOGGLE_SQUARE_ID = "toggle-polygon";
 
     private final BooleanProperty toggledOn = createToggledOnProperty();
 
@@ -37,7 +37,8 @@ public class TogglePolygon extends Polygon {
      *
      * @return the toggled-on property
      */
-    BooleanProperty toggledOnProperty() {
+    @Override
+    public BooleanProperty toggledOnProperty() {
         return toggledOn;
     }
 
@@ -46,7 +47,8 @@ public class TogglePolygon extends Polygon {
      *
      * @return true if the square is currently toggled-on, false otherwise
      */
-    boolean isToggledOn() {
+    @Override
+    public boolean isToggledOn() {
         return toggledOn.get();
     }
 
@@ -55,7 +57,8 @@ public class TogglePolygon extends Polygon {
      *
      * @param toggledOn true sets the toggle-state to on, otherwise to off
      */
-    void setToggledOn(boolean toggledOn) {
+    @Override
+    public void setToggledOn(boolean toggledOn) {
         this.toggledOn.set(toggledOn);
     }
 

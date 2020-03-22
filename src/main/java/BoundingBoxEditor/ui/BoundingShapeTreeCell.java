@@ -14,6 +14,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 
 /**
@@ -61,13 +62,8 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
     protected void updateItem(Object newCellObject, boolean empty) {
         Object oldCellObject = getItem();
 
-        if(oldCellObject instanceof BoundingBoxView) {
-            BoundingBoxView oldItem = (BoundingBoxView) oldCellObject;
-            // Remove the old item's context-menu event-handler.
-            oldItem.removeEventHandler(ContextMenuEvent.CONTEXT_MENU_REQUESTED, showContextMenuEventHandler);
-            oldItem.visibleProperty().removeListener(boundingBoxVisibilityListener);
-        } else if(oldCellObject instanceof BoundingPolygonView) {
-            BoundingPolygonView oldItem = (BoundingPolygonView) oldCellObject;
+        if(oldCellObject instanceof Shape) {
+            Shape oldItem = (Shape) oldCellObject;
             // Remove the old item's context-menu event-handler.
             oldItem.removeEventHandler(ContextMenuEvent.CONTEXT_MENU_REQUESTED, showContextMenuEventHandler);
             oldItem.visibleProperty().removeListener(boundingBoxVisibilityListener);
@@ -90,16 +86,13 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
             // Register the contextMenu with the cell.
             setContextMenu(contextMenu);
 
-            if(newCellObject instanceof BoundingBoxView) {
+            if(newCellObject instanceof Shape) {
                 // Register the contextMenu with the BoundingBoxView associated with the cell. This
                 // allows to display the contextMenu by right-clicking on the bounding-box itself.
-                ((BoundingBoxView) newCellObject).setOnContextMenuRequested(showContextMenuEventHandler);
+                ((Shape) newCellObject).setOnContextMenuRequested(showContextMenuEventHandler);
                 // The context menu should be hidden when the BoundingBoxView associated with this cell
                 // is hidden.
-                ((BoundingBoxView) newCellObject).visibleProperty().addListener(boundingBoxVisibilityListener);
-            } else if(newCellObject instanceof BoundingPolygonView) {
-                ((BoundingPolygonView) newCellObject).setOnContextMenuRequested(showContextMenuEventHandler);
-                ((BoundingPolygonView) newCellObject).visibleProperty().addListener(boundingBoxVisibilityListener);
+                ((Shape) newCellObject).visibleProperty().addListener(boundingBoxVisibilityListener);
             }
         }
     }
@@ -168,10 +161,8 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
         hideBoundingBoxMenuItem.setOnAction(event -> {
             if(getTreeItem() instanceof ObjectCategoryTreeItem) {
                 ((ObjectCategoryTreeItem) getTreeItem()).setIconToggledOn(false);
-            } else if(getTreeItem() instanceof BoundingBoxTreeItem) {
-                ((BoundingBoxTreeItem) getTreeItem()).setIconToggledOn(false);
-            } else if(getTreeItem() instanceof BoundingPolygonTreeItem) {
-                ((BoundingPolygonTreeItem) getTreeItem()).setIconToggledOn(false);
+            } else if(getTreeItem() instanceof BoundingShapeTreeItem) {
+                ((BoundingShapeTreeItem) getTreeItem()).setIconToggledOn(false);
             }
         });
     }
@@ -179,12 +170,7 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
     private void setHighlightStatusIncludingChildren(boolean highlightStatus) {
         TreeItem<Object> treeItem = getTreeItem();
 
-        if(treeItem instanceof BoundingBoxTreeItem) {
-            final BoundingBoxView boundingBox = (BoundingBoxView) treeItem.getValue();
-            if(!boundingBox.isSelected()) {
-                boundingBox.setHighlighted(highlightStatus);
-            }
-        } else if(treeItem instanceof ObjectCategoryTreeItem) {
+        if(treeItem instanceof ObjectCategoryTreeItem) {
             for(TreeItem<Object> child : treeItem.getChildren()) {
                 if(child instanceof BoundingBoxTreeItem) {
                     final BoundingBoxView childBoundingBox = (BoundingBoxView) child.getValue();
@@ -199,6 +185,11 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
                         childBoundingPolygon.setHighlighted(highlightStatus);
                     }
                 }
+            }
+        } else if(treeItem instanceof BoundingBoxTreeItem) {
+            final BoundingBoxView boundingBox = (BoundingBoxView) treeItem.getValue();
+            if(!boundingBox.isSelected()) {
+                boundingBox.setHighlighted(highlightStatus);
             }
         } else if(treeItem instanceof BoundingPolygonTreeItem) {
             final BoundingPolygonView boundingPolygon = (BoundingPolygonView) treeItem.getValue();
@@ -248,10 +239,8 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
     @SuppressWarnings("UnnecessaryLambda")
     private EventHandler<ContextMenuEvent> createShowContextMenuEventHandler() {
         return event -> {
-            if(getItem() instanceof BoundingBoxView) {
-                contextMenu.show((BoundingBoxView) getItem(), event.getScreenX(), event.getScreenY());
-            } else if(getItem() instanceof BoundingPolygonView) {
-                contextMenu.show((BoundingPolygonView) getItem(), event.getScreenX(), event.getScreenY());
+            if(getItem() instanceof Shape) {
+                contextMenu.show((Shape) getItem(), event.getScreenX(), event.getScreenY());
             }
         };
     }
