@@ -13,6 +13,9 @@ import javafx.scene.shape.Shape;
 
 import java.util.Objects;
 
+/**
+ * Class holding common data and methods of bounding shape objects.
+ */
 public class BoundingShapeViewData {
     private final Property<Bounds> autoScaleBounds = new SimpleObjectProperty<>();
     private final Group nodeGroup = new Group();

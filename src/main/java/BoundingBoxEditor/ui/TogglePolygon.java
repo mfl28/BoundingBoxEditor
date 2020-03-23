@@ -9,7 +9,7 @@ import javafx.scene.shape.Polygon;
 public class TogglePolygon extends Polygon implements Toggleable {
     private static final String TOGGLED_ON_PSEUDO_CLASS_NAME = "toggled-on";
     private static final PseudoClass TOGGLED_ON_PSEUDO_CLASS = PseudoClass.getPseudoClass(TOGGLED_ON_PSEUDO_CLASS_NAME);
-    private static final String TOGGLE_SQUARE_ID = "toggle-polygon";
+    private static final String TOGGLE_POLYGON_ID = "toggle-polygon";
 
     private final BooleanProperty toggledOn = createToggledOnProperty();
 
@@ -28,7 +28,7 @@ public class TogglePolygon extends Polygon implements Toggleable {
                 sideLength, sideLength * 0.4
         );
 
-        setId(TOGGLE_SQUARE_ID);
+        setId(TOGGLE_POLYGON_ID);
         pseudoClassStateChanged(TOGGLED_ON_PSEUDO_CLASS, true);
     }
 

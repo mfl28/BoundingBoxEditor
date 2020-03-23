@@ -137,7 +137,7 @@ public class Controller {
             model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
         }
 
-        if(model.containsAnnotations() || view.containsBoundingBoxViews() || view.containsBoundingPolygonViews()) {
+        if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
             ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
                     OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
 
@@ -196,7 +196,7 @@ public class Controller {
             model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
         }
 
-        if(!model.containsAnnotations() && !view.containsBoundingBoxViews() && !view.containsBoundingPolygonViews()) {
+        if(!model.containsAnnotations() && !view.containsBoundingShapeViews()) {
             MainView.displayErrorAlert(SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE,
                     NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT);
             return;
@@ -237,8 +237,7 @@ public class Controller {
             if(answer == ButtonBar.ButtonData.NO) {
                 model.clearAnnotationData();
                 view.reset();
-                view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingBoxes();
-                view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingPolygons();
+                view.getEditorImagePane().removeAllCurrentBoundingShapes();
                 // Reset all 'assigned bounding box states' in image file explorer.
                 view.getImageFileListView().getItems().forEach(item -> item.setHasAssignedBoundingShapes(false));
 
@@ -251,7 +250,7 @@ public class Controller {
     }
 
     /**
-     * Handles the event of the user adding a new bounding-box category.
+     * Handles the event of the user adding a new object category.
      */
     public void onRegisterAddObjectCategoryAction() {
         final String categoryName = view.getObjectCategoryInputField().getText();
@@ -293,7 +292,7 @@ public class Controller {
             model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
         }
 
-        if(model.containsAnnotations() || view.containsBoundingBoxViews() || view.containsBoundingPolygonViews()) {
+        if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
             ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(EXIT_APPLICATION_OPTION_DIALOG_TITLE,
                     EXIT_APPLICATION_OPTION_DIALOG_CONTENT);
 
@@ -325,20 +324,20 @@ public class Controller {
      */
     public void onRegisterSceneKeyPressed(KeyEvent event) {
         // While the user is drawing a bounding box, all key-events will be ignored.
-        if(view.getBoundingBoxEditorImagePane().isBoundingBoxDrawingInProgress()) {
+        if(view.getEditorImagePane().isBoundingBoxDrawingInProgress()) {
             event.consume();
             return;
         }
 
         if(event.isShortcutDown()) {
-            view.getBoundingBoxEditorImagePane().setZoomableAndPannable(true);
+            view.getEditorImagePane().setZoomableAndPannable(true);
         }
 
         if(KeyCombinations.navigateNext.match(event)) {
             handleNavigateNextKeyPressed();
         } else if(KeyCombinations.navigatePrevious.match(event)) {
             handleNavigatePreviousKeyPressed();
-        } else if(KeyCombinations.deleteSelectedBoundingBox.match(event)) {
+        } else if(KeyCombinations.deleteSelectedBoundingShape.match(event)) {
             view.removeSelectedTreeItemAndChildren();
         } else if(KeyCombinations.focusCategorySearchField.match(event)) {
             view.getCategorySearchField().requestFocus();
@@ -348,20 +347,20 @@ public class Controller {
             view.getObjectCategoryInputField().requestFocus();
         } else if(KeyCombinations.focusTagTextField.match(event)) {
             view.getTagInputField().requestFocus();
-        } else if(KeyCombinations.hideSelectedBoundingBox.match(event)) {
+        } else if(KeyCombinations.hideSelectedBoundingShape.match(event)) {
             view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(false);
-        } else if(KeyCombinations.hideAllBoundingBoxes.match(event)) {
+        } else if(KeyCombinations.hideAllBoundingShapes.match(event)) {
             view.getObjectTree().setToggleIconStateForAllTreeItems(false);
-        } else if(KeyCombinations.showSelectedBoundingBox.match(event)) {
+        } else if(KeyCombinations.showSelectedBoundingShape.match(event)) {
             view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(true);
-        } else if(KeyCombinations.showAllBoundingBoxes.match(event)) {
+        } else if(KeyCombinations.showAllBoundingShapes.match(event)) {
             view.getObjectTree().setToggleIconStateForAllTreeItems(true);
         } else if(KeyCombinations.resetSizeAndCenterImage.match(event)) {
-            view.getBoundingBoxEditorImagePane().resetImageViewSize();
+            view.getEditorImagePane().resetImageViewSize();
         } else if(KeyCombinations.selectRectangleDrawingMode.match(event)) {
-            view.getBoundingBoxEditor().getEditorToolBar().getRectangleModeButton().setSelected(true);
+            view.getEditor().getEditorToolBar().getRectangleModeButton().setSelected(true);
         } else if(KeyCombinations.selectPolygonDrawingMode.match(event)) {
-            view.getBoundingBoxEditor().getEditorToolBar().getPolygonModeButton().setSelected(true);
+            view.getEditor().getEditorToolBar().getPolygonModeButton().setSelected(true);
         }
     }
 
@@ -372,7 +371,7 @@ public class Controller {
      */
     public void onRegisterSceneKeyReleased(KeyEvent event) {
         if(event.getCode() == KeyCode.CONTROL || event.getCode() == KeyCode.META) {
-            view.getBoundingBoxEditorImagePane().setZoomableAndPannable(false);
+            view.getEditorImagePane().setZoomableAndPannable(false);
         }
 
         if(KeyCombinations.navigatePrevious.match(event)) {
@@ -401,7 +400,7 @@ public class Controller {
     }
 
     /**
-     * Handles the event of the user committing a bounding-box category name edit. Names of categories are allowed
+     * Handles the event of the user committing a object category name edit. Names of categories are allowed
      * to be changed by the user as long as the uniqueness of category-names is not violated, otherwise an error dialog
      * will be displayed and the edit will be reverted.
      *
@@ -436,12 +435,11 @@ public class Controller {
 
     /**
      * Handles the event of the user releasing a mouse-click on the displayed image.
-     * This construct a new bounding-shape.
      *
      * @param event the mouse-event
      */
     public void onRegisterImageViewMouseReleasedEvent(MouseEvent event) {
-        final EditorImagePaneView imagePane = view.getBoundingBoxEditorImagePane();
+        final EditorImagePaneView imagePane = view.getEditorImagePane();
 
         if(imagePane.isImageFullyLoaded() && event.getButton().equals(MouseButton.PRIMARY)) {
             if(event.isControlDown()) {
@@ -458,12 +456,11 @@ public class Controller {
 
     /**
      * Handles the event of the user pressing the mouse on the displayed image.
-     * This initializes (or finalizes) the currently drawn bounding-shape.
      *
      * @param event the mouse-event
      */
     public void onRegisterImageViewMousePressedEvent(MouseEvent event) {
-        EditorImagePaneView imagePaneView = view.getBoundingBoxEditorImagePane();
+        EditorImagePaneView imagePaneView = view.getEditorImagePane();
 
         if(imagePaneView.isImageFullyLoaded()
                 && !event.isControlDown()
@@ -522,7 +519,7 @@ public class Controller {
     }
 
     private void setUpModelListeners() {
-        view.getBoundingBoxEditor().getEditorToolBar()
+        view.getEditor().getEditorToolBar()
                 .getIndexLabel()
                 .textProperty()
                 .bind(model.fileIndexProperty().add(1).asString()
@@ -576,9 +573,8 @@ public class Controller {
     private void updateViewImageFiles() {
         view.reset();
 
-        EditorImagePaneView imagePane = view.getBoundingBoxEditorImagePane();
-        imagePane.removeAllCurrentBoundingBoxes();
-        imagePane.removeAllCurrentBoundingPolygons();
+        EditorImagePaneView imagePane = view.getEditorImagePane();
+        imagePane.removeAllCurrentBoundingShapes();
         view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
         view.getCurrentBoundingPolygons().removeListener(boundingPolygonViewListChangeListener);
         imagePane.getImageLoadingProgressIndicator().setVisible(true);
@@ -608,7 +604,7 @@ public class Controller {
             if(newValue.intValue() == 1) {
                 ImageAnnotation annotation = model.getCurrentImageAnnotation();
                 // Hide the progress spinner.
-                view.getBoundingBoxEditorImagePane().getImageLoadingProgressIndicator().setVisible(false);
+                view.getEditorImagePane().getImageLoadingProgressIndicator().setVisible(false);
 
                 if(annotation != null) {
                     view.loadBoundingShapeViewsFromAnnotation(annotation);
@@ -626,7 +622,7 @@ public class Controller {
             // Update selected item in image-file-list-view.
             view.getImageFileExplorer().getImageFileListView().getSelectionModel().select(newValue.intValue());
             // Show the progress spinner.
-            view.getBoundingBoxEditorImagePane().getImageLoadingProgressIndicator().setVisible(true);
+            view.getEditorImagePane().getImageLoadingProgressIndicator().setVisible(true);
 
             final Image oldImage = view.getCurrentImage();
 
@@ -641,8 +637,7 @@ public class Controller {
                     // remove old image's bounding boxes
                     view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
                     view.getCurrentBoundingPolygons().removeListener(boundingPolygonViewListChangeListener);
-                    view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingBoxes();
-                    view.getBoundingBoxEditorImagePane().removeAllCurrentBoundingPolygons();
+                    view.getEditorImagePane().removeAllCurrentBoundingShapes();
                     // Prevents javafx-bug with uncleared items in tree-view when switching between images.
                     view.getObjectTree().reset();
                 } else {
@@ -762,17 +757,17 @@ public class Controller {
     public static class KeyCombinations {
         public static final KeyCombination navigateNext = new KeyCodeCombination(KeyCode.D);
         public static final KeyCombination navigatePrevious = new KeyCodeCombination(KeyCode.A);
-        public static final KeyCombination showAllBoundingBoxes = new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
-        public static final KeyCombination hideAllBoundingBoxes = new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
-        public static final KeyCombination showSelectedBoundingBox = new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN);
-        public static final KeyCombination hideSelectedBoundingBox = new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination showAllBoundingShapes = new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
+        public static final KeyCombination hideAllBoundingShapes = new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
+        public static final KeyCombination showSelectedBoundingShape = new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination hideSelectedBoundingShape = new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN);
 
         public static final KeyCombination resetSizeAndCenterImage = new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination focusCategoryNameTextField = new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination focusCategorySearchField = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination focusTagTextField = new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination focusFileSearchField = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
-        public static final KeyCombination deleteSelectedBoundingBox = new KeyCodeCombination(KeyCode.DELETE);
+        public static final KeyCombination deleteSelectedBoundingShape = new KeyCodeCombination(KeyCode.DELETE);
         public static final KeyCombination selectRectangleDrawingMode = new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination selectPolygonDrawingMode = new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
 

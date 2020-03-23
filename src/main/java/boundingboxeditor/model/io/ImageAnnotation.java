@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A class holding all data of an image-annotation, including metadata of the image and all {@link BoundingBoxData}-objects assigned to it.
+ * A class holding all data of an image-annotation, including metadata of the image and all {@link BoundingShapeData}-objects assigned to it.
  * There will be at most one ImageAnnotation-object for each loaded image.
  */
 public class ImageAnnotation {
@@ -34,18 +34,18 @@ public class ImageAnnotation {
 
 
     /**
-     * Returns the annotation's bounding-box data.
+     * Returns the annotation's bounding-shape data.
      *
-     * @return list of data of bounding-boxes
+     * @return list of data of bounding-shapes
      */
     public List<BoundingShapeData> getBoundingShapeData() {
         return boundingShapeData;
     }
 
     /**
-     * Sets the annotation's bounding-box data.
+     * Sets the annotation's bounding-shape data.
      *
-     * @param boundingShapeData the list of data of bounding-boxes to set
+     * @param boundingShapeData the list of data of bounding-shapes to set
      */
     public void setBoundingShapeData(List<BoundingShapeData> boundingShapeData) {
         this.boundingShapeData = boundingShapeData;

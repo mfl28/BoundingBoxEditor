@@ -24,7 +24,7 @@ import java.util.*;
  * @see boundingboxeditor.ui.MainView MainView
  */
 public class Model {
-    private static final String BOUNDING_BOX_COORDINATES_PATTERN = "#0.0000";
+    private static final String BOUNDING_SHAPE_COORDINATES_PATTERN = "#0.0000";
     private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
 
     /**
@@ -36,13 +36,13 @@ public class Model {
 
     /**
      * Maps the filenames of the currently loaded image-files onto corresponding {@link ImageMetaData} objects. Image-metadata for
-     * an image is constructed (at most) once when the first bounding-box on an image is created and is reused subsequently.
+     * an image is constructed (at most) once when the first bounding-shape on an image is created and is reused subsequently.
      */
     private Map<String, ImageMetaData> imageFileNameToMetaData = new HashMap<>();
 
     /**
      * Maps the filenames of the currently loaded image-files onto corresponding {@link ImageAnnotation} objects. This is the
-     * main data-structure for storing data of the bounding-boxes and image-metadata of image annotations. {@link ImageAnnotation} objects
+     * main data-structure for storing data of the bounding-shapes and image-metadata of image annotations. {@link ImageAnnotation} objects
      * are constructed exactly once when the first store-trigger-event occurs and are updated in subsequent store-trigger-events. A
      * store-trigger-event may be any of the following:
      * <ul>
@@ -60,7 +60,7 @@ public class Model {
     private ObservableList<ObjectCategory> objectCategories = FXCollections.observableArrayList();
 
     /**
-     * Maps the name of a currently existing bounding-box category to the current number of existing bounding-box elements
+     * Maps the name of a currently existing bounding-shape category to the current number of existing bounding-shape elements
      * assigned to the category.
      */
     private Map<String, Integer> categoryToAssignedBoundingShapesCount = new HashMap<>();
@@ -74,7 +74,7 @@ public class Model {
      * Creates the app's model-component.
      */
     public Model() {
-        numberFormat.applyPattern(BOUNDING_BOX_COORDINATES_PATTERN);
+        numberFormat.applyPattern(BOUNDING_SHAPE_COORDINATES_PATTERN);
         setUpInternalListeners();
     }
 
@@ -105,7 +105,7 @@ public class Model {
     }
 
     /**
-     * Convenience method to update the currently selected image-file annotation's bounding-box data.
+     * Convenience method to update the currently selected image-file annotation's bounding-shape data.
      *
      * @param boundingShapeData the new bounding-shape data elements
      */
@@ -115,7 +115,7 @@ public class Model {
 
     /**
      * Creates or updates the {@link ImageAnnotation} associated with the image-file at the provided index using
-     * new bounding-box data.
+     * new bounding-shape data.
      *
      * @param fileIndex         the index of the image-file whose annotation should be created/updated
      * @param boundingShapeData the new bounding-shape data elements
@@ -139,7 +139,7 @@ public class Model {
      * either constructing new {@link ImageAnnotation} objects and putting them into
      * the annotation map or by updating existing ones. This method should be used by
      * classes extending {@link boundingboxeditor.model.io.ImageAnnotationLoadStrategy ImageAnnotationLoadStrategy} to load
-     * annotations from files into the model. Notice that existing bounding-box data is not overwritten, the loaded bounding-box
+     * annotations from files into the model. Notice that existing bounding-shape data is not overwritten, the loaded bounding-shape
      * data is merely added to the existing ones.
      *
      * @param imageAnnotations the new image-annotations
@@ -211,7 +211,7 @@ public class Model {
     }
 
     /**
-     * Returns the category to existing bounding-boxes count mapping.
+     * Returns the category to existing bounding-shapes count mapping.
      *
      * @return the mapping
      */
@@ -231,7 +231,7 @@ public class Model {
     /**
      * Returns an observable list of the {@link ObjectCategory} objects.
      *
-     * @return the list of bounding-box categories
+     * @return the list of object categories
      */
     public ObservableList<ObjectCategory> getObjectCategories() {
         return objectCategories;

@@ -9,10 +9,10 @@ import java.util.List;
 /**
  * Represents the data-component of a bounding-box. Objects of this class are used to
  * store the "blueprint" of the ui-component of a bounding-box (a {@link boundingboxeditor.ui.BoundingBoxView BoundingBoxView}-object).
- * BoundingBoxData-objects are part of the model-component of the app and can be nested by adding child BoundinBoxData-objects as "parts" of
+ * BoundingBoxData-objects are part of the model-component of the app and can be nested by adding child BoundingShapeData-objects as "parts" of
  * a parent object.
  *
- * @see BoundingBoxData#setParts(List)
+ * @see BoundingShapeData#setParts(List)
  */
 public class BoundingBoxData extends BoundingShapeData {
     private final Bounds boundsInImage;
@@ -98,7 +98,7 @@ public class BoundingBoxData extends BoundingShapeData {
     }
 
     @Override
-    public <T> T accept(BoundingBoxShapeDataVisitor<T> visitor) {
+    public <T> T accept(BoundingShapeDataVisitor<T> visitor) {
         return visitor.visit(this);
     }
 }

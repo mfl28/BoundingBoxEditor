@@ -14,7 +14,7 @@ import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Color;
 
 /**
- * The bounding-box category-table UI-element. Shows information about the currently existing {@link ObjectCategory} objects
+ * The object category-table UI-element. Shows information about the currently existing {@link ObjectCategory} objects
  * such as color and name. Each category row-entry in the table also includes a button to delete the corresponding category.
  *
  * @see TableView
@@ -26,7 +26,7 @@ public class ObjectCategoryTableView extends TableView<ObjectCategory> implement
     private static final String TABLE_VIEW_STYLE = "no-header-table-view";
     private static final int TABLE_VIEW_COLOR_COLUMN_WIDTH = 5;
     private static final int TABLE_VIEW_DELETE_COLUMN_WIDTH = 18;
-    private static final String BOUNDING_BOX_CATEGORY_TABLE_VIEW_ID = "category-selector";
+    private static final String OBJECT_CATEGORY_TABLE_VIEW_ID = "category-selector";
     private static final String NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET = ObjectCategoryTableView.class
             .getResource("/stylesheets/css/noCustomColorsPalette.css").toExternalForm();
 
@@ -39,7 +39,7 @@ public class ObjectCategoryTableView extends TableView<ObjectCategory> implement
     private final ContextMenu contextMenu = new ContextMenu(colorChangeItem);
 
     /**
-     * Creates a new bounding-box category table UI-element.
+     * Creates a new object category table UI-element.
      */
     ObjectCategoryTableView() {
         getColumns().add(colorColumn);
@@ -47,7 +47,7 @@ public class ObjectCategoryTableView extends TableView<ObjectCategory> implement
         getColumns().add(deleteColumn);
 
         getStyleClass().add(TABLE_VIEW_STYLE);
-        setId(BOUNDING_BOX_CATEGORY_TABLE_VIEW_ID);
+        setId(OBJECT_CATEGORY_TABLE_VIEW_ID);
         setEditable(true);
         setFocusTraversable(false);
         setPlaceholder(new Label(PLACEHOLDER_TEXT));

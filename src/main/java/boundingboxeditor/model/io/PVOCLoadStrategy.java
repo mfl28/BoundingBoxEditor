@@ -107,14 +107,14 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             throw new AnnotationToNonExistentImageException("The image file does not belong to the currently loaded images.");
         }
 
-        List<BoundingShapeData> boundingBoxData = parseBoundingBoxData(document, file.getName());
+        List<BoundingShapeData> boundingShapeData = parseBoundingShapeData(document, file.getName());
 
-        if(boundingBoxData.isEmpty()) {
+        if(boundingShapeData.isEmpty()) {
             // No image annotation will be constructed if it does not contain any bounding boxes.
             return null;
         }
 
-        return new ImageAnnotation(imageMetaData, boundingBoxData);
+        return new ImageAnnotation(imageMetaData, boundingShapeData);
     }
 
     private ImageMetaData parseImageMetaData(Document document) {
@@ -127,25 +127,25 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         return new ImageMetaData(fileName, folderName, width, height, depth);
     }
 
-    private List<BoundingShapeData> parseBoundingBoxData(Document document, String filename) {
+    private List<BoundingShapeData> parseBoundingShapeData(Document document, String filename) {
         NodeList objectElements = document.getElementsByTagName("object");
 
-        List<BoundingShapeData> boundingShapeData = new ArrayList<>();
+        List<BoundingShapeData> boundingShapeDataList = new ArrayList<>();
 
         for(int i = 0; i != objectElements.getLength(); ++i) {
             Node objectNode = objectElements.item(i);
 
             if(objectNode.getNodeType() == Node.ELEMENT_NODE) {
                 try {
-                    BoundingShapeData boundingBoxData = parseBoundingShapeElement((Element) objectNode, filename);
-                    boundingShapeData.add(boundingBoxData);
+                    BoundingShapeData boundingShapeData = parseBoundingShapeElement((Element) objectNode, filename);
+                    boundingShapeDataList.add(boundingShapeData);
                 } catch(InvalidAnnotationFileFormatException e) {
                     unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(filename, e.getMessage()));
                 }
             }
         }
 
-        return boundingShapeData;
+        return boundingShapeDataList;
     }
 
     private BoundingShapeData parseBoundingShapeElement(Element objectElement, String filename) {

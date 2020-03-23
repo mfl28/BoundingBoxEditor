@@ -2,6 +2,9 @@ package boundingboxeditor.ui;
 
 import javafx.beans.property.BooleanProperty;
 
+/**
+ * Interface of a toggleable class object.
+ */
 interface Toggleable {
     /**
      * Returns the toggled-on property.

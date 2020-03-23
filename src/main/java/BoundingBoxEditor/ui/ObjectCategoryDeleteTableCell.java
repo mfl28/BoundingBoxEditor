@@ -22,7 +22,7 @@ public class ObjectCategoryDeleteTableCell extends TableCell<ObjectCategory, Obj
     }
 
     /**
-     * Returns the bounding-box-category delete-button.
+     * Returns the object-category delete-button.
      *
      * @return the button
      */

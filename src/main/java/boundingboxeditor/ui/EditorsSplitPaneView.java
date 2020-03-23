@@ -20,14 +20,14 @@ import javafx.scene.layout.VBox;
 public class EditorsSplitPaneView extends SplitPane implements View {
     private static final String CLASS_SELECTOR_LABEL_TEXT = "Categories";
     private static final String SEARCH_CATEGORY_PROMPT_TEXT = "Search Category";
-    private static final String BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT = "Add";
-    private static final String BOUNDING_BOX_COLOR_PICKER_STYLE = "bounding-box-color-picker";
+    private static final String OBJECT_CATEGORY_ADD_BUTTON_TEXT = "Add";
+    private static final String OBJECT_CATEGORY_COLOR_PICKER_STYLE = "category-color-picker";
     private static final String OBJECT_SELECTOR_LABEL_TEXT = "Annotated Objects";
     private static final String CATEGORY_INPUT_FIELD_PROMPT_TEXT = "Category Name";
     private static final String CATEGORY_INPUT_FIELD_ID = "category-input-field";
     private static final String ADD_BUTTON_ID = "add-button";
     private static final String TAG_EDITOR_LABEL_TEXT = "Tags";
-    private static final String BOUNDING_BOX_EXPLORER_TOP_PANEL_ID = "bounding-box-explorer-top-panel";
+    private static final String BOUNDING_SHAPE_EXPLORER_TOP_PANEL_ID = "bounding-box-explorer-top-panel";
     private static final String SEARCH_ICON_ID = "search-icon";
     private static final String SEARCH_ICON_LABEL_ID = "search-icon-label";
     private static final String CATEGORY_SELECTOR_TOP_PANEL_ID = "category-selector-top-panel";
@@ -46,13 +46,13 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     private final ObjectCategoryTableView objectCategoryTable = new ObjectCategoryTableView();
     private final ColorPicker categoryColorPicker = new ColorPicker();
     private final TextField categoryNameTextField = new TextField();
-    private final Button addCategoryButton = new Button(BOUNDING_BOX_ITEM_ADD_BUTTON_TEXT);
+    private final Button addCategoryButton = new Button(OBJECT_CATEGORY_ADD_BUTTON_TEXT);
 
     private final ObjectTreeView objectTree = new ObjectTreeView();
     private final IconButton expandTreeItemsButton = new IconButton(EXPAND_TREE_ITEMS_ICON_ID, IconButton.IconType.BACKGROUND);
     private final IconButton collapseTreeItemsButton = new IconButton(COLLAPSE_TREE_ITEMS_ICON_ID, IconButton.IconType.BACKGROUND);
 
-    private final TagScrollPaneView boundingBoxTagScrollPane = new TagScrollPaneView();
+    private final TagScrollPaneView tagScrollPaneView = new TagScrollPaneView();
 
     /**
      * Creates a new panel containing UI-components responsible for interactions
@@ -92,10 +92,10 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
     /**
      * Returns the {@link ObjectTreeView} object which is responsible
-     * for displaying currently existing bounding-boxes. It also provides
-     * functionality to interact with the displayed bounding-boxes.
+     * for displaying currently existing bounding-shapes. It also provides
+     * functionality to interact with the displayed bounding-shapes.
      *
-     * @return the bounding-box tree
+     * @return the bounding-shape tree
      */
     public ObjectTreeView getObjectTree() {
         return objectTree;
@@ -115,10 +115,10 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
     /**
      * Returns the {@link ObjectCategoryTableView} object which is responsible for
-     * displaying the currently existing bounding-box categories. It also provides
+     * displaying the currently existing bounding-shape categories. It also provides
      * functionality to interact with the displayed categories.
      *
-     * @return the bounding-box category table
+     * @return the bounding-shape category table
      */
     ObjectCategoryTableView getObjectCategoryTable() {
         return objectCategoryTable;
@@ -135,7 +135,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
     /**
      * Returns the {@link ColorPicker} object which allows the user to
-     * choose the color which should be associated with a new bounding-box category.
+     * choose the color which should be associated with a new bounding-shape category.
      *
      * @return the color-picker
      */
@@ -149,7 +149,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
      * @return the text-field
      */
     TextField getTagInputField() {
-        return boundingBoxTagScrollPane.getTagInputField();
+        return tagScrollPaneView.getTagInputField();
     }
 
     private HBox createCategorySelectorTopPanel() {
@@ -183,7 +183,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
         return addCategoryBox;
     }
 
-    private HBox createBoundingBoxExplorerTopPanel() {
+    private HBox createBoundingShapeExplorerTopPanel() {
         HBox panel = new HBox(
                 new Label(OBJECT_SELECTOR_LABEL_TEXT),
                 UiUtils.createHSpacer(),
@@ -191,7 +191,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
                 expandTreeItemsButton
         );
 
-        panel.setId(BOUNDING_BOX_EXPLORER_TOP_PANEL_ID);
+        panel.setId(BOUNDING_SHAPE_EXPLORER_TOP_PANEL_ID);
         return panel;
     }
 
@@ -210,24 +210,24 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     }
 
     private VBox createObjectExplorerBox() {
-        VBox boundingBoxExplorerBox = new VBox(
-                createBoundingBoxExplorerTopPanel(),
+        VBox objectExplorerBox = new VBox(
+                createBoundingShapeExplorerTopPanel(),
                 objectTree
         );
 
         VBox.setVgrow(objectTree, Priority.ALWAYS);
-        boundingBoxExplorerBox.getStyleClass().add(SIDE_PANEL_BOX_STYLE);
+        objectExplorerBox.getStyleClass().add(SIDE_PANEL_BOX_STYLE);
 
-        return boundingBoxExplorerBox;
+        return objectExplorerBox;
     }
 
     private VBox createTagBox() {
         VBox tagBox = new VBox(
                 new Label(TAG_EDITOR_LABEL_TEXT),
-                boundingBoxTagScrollPane
+                tagScrollPaneView
         );
 
-        VBox.setVgrow(boundingBoxTagScrollPane, Priority.ALWAYS);
+        VBox.setVgrow(tagScrollPaneView, Priority.ALWAYS);
         tagBox.getStyleClass().add(SIDE_PANEL_BOX_STYLE);
         tagBox.setId(TAG_BOX_ID);
 
@@ -239,7 +239,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
         categoryNameTextField.setId(CATEGORY_INPUT_FIELD_ID);
         categoryNameTextField.setTooltip(UiUtils.createFocusTooltip(Controller.KeyCombinations.focusCategoryNameTextField));
 
-        categoryColorPicker.getStyleClass().add(BOUNDING_BOX_COLOR_PICKER_STYLE);
+        categoryColorPicker.getStyleClass().add(OBJECT_CATEGORY_COLOR_PICKER_STYLE);
         categoryColorPicker.setValue(ColorUtils.createRandomColor());
         categoryColorPicker.setTooltip(UiUtils.createTooltip(CATEGORY_COLOR_PICKER_TOOLTIP_TEXT));
 
@@ -281,11 +281,11 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
         objectTree.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue instanceof BoundingBoxTreeItem) {
-                boundingBoxTagScrollPane.setTags(((BoundingBoxView) newValue.getValue()).getTags());
+                tagScrollPaneView.setTags(((BoundingBoxView) newValue.getValue()).getTags());
             } else if(newValue instanceof BoundingPolygonTreeItem) {
-                boundingBoxTagScrollPane.setTags(((BoundingPolygonView) newValue.getValue()).getTags());
+                tagScrollPaneView.setTags(((BoundingPolygonView) newValue.getValue()).getTags());
             } else {
-                boundingBoxTagScrollPane.setTags(null);
+                tagScrollPaneView.setTags(null);
             }
         });
     }

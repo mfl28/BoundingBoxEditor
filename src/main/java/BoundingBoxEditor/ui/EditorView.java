@@ -6,7 +6,7 @@ import javafx.scene.layout.BorderPane;
 
 /**
  * Represents a UI-element containing the {@link EditorImagePaneView} object on which the user can draw/edit
- * {@link BoundingBoxView} objects. Furthermore this element contains controls to navigate and edit
+ * bounding shape objects. Furthermore this element contains controls to navigate and edit
  * images.
  *
  * @see BorderPane
@@ -16,36 +16,36 @@ import javafx.scene.layout.BorderPane;
 public class EditorView extends BorderPane implements View {
     private static final String BOUNDING_BOX_EDITOR_VIEW_ID = "bounding-box-editor-view";
 
-    private final EditorToolBarView boundingBoxEditorToolBar = new EditorToolBarView();
-    private final EditorImagePaneView boundingBoxEditorImagePane = new EditorImagePaneView();
+    private final EditorToolBarView editorToolBarView = new EditorToolBarView();
+    private final EditorImagePaneView editorImagePaneView = new EditorImagePaneView();
 
     /**
-     * Creates a new bounding-box-editor view UI-element containing the {@link EditorImagePaneView} object on which the user can draw/edit
-     * {@link BoundingBoxView} objects. Furthermore this element contains controls to navigate and edit
+     * Creates a new ditor view UI-element containing the {@link EditorImagePaneView} object on which the user can draw/edit
+     * bounding shape objects. Furthermore this element contains controls to navigate and edit
      * images.
      */
     EditorView() {
-        setTop(boundingBoxEditorToolBar);
-        setCenter(boundingBoxEditorImagePane);
+        setTop(editorToolBarView);
+        setCenter(editorImagePaneView);
         setId(BOUNDING_BOX_EDITOR_VIEW_ID);
 
-        boundingBoxEditorImagePane.setMinSize(25, 25);
+        editorImagePaneView.setMinSize(25, 25);
         setUpInternalListeners();
     }
 
     /**
-     * Returns the editor toolbar containing controls for adjusting image and bounding-box settings.
+     * Returns the editor toolbar containing controls for adjusting image and bounding-shape settings.
      *
      * @return the toolbar
      */
     public EditorToolBarView getEditorToolBar() {
-        return boundingBoxEditorToolBar;
+        return editorToolBarView;
     }
 
     @Override
     public void connectToController(Controller controller) {
-        boundingBoxEditorToolBar.connectToController(controller);
-        boundingBoxEditorImagePane.connectToController(controller);
+        editorToolBarView.connectToController(controller);
+        editorImagePaneView.connectToController(controller);
     }
 
     /**
@@ -54,23 +54,23 @@ public class EditorView extends BorderPane implements View {
      * @return the image-pane
      */
     EditorImagePaneView getEditorImagePane() {
-        return boundingBoxEditorImagePane;
+        return editorImagePaneView;
     }
 
     private void setUpInternalListeners() {
-        ColorAdjust colorAdjust = boundingBoxEditorImagePane.getColorAdjust();
-        colorAdjust.brightnessProperty().bind(boundingBoxEditorToolBar.getBrightnessSlider().valueProperty());
-        colorAdjust.contrastProperty().bind(boundingBoxEditorToolBar.getContrastSlider().valueProperty());
-        colorAdjust.saturationProperty().bind(boundingBoxEditorToolBar.getSaturationSlider().valueProperty());
+        ColorAdjust colorAdjust = editorImagePaneView.getColorAdjust();
+        colorAdjust.brightnessProperty().bind(editorToolBarView.getBrightnessSlider().valueProperty());
+        colorAdjust.contrastProperty().bind(editorToolBarView.getContrastSlider().valueProperty());
+        colorAdjust.saturationProperty().bind(editorToolBarView.getSaturationSlider().valueProperty());
 
-        boundingBoxEditorToolBar.getResetSizeAndCenterImageButton().setOnAction(event -> boundingBoxEditorImagePane.resetImageViewSize());
+        editorToolBarView.getResetSizeAndCenterImageButton().setOnAction(event -> editorImagePaneView.resetImageViewSize());
 
-        boundingBoxEditorToolBar.getRectangleModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
-            boundingBoxEditorImagePane.finalizeBoundingPolygon();
+        editorToolBarView.getRectangleModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
+            editorImagePaneView.finalizeBoundingPolygon();
             if(Boolean.TRUE.equals(newValue)) {
-                boundingBoxEditorImagePane.setDrawingMode(EditorImagePaneView.DrawingMode.BOX);
+                editorImagePaneView.setDrawingMode(EditorImagePaneView.DrawingMode.BOX);
             } else {
-                boundingBoxEditorImagePane.setDrawingMode(EditorImagePaneView.DrawingMode.POLYGON);
+                editorImagePaneView.setDrawingMode(EditorImagePaneView.DrawingMode.POLYGON);
             }
         });
 

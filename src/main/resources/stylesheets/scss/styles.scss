@@ -403,12 +403,8 @@ $base-separator-line-color: derive($base-background-color, -15%);
 }
 
 #bounding-polygon {
-    -fx-stroke-width: 2px;
+    -fx-stroke-width: 3px;
     -fx-stroke-line-join: round;
-
-    &:editing {
-        -fx-stroke-width: 3px;
-    }
 }
 
 #vertex-handle {
@@ -624,7 +620,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-alignment: center;
 }
 
-.bounding-box-color-picker {
+.category-color-picker {
     -fx-max-width: 50px;
     -fx-max-height: 25px;
 }

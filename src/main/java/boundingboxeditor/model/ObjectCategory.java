@@ -17,9 +17,9 @@ public class ObjectCategory {
     private final ObjectProperty<Color> color;
 
     /**
-     * Creates a new bounding-box category.
+     * Creates a new object category.
      *
-     * @param name  the name of the bounding-box category.
+     * @param name  the name of the object category.
      * @param color the color used for the visual representation of
      *              the category in the program.
      */

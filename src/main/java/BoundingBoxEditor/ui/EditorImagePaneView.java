@@ -32,11 +32,12 @@ import java.util.stream.Collectors;
 
 /**
  * A UI-element responsible for displaying the currently selected image on which the
- * user can draw bounding-boxes.
+ * user can draw bounding-shapes.
  *
  * @see StackPane
  * @see View
  * @see BoundingBoxView
+ * @see BoundingPolygonView
  */
 public class EditorImagePaneView extends ScrollPane implements View {
     private static final double IMAGE_PADDING = 0;
@@ -62,14 +63,15 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private final DragAnchor dragAnchor = new DragAnchor();
 
     private final ProgressIndicator imageLoadingProgressIndicator = new ProgressIndicator();
-    private final StackPane contentPane = new StackPane(imageView, boundingBoxSceneGroup, boundingPolygonSceneGroup, initializerRectangle, imageLoadingProgressIndicator);
+    private final StackPane contentPane = new StackPane(imageView, boundingBoxSceneGroup, boundingPolygonSceneGroup,
+            initializerRectangle, imageLoadingProgressIndicator);
     private boolean boundingBoxDrawingInProgress = false;
     private BoundingPolygonView currentPolygon;
     private DrawingMode drawingMode = DrawingMode.BOX;
 
     /**
      * Creates a new image-pane UI-element responsible for displaying the currently selected image on which the
-     * user can draw bounding-boxes.
+     * user can draw bounding-shapes.
      */
     EditorImagePaneView() {
         setId(IMAGE_PANE_ID);
@@ -127,8 +129,19 @@ public class EditorImagePaneView extends ScrollPane implements View {
         currentBoundingBoxes.clear();
     }
 
+    /**
+     * Clears the list of current {@link BoundingPolygonView} objects.
+     */
     public void removeAllCurrentBoundingPolygons() {
         currentBoundingPolygons.clear();
+    }
+
+    /**
+     * Clears the list of current bounding shape view objects.
+     */
+    public void removeAllCurrentBoundingShapes() {
+        removeAllCurrentBoundingBoxes();
+        removeAllCurrentBoundingPolygons();
     }
 
     /**
@@ -252,6 +265,12 @@ public class EditorImagePaneView extends ScrollPane implements View {
         currentBoundingBoxes.removeAll(boundingBoxes);
     }
 
+    /**
+     * Removes all provided {@link BoundingPolygonView} objects from the list
+     * of current {@link BoundingPolygonView} objects.
+     *
+     * @param boundingPolygons the list of objects to remove
+     */
     void removeAllFromCurrentBoundingPolygons(Collection<BoundingPolygonView> boundingPolygons) {
         currentBoundingPolygons.removeAll(boundingPolygons);
     }
@@ -266,6 +285,12 @@ public class EditorImagePaneView extends ScrollPane implements View {
         currentBoundingBoxes.setAll(boundingBoxes);
     }
 
+    /**
+     * Clears the list of current {@link BoundingPolygonView} objects and adds all
+     * objects from the provided {@link Collection}.
+     *
+     * @param boundingPolygons the {@link BoundingPolygonView} objects to set
+     */
     void setAllCurrentBoundingPolygons(Collection<BoundingPolygonView> boundingPolygons) {
         currentBoundingPolygons.setAll(boundingPolygons);
     }
@@ -341,7 +366,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     /**
      * Returns the {@link ToggleGroup} object used to realize the
-     * single-selection mechanism for {@link BoundingBoxView} objects.
+     * single-selection mechanism for bounding shape objects.
      *
      * @return the toggle-group
      */

@@ -183,37 +183,37 @@ public class MainView extends BorderPane implements View {
     }
 
     /**
-     * Loads {@link BoundingBoxView} objects from data in a provided {@link ImageAnnotation} object into
-     * the view-component. This results in displaying of the {@link BoundingBoxView} objects on top of the currently loaded
+     * Loads boundin shape objects from data in a provided {@link ImageAnnotation} object into
+     * the view-component. This results in displaying of the bounding shape objects on top of the currently loaded
      * image and showing of corresponding tree-items in the {@link ObjectTreeView} UI-element. This method
      * is called every time a previously stored {@link ImageAnnotation} object needs to be made visible to the user.
      *
      * @param annotation the image-annotation to load from
      */
     public void loadBoundingShapeViewsFromAnnotation(ImageAnnotation annotation) {
-        Pair<List<BoundingBoxView>, List<BoundingPolygonView>> boundingViews = getObjectTree()
+        Pair<List<BoundingBoxView>, List<BoundingPolygonView>> boundingShapeViews = getObjectTree()
                 .extractViewsAndBuildTreeFromAnnotation(annotation);
-        ToggleGroup boundingBoxSelectionToggleGroup = getBoundingBoxEditorImagePane().getBoundingShapeSelectionGroup();
+        ToggleGroup boundingShapeSelectionGroup = getEditorImagePane().getBoundingShapeSelectionGroup();
 
-        boundingViews.getLeft().forEach(item -> {
+        boundingShapeViews.getLeft().forEach(item -> {
             item.autoScaleWithBoundsAndInitialize(getEditorImageView().boundsInParentProperty());
-            item.setToggleGroup(boundingBoxSelectionToggleGroup);
+            item.setToggleGroup(boundingShapeSelectionGroup);
         });
 
-        boundingViews.getRight().forEach(item -> {
+        boundingShapeViews.getRight().forEach(item -> {
             item.autoScaleWithBoundsAndInitialize(getEditorImageView().boundsInParentProperty());
-            item.setToggleGroup(boundingBoxSelectionToggleGroup);
+            item.setToggleGroup(boundingShapeSelectionGroup);
         });
 
         // Temporarily switch off automatic adding of boundingBoxes to the explorer (those are already imported)
         workspaceSplitPane.setTreeUpdateEnabled(false);
-        getBoundingBoxEditorImagePane().setAllCurrentBoundingBoxes(boundingViews.getLeft());
-        getBoundingBoxEditorImagePane().setAllCurrentBoundingPolygons(boundingViews.getRight());
+        getEditorImagePane().setAllCurrentBoundingBoxes(boundingShapeViews.getLeft());
+        getEditorImagePane().setAllCurrentBoundingPolygons(boundingShapeViews.getRight());
         workspaceSplitPane.setTreeUpdateEnabled(true);
         // Expand all tree-items in the bounding-box tree-view.
         workspaceSplitPane.getEditorsSplitPane().getObjectTree().expandAllTreeItems();
         // Immediately after loading, no object should be selected.
-        boundingBoxSelectionToggleGroup.selectToggle(null);
+        boundingShapeSelectionGroup.selectToggle(null);
     }
 
     /**
@@ -237,8 +237,22 @@ public class MainView extends BorderPane implements View {
         return !getCurrentBoundingBoxes().isEmpty();
     }
 
+    /**
+     * Checks if the {@link EditorImagePaneView}-member currently contains bounding polygons.
+     *
+     * @return true if there exist bounding polygons, false otherwise.
+     */
     public boolean containsBoundingPolygonViews() {
         return !getCurrentBoundingPolygons().isEmpty();
+    }
+
+    /**
+     * Checks if the {@link EditorImagePaneView}-member currently contains bounding shapes.
+     *
+     * @return true if there exist bounding shapes, false otherwise.
+     */
+    public boolean containsBoundingShapeViews() {
+        return containsBoundingPolygonViews() || containsBoundingBoxViews();
     }
 
     /* Delegating Getters */
@@ -247,7 +261,7 @@ public class MainView extends BorderPane implements View {
         return workspaceSplitPane.getImageFileExplorer();
     }
 
-    public EditorView getBoundingBoxEditor() {
+    public EditorView getEditor() {
         return workspaceSplitPane.getEditor();
     }
 
@@ -255,7 +269,7 @@ public class MainView extends BorderPane implements View {
         return workspaceSplitPane.getEditorsSplitPane().getObjectTree();
     }
 
-    public EditorImagePaneView getBoundingBoxEditorImagePane() {
+    public EditorImagePaneView getEditorImagePane() {
         return workspaceSplitPane.getEditor().getEditorImagePane();
     }
 
@@ -344,8 +358,8 @@ public class MainView extends BorderPane implements View {
         });
 
         header.getViewMaximizeImagesItem().selectedProperty().addListener((observable, oldValue, newValue) -> {
-            getBoundingBoxEditorImagePane().setMaximizeImageView(newValue);
-            getBoundingBoxEditorImagePane().resetImageViewSize();
+            getEditorImagePane().setMaximizeImageView(newValue);
+            getEditorImagePane().resetImageViewSize();
         });
     }
 

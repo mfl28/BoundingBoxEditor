@@ -3,6 +3,9 @@ package boundingboxeditor.ui;
 import javafx.scene.control.TreeItem;
 import javafx.scene.shape.Shape;
 
+/**
+ * Base class of all shape tree items.
+ */
 public abstract class BoundingShapeTreeItem extends TreeItem<Object> {
     protected Toggleable toggleIcon;
     protected int id = 1;

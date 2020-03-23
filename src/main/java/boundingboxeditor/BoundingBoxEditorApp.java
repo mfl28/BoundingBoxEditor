@@ -11,8 +11,8 @@ import javafx.stage.Stage;
 /**
  * The main app-class and entry point of the application.
  * This is an application that allows a user to load images from an image-folder which can then be
- * annotated with bounding-boxes. It is furthermore possible to import and save image-annotation data.
- * Bounding-boxes drawn or imported by the user can be tagged (e.g.: difficult, truncated, pose: frontal,
+ * annotated with bounding-shapes. It is furthermore possible to import and save image-annotation data.
+ * Bounding-shapes drawn or imported by the user can be tagged (e.g.: difficult, truncated, pose: frontal,
  * action: walking etc.) and nested (meaning part-whole relations can be created by dragging items of a
  * tree-like UI-element onto each other).
  */

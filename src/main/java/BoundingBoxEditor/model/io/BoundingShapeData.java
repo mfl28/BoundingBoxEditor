@@ -5,6 +5,9 @@ import boundingboxeditor.model.ObjectCategory;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Base class of data-components of a bounding-shape view objects.
+ */
 public abstract class BoundingShapeData {
     private final ObjectCategory category;
     private final List<String> tags;
@@ -60,5 +63,5 @@ public abstract class BoundingShapeData {
         this.parts = parts;
     }
 
-    public abstract <T> T accept(BoundingBoxShapeDataVisitor<T> visitor);
+    public abstract <T> T accept(BoundingShapeDataVisitor<T> visitor);
 }

@@ -17,9 +17,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * The bounding-box tree UI-element. Shows information about the currently existing {@link BoundingBoxView} objects
+ * The bounding-box tree UI-element. Shows information about the currently existing bounding shape objects
  * in {@link BoundingShapeTreeCell}s.
- * {@link BoundingBoxView} objects are grouped by their category and nested objects are displayed in a hierarchical
+ * Bounding shape objects are grouped by their category and nested objects are displayed in a hierarchical
  * fashion. Any path running from the root of the tree downwards consists of alternating {@link ObjectCategoryTreeItem} and
  * {@link BoundingBoxTreeItem} objects in that order, i.e.: root, category-item, bounding-box-item, category-item, ...
  *
@@ -31,7 +31,7 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     private VirtualFlow<?> virtualFlow;
 
     /**
-     * Creates a new bounding-box tree UI-element.
+     * Creates a new object tree UI-element.
      */
     ObjectTreeView() {
         VBox.setVgrow(this, Priority.ALWAYS);
@@ -57,7 +57,7 @@ public class ObjectTreeView extends TreeView<Object> implements View {
      * currently represented by the tree, keeping the nesting structure.
      *
      * @return a list of {@link BoundingBoxData} objects corresponding to the top-level
-     * {@link BoundingBoxView} objects (possible child elements are included in
+     * bounding shape objects (possible child elements are included in
      * the "parts" member variable of the respective {@link BoundingBoxData} object)
      */
     public List<BoundingShapeData> extractCurrentBoundingShapeData() {
@@ -114,7 +114,7 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     /**
      * Takes an {@link ImageAnnotation} object and the contained structure of
      * {@link BoundingBoxData} objects and constructs the tree-structure of {@link ObjectCategoryTreeItem}
-     * and {@link BoundingBoxTreeItem} objects making up the displayed tree. At the same time {@link BoundingBoxView}
+     * and {@link BoundingBoxTreeItem} objects making up the displayed tree. At the same time bounding shape
      * objects are extracted from the encountered {@link BoundingBoxData} objects and the resulting list
      * is returned.
      *
@@ -297,7 +297,7 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         }
     }
 
-    private class TreeItemGenerator implements BoundingBoxShapeDataVisitor<Object> {
+    private class TreeItemGenerator implements BoundingShapeDataVisitor<Object> {
         TreeItem<Object> root;
         BoundingShapeData boundingShapeData;
         ImageMetaData metaData;

@@ -14,7 +14,7 @@ import javafx.scene.layout.HBox;
 import java.util.stream.Collectors;
 
 /**
- * A UI-element used to display and edit tags associated with a bounding-box.
+ * A UI-element used to display and edit tags associated with a bounding-shape.
  *
  * @see ScrollPane
  * @see View
@@ -102,7 +102,7 @@ class TagScrollPaneView extends ScrollPane implements View {
                 tagInputField.setDisable(false);
             } else {
                 // If no list of tags is registered, the tag-input field is disabled. This is the case
-                // when no bounding-box is currently selected.
+                // when no bounding-shape is currently selected.
                 tagInputField.setDisable(true);
             }
         });

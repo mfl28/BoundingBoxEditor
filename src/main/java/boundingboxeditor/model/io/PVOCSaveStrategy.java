@@ -37,8 +37,8 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String IMAGE_SIZE_ELEMENT_NAME = "size";
     private static final String IMAGE_WIDTH_ELEMENT_NAME = "width";
     private static final String IMAGE_HEIGHT_ELEMENT_NAME = "height";
-    private static final String BOUNDING_BOX_ENTRY_ELEMENT_NAME = "object";
-    private static final String BOUNDING_BOX_CATEGORY_NAME = "name";
+    private static final String BOUNDING_SHAPE_ENTRY_ELEMENT_NAME = "object";
+    private static final String BOUNDING_SHAPE_CATEGORY_NAME = "name";
     private static final String BOUNDING_BOX_SIZE_GROUP_NAME = "bndbox";
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
@@ -48,7 +48,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String YMIN_TAG = "ymin";
     private static final String YMAX_TAG = "ymax";
     private static final String ANNOTATION_FILENAME_EXTENSION = "_A";
-    private static final String BOUNDING_BOX_PART_NAME = "part";
+    private static final String BOUNDING_SHAPE_PART_NAME = "part";
     private static final String ACTIONS_TAG_NAME = "actions";
     private static final String IMAGE_DEPTH_ELEMENT_NAME = "depth";
     private static final String BOUNDING_POLYGON_SIZE_GROUP_NAME = "polygon";
@@ -99,7 +99,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         dataElement.getBoundingShapeData().forEach(boundingShape ->
                 annotationElement.appendChild(createXmlElementFromBoundingShapeData(document,
-                        BOUNDING_BOX_ENTRY_ELEMENT_NAME, boundingShape))
+                        BOUNDING_SHAPE_ENTRY_ELEMENT_NAME, boundingShape))
         );
 
         DOMSource domSource = new DOMSource(document);
@@ -128,7 +128,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
     private Element createXmlElementFromBoundingShapeData(final Document document, String elementName, final BoundingShapeData boundingShapeData) {
         final Element element = document.createElement(elementName);
-        element.appendChild(createStringValueElement(document, BOUNDING_BOX_CATEGORY_NAME, boundingShapeData.getCategoryName()));
+        element.appendChild(createStringValueElement(document, BOUNDING_SHAPE_CATEGORY_NAME, boundingShapeData.getCategoryName()));
 
         // Add tags:
         int difficultValue = 0;
@@ -172,7 +172,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         // Add parts:
         boundingShapeData.getParts().forEach(part ->
-                element.appendChild(createXmlElementFromBoundingShapeData(document, BOUNDING_BOX_PART_NAME, part))
+                element.appendChild(createXmlElementFromBoundingShapeData(document, BOUNDING_SHAPE_PART_NAME, part))
         );
 
         return element;
@@ -196,7 +196,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         return element;
     }
 
-    private class XmlElementVisitor implements BoundingBoxShapeDataVisitor<Element> {
+    private class XmlElementVisitor implements BoundingShapeDataVisitor<Element> {
         private final Document document;
 
         public XmlElementVisitor(Document document) {

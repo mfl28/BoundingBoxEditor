@@ -2,7 +2,6 @@ package boundingboxeditor.ui;
 
 import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
-import boundingboxeditor.model.io.BoundingBoxData;
 import boundingboxeditor.model.io.BoundingPolygonData;
 import boundingboxeditor.model.io.BoundingShapeData;
 import boundingboxeditor.utils.MathUtils;
@@ -28,6 +27,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Represents the visual (UI)-component of a bounding-polygon.
+ * Implements the {@link Toggle} interface to allow a single-selection
+ * mechanism.
+ *
+ * @see Polygon
+ * @see View
+ */
 public class BoundingPolygonView extends Polygon implements
         View, Toggle, BoundingShapeDataConvertible, BoundingShapeViewable {
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
@@ -43,13 +50,13 @@ public class BoundingPolygonView extends Polygon implements
     private List<Double> pointsInImage = Collections.emptyList();
 
     /**
-     * Creates a new bounding-box UI-element, which takes the shape of a rectangle that is resizable
+     * Creates a new bounding-shape UI-element, which takes the shape of a rectangle that is resizable
      * and movable by the user.
      *
-     * @param objectCategory the category this bounding-box will be assigned to
-     * @param imageMetaData  the image-meta data of the image, this bounding-box will be displayed on (this
-     *                       contains the original size of the image which is needed when transforming the visual bounding-box component
-     *                       into the data component represented by the {@link BoundingBoxData} class)
+     * @param objectCategory the category this bounding-shape will be assigned to
+     * @param imageMetaData  the image-meta data of the image, this bounding-shape will be displayed on (this
+     *                       contains the original size of the image which is needed when transforming the visual bounding-shape component
+     *                       into the data component represented by the {@link BoundingShapeData} class)
      */
     public BoundingPolygonView(ObjectCategory objectCategory, ImageMetaData imageMetaData) {
         this.boundingShapeViewData = new BoundingShapeViewData(this, objectCategory, imageMetaData);
@@ -204,13 +211,13 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     /**
-     * Creates a new {@link BoundingBoxView} object from stored bounding-box data. This function is called
-     * when bounding-box data stored in the model-component should be transformed to the visual bounding-box
+     * Creates a new {@link BoundingPolygonView} object from stored bounding-shape data. This function is called
+     * when bounding-shape data stored in the model-component should be transformed to the visual bounding-shape
      * component which is displayed to the user.
      *
-     * @param boundingPolygonData the stored {@link BoundingBoxData} object used to construct the new {@link BoundingBoxView} object
-     * @param metaData            the {@link ImageMetaData} object that should be assigned to the new {@link BoundingBoxView} object
-     * @return the new {@link BoundingBoxView} object
+     * @param boundingPolygonData the stored {@link BoundingPolygonData} object used to construct the new {@link BoundingPolygonView} object
+     * @param metaData            the {@link ImageMetaData} object that should be assigned to the new {@link BoundingPolygonView} object
+     * @return the new {@link BoundingPolygonView} object
      */
     static BoundingPolygonView fromData(BoundingPolygonData boundingPolygonData, ImageMetaData metaData) {
         BoundingPolygonView boundingPolygon = new BoundingPolygonView(boundingPolygonData.getCategory(), metaData);
@@ -220,10 +227,10 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     /**
-     * Anchors the {@link BoundingBoxView} object to and automatically scales it with the
+     * Anchors the {@link BoundingPolygonView} object to and automatically scales it with the
      * provided {@link Bounds}-property.
      *
-     * @param autoScaleBounds the auto-scale-bounds property used to anchor this {@link BoundingBoxView} object
+     * @param autoScaleBounds the auto-scale-bounds property used to anchor this {@link BoundingPolygonView} object
      */
     void autoScaleWithBounds(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
         boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
@@ -240,8 +247,8 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     /**
-     * Anchors the {@link BoundingBoxView} object to and automatically scales it with the provided {@link Bounds}-property.
-     * Initializes the {@link BoundingBoxView} with the correctly scaled size relative to the current size of the
+     * Anchors the {@link BoundingPolygonView} object to and automatically scales it with the provided {@link Bounds}-property.
+     * Initializes the {@link BoundingPolygonView} with the correctly scaled size relative to the current size of the
      * value of the autoScaleBounds-property.
      *
      * @param autoScaleBounds the bounds-property to scale with

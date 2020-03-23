@@ -19,36 +19,36 @@ import javafx.scene.text.Text;
 
 /**
  * Represents a tree-cell in a {@link ObjectTreeView}. Instances of this class are either associated
- * with a {@link ObjectCategoryTreeItem} or a {@link BoundingBoxTreeItem} and are responsible for the
+ * with a {@link ObjectCategoryTreeItem} or a {@link BoundingShapeTreeItem} and are responsible for the
  * visual representation of these items in the {@link ObjectTreeView}.
  *
  * @see TreeCell
  */
 class BoundingShapeTreeCell extends TreeCell<Object> {
     private static final String DELETE_CONTEXT_MENU_ITEM_ID = "delete-context-menu";
-    private static final String DELETE_BOUNDING_BOX_MENU_ITEM_TEXT = "Delete";
+    private static final String DELETE_BOUNDING_SHAPE_MENU_ITEM_TEXT = "Delete";
     private static final String NAME_TEXT_STYLE = "default-text";
     private static final String INFO_TEXT_ID = "info-text";
     private static final String TAG_ICON_REGION_ID = "tag-icon";
     private static final PseudoClass draggedOverPseudoClass = PseudoClass.getPseudoClass("dragged-over");
     private static final String CATEGORY_NAME_TEXT_ID = "category-name-text";
     private static final String TREE_CELL_CONTENT_ID = "tree-cell-content";
-    private static final String HIDE_BOUNDING_BOX_MENU_ITEM_TEXT = "Hide";
+    private static final String HIDE_BOUNDING_SHAPE_MENU_ITEM_TEXT = "Hide";
 
     private final BooleanProperty draggedOver = new SimpleBooleanProperty(false);
-    private final MenuItem deleteBoundingBoxMenuItem = createDeleteBoundingBoxMenuItem();
-    private final MenuItem hideBoundingBoxMenuItem = createHideBoundingBoxMenuItem();
-    private final ContextMenu contextMenu = new ContextMenu(hideBoundingBoxMenuItem, deleteBoundingBoxMenuItem);
+    private final MenuItem deleteBoundingShapeMenuItem = createDeleteBoundingShapeMenuItem();
+    private final MenuItem hideBoundingShapeMenuItem = createHideBoundingShapeMenuItem();
+    private final ContextMenu contextMenu = new ContextMenu(hideBoundingShapeMenuItem, deleteBoundingShapeMenuItem);
     private final Text nameText = new Text();
     private final Text additionalInfoText = new Text();
     private final Region tagIconRegion = createTagIconRegion();
 
     private final EventHandler<ContextMenuEvent> showContextMenuEventHandler = createShowContextMenuEventHandler();
-    private final ChangeListener<Boolean> boundingBoxVisibilityListener = createBoundingBoxVisibilityListener();
+    private final ChangeListener<Boolean> boundingShapeVisibilityListener = createBoundingShapeVisibilityListener();
 
     /**
      * Creates a new tree-cell object responsible for the visual representation of a {@link ObjectCategoryTreeItem}
-     * or a {@link BoundingBoxTreeItem} in a {@link ObjectTreeView}.
+     * or a {@link BoundingShapeTreeItem} in a {@link ObjectTreeView}.
      */
     BoundingShapeTreeCell() {
         nameText.getStyleClass().add(NAME_TEXT_STYLE);
@@ -66,7 +66,7 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
             Shape oldItem = (Shape) oldCellObject;
             // Remove the old item's context-menu event-handler.
             oldItem.removeEventHandler(ContextMenuEvent.CONTEXT_MENU_REQUESTED, showContextMenuEventHandler);
-            oldItem.visibleProperty().removeListener(boundingBoxVisibilityListener);
+            oldItem.visibleProperty().removeListener(boundingShapeVisibilityListener);
         }
 
         super.updateItem(newCellObject, empty);
@@ -87,12 +87,12 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
             setContextMenu(contextMenu);
 
             if(newCellObject instanceof Shape) {
-                // Register the contextMenu with the BoundingBoxView associated with the cell. This
-                // allows to display the contextMenu by right-clicking on the bounding-box itself.
+                // Register the contextMenu with the shape associated with the cell. This
+                // allows to display the contextMenu by right-clicking on the shape itself.
                 ((Shape) newCellObject).setOnContextMenuRequested(showContextMenuEventHandler);
-                // The context menu should be hidden when the BoundingBoxView associated with this cell
+                // The context menu should be hidden when the shape associated with this cell
                 // is hidden.
-                ((Shape) newCellObject).visibleProperty().addListener(boundingBoxVisibilityListener);
+                ((Shape) newCellObject).visibleProperty().addListener(boundingShapeVisibilityListener);
             }
         }
     }
@@ -108,26 +108,26 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
 
     /**
      * Returns the menu-item of the context-menu which allows
-     * the user to delete the currently associated {@link BoundingBoxView}.
+     * the user to delete the currently associated bounding shape view object.
      *
      * @return the menu-item
      */
     MenuItem getDeleteBoundingShapeMenuItem() {
-        return deleteBoundingBoxMenuItem;
+        return deleteBoundingShapeMenuItem;
     }
 
-    private MenuItem createDeleteBoundingBoxMenuItem() {
-        CustomMenuItem deleteMenuItem = new CustomMenuItem(new Label(DELETE_BOUNDING_BOX_MENU_ITEM_TEXT));
+    private MenuItem createDeleteBoundingShapeMenuItem() {
+        CustomMenuItem deleteMenuItem = new CustomMenuItem(new Label(DELETE_BOUNDING_SHAPE_MENU_ITEM_TEXT));
         deleteMenuItem.setId(DELETE_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(deleteMenuItem.getContent(),
-                UiUtils.createTooltip("", Controller.KeyCombinations.deleteSelectedBoundingBox));
+                UiUtils.createTooltip("", Controller.KeyCombinations.deleteSelectedBoundingShape));
         return deleteMenuItem;
     }
 
-    private MenuItem createHideBoundingBoxMenuItem() {
-        CustomMenuItem hideMenuItem = new CustomMenuItem(new Label(HIDE_BOUNDING_BOX_MENU_ITEM_TEXT));
+    private MenuItem createHideBoundingShapeMenuItem() {
+        CustomMenuItem hideMenuItem = new CustomMenuItem(new Label(HIDE_BOUNDING_SHAPE_MENU_ITEM_TEXT));
         Tooltip.install(hideMenuItem.getContent(),
-                UiUtils.createTooltip("", Controller.KeyCombinations.hideSelectedBoundingBox));
+                UiUtils.createTooltip("", Controller.KeyCombinations.hideSelectedBoundingShape));
         return hideMenuItem;
     }
 
@@ -158,7 +158,7 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
 
         draggedOver.addListener((observable, oldValue, newValue) -> pseudoClassStateChanged(draggedOverPseudoClass, newValue));
 
-        hideBoundingBoxMenuItem.setOnAction(event -> {
+        hideBoundingShapeMenuItem.setOnAction(event -> {
             if(getTreeItem() instanceof ObjectCategoryTreeItem) {
                 ((ObjectCategoryTreeItem) getTreeItem()).setIconToggledOn(false);
             } else if(getTreeItem() instanceof BoundingShapeTreeItem) {
@@ -246,7 +246,7 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
     }
 
     @SuppressWarnings("UnnecessaryLambda")
-    private ChangeListener<Boolean> createBoundingBoxVisibilityListener() {
+    private ChangeListener<Boolean> createBoundingShapeVisibilityListener() {
         return ((observable, oldValue, newValue) -> {
             if(!Boolean.TRUE.equals(newValue)) {
                 contextMenu.hide();

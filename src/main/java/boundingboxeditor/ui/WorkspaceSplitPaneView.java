@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * A UI-element representing the main workspace for the user to interact with or navigate through images
- * as well as for creating/editing/deleting bounding-boxes.
+ * as well as for creating/editing/deleting bounding-shapes.
  *
  * @see SplitPane
  * @see View
@@ -39,7 +39,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
     /**
      * Creates a new UI-element representing the main workspace for the user to interact with or navigate through images
-     * as well as for creating/editing/deleting bounding-boxes.
+     * as well as for creating/editing/deleting bounding-shapes.
      */
     WorkspaceSplitPaneView() {
         getItems().addAll(editorsSplitPane, editor, imageFileExplorer);
@@ -68,9 +68,9 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     }
 
     /**
-     * Returns the image-bounding-box-editor.
+     * Returns the editor.
      *
-     * @return the image-bounding-box-editor
+     * @return the editor
      */
     EditorView getEditor() {
         return editor;
@@ -136,7 +136,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
     /**
      * Sets the treeUpdateEnabled boolean which indicates if the {@link ObjectTreeView} object
-     * should be updated when {@link BoundingBoxView} objects are added to the current list of objects
+     * should be updated when bounding shape objects are added to the current list of objects
      * in the {@link EditorView} member.
      *
      * @param treeUpdateEnabled true means tree-updates are enabled, false means disabled
@@ -207,10 +207,10 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         editor.getEditorImagePane().selectedCategoryProperty()
                 .bind(editorsSplitPane.getObjectCategoryTable().getSelectionModel().selectedItemProperty());
 
-        editor.getEditorToolBar().getShowBoundingBoxesButton().setOnAction(event ->
+        editor.getEditorToolBar().getShowBoundingShapesButton().setOnAction(event ->
                 editorsSplitPane.getObjectTree().setToggleIconStateForAllTreeItems(true));
 
-        editor.getEditorToolBar().getHideBoundingBoxesButton().setOnAction(event ->
+        editor.getEditorToolBar().getHideBoundingShapesButton().setOnAction(event ->
                 editorsSplitPane.getObjectTree().setToggleIconStateForAllTreeItems(false));
     }
 
@@ -435,13 +435,13 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
             }
 
-            ObjectTreeView boundingBoxExplorer = (ObjectTreeView) treeView;
+            ObjectTreeView objectTreeView = (ObjectTreeView) treeView;
             // If the target is an empty cell, add the dragged item to a (possibly new) category that is a child of the tree-root.
             if(targetItem == null) {
-                targetItem = boundingBoxExplorer.getRoot();
+                targetItem = objectTreeView.getRoot();
             }
             // Add to new location
-            ObjectCategoryTreeItem newParentItem = boundingBoxExplorer.findParentCategoryTreeItemForCategory(targetItem, draggedItemCategory);
+            ObjectCategoryTreeItem newParentItem = objectTreeView.findParentCategoryTreeItemForCategory(targetItem, draggedItemCategory);
 
             if(newParentItem == null) {
                 // Category does not exits in new location
