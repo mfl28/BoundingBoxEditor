@@ -76,6 +76,9 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 () -> mainView.getImageFileListView().getSelectionModel().getSelectedItem().isHasAssignedBoundingShapes()),
                 "Correct file explorer file info status was not set within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
+        verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.hasSize(8));
+        verifyThat(mainView.getCurrentBoundingPolygons(), Matchers.hasSize(1));
+
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.CONTROL)
