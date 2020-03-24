@@ -224,27 +224,33 @@ public class EditorImagePaneView extends ScrollPane implements View {
     public void initializeBoundingPolygon(MouseEvent event, ImageMetaData currentImageMetaData) {
         if(currentPolygon == null) {
             currentPolygon = new BoundingPolygonView(selectedCategory.get(), currentImageMetaData);
+            currentPolygon.setToggleGroup(boundingShapeSelectionGroup);
+
             currentBoundingPolygons.add(currentPolygon);
 
             currentPolygon.autoScaleWithBounds(imageView.boundsInParentProperty());
-            currentPolygon.setToggleGroup(boundingShapeSelectionGroup);
-
-            boundingShapeSelectionGroup.selectToggle(currentPolygon);
-
             currentPolygon.setMouseTransparent(true);
             currentPolygon.setVisible(true);
         }
+
         Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
         currentPolygon.appendNode(parentCoordinates.getX(), parentCoordinates.getY());
+        boundingShapeSelectionGroup.selectToggle(currentPolygon);
         currentPolygon.setEditing(true);
     }
 
-    public void finalizeBoundingPolygon() {
+    public void finalizeCurrentBoundingPolygon() {
         if(currentPolygon != null) {
             currentPolygon.setMouseTransparent(false);
             currentPolygon.setEditing(false);
             currentPolygon = null;
         }
+    }
+
+    public void setBoundingPolygonsEditing(boolean editing) {
+        currentBoundingPolygons.forEach(boundingPolygonView -> {
+            boundingPolygonView.setEditing(editing);
+        });
     }
 
     public boolean isCategorySelected() {

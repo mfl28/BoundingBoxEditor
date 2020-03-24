@@ -143,12 +143,12 @@ public class BoundingPolygonView extends Polygon implements
         BoundingPolygonView other = (BoundingPolygonView) obj;
 
         if(!Objects.equals(boundingShapeViewData, other.boundingShapeViewData) ||
-                pointsInImage.size() != other.pointsInImage.size()) {
+                getPoints().size() != other.getPoints().size()) {
             return false;
         }
 
-        for(int i = 0; i != pointsInImage.size(); ++i) {
-            if(!MathUtils.doubleAlmostEqual(pointsInImage.get(i), other.pointsInImage.get(i))) {
+        for(int i = 0; i != getPoints().size(); ++i) {
+            if(!MathUtils.doubleAlmostEqual(getPoints().get(i), other.getPoints().get(i))) {
                 return false;
             }
         }
@@ -301,11 +301,11 @@ public class BoundingPolygonView extends Polygon implements
             while(c.next()) {
                 if(c.wasAdded()) {
                     for(VertexHandle vertexHandle : c.getAddedSubList()) {
-                        getPoints().add(vertexHandle.pointIndex, vertexHandle.getCenterX());
-                        getPoints().add(vertexHandle.pointIndex + 1, vertexHandle.getCenterY());
+                        getPoints().add(vertexHandle.pointIndex.get(), vertexHandle.getCenterX());
+                        getPoints().add(vertexHandle.pointIndex.get() + 1, vertexHandle.getCenterY());
 
-                        for(int i = vertexHandle.pointIndex / 2 + 1; i < vertexHandles.size(); ++i) {
-                            vertexHandles.get(i).pointIndex += 2;
+                        for(int i = vertexHandle.pointIndex.get() / 2 + 1; i < vertexHandles.size(); ++i) {
+                            vertexHandles.get(i).pointIndex.set(vertexHandles.get(i).pointIndex.get() + 2);
                         }
                     }
 
@@ -314,11 +314,11 @@ public class BoundingPolygonView extends Polygon implements
 
                 if(c.wasRemoved()) {
                     for(VertexHandle vertexHandle : c.getRemoved()) {
-                        getPoints().remove(vertexHandle.pointIndex);
-                        getPoints().remove(vertexHandle.pointIndex);
+                        getPoints().remove(vertexHandle.pointIndex.get());
+                        getPoints().remove(vertexHandle.pointIndex.get());
 
-                        for(int i = vertexHandle.pointIndex / 2; i < vertexHandles.size(); ++i) {
-                            vertexHandles.get(i).pointIndex -= 2;
+                        for(int i = vertexHandle.pointIndex.get() / 2; i < vertexHandles.size(); ++i) {
+                            vertexHandles.get(i).pointIndex.set(vertexHandles.get(i).pointIndex.get() - 2);
                         }
                     }
 
@@ -343,7 +343,7 @@ public class BoundingPolygonView extends Polygon implements
 
         setOnMousePressed(event -> {
             if(!event.isControlDown()) {
-                getToggleGroup().selectToggle(this);
+                boundingShapeViewData.getToggleGroup().selectToggle(this);
                 event.consume();
             }
         });
@@ -407,18 +407,30 @@ public class BoundingPolygonView extends Polygon implements
         private final BooleanProperty editing = createEditingProperty();
         DragAnchor dragAnchor = new DragAnchor();
         BooleanProperty selected = new SimpleBooleanProperty(false);
-        private int pointIndex;
+        private IntegerProperty pointIndex;
 
 
         VertexHandle(double pointX, double pointY, int pointIndex) {
             super(pointX, pointY, RADIUS);
-            this.pointIndex = pointIndex;
+            this.pointIndex = new SimpleIntegerProperty(pointIndex);
 
             setId(VERTEX_HANDLE_ID);
             pseudoClassStateChanged(editingPseudoClass, false);
 
             addMoveFunctionality();
             setUpInternalListeners();
+        }
+
+        public boolean isEditing() {
+            return this.editing.get();
+        }
+
+        public void setEditing(boolean editing) {
+            this.editing.set(editing);
+        }
+
+        public BooleanProperty editingProperty() {
+            return this.editing;
         }
 
         private void addMoveFunctionality() {
@@ -454,11 +466,11 @@ public class BoundingPolygonView extends Polygon implements
             visibleProperty().bind(BoundingPolygonView.this.visibleProperty().and(BoundingPolygonView.this.selectedProperty().or(BoundingPolygonView.this.editingProperty())));
 
             centerXProperty().addListener((observableValue, oldNumber, newNumber) ->
-                    BoundingPolygonView.this.getPoints().set(pointIndex, newNumber.doubleValue())
+                    BoundingPolygonView.this.getPoints().set(pointIndex.get(), newNumber.doubleValue())
             );
 
             centerYProperty().addListener((observableValue, oldNumber, newNumber) ->
-                    BoundingPolygonView.this.getPoints().set(pointIndex + 1, newNumber.doubleValue())
+                    BoundingPolygonView.this.getPoints().set(pointIndex.get() + 1, newNumber.doubleValue())
             );
 
             editing.bind(BoundingPolygonView.this.editing);

@@ -475,7 +475,8 @@ public class Controller {
                 }
             } else if(event.getButton().equals(MouseButton.SECONDARY)
                     && imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
-                imagePaneView.finalizeBoundingPolygon();
+                imagePaneView.finalizeCurrentBoundingPolygon();
+                imagePaneView.setBoundingPolygonsEditing(false);
             }
         }
     }

@@ -238,16 +238,16 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     }
 
     private void createTreeItemFromBoundingPolygonView(TreeItem<Object> root, BoundingPolygonView boundingPolygonView) {
-        BoundingPolygonTreeItem boundingBoxTreeItem = new BoundingPolygonTreeItem(boundingPolygonView);
-        boundingPolygonView.setTreeItem(boundingBoxTreeItem);
+        BoundingPolygonTreeItem boundingPolygonTreeItem = new BoundingPolygonTreeItem(boundingPolygonView);
+        boundingPolygonView.setTreeItem(boundingPolygonTreeItem);
         ObjectCategoryTreeItem parentObjectCategoryTreeItem = findParentCategoryTreeItemForCategory(root, boundingPolygonView.getObjectCategory());
 
         if(parentObjectCategoryTreeItem != null) {
-            parentObjectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingBoxTreeItem);
+            parentObjectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingPolygonTreeItem);
         } else {
             ObjectCategoryTreeItem objectCategoryTreeItem = new ObjectCategoryTreeItem(boundingPolygonView.getObjectCategory());
             root.getChildren().add(objectCategoryTreeItem);
-            objectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingBoxTreeItem);
+            objectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingPolygonTreeItem);
         }
     }
 

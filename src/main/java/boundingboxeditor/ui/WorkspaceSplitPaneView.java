@@ -176,6 +176,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                         objectTreeView.keepTreeItemInView(newValue);
                         getEditor().getEditorImagePane()
                                 .getBoundingShapeSelectionGroup().selectToggle((Toggle) newValue.getValue());
+                    } else if(newValue == null) {
+                        getEditor().getEditorImagePane().getBoundingShapeSelectionGroup().selectToggle(null);
                     }
                 });
     }

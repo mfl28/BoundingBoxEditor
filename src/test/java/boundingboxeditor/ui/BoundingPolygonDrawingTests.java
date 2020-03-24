@@ -2,6 +2,7 @@ package boundingboxeditor.ui;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import javafx.geometry.Point2D;
+import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -53,9 +54,8 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                 new Point2D(targetImageViewPointRatios[2], targetImageViewPointRatios[3]),
                 new Point2D(targetImageViewPointRatios[4], targetImageViewPointRatios[5]),
                 new Point2D(targetImageViewPointRatios[6], targetImageViewPointRatios[7]));
-        robot.rightClickOn();
-        WaitForAsyncUtils.waitForFxEvents();
 
+        WaitForAsyncUtils.waitForFxEvents();
         int drawnBoundingPolygonFileIndex = model.getCurrentFileIndex();
 
         verifyThat(mainView.getCurrentBoundingPolygons().size(), Matchers.equalTo(1));
@@ -70,6 +70,21 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(drawnPointCoordinates, Matchers.hasSize(8));
         verifyThat(drawnBoundingPolygon, NodeMatchers.isVisible());
         verifyThat(drawnBoundingPolygon.getImageRelativeRatios().toArray(Double[]::new), ratioListCloseTo(targetImageViewPointRatios));
+        verifyThat(drawnBoundingPolygon.isSelected(), Matchers.equalTo(true));
+
+        verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(), Matchers.equalTo(drawnBoundingPolygon));
+
+        robot.rightClickOn(mainView.getEditorImageView());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(drawnBoundingPolygon.isSelected(), Matchers.equalTo(false));
+        verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(), Matchers.nullValue());
+
+        robot.clickOn(drawnBoundingPolygon, MouseButton.MIDDLE);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(drawnBoundingPolygon.isSelected(), Matchers.equalTo(true));
+        verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(), Matchers.equalTo(drawnBoundingPolygon));
 
         robot.clickOn("#previous-button");
         waitUntilCurrentImageIsLoaded();
@@ -107,6 +122,9 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         // Move handle.
         robot.clickOn(reloadedBoundingPolygon);
         WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(reloadedBoundingPolygon.isSelected(), Matchers.equalTo(true));
+        verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(), Matchers.equalTo(reloadedBoundingPolygon));
 
         Point2D dragEndRatiosPoint = new Point2D(0.1, 0.1);
 

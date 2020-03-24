@@ -239,7 +239,8 @@ class BoundingShapeTreeCell extends TreeCell<Object> {
     @SuppressWarnings("UnnecessaryLambda")
     private EventHandler<ContextMenuEvent> createShowContextMenuEventHandler() {
         return event -> {
-            if(getItem() instanceof Shape) {
+            if(getItem() instanceof Shape
+                    && getItem() instanceof Toggle && ((Toggle) getItem()).isSelected()) {
                 contextMenu.show((Shape) getItem(), event.getScreenX(), event.getScreenY());
             }
         };
