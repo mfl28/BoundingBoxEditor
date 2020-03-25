@@ -409,8 +409,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
 #vertex-handle {
     &:editing {
-        -fx-stroke: $base-font-color;
-        -fx-stroke-width: 2px;
+        -fx-stroke-width: 3px;
     }
 }
 

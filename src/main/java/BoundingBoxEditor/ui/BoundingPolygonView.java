@@ -10,6 +10,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -21,11 +22,9 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Represents the visual (UI)-component of a bounding-polygon.
@@ -47,6 +46,7 @@ public class BoundingPolygonView extends Polygon implements
 
     private final BooleanProperty editing = createEditingProperty();
     private ObservableList<VertexHandle> vertexHandles = FXCollections.observableArrayList();
+    private ObservableSet<Integer> editingIndices = FXCollections.observableSet(new LinkedHashSet<>());
     private List<Double> pointsInImage = Collections.emptyList();
 
     /**
@@ -324,6 +324,12 @@ public class BoundingPolygonView extends Polygon implements
 
                     boundingShapeViewData.getNodeGroup().getChildren().removeAll(c.getRemoved());
                 }
+
+                if(isEditing() && !vertexHandles.isEmpty()) {
+                    vertexHandles.forEach(vertexHandle -> vertexHandle.setEditing(false));
+                    vertexHandles.get(0).setEditing(true);
+                    vertexHandles.get(vertexHandles.size() - 1).setEditing(true);
+                }
             }
         });
 
@@ -344,6 +350,12 @@ public class BoundingPolygonView extends Polygon implements
         setOnMousePressed(event -> {
             if(!event.isControlDown()) {
                 boundingShapeViewData.getToggleGroup().selectToggle(this);
+
+                if(event.getButton().equals(MouseButton.MIDDLE)) {
+                    splice();
+                    setEditing(false);
+                }
+
                 event.consume();
             }
         });
@@ -351,6 +363,13 @@ public class BoundingPolygonView extends Polygon implements
         boundingShapeViewData.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if(Boolean.TRUE.equals(newValue)) {
                 boundingShapeViewData.setHighlighted(false);
+            }
+        });
+
+        editing.addListener((observable, oldValue, newValue) -> {
+            if(Boolean.FALSE.equals(newValue)) {
+                vertexHandles.forEach(vertexHandle -> vertexHandle.setEditing(false));
+                editingIndices.clear();
             }
         });
     }
@@ -399,16 +418,73 @@ public class BoundingPolygonView extends Polygon implements
         };
     }
 
+    private void splice() {
+        if(editingIndices.size() < 2) {
+            // Nothing to do
+            return;
+        }
+
+        int spliceRootIndex = (int) editingIndices.toArray()[0];
+        int lowIndex = Math.floorMod(spliceRootIndex - 2, getPoints().size());
+        int highIndex = Math.floorMod(spliceRootIndex + 2, getPoints().size());
+
+        List<ImmutablePair<Integer, Integer>> edges = new ArrayList<>();
+
+        if(lowIndex == highIndex) {
+            edges.add(new ImmutablePair<>(spliceRootIndex, lowIndex));
+        } else {
+            int numEdges = vertexHandles.size();
+
+            while(numEdges > 0 && (editingIndices.contains(lowIndex) || editingIndices.contains(highIndex))) {
+                if(editingIndices.contains(lowIndex)) {
+                    edges.add(0, new ImmutablePair<>(lowIndex, Math.floorMod(lowIndex + 2, getPoints().size())));
+                    lowIndex = Math.floorMod(lowIndex - 2, getPoints().size());
+                } else if(editingIndices.contains(highIndex)) {
+                    edges.add(new ImmutablePair<>(Math.floorMod(highIndex - 2, getPoints().size()), highIndex));
+                    highIndex = Math.floorMod(highIndex + 2, getPoints().size());
+                }
+                numEdges -= 1;
+            }
+        }
+
+        int indexShift = 0;
+        int indexShiftThreshold = getPoints().size();
+
+        for(ImmutablePair<Integer, Integer> pair : edges) {
+            int startIndex = pair.left + (pair.left > indexShiftThreshold ? indexShift : 0);
+            int endIndex = pair.right + (pair.right > indexShiftThreshold ? indexShift : 0);
+
+            indexShiftThreshold = Math.min(indexShiftThreshold, startIndex);
+
+            insertVertexHandleBetween(startIndex, endIndex);
+
+            if(endIndex == 0) {
+                indexShift = 0;
+            } else {
+                indexShift += 2;
+            }
+        }
+    }
+
+    private void insertVertexHandleBetween(int startIndex, int endIndex) {
+        List<Double> points = getPoints();
+
+        double midpointX = (points.get(startIndex) + points.get(endIndex)) / 2.0;
+        double midpointY = (points.get(startIndex + 1) + points.get(endIndex + 1)) / 2.0;
+
+        vertexHandles.add(startIndex / 2 + 1, new VertexHandle(midpointX, midpointY, startIndex + 2));
+    }
+
     private class VertexHandle extends Circle {
-        private static final double RADIUS = 6.0;
+        private static final double RADIUS = 6.5;
         private static final String VERTEX_HANDLE_ID = "vertex-handle";
         private static final String EDITING_PSEUDO_CLASS_NAME = "editing";
+        private static final double BRIGHTNESS_BLACK_SWITCH_THRESHOLD = 0.75;
         private final PseudoClass editingPseudoClass = PseudoClass.getPseudoClass(EDITING_PSEUDO_CLASS_NAME);
         private final BooleanProperty editing = createEditingProperty();
         DragAnchor dragAnchor = new DragAnchor();
         BooleanProperty selected = new SimpleBooleanProperty(false);
         private IntegerProperty pointIndex;
-
 
         VertexHandle(double pointX, double pointY, int pointIndex) {
             super(pointX, pointY, RADIUS);
@@ -437,7 +513,35 @@ public class BoundingPolygonView extends Polygon implements
             setOnMousePressed(mouseEvent -> {
                 if(mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
                     dragAnchor.setCoordinates(mouseEvent.getX() - getCenterX(), mouseEvent.getY() - getCenterY());
+                } else if(mouseEvent.getButton().equals(MouseButton.MIDDLE)) {
+                    if(isEditing()) {
+                        setEditing(false);
+                        BoundingPolygonView.this.editingIndices.remove(pointIndex.get());
+                    } else {
+                        if(BoundingPolygonView.this.editingIndices.isEmpty()) {
+                            setEditing(true);
+                            BoundingPolygonView.this.setEditing(true);
+                            BoundingPolygonView.this.editingIndices.add(pointIndex.get());
+                        } else if(BoundingPolygonView.this.editingIndices.contains(pointIndex.get())) {
+                            if((BoundingPolygonView.this.editingIndices.contains(Math.floorMod(pointIndex.get() - 2, BoundingPolygonView.this.getPoints().size()))
+                                    && !BoundingPolygonView.this.editingIndices.contains(Math.floorMod(pointIndex.get() + 2, BoundingPolygonView.this.getPoints().size()))) ||
+                                    (BoundingPolygonView.this.editingIndices.contains(Math.floorMod(pointIndex.get() + 2, BoundingPolygonView.this.getPoints().size()))
+                                            && !BoundingPolygonView.this.editingIndices.contains(Math.floorMod(pointIndex.get() - 2, BoundingPolygonView.this.getPoints().size()))) ||
+                                    BoundingPolygonView.this.editingIndices.size() == 1) {
+                                setEditing(false);
+                                BoundingPolygonView.this.editingIndices.remove(pointIndex.get());
+                            }
+                        } else {
+                            if(BoundingPolygonView.this.editingIndices.contains(Math.floorMod(pointIndex.get() - 2, BoundingPolygonView.this.getPoints().size()))
+                                    || BoundingPolygonView.this.editingIndices.contains(Math.floorMod((pointIndex.get() + 2), BoundingPolygonView.this.getPoints().size()))) {
+                                setEditing(true);
+                                BoundingPolygonView.this.setEditing(true);
+                                BoundingPolygonView.this.editingIndices.add(pointIndex.get());
+                            }
+                        }
+                    }
                 }
+
                 mouseEvent.consume();
             });
 
@@ -451,8 +555,6 @@ public class BoundingPolygonView extends Polygon implements
                 }
                 mouseEvent.consume();
             });
-
-
         }
 
         private void setUpInternalListeners() {
@@ -473,7 +575,11 @@ public class BoundingPolygonView extends Polygon implements
                     BoundingPolygonView.this.getPoints().set(pointIndex.get() + 1, newNumber.doubleValue())
             );
 
-            editing.bind(BoundingPolygonView.this.editing);
+            strokeProperty().bind(Bindings.when(editing)
+                    .then(Bindings.createObjectBinding(() ->
+                            ((Color) getFill()).getBrightness() > BRIGHTNESS_BLACK_SWITCH_THRESHOLD
+                                    ? Color.BLACK : Color.WHITE, fillProperty()))
+                    .otherwise(Bindings.createObjectBinding(() -> ((Color) getFill()), fillProperty())));
         }
 
         private BooleanProperty createEditingProperty() {
