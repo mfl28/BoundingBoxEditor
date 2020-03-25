@@ -40,7 +40,7 @@ public class BoundingBoxEditorTestBase {
     protected static final double RATIO_EQUAL_THRESHOLD = 1e-2;
     private static final double INITIAL_WINDOW_SCALE = 0.75;
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
-    protected static int TIMEOUT_DURATION_IN_SEC = 10;
+    protected static int TIMEOUT_DURATION_IN_SEC = 40;
     protected static String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
     protected static String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
     protected Controller controller;
@@ -99,9 +99,9 @@ public class BoundingBoxEditorTestBase {
                 .release(MouseButton.PRIMARY);
     }
 
-    protected void moveAndClickRelativeToImageView(FxRobot robot, Point2D... points) {
+    protected void moveAndClickRelativeToImageView(FxRobot robot, MouseButton mousebutton, Point2D... points) {
         for(Point2D point : points) {
-            robot.moveTo(getScreenPointFromImageViewRatios(point)).clickOn(MouseButton.PRIMARY);
+            robot.moveTo(getScreenPointFromImageViewRatios(point)).clickOn(mousebutton);
         }
     }
 
@@ -119,8 +119,8 @@ public class BoundingBoxEditorTestBase {
         final Image image = mainView.getCurrentImage();
 
         WaitForAsyncUtils.waitForFxEvents();
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> image != null);
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, image.progressProperty().isEqualTo(1));
+        WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, () -> image != null);
+        WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, image.progressProperty().isEqualTo(1));
     }
 
     @Start
@@ -144,6 +144,7 @@ public class BoundingBoxEditorTestBase {
 
     @AfterEach
     protected void tearDown() throws TimeoutException {
+        FxToolkit.cleanupStages();
         FxToolkit.hideStage();
     }
 

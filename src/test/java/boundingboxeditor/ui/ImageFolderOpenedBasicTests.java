@@ -7,6 +7,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
@@ -43,7 +44,6 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
     private void verifyMenuBarFunctionality(FxRobot robot) {
         robot.clickOn("File");
-
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem openFolderItem = getSubMenuItem(robot, "File", "Open Folder...");

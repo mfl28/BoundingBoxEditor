@@ -16,6 +16,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
@@ -66,7 +67,6 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private final StackPane contentPane = new StackPane(imageView, boundingBoxSceneGroup, boundingPolygonSceneGroup,
             initializerRectangle, imageLoadingProgressIndicator);
     private boolean boundingBoxDrawingInProgress = false;
-    private BoundingPolygonView currentPolygon;
     private DrawingMode drawingMode = DrawingMode.BOX;
 
     /**
@@ -222,34 +222,34 @@ public class EditorImagePaneView extends ScrollPane implements View {
     }
 
     public void initializeBoundingPolygon(MouseEvent event, ImageMetaData currentImageMetaData) {
-        if(currentPolygon == null) {
-            currentPolygon = new BoundingPolygonView(selectedCategory.get(), currentImageMetaData);
-            currentPolygon.setToggleGroup(boundingShapeSelectionGroup);
+        Toggle selectedBoundingShape = boundingShapeSelectionGroup.getSelectedToggle();
 
-            currentBoundingPolygons.add(currentPolygon);
+        BoundingPolygonView selectedBoundingPolygon;
 
-            currentPolygon.autoScaleWithBounds(imageView.boundsInParentProperty());
-            currentPolygon.setMouseTransparent(true);
-            currentPolygon.setVisible(true);
+        if(!(selectedBoundingShape instanceof BoundingPolygonView && ((BoundingPolygonView) selectedBoundingShape).isConstructing())) {
+            selectedBoundingPolygon = new BoundingPolygonView(selectedCategory.get(), currentImageMetaData);
+            selectedBoundingPolygon.setToggleGroup(boundingShapeSelectionGroup);
+            selectedBoundingPolygon.setConstructing(true);
+
+            currentBoundingPolygons.add(selectedBoundingPolygon);
+
+            selectedBoundingPolygon.autoScaleWithBounds(imageView.boundsInParentProperty());
+            selectedBoundingPolygon.setMouseTransparent(true);
+            selectedBoundingPolygon.setVisible(true);
+            boundingShapeSelectionGroup.selectToggle(selectedBoundingPolygon);
+        } else {
+            selectedBoundingPolygon = (BoundingPolygonView) selectedBoundingShape;
         }
 
         Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
-        currentPolygon.appendNode(parentCoordinates.getX(), parentCoordinates.getY());
-        boundingShapeSelectionGroup.selectToggle(currentPolygon);
-        currentPolygon.setEditing(true);
+        selectedBoundingPolygon.appendNode(parentCoordinates.getX(), parentCoordinates.getY());
+        selectedBoundingPolygon.setEditing(true);
     }
 
-    public void finalizeCurrentBoundingPolygon() {
-        if(currentPolygon != null) {
-            currentPolygon.setMouseTransparent(false);
-            currentPolygon.setEditing(false);
-            currentPolygon = null;
-        }
-    }
-
-    public void setBoundingPolygonsEditing(boolean editing) {
+    public void setBoundingPolygonsEditingAndConstructing(boolean editing) {
         currentBoundingPolygons.forEach(boundingPolygonView -> {
             boundingPolygonView.setEditing(editing);
+            boundingPolygonView.setConstructing(false);
         });
     }
 
@@ -366,7 +366,6 @@ public class EditorImagePaneView extends ScrollPane implements View {
         imageView.setImage(new Image(imageFile.toURI().toString(),
                 dimension.getWidth(), dimension.getHeight(), true, true, true));
 
-        currentPolygon = null;
         resetImageViewSize();
     }
 

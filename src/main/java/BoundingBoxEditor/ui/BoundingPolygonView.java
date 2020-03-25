@@ -45,6 +45,7 @@ public class BoundingPolygonView extends Polygon implements
     private final BoundingShapeViewData boundingShapeViewData;
 
     private final BooleanProperty editing = createEditingProperty();
+    private final BooleanProperty constructing = new SimpleBooleanProperty(false);
     private ObservableList<VertexHandle> vertexHandles = FXCollections.observableArrayList();
     private ObservableSet<Integer> editingIndices = FXCollections.observableSet(new LinkedHashSet<>());
     private List<Double> pointsInImage = Collections.emptyList();
@@ -93,6 +94,18 @@ public class BoundingPolygonView extends Polygon implements
 
     public void setHighlighted(boolean highlighted) {
         boundingShapeViewData.setHighlighted(highlighted);
+    }
+
+    public boolean isConstructing() {
+        return constructing.get();
+    }
+
+    public void setConstructing(boolean constructing) {
+        this.constructing.set(constructing);
+    }
+
+    public BooleanProperty constructingProperty() {
+        return constructing;
     }
 
     @Override
@@ -286,6 +299,14 @@ public class BoundingPolygonView extends Polygon implements
         return result;
     }
 
+    ObservableList<VertexHandle> getVertexHandles() {
+        return vertexHandles;
+    }
+
+    ObservableSet<Integer> getEditingIndices() {
+        return editingIndices;
+    }
+
     private void setUpInternalListeners() {
         strokeProperty().bind(boundingShapeViewData.getObjectCategory().colorProperty());
 
@@ -363,6 +384,9 @@ public class BoundingPolygonView extends Polygon implements
         boundingShapeViewData.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if(Boolean.TRUE.equals(newValue)) {
                 boundingShapeViewData.setHighlighted(false);
+            } else {
+                setConstructing(false);
+                setEditing(false);
             }
         });
 
@@ -370,6 +394,20 @@ public class BoundingPolygonView extends Polygon implements
             if(Boolean.FALSE.equals(newValue)) {
                 vertexHandles.forEach(vertexHandle -> vertexHandle.setEditing(false));
                 editingIndices.clear();
+            }
+        });
+
+        constructing.addListener((observable, oldValue, newValue) -> {
+            if(Boolean.FALSE.equals(newValue)) {
+                setMouseTransparent(false);
+                setEditing(false);
+            }
+        });
+
+        visibleProperty().addListener((observable, oldValue, newValue) -> {
+            if(Boolean.FALSE.equals(newValue)) {
+                setConstructing(false);
+                setEditing(false);
             }
         });
     }
@@ -419,7 +457,7 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     private void splice() {
-        if(editingIndices.size() < 2) {
+        if(editingIndices.size() < 2 || isConstructing()) {
             // Nothing to do
             return;
         }
@@ -475,7 +513,7 @@ public class BoundingPolygonView extends Polygon implements
         vertexHandles.add(startIndex / 2 + 1, new VertexHandle(midpointX, midpointY, startIndex + 2));
     }
 
-    private class VertexHandle extends Circle {
+    class VertexHandle extends Circle {
         private static final double RADIUS = 6.5;
         private static final String VERTEX_HANDLE_ID = "vertex-handle";
         private static final String EDITING_PSEUDO_CLASS_NAME = "editing";
@@ -509,11 +547,15 @@ public class BoundingPolygonView extends Polygon implements
             return this.editing;
         }
 
+        int getPointIndex() {
+            return pointIndex.get();
+        }
+
         private void addMoveFunctionality() {
             setOnMousePressed(mouseEvent -> {
                 if(mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
                     dragAnchor.setCoordinates(mouseEvent.getX() - getCenterX(), mouseEvent.getY() - getCenterY());
-                } else if(mouseEvent.getButton().equals(MouseButton.MIDDLE)) {
+                } else if(mouseEvent.getButton().equals(MouseButton.MIDDLE) && !isConstructing()) {
                     if(isEditing()) {
                         setEditing(false);
                         BoundingPolygonView.this.editingIndices.remove(pointIndex.get());

@@ -7,6 +7,7 @@ import javafx.geometry.Point2D;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
@@ -50,7 +51,10 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         int drawnBoundingBoxFileIndex = model.getCurrentFileIndex();
 
-        verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> mainView.getCurrentBoundingBoxes().size() == 1),
+                "Expected number of bounding boxes not found in " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()

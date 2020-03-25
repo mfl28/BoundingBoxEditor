@@ -238,7 +238,7 @@ public class Controller {
                 model.clearAnnotationData();
                 view.reset();
                 view.getEditorImagePane().removeAllCurrentBoundingShapes();
-                // Reset all 'assigned bounding box states' in image file explorer.
+                // Reset all 'assigned bounding shape states' in image file explorer.
                 view.getImageFileListView().getItems().forEach(item -> item.setHasAssignedBoundingShapes(false));
 
             } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
@@ -475,8 +475,7 @@ public class Controller {
                 }
             } else if(event.getButton().equals(MouseButton.SECONDARY)
                     && imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
-                imagePaneView.finalizeCurrentBoundingPolygon();
-                imagePaneView.setBoundingPolygonsEditing(false);
+                imagePaneView.setBoundingPolygonsEditingAndConstructing(false);
             }
         }
     }

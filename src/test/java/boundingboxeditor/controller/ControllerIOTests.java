@@ -14,6 +14,7 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
@@ -73,11 +74,9 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getObjectCategories(), Matchers.hasSize(3));
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> mainView.getImageFileListView().getSelectionModel().getSelectedItem().isHasAssignedBoundingShapes()),
+                () -> mainView.getImageFileListView().getSelectionModel().getSelectedItem().isHasAssignedBoundingShapes()
+                 && mainView.getCurrentBoundingBoxes().size() == 8 && mainView.getCurrentBoundingPolygons().size() == 1),
                 "Correct file explorer file info status was not set within " + TIMEOUT_DURATION_IN_SEC + " sec.");
-
-        verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.hasSize(8));
-        verifyThat(mainView.getCurrentBoundingPolygons(), Matchers.hasSize(1));
 
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
@@ -205,7 +204,9 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         final List<IOResult.ErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
-        verifyThat(errorInfoEntries, Matchers.hasSize(1));
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> errorInfoTable.getItems().size() == 1),
+                "Expected number of error info entries not found in " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         final IOResult.ErrorInfoEntry referenceErrorInfoEntry = new IOResult.ErrorInfoEntry("annotation_with_missing_filename.xml",
                 "Missing element: filename");
@@ -249,7 +250,10 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> mainView.getCurrentBoundingBoxes().size() == 1),
+                "Expected number of bounding boxes not found in " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
