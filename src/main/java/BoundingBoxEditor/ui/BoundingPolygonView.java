@@ -556,26 +556,34 @@ public class BoundingPolygonView extends Polygon implements
                 if(mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
                     dragAnchor.setCoordinates(mouseEvent.getX() - getCenterX(), mouseEvent.getY() - getCenterY());
                 } else if(mouseEvent.getButton().equals(MouseButton.MIDDLE) && !isConstructing()) {
+                    int lowNeighborIndex = Math.floorMod(pointIndex.get() - 2, BoundingPolygonView.this.getPoints().size());
+                    int highNeighborIndex = Math.floorMod(pointIndex.get() + 2, BoundingPolygonView.this.getPoints().size());
+
                     if(isEditing()) {
                         setEditing(false);
                         BoundingPolygonView.this.editingIndices.remove(pointIndex.get());
+
+                        if(BoundingPolygonView.this.editingIndices.contains(lowNeighborIndex)
+                                && BoundingPolygonView.this.editingIndices.contains(highNeighborIndex)) {
+                            BoundingPolygonView.this.setEditing(false);
+                        }
                     } else {
                         if(BoundingPolygonView.this.editingIndices.isEmpty()) {
                             setEditing(true);
                             BoundingPolygonView.this.setEditing(true);
                             BoundingPolygonView.this.editingIndices.add(pointIndex.get());
                         } else if(BoundingPolygonView.this.editingIndices.contains(pointIndex.get())) {
-                            if((BoundingPolygonView.this.editingIndices.contains(Math.floorMod(pointIndex.get() - 2, BoundingPolygonView.this.getPoints().size()))
-                                    && !BoundingPolygonView.this.editingIndices.contains(Math.floorMod(pointIndex.get() + 2, BoundingPolygonView.this.getPoints().size()))) ||
-                                    (BoundingPolygonView.this.editingIndices.contains(Math.floorMod(pointIndex.get() + 2, BoundingPolygonView.this.getPoints().size()))
-                                            && !BoundingPolygonView.this.editingIndices.contains(Math.floorMod(pointIndex.get() - 2, BoundingPolygonView.this.getPoints().size()))) ||
+                            if((BoundingPolygonView.this.editingIndices.contains(lowNeighborIndex)
+                                    && !BoundingPolygonView.this.editingIndices.contains(highNeighborIndex)) ||
+                                    (BoundingPolygonView.this.editingIndices.contains(highNeighborIndex)
+                                            && !BoundingPolygonView.this.editingIndices.contains(lowNeighborIndex)) ||
                                     BoundingPolygonView.this.editingIndices.size() == 1) {
                                 setEditing(false);
                                 BoundingPolygonView.this.editingIndices.remove(pointIndex.get());
                             }
                         } else {
-                            if(BoundingPolygonView.this.editingIndices.contains(Math.floorMod(pointIndex.get() - 2, BoundingPolygonView.this.getPoints().size()))
-                                    || BoundingPolygonView.this.editingIndices.contains(Math.floorMod((pointIndex.get() + 2), BoundingPolygonView.this.getPoints().size()))) {
+                            if(BoundingPolygonView.this.editingIndices.contains(lowNeighborIndex)
+                                    || BoundingPolygonView.this.editingIndices.contains(highNeighborIndex)) {
                                 setEditing(true);
                                 BoundingPolygonView.this.setEditing(true);
                                 BoundingPolygonView.this.editingIndices.add(pointIndex.get());
