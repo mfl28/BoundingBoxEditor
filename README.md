@@ -5,8 +5,8 @@
 </p>
 
 [![Build Status](https://dev.azure.com/mfl28/BoundingBoxEditor/_apis/build/status/mfl28.BoundingBoxEditor?branchName=master)](https://dev.azure.com/mfl28/BoundingBoxEditor/_build/latest?definitionId=1&branchName=master)
-![Azure DevOps tests](https://img.shields.io/azure-devops/tests/mfl28/BoundingBoxEditor/1.svg)
-![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/mfl28/BoundingBoxEditor/1.svg)
+![Azure DevOps tests (master)](https://img.shields.io/azure-devops/tests/mfl28/BoundingBoxEditor/1/master)
+![Azure DevOps coverage (master)](https://img.shields.io/azure-devops/coverage/mfl28/BoundingBoxEditor/1/master)
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java)
 
 This is a desktop application written in Java using the JavaFX application platform. It allows you to create image annotations using bounding box object-labels. 

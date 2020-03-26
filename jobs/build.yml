@@ -22,4 +22,5 @@ jobs:
         publishJUnitResults: false
         tasks: 'jlinkZip'
     - publish: '$(Build.SourcesDirectory)/build/distributions/boundingboxeditor-${{ parameters.platform }}.zip'
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       artifact: 'runtime-image-${{ parameters.platform }}' 
