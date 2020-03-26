@@ -14,7 +14,6 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
@@ -75,7 +74,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> mainView.getImageFileListView().getSelectionModel().getSelectedItem().isHasAssignedBoundingShapes()
-                 && mainView.getCurrentBoundingBoxes().size() == 8 && mainView.getCurrentBoundingPolygons().size() == 1),
+                        && mainView.getCurrentBoundingBoxes().size() == 8 && mainView.getCurrentBoundingPolygons().size() == 1),
                 "Correct file explorer file info status was not set within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         // Zoom a bit to change the image-view size.
@@ -245,6 +244,9 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         String testCategoryName = "Test";
         enterNewCategory(robot, testCategoryName);
         WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory(), Matchers.notNullValue());
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo(testCategoryName));
 
         // Draw a bounding box.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));

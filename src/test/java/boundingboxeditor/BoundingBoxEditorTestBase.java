@@ -40,7 +40,7 @@ public class BoundingBoxEditorTestBase {
     protected static final double RATIO_EQUAL_THRESHOLD = 1e-2;
     private static final double INITIAL_WINDOW_SCALE = 0.75;
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
-    protected static int TIMEOUT_DURATION_IN_SEC = 40;
+    protected static int TIMEOUT_DURATION_IN_SEC = 20;
     protected static String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
     protected static String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
     protected Controller controller;
@@ -107,12 +107,15 @@ public class BoundingBoxEditorTestBase {
 
     protected void enterNewCategory(FxRobot robot, String categoryName) {
         robot.clickOn("#category-input-field");
+        WaitForAsyncUtils.waitForFxEvents();
 
         if(categoryName != null) {
             robot.write(categoryName);
+            WaitForAsyncUtils.waitForFxEvents();
         }
 
         robot.clickOn("#add-button");
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     protected void waitUntilCurrentImageIsLoaded() throws TimeoutException {
