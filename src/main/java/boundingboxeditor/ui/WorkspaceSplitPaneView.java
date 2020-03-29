@@ -101,10 +101,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
      * @param treeItem the root-tree-item for the removal
      */
     void removeBoundingShapeWithTreeItemRecursively(TreeItem<Object> treeItem) {
-        editor.getEditorImagePane().removeAllFromCurrentBoundingBoxes(
-                ObjectTreeView.getBoundingBoxViewsRecursively(treeItem));
-        editor.getEditorImagePane().removeAllFromCurrentBoundingPolygons(
-                ObjectTreeView.getBoundingPolygonViewsRecursively(treeItem));
+        editor.getEditorImagePane()
+                .removeAllFromCurrentBoundingShapes(ObjectTreeView.getBoundingShapesRecursively(treeItem));
 
         if(treeItem instanceof ObjectCategoryTreeItem) {
             treeItem.getParent().getChildren().remove(treeItem);
@@ -200,11 +198,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                     }
                 });
 
-        editor.getEditorImagePane()
-                .getCurrentBoundingBoxes().addListener(new CurrentBoundingBoxListChangeListener());
-
-        editor.getEditorImagePane()
-                .getCurrentBoundingPolygons().addListener(new CurrentBoundingPolygonListChangeListener());
+        editor.getEditorImagePane().getCurrentBoundingShapes()
+                .addListener(new CurrentBoundingShapeListChangeListener());
 
         editor.getEditorImagePane().selectedCategoryProperty()
                 .bind(editorsSplitPane.getObjectCategoryTable().getSelectionModel().selectedItemProperty());
@@ -220,64 +215,29 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         editorsSplitPane.getObjectTree().setCellFactory(new ObjectTreeElementCellFactory());
     }
 
-    private class CurrentBoundingBoxListChangeListener implements ListChangeListener<BoundingBoxView> {
+    private class CurrentBoundingShapeListChangeListener implements ListChangeListener<BoundingShapeViewable> {
         @Override
-        public void onChanged(Change<? extends BoundingBoxView> c) {
+        public void onChanged(Change<? extends BoundingShapeViewable> c) {
             while(c.next()) {
                 final ImageFileListView.FileInfo currentSelectedItem = imageFileExplorer.getImageFileListView()
                         .getSelectionModel().getSelectedItem();
 
                 if(c.wasAdded()) {
-                    List<? extends BoundingBoxView> addedItems = c.getAddedSubList();
+                    List<? extends BoundingShapeViewable> addedItems = c.getAddedSubList();
 
-                    editor.getEditorImagePane().addBoundingBoxViewsToSceneGroup(addedItems);
+                    editor.getEditorImagePane().addBoundingShapesToSceneGroup(addedItems);
 
                     if(treeUpdateEnabled) {
-                        editorsSplitPane.getObjectTree().addTreeItemsFromBoundingBoxViews(addedItems);
+                        editorsSplitPane.getObjectTree().addTreeItemsFromBoundingShapeViews(addedItems);
                     }
 
                     currentSelectedItem.setHasAssignedBoundingShapes(true);
                 }
 
                 if(c.wasRemoved()) {
-                    editor.getEditorImagePane().removeBoundingBoxViewsFromSceneGroup(c.getRemoved());
+                    editor.getEditorImagePane().removeBoundingShapesFromSceneGroup(c.getRemoved());
 
-                    if(editor.getEditorImagePane().getCurrentBoundingBoxes().isEmpty() &&
-                            editor.getEditorImagePane().getCurrentBoundingPolygons().isEmpty() &&
-                            editor.getEditorImagePane().getCurrentImage().getUrl().equals(
-                                    currentSelectedItem.getFile().toURI().toString())
-                    ) {
-                        currentSelectedItem.setHasAssignedBoundingShapes(false);
-                    }
-                }
-            }
-        }
-    }
-
-    private class CurrentBoundingPolygonListChangeListener implements ListChangeListener<BoundingPolygonView> {
-        @Override
-        public void onChanged(Change<? extends BoundingPolygonView> c) {
-            while(c.next()) {
-                final ImageFileListView.FileInfo currentSelectedItem = imageFileExplorer.getImageFileListView()
-                        .getSelectionModel().getSelectedItem();
-
-                if(c.wasAdded()) {
-                    List<? extends BoundingPolygonView> addedItems = c.getAddedSubList();
-
-                    editor.getEditorImagePane().addBoundingPolygonViewsToSceneGroup(addedItems);
-
-                    if(treeUpdateEnabled) {
-                        editorsSplitPane.getObjectTree().addTreeItemsFromBoundingPolygonViews(addedItems);
-                    }
-
-                    currentSelectedItem.setHasAssignedBoundingShapes(true);
-                }
-
-                if(c.wasRemoved()) {
-                    editor.getEditorImagePane().removeBoundingPolygonViewsFromSceneGroup(c.getRemoved());
-
-                    if(editor.getEditorImagePane().getCurrentBoundingPolygons().isEmpty() &&
-                            editor.getEditorImagePane().getCurrentBoundingBoxes().isEmpty() &&
+                    if(editor.getEditorImagePane().getCurrentBoundingShapes().isEmpty() &&
                             editor.getEditorImagePane().getCurrentImage().getUrl().equals(
                                     currentSelectedItem.getFile().toURI().toString())
                     ) {

@@ -154,7 +154,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         // Now the tree-should be empty, as no bounding-boxes have been created for the current image.
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0));
-        verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(0));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));
 
         // Switch back to the previous image.
         robot.clickOn("#previous-button");
@@ -182,7 +182,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         // ...but one less Test-children.
         verifyThat(newTestCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
 
-        verifyThat(mainView.getCurrentBoundingBoxes(),
+        verifyThat(mainView.getCurrentBoundingShapes(),
                 Matchers.not(Matchers.hasItem((BoundingBoxView) newFirstTestChildTreeItem.getValue())));
         // After the first bounding-box and its tree-item was deleted, the (formerly) second tree-item's id should have been updated.
         verifyThat(newSecondTestChildTreeItem.getId(), Matchers.equalTo(1));
@@ -195,7 +195,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         // Now just the Dummy-category item should be left.
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1));
-        verifyThat(mainView.getCurrentBoundingBoxes(),
+        verifyThat(mainView.getCurrentBoundingShapes(),
                 Matchers.not(Matchers.hasItem((BoundingBoxView) newSecondTestChildTreeItem.getValue())));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
@@ -207,7 +207,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         // Now the tree-view should be empty (besides the invisible root-item).
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0));
         // There should be no remaining bounding-boxes.
-        verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(0));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));

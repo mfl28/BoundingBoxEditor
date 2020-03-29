@@ -7,7 +7,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
@@ -16,7 +15,6 @@ import org.testfx.matcher.control.TableViewMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -50,10 +48,6 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         MenuItem openFolderItem = getSubMenuItem(robot, "File", "Open Folder...");
         assertTrue(openFolderItem.isVisible());
         assertFalse(openFolderItem.isDisable());
-
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> robot.lookup("Open Folder...").tryQuery().isPresent()),
-                "Expected 'Open Folder...' MenuItem not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         robot.clickOn("Open Folder...").push(KeyCode.ESCAPE);
 

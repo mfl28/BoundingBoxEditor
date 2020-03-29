@@ -55,8 +55,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     private final Group boundingShapeSceneGroup = new Group();
     private final ToggleGroup boundingShapeSelectionGroup = new ToggleGroup();
-    private final ObservableList<BoundingBoxView> currentBoundingBoxes = FXCollections.observableArrayList();
-    private final ObservableList<BoundingPolygonView> currentBoundingPolygons = FXCollections.observableArrayList();
+    private final ObservableList<BoundingShapeViewable> currentBoundingShapes = FXCollections.observableArrayList();
     private final ObjectProperty<ObjectCategory> selectedCategory = new SimpleObjectProperty<>(null);
 
     private final Rectangle initializerRectangle = createInitializerRectangle();
@@ -115,31 +114,16 @@ public class EditorImagePaneView extends ScrollPane implements View {
         newBoundingBox.autoScaleWithBounds(imageView.boundsInParentProperty());
         newBoundingBox.setToggleGroup(boundingShapeSelectionGroup);
 
-        currentBoundingBoxes.add(newBoundingBox);
+        currentBoundingShapes.add(newBoundingBox);
         boundingShapeSelectionGroup.selectToggle(newBoundingBox);
         initializerRectangle.setVisible(false);
-    }
-
-    /**
-     * Clears the list of current {@link BoundingBoxView} objects.
-     */
-    public void removeAllCurrentBoundingBoxes() {
-        currentBoundingBoxes.clear();
-    }
-
-    /**
-     * Clears the list of current {@link BoundingPolygonView} objects.
-     */
-    public void removeAllCurrentBoundingPolygons() {
-        currentBoundingPolygons.clear();
     }
 
     /**
      * Clears the list of current bounding shape view objects.
      */
     public void removeAllCurrentBoundingShapes() {
-        removeAllCurrentBoundingBoxes();
-        removeAllCurrentBoundingPolygons();
+        currentBoundingShapes.clear();
     }
 
     /**
@@ -163,8 +147,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
      * @param value true to switch on, false to switch off
      */
     public void setZoomableAndPannable(boolean value) {
-        currentBoundingBoxes.forEach(boundingBox -> boundingBox.setMouseTransparent(value));
-        currentBoundingPolygons.forEach(boundingPolygon -> boundingPolygon.setMouseTransparent(value));
+        currentBoundingShapes.forEach(viewable -> viewable.getViewData().getBaseShape().setMouseTransparent(value));
         imageView.setCursor(value ? Cursor.OPEN_HAND : Cursor.DEFAULT);
         setPannable(value);
     }
@@ -229,7 +212,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
             selectedBoundingPolygon.setToggleGroup(boundingShapeSelectionGroup);
             selectedBoundingPolygon.setConstructing(true);
 
-            currentBoundingPolygons.add(selectedBoundingPolygon);
+            currentBoundingShapes.add(selectedBoundingPolygon);
 
             selectedBoundingPolygon.autoScaleWithBounds(imageView.boundsInParentProperty());
             selectedBoundingPolygon.setMouseTransparent(true);
@@ -245,10 +228,13 @@ public class EditorImagePaneView extends ScrollPane implements View {
     }
 
     public void setBoundingPolygonsEditingAndConstructing(boolean editing) {
-        currentBoundingPolygons.forEach(boundingPolygonView -> {
-            boundingPolygonView.setEditing(editing);
-            boundingPolygonView.setConstructing(false);
-        });
+        currentBoundingShapes.stream()
+                .filter(viewable -> viewable instanceof BoundingPolygonView)
+                .map(viewable -> (BoundingPolygonView) viewable)
+                .forEach(boundingPolygonView -> {
+                    boundingPolygonView.setEditing(editing);
+                    boundingPolygonView.setConstructing(false);
+                });
     }
 
     public boolean isCategorySelected() {
@@ -260,94 +246,46 @@ public class EditorImagePaneView extends ScrollPane implements View {
     }
 
     /**
-     * Removes all provided {@link BoundingBoxView} objects from the list
-     * of current {@link BoundingBoxView} objects.
+     * Removes all provided {@link BoundingShapeViewable} objects from the list
+     * of current {@link BoundingShapeViewable} objects.
      *
-     * @param boundingBoxes the list of objects to remove
+     * @param boundingShapes the list of objects to remove
      */
-    void removeAllFromCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
-        currentBoundingBoxes.removeAll(boundingBoxes);
+    void removeAllFromCurrentBoundingShapes(Collection<BoundingShapeViewable> boundingShapes) {
+        currentBoundingShapes.removeAll(boundingShapes);
     }
 
     /**
-     * Removes all provided {@link BoundingPolygonView} objects from the list
-     * of current {@link BoundingPolygonView} objects.
-     *
-     * @param boundingPolygons the list of objects to remove
-     */
-    void removeAllFromCurrentBoundingPolygons(Collection<BoundingPolygonView> boundingPolygons) {
-        currentBoundingPolygons.removeAll(boundingPolygons);
-    }
-
-    /**
-     * Clears the list of current {@link BoundingBoxView} objects and adds all
+     * Clears the list of current {@link BoundingShapeViewable} objects and adds all
      * objects from the provided {@link Collection}.
      *
-     * @param boundingBoxes the {@link BoundingBoxView} objects to set
+     * @param boundingShapes the {@link BoundingShapeViewable} objects to set
      */
-    void setAllCurrentBoundingBoxes(Collection<BoundingBoxView> boundingBoxes) {
-        currentBoundingBoxes.setAll(boundingBoxes);
+    void setAllCurrentBoundingShapes(Collection<BoundingShapeViewable> boundingShapes) {
+        currentBoundingShapes.setAll(boundingShapes);
     }
 
     /**
-     * Clears the list of current {@link BoundingPolygonView} objects and adds all
-     * objects from the provided {@link Collection}.
+     * Adds the provided {@link BoundingShapeViewable} objects to the boundingShapeSceneGroup which is
+     * a node in the scene-graph.
      *
-     * @param boundingPolygons the {@link BoundingPolygonView} objects to set
+     * @param boundingShapes the objects to add
      */
-    void setAllCurrentBoundingPolygons(Collection<BoundingPolygonView> boundingPolygons) {
-        currentBoundingPolygons.setAll(boundingPolygons);
-    }
-
-    /**
-     * Adds the provided {@link BoundingBoxView} objects to the boundingShapeSceneGroup which is
-     * a node in the scene-graph. Should only be called from within a change-listener registered
-     * to currentBoundingBoxes.
-     *
-     * @param boundingBoxes the objects to add
-     */
-    void addBoundingBoxViewsToSceneGroup(Collection<? extends BoundingBoxView> boundingBoxes) {
-        boundingShapeSceneGroup.getChildren().addAll(boundingBoxes.stream()
-                .map(BoundingBoxView::getNodeGroup)
+    void addBoundingShapesToSceneGroup(Collection<? extends BoundingShapeViewable> boundingShapes) {
+        boundingShapeSceneGroup.getChildren().addAll(boundingShapes.stream()
+                .map(viewable -> viewable.getViewData().getNodeGroup())
                 .collect(Collectors.toList()));
     }
 
     /**
-     * Adds the provided {@link BoundingPolygonView} objects to the boundingPolygonSceneGroup which is
-     * a node in the scene-graph. Should only be called from within a change-listener registered
-     * to currentBoundingPolygons.
+     * Removes the provided {@link BoundingShapeViewable} objects from a the boundingShapeSceneGroup which is
+     * a node in the scene-graph.
      *
-     * @param boundingPolygonViews the objects to add
+     * @param boundingShapes the objects to remove
      */
-    void addBoundingPolygonViewsToSceneGroup(Collection<? extends BoundingPolygonView> boundingPolygonViews) {
-        boundingShapeSceneGroup.getChildren().addAll(boundingPolygonViews.stream()
-                .map(BoundingPolygonView::getNodeGroup)
-                .collect(Collectors.toList()));
-    }
-
-    /**
-     * Removes the provided {@link BoundingBoxView} objects from a the boundingShapeSceneGroup which is
-     * a node in the scene-graph. Should only be called from within a change-listener registered
-     * to currentBoundingBoxes.
-     *
-     * @param boundingBoxes the objects to remove
-     */
-    void removeBoundingBoxViewsFromSceneGroup(Collection<? extends BoundingBoxView> boundingBoxes) {
-        boundingShapeSceneGroup.getChildren().removeAll(boundingBoxes.stream()
-                .map(BoundingBoxView::getNodeGroup)
-                .collect(Collectors.toList()));
-    }
-
-    /**
-     * Removes the provided {@link BoundingPolygonView} objects from a the boundingShapeSceneGroup which is
-     * a node in the scene-graph. Should only be called from within a change-listener registered
-     * to currentBoundingBoxes.
-     *
-     * @param boundingPolygons the objects to remove
-     */
-    void removeBoundingPolygonViewsFromSceneGroup(Collection<? extends BoundingPolygonView> boundingPolygons) {
-        boundingShapeSceneGroup.getChildren().removeAll(boundingPolygons.stream()
-                .map(BoundingPolygonView::getNodeGroup)
+    void removeBoundingShapesFromSceneGroup(Collection<? extends BoundingShapeViewable> boundingShapes) {
+        boundingShapeSceneGroup.getChildren().removeAll(boundingShapes.stream()
+                .map(viewable -> viewable.getViewData().getNodeGroup())
                 .collect(Collectors.toList()));
     }
 
@@ -378,21 +316,12 @@ public class EditorImagePaneView extends ScrollPane implements View {
     }
 
     /**
-     * Returns the {@link ObservableList} of current {@link BoundingBoxView} objects.
+     * Returns the {@link ObservableList} of current {@link BoundingShapeViewable} objects.
      *
      * @return the list
      */
-    ObservableList<BoundingBoxView> getCurrentBoundingBoxes() {
-        return currentBoundingBoxes;
-    }
-
-    /**
-     * Returns the {@link ObservableList} of current {@link BoundingPolygonView} objects.
-     *
-     * @return the list
-     */
-    ObservableList<BoundingPolygonView> getCurrentBoundingPolygons() {
-        return currentBoundingPolygons;
+    ObservableList<BoundingShapeViewable> getCurrentBoundingShapes() {
+        return currentBoundingShapes;
     }
 
     /**

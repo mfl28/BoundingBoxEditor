@@ -86,8 +86,7 @@ public class Controller {
     private final MainView view = new MainView();
     private final Model model = new Model();
 
-    private final ListChangeListener<BoundingBoxView> boundingBoxCountPerCategoryListener = createBoundingBoxCountPerCategoryListener();
-    private final ListChangeListener<BoundingPolygonView> boundingPolygonViewListChangeListener = createBoundingPolygonCountPerCategoryListener();
+    private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener = createBoundingShapeCountPerCategoryListener();
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
     private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
@@ -575,8 +574,7 @@ public class Controller {
 
         EditorImagePaneView imagePane = view.getEditorImagePane();
         imagePane.removeAllCurrentBoundingShapes();
-        view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
-        view.getCurrentBoundingPolygons().removeListener(boundingPolygonViewListChangeListener);
+        view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
         imagePane.getImageLoadingProgressIndicator().setVisible(true);
 
         ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
@@ -610,8 +608,7 @@ public class Controller {
                     view.loadBoundingShapeViewsFromAnnotation(annotation);
                 }
 
-                view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
-                view.getCurrentBoundingPolygons().addListener(boundingPolygonViewListChangeListener);
+                view.getCurrentBoundingShapes().addListener(boundingShapeCountPerCategoryListener);
             }
         };
     }
@@ -635,8 +632,7 @@ public class Controller {
                     // update model bounding-box-data from previous image:
                     model.updateBoundingShapeDataAtFileIndex(oldValue.intValue(), view.extractCurrentBoundingShapeData());
                     // remove old image's bounding boxes
-                    view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
-                    view.getCurrentBoundingPolygons().removeListener(boundingPolygonViewListChangeListener);
+                    view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
                     view.getEditorImagePane().removeAllCurrentBoundingShapes();
                     // Prevents javafx-bug with uncleared items in tree-view when switching between images.
                     view.getObjectTree().reset();
@@ -691,39 +687,19 @@ public class Controller {
     }
 
     @SuppressWarnings("UnnecessaryLambda")
-    private ListChangeListener<BoundingBoxView> createBoundingBoxCountPerCategoryListener() {
+    private ListChangeListener<BoundingShapeViewable> createBoundingShapeCountPerCategoryListener() {
         return change -> {
             while(change.next()) {
                 if(change.wasAdded()) {
                     change.getAddedSubList().forEach(item ->
                             model.getCategoryToAssignedBoundingShapesCountMap()
-                                    .merge(item.getObjectCategory().getName(), 1, Integer::sum));
+                                    .merge(item.getViewData().getObjectCategory().getName(), 1, Integer::sum));
                 }
 
                 if(change.wasRemoved()) {
                     change.getRemoved().forEach(item ->
                             model.getCategoryToAssignedBoundingShapesCountMap()
-                                    .computeIfPresent(item.getObjectCategory().getName(),
-                                            (key, value) -> --value));
-                }
-            }
-        };
-    }
-
-    @SuppressWarnings("UnnecessaryLambda")
-    private ListChangeListener<BoundingPolygonView> createBoundingPolygonCountPerCategoryListener() {
-        return change -> {
-            while(change.next()) {
-                if(change.wasAdded()) {
-                    change.getAddedSubList().forEach(item ->
-                            model.getCategoryToAssignedBoundingShapesCountMap()
-                                    .merge(item.getObjectCategory().getName(), 1, Integer::sum));
-                }
-
-                if(change.wasRemoved()) {
-                    change.getRemoved().forEach(item ->
-                            model.getCategoryToAssignedBoundingShapesCountMap()
-                                    .computeIfPresent(item.getObjectCategory().getName(),
+                                    .computeIfPresent(item.getViewData().getObjectCategory().getName(),
                                             (key, value) -> --value));
                 }
             }
@@ -875,11 +851,9 @@ public class Controller {
 
             if(annotation != null) {
                 view.getObjectTree().reset();
-                view.getCurrentBoundingBoxes().removeListener(boundingBoxCountPerCategoryListener);
-                view.getCurrentBoundingPolygons().removeListener(boundingPolygonViewListChangeListener);
+                view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
                 view.loadBoundingShapeViewsFromAnnotation(annotation);
-                view.getCurrentBoundingBoxes().addListener(boundingBoxCountPerCategoryListener);
-                view.getCurrentBoundingPolygons().addListener(boundingPolygonViewListChangeListener);
+                view.getCurrentBoundingShapes().addListener(boundingShapeCountPerCategoryListener);
                 view.getObjectCategoryTable().refresh();
                 view.getObjectTree().refresh();
             }

@@ -10,8 +10,6 @@ import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.apache.commons.collections4.IteratorUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,7 +19,7 @@ import java.util.stream.Collectors;
  * in {@link ObjectTreeElementCell}s.
  * Bounding shape objects are grouped by their category and nested objects are displayed in a hierarchical
  * fashion. Any path running from the root of the tree downwards consists of alternating {@link ObjectCategoryTreeItem} and
- * {@link BoundingBoxTreeItem} objects in that order, i.e.: root, category-item, bounding-box-item, category-item, ...
+ * {@link BoundingShapeTreeItem} objects in that order, i.e.: root, category-item, bounding-shape-item, category-item, ...
  *
  * @see TreeView
  * @see View
@@ -113,79 +111,53 @@ public class ObjectTreeView extends TreeView<Object> implements View {
 
     /**
      * Takes an {@link ImageAnnotation} object and the contained structure of
-     * {@link BoundingBoxData} objects and constructs the tree-structure of {@link ObjectCategoryTreeItem}
-     * and {@link BoundingBoxTreeItem} objects making up the displayed tree. At the same time bounding shape
-     * objects are extracted from the encountered {@link BoundingBoxData} objects and the resulting list
+     * {@link BoundingShapeData} objects and constructs the tree-structure of {@link ObjectCategoryTreeItem}
+     * and {@link BoundingShapeViewable} objects making up the displayed tree. At the same time bounding shape
+     * objects are extracted from the encountered {@link BoundingShapeData} objects and the resulting list
      * is returned.
      *
      * @param annotation the image-annotation
-     * @return the list of extracted {@link BoundingBoxView} objects
+     * @return the list of extracted {@link BoundingShapeViewable} objects
      */
-    Pair<List<BoundingBoxView>, List<BoundingPolygonView>> extractViewsAndBuildTreeFromAnnotation(ImageAnnotation annotation) {
+    List<BoundingShapeViewable> extractBoundingShapesAndBuildTreeFromAnnotation(ImageAnnotation annotation) {
         ImageMetaData metaData = annotation.getImageMetaData();
         annotation.getBoundingShapeData().forEach(boundingShapeData ->
                 boundingShapeData.accept(new TreeItemGenerator(getRoot(), boundingShapeData, metaData)));
 
-        List<BoundingBoxView> boundingBoxViews = IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot())).stream()
-                .filter(treeItem -> treeItem instanceof BoundingBoxTreeItem)
-                .map(item -> (BoundingBoxView) item.getValue())
+        return IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot())).stream()
+                .filter(treeItem -> treeItem.getValue() instanceof BoundingShapeViewable)
+                .map(item -> (BoundingShapeViewable) item.getValue())
                 .collect(Collectors.toList());
-
-        List<BoundingPolygonView> boundingPolygonViews = IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot())).stream()
-                .filter(treeItem -> treeItem instanceof BoundingPolygonTreeItem)
-                .map(item -> (BoundingPolygonView) item.getValue())
-                .collect(Collectors.toList());
-
-        return new ImmutablePair<>(boundingBoxViews, boundingPolygonViews);
     }
 
+
     /**
-     * Returns a list containing all {@link BoundingBoxView} objects contained in the tree
+     * Returns a list containing all {@link BoundingShapeViewable} objects contained in the tree
      * of {@link TreeItem} objects with the provided root.
      *
      * @param root the root of the tree
-     * @return the list containing the {@link BoundingBoxView} objects
+     * @return the list containing the {@link BoundingShapeViewable} objects
      */
-    static List<BoundingBoxView> getBoundingBoxViewsRecursively(TreeItem<Object> root) {
+    static List<BoundingShapeViewable> getBoundingShapesRecursively(TreeItem<Object> root) {
         if(root.isLeaf()) {
-            return root instanceof BoundingBoxTreeItem ? List.of((BoundingBoxView) root.getValue()) : Collections.emptyList();
+            return root instanceof BoundingShapeTreeItem ? List.of((BoundingShapeViewable) root.getValue()) : Collections.emptyList();
         }
 
         BoundingShapeTreeItemIterator iterator = new BoundingShapeTreeItemIterator(root);
 
         return IteratorUtils.toList(iterator).stream()
-                .filter(child -> child instanceof BoundingBoxTreeItem)
-                .map(item -> (BoundingBoxView) item.getValue()).collect(Collectors.toList());
-    }
-
-    static List<BoundingPolygonView> getBoundingPolygonViewsRecursively(TreeItem<Object> root) {
-        if(root.isLeaf()) {
-            return root instanceof BoundingPolygonTreeItem ? List.of((BoundingPolygonView) root.getValue()) : Collections.emptyList();
-        }
-
-        BoundingShapeTreeItemIterator iterator = new BoundingShapeTreeItemIterator(root);
-
-        return IteratorUtils.toList(iterator).stream()
-                .filter(child -> child instanceof BoundingPolygonTreeItem)
-                .map(item -> (BoundingPolygonView) item.getValue()).collect(Collectors.toList());
+                .filter(child -> child.getValue() instanceof BoundingShapeViewable)
+                .map(child -> (BoundingShapeViewable) child.getValue())
+                .collect(Collectors.toList());
     }
 
     /**
-     * Adds tree-items assigned to the provided {@link BoundingBoxView} objects to the current tree.
+     * Adds tree-items assigned to the provided {@link BoundingShapeViewable} objects to the current tree.
      *
-     * @param boundingBoxes the bounding-boxes for which to add the tree-items
+     * @param boundingShapes the bounding-shapes for which to add the tree-items
      */
-    void addTreeItemsFromBoundingBoxViews(Collection<? extends BoundingBoxView> boundingBoxes) {
-        boundingBoxes.forEach(boundingBox -> createTreeItemFromBoundingBoxView(getRoot(), boundingBox));
-    }
-
-    /**
-     * Adds tree-items assigned to the provided {@link BoundingBoxView} objects to the current tree.
-     *
-     * @param boundingPolygonViews the bounding-boxes for which to add the tree-items
-     */
-    void addTreeItemsFromBoundingPolygonViews(Collection<? extends BoundingPolygonView> boundingPolygonViews) {
-        boundingPolygonViews.forEach(boundingPolygonView -> createTreeItemFromBoundingPolygonView(getRoot(), boundingPolygonView));
+    void addTreeItemsFromBoundingShapeViews(Collection<? extends BoundingShapeViewable> boundingShapes) {
+        boundingShapes.forEach(viewable -> createTreeItemFromBoundingShape(getRoot(), viewable));
     }
 
     /**
@@ -223,31 +195,19 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         });
     }
 
-    private void createTreeItemFromBoundingBoxView(TreeItem<Object> root, BoundingBoxView boundingBox) {
-        BoundingBoxTreeItem boundingBoxTreeItem = new BoundingBoxTreeItem(boundingBox);
-        boundingBox.setTreeItem(boundingBoxTreeItem);
-        ObjectCategoryTreeItem parentObjectCategoryTreeItem = findParentCategoryTreeItemForCategory(root, boundingBox.getObjectCategory());
+    private void createTreeItemFromBoundingShape(TreeItem<Object> root, BoundingShapeViewable boundingShape) {
+        BoundingShapeTreeItem boundingShapeTreeItem = boundingShape.toTreeItem();
+        boundingShape.getViewData().setTreeItem(boundingShapeTreeItem);
+
+        ObjectCategoryTreeItem parentObjectCategoryTreeItem = findParentCategoryTreeItemForCategory(root,
+                boundingShape.getViewData().getObjectCategory());
 
         if(parentObjectCategoryTreeItem != null) {
-            parentObjectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingBoxTreeItem);
+            parentObjectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingShapeTreeItem);
         } else {
-            ObjectCategoryTreeItem objectCategoryTreeItem = new ObjectCategoryTreeItem(boundingBox.getObjectCategory());
+            ObjectCategoryTreeItem objectCategoryTreeItem = new ObjectCategoryTreeItem(boundingShape.getViewData().getObjectCategory());
             root.getChildren().add(objectCategoryTreeItem);
-            objectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingBoxTreeItem);
-        }
-    }
-
-    private void createTreeItemFromBoundingPolygonView(TreeItem<Object> root, BoundingPolygonView boundingPolygonView) {
-        BoundingPolygonTreeItem boundingPolygonTreeItem = new BoundingPolygonTreeItem(boundingPolygonView);
-        boundingPolygonView.setTreeItem(boundingPolygonTreeItem);
-        ObjectCategoryTreeItem parentObjectCategoryTreeItem = findParentCategoryTreeItemForCategory(root, boundingPolygonView.getObjectCategory());
-
-        if(parentObjectCategoryTreeItem != null) {
-            parentObjectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingPolygonTreeItem);
-        } else {
-            ObjectCategoryTreeItem objectCategoryTreeItem = new ObjectCategoryTreeItem(boundingPolygonView.getObjectCategory());
-            root.getChildren().add(objectCategoryTreeItem);
-            objectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingPolygonTreeItem);
+            objectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingShapeTreeItem);
         }
     }
 

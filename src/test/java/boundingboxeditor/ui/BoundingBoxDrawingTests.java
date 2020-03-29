@@ -51,7 +51,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         int drawnBoundingBoxFileIndex = model.getCurrentFileIndex();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> mainView.getCurrentBoundingBoxes().size() == 1),
+                () -> mainView.getCurrentBoundingShapes().size() == 1),
                 "Expected number of bounding boxes not found in " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
@@ -59,13 +59,14 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
-        final BoundingBoxView drawnBoundingBox = mainView.getCurrentBoundingBoxes().get(0);
+        verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class));
+        final BoundingBoxView drawnBoundingBox = (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
 
         robot.clickOn("#previous-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(0));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
@@ -78,14 +79,16 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
-        verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.hasItem(drawnBoundingBox));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
-        final BoundingBoxView boundingBoxView = mainView.getCurrentBoundingBoxes().get(0);
+        verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class));
+
+        final BoundingBoxView boundingBoxView = (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
 
         // Move bounding box to top left corner.
         double boundingBoxWidth = boundingBoxView.getWidth();
@@ -126,7 +129,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
-        verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(0));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(0));
 
         verifyThat(mainView.getImageFileListView().getItems()
@@ -140,10 +143,12 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
-        final BoundingBoxView boundingBoxView3 = mainView.getCurrentBoundingBoxes().get(0);
+        verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class));
+
+        final BoundingBoxView boundingBoxView3 = (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
         double preResizeMaxX = boundingBoxView3.getX() + boundingBoxView3.getWidth();
         double preResizeMaxY = boundingBoxView3.getY() + boundingBoxView3.getHeight();
 

@@ -23,11 +23,13 @@ public class BoundingShapeViewData {
     private final BooleanProperty highlighted = new SimpleBooleanProperty(false);
     private final ObjectProperty<ToggleGroup> toggleGroup = new SimpleObjectProperty<>();
     private final ObservableList<String> tags = FXCollections.observableArrayList();
+    private final Shape baseShape;
     private ObjectCategory objectCategory;
     private ImageMetaData imageMetaData;
     private BoundingShapeTreeItem treeItem;
 
     public BoundingShapeViewData(Shape shape, ObjectCategory objectCategory, ImageMetaData imageMetaData) {
+        this.baseShape = shape;
         this.objectCategory = objectCategory;
         this.imageMetaData = imageMetaData;
         nodeGroup.getChildren().add(shape);
@@ -55,6 +57,10 @@ public class BoundingShapeViewData {
 
     public void setImageMetaData(ImageMetaData imageMetaData) {
         this.imageMetaData = imageMetaData;
+    }
+
+    public Shape getBaseShape() {
+        return baseShape;
     }
 
     public ToggleGroup getToggleGroup() {

@@ -157,6 +157,25 @@ public class BoundingBoxView extends Rectangle implements
     }
 
     /**
+     * Anchors the {@link BoundingBoxView} object to and automatically scales it with the provided {@link Bounds}-property.
+     * Initializes the {@link BoundingBoxView} with the correctly scaled size relative to the current size of the
+     * value of the autoScaleBounds-property.
+     *
+     * @param autoScaleBounds the bounds-property to scale with
+     */
+    @Override
+    public void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
+        this.boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
+        initializeFromBoundsInImage();
+        addAutoScaleListener();
+    }
+
+    @Override
+    public BoundingShapeTreeItem toTreeItem() {
+        return new BoundingBoxTreeItem(this);
+    }
+
+    /**
      * Sets up the {@link BoundingBoxView} object's coordinates and size from a provided initializer-rectangle.
      *
      * @param initializer the initializer {@link Rectangle} object
@@ -218,19 +237,6 @@ public class BoundingBoxView extends Rectangle implements
         boundingBox.setBoundsInImage(boundingBoxData.getBoundsInImage());
         boundingBox.getTags().setAll(boundingBoxData.getTags());
         return boundingBox;
-    }
-
-    /**
-     * Anchors the {@link BoundingBoxView} object to and automatically scales it with the provided {@link Bounds}-property.
-     * Initializes the {@link BoundingBoxView} with the correctly scaled size relative to the current size of the
-     * value of the autoScaleBounds-property.
-     *
-     * @param autoScaleBounds the bounds-property to scale with
-     */
-    void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
-        this.boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
-        initializeFromBoundsInImage();
-        addAutoScaleListener();
     }
 
     /**

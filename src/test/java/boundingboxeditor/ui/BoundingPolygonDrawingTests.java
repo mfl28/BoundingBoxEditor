@@ -62,7 +62,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         int drawnBoundingPolygonFileIndex = model.getCurrentFileIndex();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> mainView.getCurrentBoundingPolygons().size() == 1),
+                () -> mainView.getCurrentBoundingShapes().size() == 1),
                 "Expected number of bounding polygons not found in " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
@@ -70,7 +70,9 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
-        final BoundingPolygonView drawnBoundingPolygon = mainView.getCurrentBoundingPolygons().get(0);
+        verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingPolygonView.class));
+
+        final BoundingPolygonView drawnBoundingPolygon = (BoundingPolygonView) mainView.getCurrentBoundingShapes().get(0);
         final List<Double> drawnPointCoordinates = List.of(drawnBoundingPolygon.getPoints().toArray(Double[]::new));
 
         verifyThat(drawnPointCoordinates, Matchers.hasSize(targetImageViewPointRatios.length));
@@ -104,7 +106,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getCurrentBoundingPolygons().size(), Matchers.equalTo(0));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
@@ -117,9 +119,11 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getCurrentBoundingPolygons().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
 
-        final BoundingPolygonView reloadedBoundingPolygon = mainView.getCurrentBoundingPolygons().get(0);
+        verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingPolygonView.class));
+
+        final BoundingPolygonView reloadedBoundingPolygon = (BoundingPolygonView) mainView.getCurrentBoundingShapes().get(0);
 
         verifyThat(reloadedBoundingPolygon, NodeMatchers.isVisible());
         verifyThat(reloadedBoundingPolygon.getPoints(), Matchers.hasSize(targetImageViewPointRatios.length));
@@ -193,7 +197,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         robot.rightClickOn(reloadedBoundingPolygon).clickOn("Delete");
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getCurrentBoundingPolygons(), Matchers.empty());
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty());
         verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(), Matchers.equalTo(null));
 
         // Start to construct a new polygon.
@@ -208,9 +212,11 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         robot.clickOn("Rectangle");
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getCurrentBoundingPolygons(), Matchers.hasSize(1));
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(1));
 
-        BoundingPolygonView newBoundingPolygonView = mainView.getCurrentBoundingPolygons().get(0);
+        verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingPolygonView.class));
+
+        BoundingPolygonView newBoundingPolygonView = (BoundingPolygonView) mainView.getCurrentBoundingShapes().get(0);
         verifyThat(newBoundingPolygonView, Matchers.notNullValue());
 
         verifyThat(newBoundingPolygonView.isConstructing(), Matchers.equalTo(false));

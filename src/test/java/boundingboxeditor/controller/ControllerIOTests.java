@@ -3,6 +3,7 @@ package boundingboxeditor.controller;
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import boundingboxeditor.model.io.IOResult;
 import boundingboxeditor.ui.BoundingBoxView;
+import boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -74,7 +75,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> mainView.getImageFileListView().getSelectionModel().getSelectedItem().isHasAssignedBoundingShapes()
-                        && mainView.getCurrentBoundingBoxes().size() == 8 && mainView.getCurrentBoundingPolygons().size() == 1),
+                        && mainView.getCurrentBoundingShapes().stream().filter(viewable -> viewable instanceof BoundingBoxView).count() == 8
+                        && mainView.getCurrentBoundingShapes().stream().filter(viewable -> viewable instanceof BoundingPolygonView).count() == 1),
                 "Correct file explorer file info status was not set within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         // Zoom a bit to change the image-view size.
@@ -223,7 +225,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().isEmpty(), Matchers.is(true));
         verifyThat(model.getObjectCategories(), Matchers.empty());
         verifyThat(model.getImageAnnotations(), Matchers.empty());
-        verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.empty());
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty());
 
         // Should not have changed the status message.
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(), Matchers.startsWith("Successfully loaded 4 image-files from folder "));
@@ -245,21 +247,20 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, testCategoryName);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory(), Matchers.notNullValue());
-        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo(testCategoryName));
-
         // Draw a bounding box.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> mainView.getCurrentBoundingBoxes().size() == 1),
+                () -> mainView.getCurrentBoundingShapes().size() == 1),
                 "Expected number of bounding boxes not found in " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
-        final BoundingBoxView drawnBoundingBox = mainView.getCurrentBoundingBoxes().get(0);
+        verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class));
+
+        final BoundingBoxView drawnBoundingBox = (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
 
         final File annotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
 
@@ -286,7 +287,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(3));
         verifyThat(model.getImageAnnotations(), Matchers.hasSize(1));
-        verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.empty());
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty());
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
@@ -301,8 +302,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         importAnnotationAndClickDialogOption(robot, annotationFile, "Yes");
 
         // Everything should have stayed the same for the current image...
-        verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
-        verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.hasItem(drawnBoundingBox));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
@@ -349,8 +350,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                                                                   File annotationFile) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "Cancel");
 
-        verifyThat(mainView.getCurrentBoundingBoxes().size(), Matchers.equalTo(1));
-        verifyThat(mainView.getCurrentBoundingBoxes(), Matchers.hasItem(drawnBoundingBox));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox));
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
     }
