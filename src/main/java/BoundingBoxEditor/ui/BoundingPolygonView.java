@@ -46,6 +46,8 @@ public class BoundingPolygonView extends Polygon implements
 
     private final BooleanProperty editing = createEditingProperty();
     private final BooleanProperty constructing = new SimpleBooleanProperty(false);
+    private final DoubleProperty width = new SimpleDoubleProperty();
+    private final DoubleProperty height = new SimpleDoubleProperty();
     private ObservableList<VertexHandle> vertexHandles = FXCollections.observableArrayList();
     private ObservableSet<Integer> editingIndices = FXCollections.observableSet(new LinkedHashSet<>());
     private List<Double> pointsInImage = Collections.emptyList();
@@ -307,6 +309,21 @@ public class BoundingPolygonView extends Polygon implements
         return editingIndices;
     }
 
+    void refine() {
+        splice();
+        setEditing(false);
+    }
+
+    void removeEditingVertices() {
+        long numToRemove = editingIndices.size();
+
+        if(vertexHandles.size() - numToRemove >= 2) {
+            vertexHandles.removeIf(VertexHandle::isEditing);
+        }
+
+        setEditing(false);
+    }
+
     private void setUpInternalListeners() {
         strokeProperty().bind(boundingShapeViewData.getObjectCategory().colorProperty());
 
@@ -315,8 +332,6 @@ public class BoundingPolygonView extends Polygon implements
                 .otherwise(Bindings.when(boundingShapeViewData.highlightedProperty())
                         .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
                         .otherwise(Color.TRANSPARENT)));
-
-        boundingShapeViewData.getNodeGroup().viewOrderProperty().bind(viewOrderProperty());
 
         vertexHandles.addListener((ListChangeListener<VertexHandle>) c -> {
             while(c.next()) {
@@ -331,6 +346,7 @@ public class BoundingPolygonView extends Polygon implements
                     }
 
                     boundingShapeViewData.getNodeGroup().getChildren().addAll(c.getAddedSubList());
+                    updateWidthAndHeight();
                 }
 
                 if(c.wasRemoved()) {
@@ -344,9 +360,10 @@ public class BoundingPolygonView extends Polygon implements
                     }
 
                     boundingShapeViewData.getNodeGroup().getChildren().removeAll(c.getRemoved());
+                    updateWidthAndHeight();
                 }
 
-                if(isEditing() && !vertexHandles.isEmpty()) {
+                if(isConstructing() && !vertexHandles.isEmpty()) {
                     vertexHandles.forEach(vertexHandle -> vertexHandle.setEditing(false));
                     vertexHandles.get(0).setEditing(true);
                     vertexHandles.get(vertexHandles.size() - 1).setEditing(true);
@@ -373,8 +390,7 @@ public class BoundingPolygonView extends Polygon implements
                 boundingShapeViewData.getToggleGroup().selectToggle(this);
 
                 if(event.getButton().equals(MouseButton.MIDDLE)) {
-                    splice();
-                    setEditing(false);
+                    refine();
                 }
 
                 event.consume();
@@ -410,6 +426,31 @@ public class BoundingPolygonView extends Polygon implements
                 setEditing(false);
             }
         });
+
+        boundingShapeViewData.getNodeGroup().viewOrderProperty().bind(
+                Bindings.when(boundingShapeViewData.selectedProperty())
+                        .then(0)
+                        .otherwise(Bindings.min(width, height))
+        );
+    }
+
+    private void updateWidthAndHeight() {
+        double xMin = Double.MAX_VALUE;
+        double yMin = Double.MAX_VALUE;
+        double xMax = 0;
+        double yMax = 0;
+
+        List<Double> points = getPoints();
+
+        for(int i = 0; i < points.size(); i += 2) {
+            xMin = Math.min(points.get(i), xMin);
+            yMin = Math.min(points.get(i + 1), yMin);
+            xMax = Math.max(points.get(i), xMax);
+            yMax = Math.max(points.get(i + 1), yMax);
+        }
+
+        width.set(Math.abs(xMax - xMin));
+        height.set(Math.abs(yMax - yMin));
     }
 
     private void initializeFromBoundsInImage() {
@@ -564,7 +605,8 @@ public class BoundingPolygonView extends Polygon implements
                         BoundingPolygonView.this.editingIndices.remove(pointIndex.get());
 
                         if(BoundingPolygonView.this.editingIndices.contains(lowNeighborIndex)
-                                && BoundingPolygonView.this.editingIndices.contains(highNeighborIndex)) {
+                                && BoundingPolygonView.this.editingIndices.contains(highNeighborIndex)
+                                && BoundingPolygonView.this.editingIndices.size() != BoundingPolygonView.this.vertexHandles.size() - 1) {
                             BoundingPolygonView.this.setEditing(false);
                         }
                     } else {

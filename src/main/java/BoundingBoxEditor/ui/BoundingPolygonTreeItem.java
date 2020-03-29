@@ -6,7 +6,7 @@ import javafx.scene.shape.Shape;
 import java.util.Objects;
 
 /**
- * A tree-item representing an existing {@link BoundingPolygonView} in a {@link BoundingShapeTreeCell} of a {@link ObjectTreeView}.
+ * A tree-item representing an existing {@link BoundingPolygonView} in a {@link ObjectTreeElementCell} of a {@link ObjectTreeView}.
  *
  * @see TreeItem
  */
@@ -14,7 +14,7 @@ public class BoundingPolygonTreeItem extends BoundingShapeTreeItem {
     private static final double TOGGLE_ICON_SIDE_LENGTH = 10;
 
     /**
-     * Creates a new tree-item representing a {@link BoundingPolygonView} in a {@link BoundingShapeTreeCell} that is part of
+     * Creates a new tree-item representing a {@link BoundingPolygonView} in a {@link ObjectTreeElementCell} that is part of
      * a {@link ObjectTreeView}.
      *
      * @param boundingPolygon the {@link BoundingPolygonView} that should be associated with the tree-item

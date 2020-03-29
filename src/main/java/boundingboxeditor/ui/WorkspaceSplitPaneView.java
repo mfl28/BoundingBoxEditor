@@ -217,7 +217,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     }
 
     private void setObjectTreeCellFactory() {
-        editorsSplitPane.getObjectTree().setCellFactory(new BoundingShapeTreeCellFactory());
+        editorsSplitPane.getObjectTree().setCellFactory(new ObjectTreeElementCellFactory());
     }
 
     private class CurrentBoundingBoxListChangeListener implements ListChangeListener<BoundingBoxView> {
@@ -288,13 +288,13 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         }
     }
 
-    private class BoundingShapeTreeCellFactory implements Callback<TreeView<Object>, TreeCell<Object>> {
+    private class ObjectTreeElementCellFactory implements Callback<TreeView<Object>, TreeCell<Object>> {
         private static final String INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE = "Invalid dragged object class type.";
         private TreeItem<Object> draggedItem;
 
         @Override
         public TreeCell<Object> call(TreeView<Object> treeView) {
-            final BoundingShapeTreeCell cell = new BoundingShapeTreeCell();
+            final ObjectTreeElementCell cell = new ObjectTreeElementCell();
 
             applyOnDeleteBoundingShapeMenuItemListener(cell);
             applyOnDragDetectedListener(cell);
@@ -306,7 +306,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             return cell;
         }
 
-        private void applyOnDeleteBoundingShapeMenuItemListener(BoundingShapeTreeCell cell) {
+        private void applyOnDeleteBoundingShapeMenuItemListener(ObjectTreeElementCell cell) {
             cell.getDeleteBoundingShapeMenuItem().setOnAction(event -> {
                 if(!cell.isEmpty()) {
                     removeBoundingShapeWithTreeItemRecursively(cell.getTreeItem());
@@ -314,7 +314,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             });
         }
 
-        private void applyOnDragDetectedListener(BoundingShapeTreeCell cell) {
+        private void applyOnDragDetectedListener(ObjectTreeElementCell cell) {
             cell.setOnDragDetected(event -> {
                 if(cell.isEmpty()) {
                     return;
@@ -332,7 +332,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             });
         }
 
-        private void applyOnDragOverListener(BoundingShapeTreeCell cell, TreeView<Object> treeView) {
+        private void applyOnDragOverListener(ObjectTreeElementCell cell, TreeView<Object> treeView) {
             cell.setOnDragOver(event -> {
                 if(!event.getDragboard().hasContent(dragDataFormat)) {
                     return;
@@ -361,7 +361,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             });
         }
 
-        private void applyOnDragEnteredListener(BoundingShapeTreeCell cell) {
+        private void applyOnDragEnteredListener(ObjectTreeElementCell cell) {
             cell.setOnDragEntered(event -> {
                 TreeItem<Object> thisItem = cell.getTreeItem();
 
@@ -378,14 +378,14 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             });
         }
 
-        private void applyOnDragExitedListener(BoundingShapeTreeCell cell) {
+        private void applyOnDragExitedListener(ObjectTreeElementCell cell) {
             cell.setOnDragExited(event -> {
                 cell.setDraggedOver(false);
                 event.consume();
             });
         }
 
-        private void applyOnDragDroppedListener(BoundingShapeTreeCell cell, TreeView<Object> treeView) {
+        private void applyOnDragDroppedListener(ObjectTreeElementCell cell, TreeView<Object> treeView) {
             cell.setOnDragDropped(event -> {
                 if(!event.getDragboard().hasContent(dragDataFormat)) {
                     return;

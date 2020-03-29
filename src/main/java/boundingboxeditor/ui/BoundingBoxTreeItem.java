@@ -6,7 +6,7 @@ import javafx.scene.shape.Shape;
 import java.util.Objects;
 
 /**
- * A tree-item representing an existing {@link BoundingBoxView} in a {@link BoundingShapeTreeCell} of a {@link ObjectTreeView}.
+ * A tree-item representing an existing {@link BoundingBoxView} in a {@link ObjectTreeElementCell} of a {@link ObjectTreeView}.
  *
  * @see TreeItem
  */
@@ -14,7 +14,7 @@ class BoundingBoxTreeItem extends BoundingShapeTreeItem {
     private static final double TOGGLE_ICON_SIDE_LENGTH = 9.5;
 
     /**
-     * Creates a new tree-item representing a {@link BoundingBoxView} in a {@link BoundingShapeTreeCell} that is part of
+     * Creates a new tree-item representing a {@link BoundingBoxView} in a {@link ObjectTreeElementCell} that is part of
      * a {@link ObjectTreeView}.
      *
      * @param boundingBoxView the {@link BoundingBoxView} that should be associated with the tree-item

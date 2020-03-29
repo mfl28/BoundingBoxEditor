@@ -53,8 +53,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private final SimpleBooleanProperty maximizeImageView = new SimpleBooleanProperty(true);
     private final ColorAdjust colorAdjust = new ColorAdjust();
 
-    private final Group boundingBoxSceneGroup = new Group();
-    private final Group boundingPolygonSceneGroup = new Group();
+    private final Group boundingShapeSceneGroup = new Group();
     private final ToggleGroup boundingShapeSelectionGroup = new ToggleGroup();
     private final ObservableList<BoundingBoxView> currentBoundingBoxes = FXCollections.observableArrayList();
     private final ObservableList<BoundingPolygonView> currentBoundingPolygons = FXCollections.observableArrayList();
@@ -64,7 +63,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private final DragAnchor dragAnchor = new DragAnchor();
 
     private final ProgressIndicator imageLoadingProgressIndicator = new ProgressIndicator();
-    private final StackPane contentPane = new StackPane(imageView, boundingBoxSceneGroup, boundingPolygonSceneGroup,
+    private final StackPane contentPane = new StackPane(imageView, boundingShapeSceneGroup,
             initializerRectangle, imageLoadingProgressIndicator);
     private boolean boundingBoxDrawingInProgress = false;
     private DrawingMode drawingMode = DrawingMode.BOX;
@@ -83,8 +82,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
         setVbarPolicy(ScrollBarPolicy.NEVER);
         setHbarPolicy(ScrollBarPolicy.NEVER);
 
-        boundingBoxSceneGroup.setManaged(false);
-        boundingPolygonSceneGroup.setManaged(false);
+        boundingShapeSceneGroup.setManaged(false);
 
         setUpImageView();
         setUpInternalListeners();
@@ -302,14 +300,14 @@ public class EditorImagePaneView extends ScrollPane implements View {
     }
 
     /**
-     * Adds the provided {@link BoundingBoxView} objects to the boundingBoxSceneGroup which is
+     * Adds the provided {@link BoundingBoxView} objects to the boundingShapeSceneGroup which is
      * a node in the scene-graph. Should only be called from within a change-listener registered
      * to currentBoundingBoxes.
      *
      * @param boundingBoxes the objects to add
      */
     void addBoundingBoxViewsToSceneGroup(Collection<? extends BoundingBoxView> boundingBoxes) {
-        boundingBoxSceneGroup.getChildren().addAll(boundingBoxes.stream()
+        boundingShapeSceneGroup.getChildren().addAll(boundingBoxes.stream()
                 .map(BoundingBoxView::getNodeGroup)
                 .collect(Collectors.toList()));
     }
@@ -322,33 +320,33 @@ public class EditorImagePaneView extends ScrollPane implements View {
      * @param boundingPolygonViews the objects to add
      */
     void addBoundingPolygonViewsToSceneGroup(Collection<? extends BoundingPolygonView> boundingPolygonViews) {
-        boundingPolygonSceneGroup.getChildren().addAll(boundingPolygonViews.stream()
+        boundingShapeSceneGroup.getChildren().addAll(boundingPolygonViews.stream()
                 .map(BoundingPolygonView::getNodeGroup)
                 .collect(Collectors.toList()));
     }
 
     /**
-     * Removes the provided {@link BoundingBoxView} objects from a the boundingBoxSceneGroup which is
+     * Removes the provided {@link BoundingBoxView} objects from a the boundingShapeSceneGroup which is
      * a node in the scene-graph. Should only be called from within a change-listener registered
      * to currentBoundingBoxes.
      *
      * @param boundingBoxes the objects to remove
      */
     void removeBoundingBoxViewsFromSceneGroup(Collection<? extends BoundingBoxView> boundingBoxes) {
-        boundingBoxSceneGroup.getChildren().removeAll(boundingBoxes.stream()
+        boundingShapeSceneGroup.getChildren().removeAll(boundingBoxes.stream()
                 .map(BoundingBoxView::getNodeGroup)
                 .collect(Collectors.toList()));
     }
 
     /**
-     * Removes the provided {@link BoundingPolygonView} objects from a the boundingBoxSceneGroup which is
+     * Removes the provided {@link BoundingPolygonView} objects from a the boundingShapeSceneGroup which is
      * a node in the scene-graph. Should only be called from within a change-listener registered
      * to currentBoundingBoxes.
      *
      * @param boundingPolygons the objects to remove
      */
     void removeBoundingPolygonViewsFromSceneGroup(Collection<? extends BoundingPolygonView> boundingPolygons) {
-        boundingPolygonSceneGroup.getChildren().removeAll(boundingPolygons.stream()
+        boundingShapeSceneGroup.getChildren().removeAll(boundingPolygons.stream()
                 .map(BoundingPolygonView::getNodeGroup)
                 .collect(Collectors.toList()));
     }

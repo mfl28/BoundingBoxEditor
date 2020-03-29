@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 /**
  * The bounding-box tree UI-element. Shows information about the currently existing bounding shape objects
- * in {@link BoundingShapeTreeCell}s.
+ * in {@link ObjectTreeElementCell}s.
  * Bounding shape objects are grouped by their category and nested objects are displayed in a hierarchical
  * fashion. Any path running from the root of the tree downwards consists of alternating {@link ObjectCategoryTreeItem} and
  * {@link BoundingBoxTreeItem} objects in that order, i.e.: root, category-item, bounding-box-item, category-item, ...

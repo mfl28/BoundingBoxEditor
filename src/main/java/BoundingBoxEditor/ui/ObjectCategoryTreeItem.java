@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * A tree-item representing an existing {@link ObjectCategory} in a {@link BoundingShapeTreeCell} of a {@link ObjectTreeView}.
+ * A tree-item representing an existing {@link ObjectCategory} in a {@link ObjectTreeElementCell} of a {@link ObjectTreeView}.
  *
  * @see TreeItem
  */
@@ -22,7 +22,7 @@ class ObjectCategoryTreeItem extends TreeItem<Object> {
     private final ObjectCategory objectCategory;
 
     /**
-     * Creates a new tree-item representing a {@link ObjectCategory} in a {@link BoundingShapeTreeCell} that is part of
+     * Creates a new tree-item representing a {@link ObjectCategory} in a {@link ObjectTreeElementCell} that is part of
      * a {@link ObjectTreeView}.
      *
      * @param objectCategory the {@link ObjectCategory} that should be associated with the tree-item
