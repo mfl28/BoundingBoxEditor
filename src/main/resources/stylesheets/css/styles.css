@@ -215,24 +215,25 @@
 .tool-bar .toggle-button, .tool-bar .toggle-button:focused, .tool-bar .toggle-button:armed {
   -fx-background-color: transparent;
   -fx-text-fill: #d8dee9;
-  -fx-background-insets: 0; }
-  /* line 302, src/main/resources/stylesheets/scss/styles.scss */
+  -fx-background-insets: 0;
+  -fx-background-radius: 0; }
+  /* line 303, src/main/resources/stylesheets/scss/styles.scss */
   .tool-bar .toggle-button:hover {
     -fx-background-color: #434c5e;
     -fx-text-fill: #eceff4;
     -fx-background-insets: 0; }
-  /* line 308, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 309, src/main/resources/stylesheets/scss/styles.scss */
   .tool-bar .toggle-button:selected {
     -fx-background-color: #88c0d0;
     -fx-text-fill: #2e3440;
     -fx-background-insets: 0; }
-  /* line 314, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 315, src/main/resources/stylesheets/scss/styles.scss */
   .tool-bar .toggle-button:pressed {
     -fx-background-color: #4c566a;
     -fx-text-fill: #eceff4;
     -fx-background-insets: 0; }
 
-/* line 322, src/main/resources/stylesheets/scss/styles.scss */
+/* line 323, src/main/resources/stylesheets/scss/styles.scss */
 #previous-button-icon {
   -fx-max-width: 15px;
   -fx-max-height: 15px;
@@ -241,7 +242,7 @@
   -fx-background-color: #d8dee9;
   -fx-shape: "m 11.980469,3.9902344 a 1.0001,1.0001 0 0 0 -0.6875,0.3027344 L 4.2929688,11.292969 a 1.0001,1.0001 0 0 0 0,1.414062 l 7.0000002,7 a 1.0001,1.0001 0 1 0 1.414062,-1.414062 L 6.4140625, 12 12.707031,5.7070312 A 1.0001,1.0001 0 0 0 11.980469,3.9902344 Z M 5,11 a 1.0001,1.0001 0 1 0 0, 2 h 14 a 1.0001,1.0001 0 1 0 0,-2 z"; }
 
-/* line 328, src/main/resources/stylesheets/scss/styles.scss */
+/* line 329, src/main/resources/stylesheets/scss/styles.scss */
 #next-button-icon {
   -fx-max-width: 15px;
   -fx-max-height: 15px;
@@ -250,7 +251,7 @@
   -fx-background-color: #d8dee9;
   -fx-shape: "M 11.990234,3.9902344 A 1.0001,1.0001 0 0 0 11.292969,5.7070312 L 17.585938,12 11.292969, 18.292969 a 1.0001,1.0001 0 1 0 1.414062,1.414062 l 7,-7 a 1.0001,1.0001 0 0 0 0,-1.414062 l -7,-7.0000002 A 1.0001,1.0001 0 0 0 11.990234,3.9902344 Z M 5,11 a 1.0001,1.0001 0 1 0 0,2 h 14 a 1.0001,1.0001 0 1 0 0,-2 z"; }
 
-/* line 334, src/main/resources/stylesheets/scss/styles.scss */
+/* line 335, src/main/resources/stylesheets/scss/styles.scss */
 #search-icon {
   -fx-max-width: 15px;
   -fx-max-height: 15px;
@@ -259,7 +260,7 @@
   -fx-background-color: #d8dee9;
   -fx-shape: "m 16.638672,15.640625 a 1.0001,1.0001 0 0 0 -0.695313,1.716797 l 4.34961,4.349609 a 1.0001,1.0001 0 1 0 1.414062,-1.414062 l -4.349609, -4.34961 a 1.0001,1.0001 0 0 0 -0.71875,-0.302734 z M 11,2 c -4.9587181,0 -9,4.0412819 -9,9 0,4.958718 4.0412819,9 9,9 4.958718,0 9,-4.041282 9,-9 0,-4.9587181 -4.041282,-9 -9,-9 z m 0,2 c 3.877838,0 7,3.1221621 7,7 0,3.877838 -3.122162,7 -7,7 C 7.1221621,18 4,14.877838 4,11 4,7.1221621 7.1221621, 4 11,4 Z"; }
 
-/* line 340, src/main/resources/stylesheets/scss/styles.scss */
+/* line 341, src/main/resources/stylesheets/scss/styles.scss */
 #tag-icon {
   -fx-max-width: 10px;
   -fx-max-height: 10px;
@@ -268,7 +269,7 @@
   -fx-background-color: derive(#d8dee9, -20%);
   -fx-shape: "M 7,6 A 1.0001,1.0001 0 1 0 7,8 1.0001,1.0001 0 1 0 7,6 Z M 2,1 A 1.0001,1.0001 0 0 0 1,2 v 10 a 1.0001,1.0001 0 0 0 0.2929688,0.707031 l 8.5898437,8.580078 c 1.1634425,1.164738 3.0806985,1.164738 4.2441405,0 l 7.169922,-7.169921 a 1.0001, 1.0001 0 0 0 0.002,-0.002 c 1.154974,-1.161867 1.154974,-3.068601 0,-4.2304684 a 1.0001,1.0001 0 0 0 -0.002,-0.00195 L 12.707031, 1.2929688 A 1.0001,1.0001 0 0 0 12,1 Z m 1,2 h 8.585938 l 8.296874,8.296875 c 0.393937,0.398334 0.393306,1.010586 -0.002,1.408203 l -7.167968,7.167969 c -0.399014,0.399458 -1.017002,0.399458 -1.416016,0 L 3,11.585938 Z"; }
 
-/* line 346, src/main/resources/stylesheets/scss/styles.scss */
+/* line 347, src/main/resources/stylesheets/scss/styles.scss */
 #folder-icon {
   -fx-max-width: 12px;
   -fx-max-height: 12px;
@@ -277,7 +278,7 @@
   -fx-background-color: #d8dee9;
   -fx-shape: "M 4,2 C 2.3549904,2 1,3.3549904 1,5 v 14 c 0,1.64501 1.3549904,3 3,3 h 16 c 1.64501,0 3,-1.35499 3,-3 V 8 C 23,6.3549904 21.64501,5 20,5 H 11.535156 L 9.8320312,2.4453125 A 1.0001,1.0001 0 0 0 9,2 Z M 4,4 H 8.4648438 L 10.167969,6.5546875 A 1.0001,1.0001 0 0 0 11,7 h 9 c 0.564129,0 1,0.4358706 1,1 v 11 c 0,0.564129 -0.435871,1 -1,1 H 4 C 3.4358706,20 3,19.564129 3,19 V 5 C 3,4.4358706 3.4358706,4 4,4 Z"; }
 
-/* line 352, src/main/resources/stylesheets/scss/styles.scss */
+/* line 353, src/main/resources/stylesheets/scss/styles.scss */
 #save-icon {
   -fx-max-width: 12px;
   -fx-max-height: 12px;
@@ -286,7 +287,16 @@
   -fx-background-color: #d8dee9;
   -fx-shape: "M 6.984375,1.9863281 A 1.0001,1.0001 0 0 0 6,3 v 5 a 1.0001,1.0001 0 0 0 1,1 h 8 A 1.0001,1.0001 0 1 0 15,7 H 8 V 3 A 1.0001,1.0001 0 0 0 6.984375,1.9863281 Z M 7,12 a 1.0001,1.0001 0 0 0 -1,1 v 8 a 1.0001,1.0001 0 1 0 2,0 v -7 h 8 v 7 a 1.0001,1.0001 0 1 0 2,0 V 13 A 1.0001,1.0001 0 0 0 17,12 Z M 5,2 C 3.3549904,2 2,3.3549904 2,5 v 14 c 0,1.64501 1.3549904,3 3,3 h 14 c 1.64501,0 3,-1.35499 3,-3 V 8 A 1.0001,1.0001 0 0 0 21.707031,7.2929688 l -5,-5 A 1.0001,1.0001 0 0 0 16,2 Z M 5,4 H 15.585938 L 20,8.4140625 V 19 c 0,0.564129 -0.435871,1 -1,1 H 5 C 4.4358706,20 4,19.564129 4,19 V 5 C 4,4.4358706 4.4358706,4 5,4 Z"; }
 
-/* line 358, src/main/resources/stylesheets/scss/styles.scss */
+/* line 359, src/main/resources/stylesheets/scss/styles.scss */
+#file-import-icon {
+  -fx-max-width: 12px;
+  -fx-max-height: 12px;
+  -fx-min-width: 12px;
+  -fx-min-height: 12px;
+  -fx-background-color: #d8dee9;
+  -fx-shape: "M 11.984375,1.9863281 C 11.279766,1.9745896 10.890611,2.7109164 11,3.33953 c 0.0024,3.9201032 -0.0048,7.840378 0.0036,11.760374 0.0272,0.877882 1.292556,1.248516 1.789096,0.524041 0.367542,-0.569563 0.147028,-1.285803 0.20732,-1.925477 -0.0024,-3.599434 0.0048,-7.1990454 -0.0036,-10.7983705 -0.0352,-0.511243 -0.499617,-0.9307501 -1.011996,-0.9137694 z M 6.9902344,8.9902344 C 6.099379,8.9422515 5.6333391,10.197047 6.3329828,10.747045 c 1.7091512,1.690593 3.3834295,3.420726 5.1146032,5.086352 0.556804,0.398857 1.21812,0.02559 1.579557,-0.446478 1.599305,-1.614051 3.229823,-3.200179 4.809406,-4.831875 C 18.375494,9.8615354 17.637269,8.7690483 16.79277,9.0103736 16.159214,9.2375121 15.792908,9.8694258 15.292619,10.293319 14.195079,11.390858 13.09754,12.488398 12,13.585938 10.514292,12.116347 9.0589866,10.612626 7.5541967,9.1644526 7.3893665,9.0514444 7.190083,8.9898832 6.9902344,8.9902344 Z M 2.984375,13.986328 C 2.2797657,13.97459 1.8906111,14.710916 2,15.33953 c 0.019081,1.371149 -0.040708,2.74627 0.03485,4.114605 C 2.241938,21.010728 3.7932155,22.164735 5.33953,22 c 4.6549195,-0.01032 9.311164,0.0207 13.965251,-0.01562 C 20.925016,21.85466 22.174824,20.260266 22,18.66047 c -0.01104,-1.286164 0.02232,-2.574893 -0.01712,-3.859421 -0.114702,-0.870782 -1.410742,-1.113239 -1.832474,-0.342811 -0.282186,0.606235 -0.09706,1.306766 -0.150402,1.95647 -0.01192,0.92982 0.02467,1.861981 -0.01983,2.790227 C 19.845759,20.014529 18.966281,20.037069 18.32094,20 13.880627,20 9.4403133,20 5,20 4.1055425,20.026386 3.922563,19.075121 4,18.377528 3.9889608,17.18568 4.0223623,15.991257 3.982787,14.801056 3.9025379,14.332896 3.4592571,13.971069 2.984375,13.986328 Z"; }
+
+/* line 365, src/main/resources/stylesheets/scss/styles.scss */
 #exit-icon {
   -fx-max-width: 12px;
   -fx-max-height: 12px;
@@ -295,7 +305,7 @@
   -fx-background-color: #d8dee9;
   -fx-shape: "M 11.984375,0.98632812 A 1.0001,1.0001 0 0 0 11,2 v 10 a 1.0001,1.0001 0 1 0 2,0 V 2 A 1.0001,1.0001 0 0 0 11.984375,0.98632812 Z m -6.375,4.64453128 a 1.0001,1.0001 0 0 0 -0.6875,0.3027344 C 1.8026605,9.053827 1.3187565,13.361857 2.7558594,16.830078 c 1.4371028,3.468221 4.8267962,6.171875 9.2382816,6.171875 4.411485,0 7.803131,-2.703654 9.240234,-6.171875 1.437103,-3.468221 0.951246,-7.776251 -2.167969,-10.8964842 a 1.0001,1.0001 0 1 0 -1.414062,1.4140624 c 2.549436,2.5502692 2.892679,5.9214108 1.734375,8.7167968 -1.158305,2.795386 -3.787042,4.9375 -7.392578,4.9375 -3.6055366,0 -6.2323208,-2.142114 -7.3906254,-4.9375 C 3.445211,13.269067 3.7884542,9.8979254 6.3378906,7.3476562 A 1.0001,1.0001 0 0 0 5.609375,5.6308594 Z"; }
 
-/* line 364, src/main/resources/stylesheets/scss/styles.scss */
+/* line 371, src/main/resources/stylesheets/scss/styles.scss */
 #show-bounding-boxes-icon {
   -fx-max-width: 15px;
   -fx-max-height: 15px;
@@ -311,7 +321,7 @@
   #show-bounding-boxes-icon:pressed {
     -fx-background-color: #5e81ac; }
 
-/* line 373, src/main/resources/stylesheets/scss/styles.scss */
+/* line 380, src/main/resources/stylesheets/scss/styles.scss */
 #hide-bounding-boxes-icon {
   -fx-max-width: 15px;
   -fx-max-height: 15px;
@@ -326,7 +336,7 @@
   #hide-bounding-boxes-icon:pressed {
     -fx-background-color: #5e81ac; }
 
-/* line 381, src/main/resources/stylesheets/scss/styles.scss */
+/* line 388, src/main/resources/stylesheets/scss/styles.scss */
 #reset-image-size-icon {
   -fx-max-width: 15px;
   -fx-max-height: 15px;
@@ -341,30 +351,48 @@
   #reset-image-size-icon:pressed {
     -fx-background-color: #5e81ac; }
 
-/* line 389, src/main/resources/stylesheets/scss/styles.scss */
+/* line 396, src/main/resources/stylesheets/scss/styles.scss */
+#rectangle-mode-button-icon {
+  -fx-max-width: 12px;
+  -fx-max-height: 12px;
+  -fx-min-width: 12px;
+  -fx-min-height: 12px;
+  -fx-background-color: #d8dee9;
+  -fx-shape: "M 5,2 C 3.2874251,1.9556109 1.8252934,3.590262 2,5.2828427 2.0103171,9.9566412 1.9793015,14.631765 2.0156222,19.30473 2.1455307,20.924774 3.7396774,22.174707 5.3394113,22 9.9943536,21.989684 14.650621,22.020697 19.30473,21.984378 20.924774,21.854469 22.174707,20.260323 22,18.660589 21.989684,14.005646 22.020697,9.3493788 21.984378,4.6952699 21.854469,3.0752264 20.260323,1.8252934 18.660589,2 14.107059,2 9.5535296,2 5,2 Z m 0,2 c 4.6666667,0 9.333333,0 14,0 0.89916,-0.032028 1.076265,0.9245002 1,1.622254 0,4.459249 0,8.918497 0,13.377746 0.03203,0.89916 -0.9245,1.076265 -1.622254,1 C 13.918497,20 9.4592487,20 5,20 4.1008403,20.032028 3.9237355,19.0755 4,18.377746 4,13.918497 4,9.4592487 4,5 3.9793609,4.4551333 4.4547243,3.9794146 5,4 Z"; }
+
+/* line 402, src/main/resources/stylesheets/scss/styles.scss */
+#polygon-mode-button-icon {
+  -fx-max-width: 12px;
+  -fx-max-height: 12px;
+  -fx-min-width: 12px;
+  -fx-min-height: 12px;
+  -fx-background-color: #d8dee9;
+  -fx-shape: "M 12,1.0019531 C 10.743364,1.0139221 9.7695359,1.8979376 8.6970985,2.4348052 6.8591013,3.5053705 4.9831359,4.5157816 3.1697658,5.6253717 2.1822187,6.3266142 1.9193469,7.5744565 2,8.7134831 c 0.00457,2.4959459 -0.00915,4.9922059 0.00686,7.4879559 0.041744,1.255977 0.9856606,2.215483 2.0649087,2.720799 2.2663898,1.276802 4.5032475,2.610515 6.7888272,3.850342 1.101694,0.503266 2.31036,0.103106 3.258879,-0.530835 2.182057,-1.252607 4.374151,-2.488434 6.54994,-3.751517 1.067783,-0.662199 1.426557,-1.957444 1.33059,-3.144254 -0.0046,-2.515748 0.0091,-5.031811 -0.0069,-7.5473629 C 21.951411,6.542627 21.007489,5.5831643 19.928256,5.0778449 17.663131,3.8012474 15.426878,2.4691042 13.143011,1.2285587 12.781677,1.0793053 12.390953,1.0017671 12,1.0019531 Z m -0.5,2.1347657 c 0.744367,-0.4154599 1.39816,0.2971922 2.036344,0.5919589 2.023074,1.1632315 4.059153,2.3054491 6.074086,3.481837 0.619506,0.5214231 0.317233,1.3947334 0.38957,2.0975377 -0.0059,2.2741516 0.01179,4.5490876 -0.0089,6.8227476 -0.142367,0.798616 -1.05222,0.969899 -1.626832,1.381491 -1.995916,1.134137 -3.981299,2.288082 -5.983758,3.409914 -0.764152,0.273528 -1.371132,-0.423246 -2.020137,-0.709886 C 8.3717555,19.068756 6.3700906,17.946205 4.3895701,16.789485 3.7700642,16.268062 4.0723369,15.394752 4,14.691948 4.0060974,12.417244 3.9878424,10.14171 4.0090591,7.8675228 4.1527188,7.0701305 5.0614399,6.8990876 5.6356881,6.4877089 7.5904969,5.3707836 9.5450005,4.253288 11.5,3.1367188 Z"; }
+
+/* line 408, src/main/resources/stylesheets/scss/styles.scss */
 #toggle-square {
   -fx-opacity: 0.3; }
-  /* line 392, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 411, src/main/resources/stylesheets/scss/styles.scss */
   #toggle-square:toggled-on {
     -fx-opacity: 1.0; }
 
-/* line 397, src/main/resources/stylesheets/scss/styles.scss */
+/* line 416, src/main/resources/stylesheets/scss/styles.scss */
 #toggle-polygon {
   -fx-opacity: 0.3; }
-  /* line 400, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 419, src/main/resources/stylesheets/scss/styles.scss */
   #toggle-polygon:toggled-on {
     -fx-opacity: 1.0; }
 
-/* line 405, src/main/resources/stylesheets/scss/styles.scss */
+/* line 424, src/main/resources/stylesheets/scss/styles.scss */
 #bounding-polygon {
   -fx-stroke-width: 3px;
   -fx-stroke-line-join: round; }
 
-/* line 411, src/main/resources/stylesheets/scss/styles.scss */
+/* line 430, src/main/resources/stylesheets/scss/styles.scss */
 #vertex-handle:editing {
   -fx-stroke-width: 3px; }
 
-/* line 416, src/main/resources/stylesheets/scss/styles.scss */
+/* line 435, src/main/resources/stylesheets/scss/styles.scss */
 #expand-tree-items-icon {
   -fx-max-width: 15px;
   -fx-max-height: 15px;
@@ -379,7 +407,7 @@
   #expand-tree-items-icon:pressed {
     -fx-background-color: #5e81ac; }
 
-/* line 424, src/main/resources/stylesheets/scss/styles.scss */
+/* line 443, src/main/resources/stylesheets/scss/styles.scss */
 #collapse-tree-items-icon {
   -fx-max-width: 15px;
   -fx-max-height: 15px;
@@ -394,19 +422,19 @@
   #collapse-tree-items-icon:pressed {
     -fx-background-color: #5e81ac; }
 
-/* line 433, src/main/resources/stylesheets/scss/styles.scss */
+/* line 452, src/main/resources/stylesheets/scss/styles.scss */
 .label {
   -fx-text-fill: #d8dee9;
   -fx-font-size: 14 pt; }
 
-/* line 438, src/main/resources/stylesheets/scss/styles.scss */
+/* line 457, src/main/resources/stylesheets/scss/styles.scss */
 #search-icon-label {
   -fx-padding: 0 0 0 5px;
   -fx-min-height: 25px;
   -fx-max-height: 25px;
   -fx-background-color: #4c566a; }
 
-/* line 445, src/main/resources/stylesheets/scss/styles.scss */
+/* line 464, src/main/resources/stylesheets/scss/styles.scss */
 #brightness-label {
   -fx-max-width: 20px;
   -fx-max-height: 20px;
@@ -415,7 +443,7 @@
   -fx-background-color: #d8dee9;
   -fx-shape: "m 19.759766,3.2109375 a 1.0001,1.0001 0 0 0 -0.6875,0.3027344 l -1.419922,1.4199219 a 1.0001,1.0001 0 1 0 1.414062,1.4140624 L 20.486328,4.9277344 A 1.0001,1.0001 0 0 0 19.759766,3.2109375 Z M 5.6210938,17.349609 a 1.0001,1.0001 0 0 0 -0.6875,0.302735 l -1.4199219,1.419922 a 1.0001,1.0001 0 1 0 1.4140625,1.414062 L 6.3476562,19.066406 A 1.0001,1.0001 0 0 0 5.6210938,17.349609 Z M 21,11 a 1.0001,1.0001 0 1 0 0,2 h 2 a 1.0001,1.0001 0 1 0 0,-2 z M 1,11 a 1.0001,1.0001 0 1 0 0,2 h 2 a 1.0001,1.0001 0 1 0 0,-2 z m 17.349609,6.349609 a 1.0001,1.0001 0 0 0 -0.697265,1.716797 l 1.419922,1.419922 a 1.0001,1.0001 0 1 0 1.414062,-1.414062 L 19.066406,17.652344 A 1.0001,1.0001 0 0 0 18.349609,17.349609 Z M 4.2089844,3.2089844 a 1.0001,1.0001 0 0 0 -0.6953125,1.71875 L 4.9335938,6.3476562 A 1.0001,1.0001 0 1 0 6.3476562,4.9335938 L 4.9277344,3.5136719 A 1.0001,1.0001 0 0 0 4.2089844,3.2089844 Z M 11.984375,19.986328 A 1.0001,1.0001 0 0 0 11,21 v 2 a 1.0001,1.0001 0 1 0 2,0 v -2 a 1.0001,1.0001 0 0 0 -1.015625,-1.013672 z m 0,-19.99999988 A 1.0001,1.0001 0 0 0 11,1 v 2 a 1.0001,1.0001 0 1 0 2,0 V 1 A 1.0001,1.0001 0 0 0 11.984375,-0.01367188 Z M 12,6 c -3.3018639,0 -6,2.6981361 -6,6 0,3.301864 2.6981361,6 6,6 3.301864,0 6,-2.698136 6,-6 0,-3.3018639 -2.698136,-6 -6,-6 z m 0,2 c 2.220984,0 4,1.7790164 4,4 0,2.220984 -1.779016,4 -4,4 C 9.7790164,16 8,14.220984 8,12 8,9.7790164 9.7790164,8 12,8 Z"; }
 
-/* line 451, src/main/resources/stylesheets/scss/styles.scss */
+/* line 470, src/main/resources/stylesheets/scss/styles.scss */
 #contrast-label {
   -fx-max-width: 20px;
   -fx-max-height: 20px;
@@ -424,7 +452,7 @@
   -fx-background-color: #d8dee9;
   -fx-shape: "M 12.116834,12.00131 V 8.0283286 h 0.139109 c 0.413066,0 1.177123,0.2148259 1.622666,0.4562365 0.970165,0.5256691 1.682961,1.424715 1.962626,2.4754499 0.603052,2.265748 -0.833675,4.531676 -3.144111,4.958716 -0.165328,0.03056 -0.363528,0.05556 -0.440443,0.05556 H 12.116834 Z M 12.05,8 v 8.089992 M 19.759766,3.2109375 a 1.0001,1.0001 0 0 0 -0.6875,0.3027344 l -1.419922,1.4199219 a 1.0001,1.0001 0 1 0 1.414062,1.4140624 L 20.486328,4.9277344 A 1.0001,1.0001 0 0 0 19.759766,3.2109375 Z M 5.6210938,17.349609 a 1.0001,1.0001 0 0 0 -0.6875,0.302735 l -1.4199219,1.419922 a 1.0001,1.0001 0 1 0 1.4140625,1.414062 L 6.3476562,19.066406 A 1.0001,1.0001 0 0 0 5.6210938, 17.349609 Z M 21,11 a 1.0001,1.0001 0 1 0 0,2 h 2 a 1.0001,1.0001 0 1 0 0,-2 z M 1,11 a 1.0001,1.0001 0 1 0 0,2 h 2 a 1.0001,1.0001 0 1 0 0,-2 z m 17.349609,6.349609 a 1.0001,1.0001 0 0 0 -0.697265,1.716797 l 1.419922,1.419922 a 1.0001,1.0001 0 1 0 1.414062,-1.414062 L 19.066406,17.652344 A 1.0001,1.0001 0 0 0 18.349609,17.349609 Z M 4.2089844,3.2089844 a 1.0001,1.0001 0 0 0 -0.6953125,1.71875 L 4.9335938,6.3476562 A 1.0001,1.0001 0 1 0 6.3476562,4.9335938 L 4.9277344,3.5136719 A 1.0001,1.0001 0 0 0 4.2089844,3.2089844 Z M 11.984375,19.986328 A 1.0001,1.0001 0 0 0 11,21 v 2 a 1.0001,1.0001 0 1 0 2,0 v -2 a 1.0001,1.0001 0 0 0 -1.015625,-1.013672 z m 0,-19.99999988 A 1.0001,1.0001 0 0 0 11,1 v 2 a 1.0001,1.0001 0 1 0 2,0 V 1 A 1.0001,1.0001 0 0 0 11.984375,-0.01367188 Z M 12,6 c -3.3018639,0 -6,2.6981361 -6,6 0,3.301864 2.6981361,6 6,6 3.301864,0 6,-2.698136 6,-6 0,-3.3018639 -2.698136,-6 -6,-6 z m 0,2 c 2.220984,0 4,1.7790164 4,4 0,2.220984 -1.779016,4 -4,4 C 9.7790164,16 8,14.220984 8,12 8,9.7790164 9.7790164,8 12,8 Z"; }
 
-/* line 457, src/main/resources/stylesheets/scss/styles.scss */
+/* line 476, src/main/resources/stylesheets/scss/styles.scss */
 #saturation-label {
   -fx-max-width: 20px;
   -fx-max-height: 20px;
@@ -434,68 +462,68 @@
   -fx-background-color: #d8dee9;
   -fx-shape: "M 11.984375,1.6894531 A 1.0001,1.0001 0 0 0 11.292969,1.984375 L 5.6425781,7.6425781 C 2.8361877,10.44713 2.3970528, 14.330002 3.6894531,17.451172 c 1.2924004,3.12117 4.349289,5.55664 8.3164059,5.55664 3.967118,10e-7 7.022053,-2.43547 8.314453,-5.55664 1.292401,-3.12117 0.853266,-7.004042 -1.953124,-9.8085939 L 12.707031,1.9824219 A 1.0001,1.0001 0 0 0 11.984375,1.6894531 Z M 12,4.1035156 l 4.953125,4.953125 c 2.236225,2.2347604 2.533251,5.1807534 1.519531,7.6289064 -1.01372,2.448152 -3.30578,4.322265 -6.466797,4.322265 -3.1610163,10e-7 -5.4550295,-1.874113 -6.4687496,-4.322265 C 4.5233892,14.237394 4.8204152,11.291401 7.0566406,9.0566406 a 1.0001,1.0001 0 0 0 0.00195,0 z"; }
 
-/* line 464, src/main/resources/stylesheets/scss/styles.scss */
+/* line 483, src/main/resources/stylesheets/scss/styles.scss */
 #event-time-stamp-label {
   -fx-text-fill: #d08770; }
 
-/* line 469, src/main/resources/stylesheets/scss/styles.scss */
+/* line 488, src/main/resources/stylesheets/scss/styles.scss */
 #bounding-rectangle {
   -fx-stroke-width: 3px; }
 
-/* line 474, src/main/resources/stylesheets/scss/styles.scss */
+/* line 493, src/main/resources/stylesheets/scss/styles.scss */
 #main-view {
   -fx-background-color: #3b4252; }
 
-/* line 478, src/main/resources/stylesheets/scss/styles.scss */
+/* line 497, src/main/resources/stylesheets/scss/styles.scss */
 #image-pane-view {
   -fx-background-color: #3b4252; }
 
-/* line 482, src/main/resources/stylesheets/scss/styles.scss */
+/* line 501, src/main/resources/stylesheets/scss/styles.scss */
 .header-view {
   -fx-background-color: #2e3440; }
 
-/* line 486, src/main/resources/stylesheets/scss/styles.scss */
+/* line 505, src/main/resources/stylesheets/scss/styles.scss */
 .tool-bar {
   -fx-background-color: #2e3440;
   -fx-padding: 0; }
 
-/* line 491, src/main/resources/stylesheets/scss/styles.scss */
+/* line 510, src/main/resources/stylesheets/scss/styles.scss */
 .side-panel-box {
   -fx-background-color: #2e3440;
   -fx-pref-width: 230px;
   -fx-min-width: 230px;
   -fx-padding: 3px 5px 0 5px;
   -fx-spacing: 5px; }
-  /* line 497, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 516, src/main/resources/stylesheets/scss/styles.scss */
   .side-panel-box > .label {
     -fx-font-weight: bold; }
 
-/* line 502, src/main/resources/stylesheets/scss/styles.scss */
+/* line 521, src/main/resources/stylesheets/scss/styles.scss */
 #status-panel {
   -fx-background-color: #2e3440;
   -fx-padding: 5px; }
 
-/* line 507, src/main/resources/stylesheets/scss/styles.scss */
+/* line 526, src/main/resources/stylesheets/scss/styles.scss */
 .split-pane {
   -fx-background-color: #3b4252;
   -fx-background-insets: 0;
   -fx-padding: 0; }
-  /* line 512, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 531, src/main/resources/stylesheets/scss/styles.scss */
   .split-pane:horizontal > .split-pane-divider {
     -fx-background-color: derive(#2e3440, -15%);
     -fx-background-insets: 0;
     -fx-padding: 1px; }
-  /* line 518, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 537, src/main/resources/stylesheets/scss/styles.scss */
   .split-pane:vertical > .split-pane-divider {
     -fx-background-color: derive(#2e3440, -15%);
     -fx-background-insets: 0;
     -fx-padding: 1px; }
 
-/* line 525, src/main/resources/stylesheets/scss/styles.scss */
+/* line 544, src/main/resources/stylesheets/scss/styles.scss */
 #editors-split-pane {
   -fx-background-color: #2e3440; }
 
-/* line 529, src/main/resources/stylesheets/scss/styles.scss */
+/* line 548, src/main/resources/stylesheets/scss/styles.scss */
 #image-file-explorer {
   -fx-pref-width: 230px;
   -fx-min-width: 230px;
@@ -505,42 +533,42 @@
   -fx-border-color: derive(#2e3440, -15%);
   -fx-border-width: 0 0 2px 0;
   -fx-spacing: 5px; }
-  /* line 538, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 557, src/main/resources/stylesheets/scss/styles.scss */
   #image-file-explorer > .label {
     -fx-padding: 0 5px 0 5px;
     -fx-font-weight: bold; }
 
-/* line 544, src/main/resources/stylesheets/scss/styles.scss */
+/* line 563, src/main/resources/stylesheets/scss/styles.scss */
 #image-file-info-cell:has-assigned-bounding-boxes {
   -fx-text-fill: #d8dee9;
   -fx-font-weight: normal; }
-  /* line 548, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 567, src/main/resources/stylesheets/scss/styles.scss */
   #image-file-info-cell:has-assigned-bounding-boxes:has-assigned-bounding-boxes {
     -fx-text-fill: #ebcb8b;
     -fx-font-weight: bold; }
 
-/* line 555, src/main/resources/stylesheets/scss/styles.scss */
+/* line 574, src/main/resources/stylesheets/scss/styles.scss */
 .separator .line {
   -fx-border-width: 1px;
   -fx-border-color: derive(#2e3440, -15%); }
 
-/* line 560, src/main/resources/stylesheets/scss/styles.scss */
+/* line 579, src/main/resources/stylesheets/scss/styles.scss */
 .mnemonic-underline {
   -fx-stroke: #d8dee9; }
 
-/* line 565, src/main/resources/stylesheets/scss/styles.scss */
+/* line 584, src/main/resources/stylesheets/scss/styles.scss */
 .slider .track {
   -fx-control-inner-background: #d8dee9; }
 
-/* line 569, src/main/resources/stylesheets/scss/styles.scss */
+/* line 588, src/main/resources/stylesheets/scss/styles.scss */
 .slider .thumb {
   -fx-background-color: derive(#4c566a, 20%);
   -fx-effect: none; }
-  /* line 573, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 592, src/main/resources/stylesheets/scss/styles.scss */
   .slider .thumb:hover, .slider .thumb:pressed {
     -fx-background-color: #5e81ac; }
 
-/* line 580, src/main/resources/stylesheets/scss/styles.scss */
+/* line 599, src/main/resources/stylesheets/scss/styles.scss */
 .text-field {
   -fx-background-color: #4c566a;
   -fx-text-fill: #d8dee9;
@@ -549,250 +577,250 @@
   -fx-padding: 4px;
   -fx-accent: #5e81ac; }
 
-/* line 590, src/main/resources/stylesheets/scss/styles.scss */
+/* line 609, src/main/resources/stylesheets/scss/styles.scss */
 .text-field-table-cell .text-field {
   -fx-padding: 0; }
 
-/* line 595, src/main/resources/stylesheets/scss/styles.scss */
+/* line 614, src/main/resources/stylesheets/scss/styles.scss */
 #category-input-field {
   -fx-min-width: 50px;
   -fx-pref-width: 120px; }
 
-/* line 600, src/main/resources/stylesheets/scss/styles.scss */
+/* line 619, src/main/resources/stylesheets/scss/styles.scss */
 #bounding-box-editor-toolbox {
   -fx-spacing: 10px;
   -fx-alignment: center;
   -fx-padding: 0 5px;
   -fx-background-color: #3b4252; }
 
-/* line 607, src/main/resources/stylesheets/scss/styles.scss */
+/* line 626, src/main/resources/stylesheets/scss/styles.scss */
 #bounding-box-explorer-top-panel {
   -fx-spacing: 10px; }
 
-/* line 611, src/main/resources/stylesheets/scss/styles.scss */
+/* line 630, src/main/resources/stylesheets/scss/styles.scss */
 #category-selector-top-panel {
   -fx-alignment: center;
   -fx-padding: 0;
   -fx-spacing: 0; }
 
-/* line 617, src/main/resources/stylesheets/scss/styles.scss */
+/* line 636, src/main/resources/stylesheets/scss/styles.scss */
 #add-category-box {
   -fx-padding: 0 0 5px 0;
   -fx-alignment: center; }
 
-/* line 622, src/main/resources/stylesheets/scss/styles.scss */
+/* line 641, src/main/resources/stylesheets/scss/styles.scss */
 .category-color-picker {
   -fx-max-width: 50px;
   -fx-max-height: 25px; }
 
-/* line 627, src/main/resources/stylesheets/scss/styles.scss */
+/* line 646, src/main/resources/stylesheets/scss/styles.scss */
 .progress-indicator {
   -fx-background-color: transparent;
   -fx-accent: #d8dee9; }
 
-/* line 632, src/main/resources/stylesheets/scss/styles.scss */
+/* line 651, src/main/resources/stylesheets/scss/styles.scss */
 #tag-editor-scroll-pane {
   -fx-background-color: transparent;
   -fx-min-height: 50px;
   -fx-pref-height: 70px;
   -fx-max-height: 180px; }
-  /* line 638, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 657, src/main/resources/stylesheets/scss/styles.scss */
   #tag-editor-scroll-pane > .viewport {
     -fx-background-color: transparent; }
 
-/* line 643, src/main/resources/stylesheets/scss/styles.scss */
+/* line 662, src/main/resources/stylesheets/scss/styles.scss */
 #image-file-search-box {
   -fx-padding: 0 5px;
   -fx-spacing: 0;
   -fx-alignment: center; }
 
-/* line 650, src/main/resources/stylesheets/scss/styles.scss */
+/* line 669, src/main/resources/stylesheets/scss/styles.scss */
 .scroll-pane {
   -fx-background-insets: 0;
   -fx-padding: 0; }
-  /* line 654, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 673, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-pane > .viewport {
     -fx-background-color: transparent; }
 
-/* line 660, src/main/resources/stylesheets/scss/styles.scss */
+/* line 679, src/main/resources/stylesheets/scss/styles.scss */
 #bounding-box-explorer-top-panel {
   -fx-alignment: center; }
-  /* line 663, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 682, src/main/resources/stylesheets/scss/styles.scss */
   #bounding-box-explorer-top-panel > .label {
     -fx-font-weight: bold; }
 
-/* line 668, src/main/resources/stylesheets/scss/styles.scss */
+/* line 687, src/main/resources/stylesheets/scss/styles.scss */
 .table-view {
   -fx-background-color: transparent;
   -fx-color: #2e3440; }
-  /* line 672, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 691, src/main/resources/stylesheets/scss/styles.scss */
   .table-view:focused, .table-view .corner {
     -fx-background-color: transparent; }
-  /* line 676, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 695, src/main/resources/stylesheets/scss/styles.scss */
   .table-view .table-cell {
     -fx-text-fill: #d8dee9; }
 
-/* line 681, src/main/resources/stylesheets/scss/styles.scss */
+/* line 700, src/main/resources/stylesheets/scss/styles.scss */
 .table-row-cell {
   -fx-background-color: #2e3440, #3b4252;
   -fx-table-cell-border-color: transparent;
   -fx-border-width: 0; }
-  /* line 686, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 705, src/main/resources/stylesheets/scss/styles.scss */
   .table-row-cell:selected .table-cell {
     -fx-background-color: #4c566a;
     -fx-text-fill: #d8dee9; }
-    /* line 690, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 709, src/main/resources/stylesheets/scss/styles.scss */
     .table-row-cell:selected .table-cell:selected {
       -fx-background-insets: 0;
       -fx-border-insets: 0;
       -fx-padding: 0; }
-  /* line 697, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 716, src/main/resources/stylesheets/scss/styles.scss */
   .table-row-cell:hover {
     -fx-background-color: #434c5e; }
-  /* line 701, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 720, src/main/resources/stylesheets/scss/styles.scss */
   .table-row-cell > .tree-disclosure-node > .arrow {
     -fx-rotate: 0;
     -fx-background-color: #d8dee9; }
-  /* line 706, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 725, src/main/resources/stylesheets/scss/styles.scss */
   .table-row-cell:expanded > .tree-disclosure-node > .arrow {
     -fx-rotate: 90; }
 
-/* line 712, src/main/resources/stylesheets/scss/styles.scss */
+/* line 731, src/main/resources/stylesheets/scss/styles.scss */
 .no-header-table-view .column-header-background {
   -fx-max-height: 0;
   -fx-pref-height: 0;
   -fx-min-height: 0; }
 
-/* line 720, src/main/resources/stylesheets/scss/styles.scss */
+/* line 739, src/main/resources/stylesheets/scss/styles.scss */
 .tree-view {
   -fx-background-insets: 0;
   -fx-background-color: #3b4252;
   -fx-text-fill: #d8dee9;
   -fx-min-height: 50px; }
-  /* line 726, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 745, src/main/resources/stylesheets/scss/styles.scss */
   .tree-view .corner {
     -fx-background-color: transparent; }
-  /* line 730, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 749, src/main/resources/stylesheets/scss/styles.scss */
   .tree-view .tree-cell {
     -fx-padding: 0.1em 0;
     -fx-background-color: transparent; }
-    /* line 734, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 753, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:hover {
       -fx-background-color: #434c5e; }
-    /* line 738, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 757, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:selected {
       -fx-background-color: #4c566a; }
-    /* line 742, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 761, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:empty {
       -fx-background-color: transparent; }
-    /* line 746, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 765, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:dragged-over {
       -fx-background-color: #bf616a; }
-    /* line 750, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 769, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell > .tree-disclosure-node > .arrow {
       -fx-rotate: 0;
       -fx-background-color: #d8dee9; }
-    /* line 755, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 774, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:expanded > .tree-disclosure-node > .arrow {
       -fx-rotate: 90; }
 
-/* line 761, src/main/resources/stylesheets/scss/styles.scss */
+/* line 780, src/main/resources/stylesheets/scss/styles.scss */
 #info-text {
   -fx-fill: #d08770; }
 
-/* line 765, src/main/resources/stylesheets/scss/styles.scss */
+/* line 784, src/main/resources/stylesheets/scss/styles.scss */
 #category-name-text {
   -fx-font-weight: bold; }
 
-/* line 769, src/main/resources/stylesheets/scss/styles.scss */
+/* line 788, src/main/resources/stylesheets/scss/styles.scss */
 #tree-cell-content {
   -fx-spacing: 4px; }
 
-/* line 774, src/main/resources/stylesheets/scss/styles.scss */
+/* line 793, src/main/resources/stylesheets/scss/styles.scss */
 .scroll-bar, .scroll-bar .track, .scroll-bar .track-background {
   -fx-background-color: #3b4252;
   -fx-effect: none;
   -fx-border-style: hidden; }
-  /* line 783, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 802, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar .thumb {
     -fx-background-color: #d8dee9; }
-    /* line 786, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 805, src/main/resources/stylesheets/scss/styles.scss */
     .scroll-bar .thumb:hover {
       -fx-background-color: #bf616a; }
-  /* line 791, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 810, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:vertical .decrement-button, .scroll-bar .track:vertical .decrement-button, .scroll-bar .track-background:vertical .decrement-button,
   .scroll-bar:vertical .increment-button, .scroll-bar .track:vertical .increment-button, .scroll-bar .track-background:vertical .increment-button {
     -fx-padding: 0 4px;
     -fx-opacity: 0; }
-  /* line 797, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 816, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:horizontal .decrement-button, .scroll-bar .track:horizontal .decrement-button, .scroll-bar .track-background:horizontal .decrement-button,
   .scroll-bar:horizontal .increment-button, .scroll-bar .track:horizontal .increment-button, .scroll-bar .track-background:horizontal .increment-button {
     -fx-padding: 4px 0;
     -fx-opacity: 0; }
-  /* line 803, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 822, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:horizontal .increment-arrow, .scroll-bar .track:horizontal .increment-arrow, .scroll-bar .track-background:horizontal .increment-arrow,
   .scroll-bar:horizontal .decrement-arrow, .scroll-bar .track:horizontal .decrement-arrow, .scroll-bar .track-background:horizontal .decrement-arrow {
     -fx-shape: " ";
     -fx-padding: 0.10em 0; }
-  /* line 810, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 829, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:vertical .increment-arrow, .scroll-bar .track:vertical .increment-arrow, .scroll-bar .track-background:vertical .increment-arrow,
   .scroll-bar:vertical .decrement-arrow, .scroll-bar .track:vertical .decrement-arrow, .scroll-bar .track-background:vertical .decrement-arrow {
     -fx-shape: " ";
     -fx-padding: 0 0.10em; }
 
-/* line 818, src/main/resources/stylesheets/scss/styles.scss */
+/* line 837, src/main/resources/stylesheets/scss/styles.scss */
 .list-view {
   -fx-background-color: transparent;
   -fx-color: #2e3440;
   -fx-padding: 0 5px 0 0; }
-  /* line 823, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 842, src/main/resources/stylesheets/scss/styles.scss */
   .list-view .corner {
     -fx-background-color: transparent; }
-  /* line 827, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 846, src/main/resources/stylesheets/scss/styles.scss */
   .list-view:focused {
     -fx-background-color: transparent; }
-    /* line 830, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 849, src/main/resources/stylesheets/scss/styles.scss */
     .list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:focused {
       -fx-background-insets: 0;
       -fx-border-width: 0;
       -fx-padding: 5px; }
-  /* line 837, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 856, src/main/resources/stylesheets/scss/styles.scss */
   .list-view .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: #d8dee9;
     -fx-padding: 5px;
     -fx-background-insets: 0;
     -fx-border-width: 0; }
-    /* line 844, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 863, src/main/resources/stylesheets/scss/styles.scss */
     .list-view .list-cell:empty {
       -fx-opacity: 0;
       -fx-padding: 5px; }
-    /* line 849, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 868, src/main/resources/stylesheets/scss/styles.scss */
     .list-view .list-cell:selected {
       -fx-background-color: #bf616a;
       -fx-background-insets: 0;
       -fx-border-width: 0;
       -fx-padding: 5px; }
 
-/* line 859, src/main/resources/stylesheets/scss/styles.scss */
+/* line 878, src/main/resources/stylesheets/scss/styles.scss */
 #tag {
   -fx-background-color: #4c566a;
   -fx-border-radius: 10;
   -fx-background-radius: 10;
   -fx-padding: 3px 5px; }
 
-/* line 866, src/main/resources/stylesheets/scss/styles.scss */
+/* line 885, src/main/resources/stylesheets/scss/styles.scss */
 #tag-input-field {
   -fx-background-color: transparent;
   -fx-padding: 0;
   -fx-pref-width: 65px;
   -fx-max-width: 100px; }
 
-/* line 873, src/main/resources/stylesheets/scss/styles.scss */
+/* line 892, src/main/resources/stylesheets/scss/styles.scss */
 #tag-label {
   -fx-font-size: 12 pt; }
 
-/* line 877, src/main/resources/stylesheets/scss/styles.scss */
+/* line 896, src/main/resources/stylesheets/scss/styles.scss */
 #tag-box {
   -fx-border-style: hidden hidden solid hidden;
   -fx-border-color: derive(#2e3440, -15%);

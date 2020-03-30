@@ -1,11 +1,16 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
+import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.utils.UiUtils;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 
 /**
  * Represents a UI-element containing navigation and image-settings controls as
@@ -46,14 +51,23 @@ public class EditorToolBarView extends ToolBar implements View {
     private static final String HIDE_BOUNDING_BOXES_BUTTON_TOOLTIP = "Hide all Bounding Boxes";
     private static final String RESET_IMAGE_SIZE_BUTTON_TOOLTIP = "Reset Image Size and Center";
     private static final String BOUNDING_SHAPE_EDITOR_TOOLBOX_ID = "bounding-box-editor-toolbox";
+    private static final String RECTANGLE_DRAWING_MODE_TOOLTIP_TEXT = "Select Rectangle Drawing-Mode";
+    private static final String POLYGON_DRAWING_MODE_TOOLTIP_TEXT = "Select Polygon Drawing-Mode";
+    private static final String SHOW_BOUNDING_BOXES_ICON_BUTTON_ID = "show-bounding-boxes-icon";
+    private static final String HIDE_BOUNDING_BOXES_ICON_BUTTON_ID = "hide-bounding-boxes-icon";
+    private static final String RESET_IMAGE_SIZE_ICON_BUTTON_ID = "reset-image-size-icon";
+    private static final String RECTANGLE_MODE_BUTTON_TEXT = "Rectangle";
+    private static final String POLYGON_MODE_BUTTON_TEXT = "Polygon";
+    private static final String RECTANGLE_MODE_BUTTON_ICON_ID = "rectangle-mode-button-icon";
+    private static final String POLYGON_MODE_BUTTON_ICON_ID = "polygon-mode-button-icon";
 
-    private final IconButton showBoundingShapesButton = new IconButton("show-bounding-boxes-icon", IconButton.IconType.BACKGROUND);
-    private final IconButton hideBoundingShapesButton = new IconButton("hide-bounding-boxes-icon", IconButton.IconType.BACKGROUND);
-    private final ToggleButton rectangleModeButton = new ToggleButton("Rectangle");
-    private final ToggleButton polygonModeButton = new ToggleButton("Polygon");
+    private final IconButton showBoundingShapesButton = new IconButton(SHOW_BOUNDING_BOXES_ICON_BUTTON_ID, IconButton.IconType.BACKGROUND);
+    private final IconButton hideBoundingShapesButton = new IconButton(HIDE_BOUNDING_BOXES_ICON_BUTTON_ID, IconButton.IconType.BACKGROUND);
+    private final ToggleButton rectangleModeButton = createDrawModeButton(RECTANGLE_MODE_BUTTON_TEXT, RECTANGLE_MODE_BUTTON_ICON_ID);
+    private final ToggleButton polygonModeButton = createDrawModeButton(POLYGON_MODE_BUTTON_TEXT, POLYGON_MODE_BUTTON_ICON_ID);
     private final ToggleGroup modeToggleGroup = new ToggleGroup();
 
-    private final IconButton resetSizeAndCenterImageButton = new IconButton("reset-image-size-icon", IconButton.IconType.BACKGROUND);
+    private final IconButton resetSizeAndCenterImageButton = new IconButton(RESET_IMAGE_SIZE_ICON_BUTTON_ID, IconButton.IconType.BACKGROUND);
 
     private final Button nextButton = new IconButton(NEXT_BUTTON_ICON_ID, IconButton.IconType.GRAPHIC);
     private final Label indexLabel = new Label();
@@ -232,6 +246,24 @@ public class EditorToolBarView extends ToolBar implements View {
         return menuButton;
     }
 
+    private ToggleButton createDrawModeButton(String text, String iconCssId) {
+        ToggleButton button = new ToggleButton(text);
+
+        Region icon = new Region();
+        icon.setId(iconCssId);
+        icon.setPickOnBounds(true);
+        icon.backgroundProperty().bind(Bindings.createObjectBinding(() ->
+                new Background(new BackgroundFill(button.getTextFill(), null, null)), button.textFillProperty()));
+
+        button.setGraphic(icon);
+        button.setContentDisplay(ContentDisplay.RIGHT);
+
+        button.setFocusTraversable(false);
+        button.setPickOnBounds(true);
+
+        return button;
+    }
+
     private void setUpButtonsAndLabels() {
         nextButton.setId(NEXT_BUTTON_ID);
         nextButton.setTooltip(UiUtils.createTooltip(NEXT_BUTTON_TOOLTIP_TEXT,
@@ -263,9 +295,9 @@ public class EditorToolBarView extends ToolBar implements View {
         rectangleModeButton.setToggleGroup(modeToggleGroup);
         polygonModeButton.setToggleGroup(modeToggleGroup);
 
-        rectangleModeButton.setTooltip(UiUtils.createTooltip("Select rectangle drawing-mode",
+        rectangleModeButton.setTooltip(UiUtils.createTooltip(RECTANGLE_DRAWING_MODE_TOOLTIP_TEXT,
                 Controller.KeyCombinations.selectRectangleDrawingMode));
-        polygonModeButton.setTooltip(UiUtils.createTooltip("Select polygon drawing-mode",
+        polygonModeButton.setTooltip(UiUtils.createTooltip(POLYGON_DRAWING_MODE_TOOLTIP_TEXT,
                 Controller.KeyCombinations.selectPolygonDrawingMode));
 
         modeToggleGroup.selectToggle(rectangleModeButton);

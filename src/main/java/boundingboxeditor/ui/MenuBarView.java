@@ -23,10 +23,11 @@ class MenuBarView extends MenuBar implements View {
     private static final String SAVE_ICON_ID = "save-icon";
     private static final String OPEN_FOLDER_ICON_ID = "folder-icon";
     private static final String EXIT_ICON_ID = "exit-icon";
+    private static final String FILE_IMPORT_ICON_ID = "file-import-icon";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
     private final MenuItem fileSaveItem = new MenuItem(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
-    private final MenuItem fileImportAnnotationsItem = new MenuItem(ANNOTATION_IMPORT_TEXT);
+    private final MenuItem fileImportAnnotationsItem = new MenuItem(ANNOTATION_IMPORT_TEXT, createIconRegion(FILE_IMPORT_ICON_ID));
     private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT, createIconRegion(EXIT_ICON_ID));
     private final CheckMenuItem viewMaximizeImagesItem = new CheckMenuItem(MAXIMIZE_IMAGES_TEXT);
     private final CheckMenuItem viewShowImagesPanelItem = new CheckMenuItem(SHOW_IMAGE_FILE_EXPLORER_TEXT);

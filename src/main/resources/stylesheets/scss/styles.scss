@@ -293,6 +293,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-background-color: transparent;
     -fx-text-fill: $base-font-color;
     -fx-background-insets: 0;
+    -fx-background-radius: 0;
 
     &:focused,
     &:armed {
@@ -355,6 +356,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-shape: $save-icon;
 }
 
+#file-import-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $file-import-icon;
+}
+
 #exit-icon {
     @include medium-icon;
     -fx-background-color: $base-font-color;
@@ -384,6 +391,18 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-shape: $reset-image-size-icon;
 
     @include icon-button-interaction-highlighting;
+}
+
+#rectangle-mode-button-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $rectangle-mode-icon;
+}
+
+#polygon-mode-button-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $polygon-mode-icon;
 }
 
 #toggle-square {
