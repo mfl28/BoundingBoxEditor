@@ -17,6 +17,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 
+import java.util.Objects;
+
 /**
  * Represents a tree-cell in a {@link ObjectTreeView}. Instances of this class are either associated
  * with a {@link ObjectCategoryTreeItem} or a {@link BoundingShapeTreeItem} and are responsible for the
@@ -70,6 +72,10 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     @Override
     protected void updateItem(Object newCellObject, boolean empty) {
         Object oldCellObject = getItem();
+
+        if(Objects.equals(newCellObject, oldCellObject)) {
+            return;
+        }
 
         if(oldCellObject instanceof Shape) {
             Shape oldItem = (Shape) oldCellObject;
