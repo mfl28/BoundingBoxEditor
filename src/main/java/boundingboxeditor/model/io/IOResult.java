@@ -11,10 +11,10 @@ import java.util.Objects;
  * saving of image-annotations).
  */
 public class IOResult {
-    private int nrSuccessfullyProcessedItems;
-    private long timeTakenInMilliseconds;
-    private List<ErrorInfoEntry> errorTableEntries;
-    private OperationType operationType;
+    private final int nrSuccessfullyProcessedItems;
+    private final long timeTakenInMilliseconds;
+    private final List<ErrorInfoEntry> errorTableEntries;
+    private final OperationType operationType;
 
     /**
      * Creates a new io-operation result.
@@ -77,8 +77,8 @@ public class IOResult {
      * Holds information about an error that occurred during an io-operation.
      */
     public static class ErrorInfoEntry {
-        private StringProperty fileName;
-        private StringProperty errorDescription;
+        private final StringProperty fileName;
+        private final StringProperty errorDescription;
 
         /**
          * Creates a new error-information entry.

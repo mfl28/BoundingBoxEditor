@@ -1,6 +1,9 @@
 package boundingboxeditor.model.io;
 
+import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.ui.BoundingBoxView;
+import boundingboxeditor.ui.BoundingShapeViewable;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 
@@ -95,6 +98,11 @@ public class BoundingBoxData extends BoundingShapeData {
      */
     public Bounds getBoundsInImage() {
         return boundsInImage;
+    }
+
+    @Override
+    public BoundingShapeViewable toBoundingShapeView(ImageMetaData metaData) {
+        return BoundingBoxView.fromData(this, metaData);
     }
 
     @Override

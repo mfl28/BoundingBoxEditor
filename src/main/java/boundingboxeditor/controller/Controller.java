@@ -753,7 +753,7 @@ public class Controller {
     }
 
     class AnnotationSaverService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
-        private File saveDirectory;
+        private final File saveDirectory;
 
         AnnotationSaverService(File saveDirectory) {
             this.saveDirectory = saveDirectory;
@@ -803,7 +803,7 @@ public class Controller {
     }
 
     class AnnotationLoaderService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
-        private File loadDirectory;
+        private final File loadDirectory;
 
         AnnotationLoaderService(File loadDirectory) {
             this.loadDirectory = loadDirectory;

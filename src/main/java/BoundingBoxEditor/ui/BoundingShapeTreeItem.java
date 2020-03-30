@@ -10,7 +10,7 @@ public abstract class BoundingShapeTreeItem extends TreeItem<Object> {
     protected Toggleable toggleIcon;
     protected int id = 1;
 
-    BoundingShapeTreeItem(Toggleable toggleIcon, Shape shape) {
+    BoundingShapeTreeItem(Toggleable toggleIcon, BoundingShapeViewable shape) {
         super(shape);
         this.toggleIcon = toggleIcon;
     }
@@ -75,5 +75,7 @@ public abstract class BoundingShapeTreeItem extends TreeItem<Object> {
         }
     }
 
-    abstract void setHighlightShape(boolean value);
+    void setHighlightShape(boolean value) {
+        ((BoundingShapeViewable) getValue()).getViewData().setHighlighted(value);
+    }
 }

@@ -353,7 +353,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
                 TreeItem<Object> targetItem = cell.getTreeItem();
 
-                // Cannot drop on CategoryTreeItems
+                // Cannot drop on ObjectCategoryTreeItem
                 if(targetItem instanceof ObjectCategoryTreeItem) {
                     return;
                 }
@@ -389,10 +389,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
             if(draggedItem instanceof ObjectCategoryTreeItem) {
                 draggedItemCategory = ((ObjectCategoryTreeItem) draggedItem).getObjectCategory();
-            } else if(draggedItem instanceof BoundingBoxTreeItem) {
-                draggedItemCategory = ((BoundingBoxView) draggedItem.getValue()).getObjectCategory();
-            } else if(draggedItem instanceof BoundingPolygonTreeItem) {
-                draggedItemCategory = ((BoundingPolygonView) draggedItem.getValue()).getObjectCategory();
+            } else if(draggedItem instanceof BoundingShapeTreeItem) {
+                draggedItemCategory = ((BoundingShapeViewable) draggedItem.getValue()).getViewData().getObjectCategory();
             } else {
                 throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
             }
@@ -410,14 +408,10 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 if(draggedItem instanceof ObjectCategoryTreeItem) {
                     // Full category is added:
                     targetItem.getChildren().add(draggedItem);
-                } else if(draggedItem instanceof BoundingBoxTreeItem) {
-                    // Create new category part:
-                    ObjectCategoryTreeItem newCategoryParent = new ObjectCategoryTreeItem(((BoundingBoxView) draggedItem.getValue()).getObjectCategory());
-                    newCategoryParent.attachBoundingShapeTreeItemChild((BoundingBoxTreeItem) draggedItem);
-                    targetItem.getChildren().add(newCategoryParent);
-                } else if(draggedItem instanceof BoundingPolygonTreeItem) {
-                    ObjectCategoryTreeItem newCategoryParent = new ObjectCategoryTreeItem(((BoundingPolygonView) draggedItem.getValue()).getObjectCategory());
-                    newCategoryParent.attachBoundingShapeTreeItemChild((BoundingPolygonTreeItem) draggedItem);
+                } else if(draggedItem instanceof BoundingShapeTreeItem) {
+                    ObjectCategoryTreeItem newCategoryParent = new ObjectCategoryTreeItem(((BoundingShapeViewable) draggedItem.getValue())
+                            .getViewData().getObjectCategory());
+                    newCategoryParent.attachBoundingShapeTreeItemChild((BoundingShapeTreeItem) draggedItem);
                     targetItem.getChildren().add(newCategoryParent);
                 } else {
                     throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);

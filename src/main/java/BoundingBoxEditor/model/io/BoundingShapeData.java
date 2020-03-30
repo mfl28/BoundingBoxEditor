@@ -1,6 +1,8 @@
 package boundingboxeditor.model.io;
 
+import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.ui.BoundingShapeViewable;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +19,8 @@ public abstract class BoundingShapeData {
         this.category = category;
         this.tags = tags;
     }
+
+    public abstract BoundingShapeViewable toBoundingShapeView(ImageMetaData metaData);
 
     /**
      * Returns the name of the category of the bounding-box.

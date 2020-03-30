@@ -1,6 +1,9 @@
 package boundingboxeditor.model.io;
 
+import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.ui.BoundingPolygonView;
+import boundingboxeditor.ui.BoundingShapeViewable;
 
 import java.util.List;
 
@@ -22,6 +25,11 @@ public class BoundingPolygonData extends BoundingShapeData {
 
     public List<Double> getPointsInImage() {
         return pointsInImage;
+    }
+
+    @Override
+    public BoundingShapeViewable toBoundingShapeView(ImageMetaData metaData) {
+        return BoundingPolygonView.fromData(this, metaData);
     }
 
     @Override

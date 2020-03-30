@@ -47,6 +47,7 @@ public class BoundingShapeViewData {
         return highlighted;
     }
 
+
     public BooleanProperty highlightedProperty() {
         return highlighted;
     }

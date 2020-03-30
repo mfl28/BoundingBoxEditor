@@ -15,10 +15,8 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
-import javafx.scene.Group;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.TreeItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
@@ -70,6 +68,22 @@ public class BoundingBoxView extends Rectangle implements
 
         addMoveFunctionality();
         setUpInternalListeners();
+    }
+
+    /**
+     * Creates a new {@link BoundingBoxView} object from stored bounding-box data. This function is called
+     * when bounding-box data stored in the model-component should be transformed to the visual bounding-box
+     * component which is displayed to the user.
+     *
+     * @param boundingBoxData the stored {@link BoundingBoxData} object used to construct the new {@link BoundingBoxView} object
+     * @param metaData        the {@link ImageMetaData} object that should be assigned to the new {@link BoundingBoxView} object
+     * @return the new {@link BoundingBoxView} object
+     */
+    public static BoundingBoxView fromData(BoundingBoxData boundingBoxData, ImageMetaData metaData) {
+        BoundingBoxView boundingBox = new BoundingBoxView(boundingBoxData.getCategory(), metaData);
+        boundingBox.setBoundsInImage(boundingBoxData.getBoundsInImage());
+        boundingBox.getTags().setAll(boundingBoxData.getTags());
+        return boundingBox;
     }
 
     @Override
@@ -197,22 +211,6 @@ public class BoundingBoxView extends Rectangle implements
     }
 
     /**
-     * Returns the associated {@link TreeItem} object.
-     *
-     * @return the {@link TreeItem} object
-     */
-    TreeItem<Object> getTreeItem() {
-        return boundingShapeViewData.getTreeItem();
-    }
-
-    /**
-     * Sets the associated {@link TreeItem} object.
-     */
-    void setTreeItem(BoundingShapeTreeItem treeItem) {
-        boundingShapeViewData.setTreeItem(treeItem);
-    }
-
-    /**
      * Anchors the {@link BoundingBoxView} object to and automatically scales it with the
      * provided {@link Bounds}-property.
      *
@@ -221,42 +219,6 @@ public class BoundingBoxView extends Rectangle implements
     void autoScaleWithBounds(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
         this.boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
         addAutoScaleListener();
-    }
-
-    /**
-     * Creates a new {@link BoundingBoxView} object from stored bounding-box data. This function is called
-     * when bounding-box data stored in the model-component should be transformed to the visual bounding-box
-     * component which is displayed to the user.
-     *
-     * @param boundingBoxData the stored {@link BoundingBoxData} object used to construct the new {@link BoundingBoxView} object
-     * @param metaData        the {@link ImageMetaData} object that should be assigned to the new {@link BoundingBoxView} object
-     * @return the new {@link BoundingBoxView} object
-     */
-    static BoundingBoxView fromData(BoundingBoxData boundingBoxData, ImageMetaData metaData) {
-        BoundingBoxView boundingBox = new BoundingBoxView(boundingBoxData.getCategory(), metaData);
-        boundingBox.setBoundsInImage(boundingBoxData.getBoundsInImage());
-        boundingBox.getTags().setAll(boundingBoxData.getTags());
-        return boundingBox;
-    }
-
-    /**
-     * Returns a {@link Group} object whose children are the components that make
-     * up this {@link BoundingBoxView} UI-element (the rectangle itself as well as the resize-handles).
-     * This function is used when the bounding-box should be added to the scene-graph.
-     *
-     * @return the group
-     */
-    Group getNodeGroup() {
-        return boundingShapeViewData.getNodeGroup();
-    }
-
-    /**
-     * Sets the highlighted-status of the bounding-box.
-     *
-     * @param highlighted true to set highlighting on, otherwise off
-     */
-    void setHighlighted(boolean highlighted) {
-        boundingShapeViewData.setHighlighted(highlighted);
     }
 
     private List<ResizeHandle> createResizeHandles() {

@@ -46,11 +46,6 @@ class BoundingBoxTreeItem extends BoundingShapeTreeItem {
         return id == other.id && getValue().equals(other.getValue()) && getChildren().equals(other.getChildren());
     }
 
-    @Override
-    void setHighlightShape(boolean value) {
-        ((BoundingBoxView) getValue()).setHighlighted(value);
-    }
-
     private void setUpInternalListeners() {
         ((Shape) toggleIcon).fillProperty().bind(((BoundingBoxView) getValue()).getObjectCategory().colorProperty());
 

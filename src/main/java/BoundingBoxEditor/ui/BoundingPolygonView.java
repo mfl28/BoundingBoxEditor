@@ -14,10 +14,8 @@ import javafx.collections.ObservableSet;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.scene.Group;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.TreeItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -48,8 +46,8 @@ public class BoundingPolygonView extends Polygon implements
     private final BooleanProperty constructing = new SimpleBooleanProperty(false);
     private final DoubleProperty width = new SimpleDoubleProperty();
     private final DoubleProperty height = new SimpleDoubleProperty();
-    private ObservableList<VertexHandle> vertexHandles = FXCollections.observableArrayList();
-    private ObservableSet<Integer> editingIndices = FXCollections.observableSet(new LinkedHashSet<>());
+    private final ObservableList<VertexHandle> vertexHandles = FXCollections.observableArrayList();
+    private final ObservableSet<Integer> editingIndices = FXCollections.observableSet(new LinkedHashSet<>());
     private List<Double> pointsInImage = Collections.emptyList();
 
     /**
@@ -74,28 +72,28 @@ public class BoundingPolygonView extends Polygon implements
         setUpInternalListeners();
     }
 
+    /**
+     * Creates a new {@link BoundingPolygonView} object from stored bounding-shape data. This function is called
+     * when bounding-shape data stored in the model-component should be transformed to the visual bounding-shape
+     * component which is displayed to the user.
+     *
+     * @param boundingPolygonData the stored {@link BoundingPolygonData} object used to construct the new {@link BoundingPolygonView} object
+     * @param metaData            the {@link ImageMetaData} object that should be assigned to the new {@link BoundingPolygonView} object
+     * @return the new {@link BoundingPolygonView} object
+     */
+    public static BoundingPolygonView fromData(BoundingPolygonData boundingPolygonData, ImageMetaData metaData) {
+        BoundingPolygonView boundingPolygon = new BoundingPolygonView(boundingPolygonData.getCategory(), metaData);
+        boundingPolygon.pointsInImage = boundingPolygonData.getPointsInImage();
+        boundingPolygon.getTags().setAll(boundingPolygonData.getTags());
+        return boundingPolygon;
+    }
+
     public void appendNode(double x, double y) {
         vertexHandles.add(new VertexHandle(x, y, getPoints().size()));
     }
 
     public ObjectCategory getObjectCategory() {
         return boundingShapeViewData.getObjectCategory();
-    }
-
-    public Group getNodeGroup() {
-        return boundingShapeViewData.getNodeGroup();
-    }
-
-    public BooleanProperty highlightedProperty() {
-        return boundingShapeViewData.highlightedProperty();
-    }
-
-    public boolean isHighlighted() {
-        return boundingShapeViewData.isHighlighted();
-    }
-
-    public void setHighlighted(boolean highlighted) {
-        boundingShapeViewData.setHighlighted(highlighted);
     }
 
     public boolean isConstructing() {
@@ -226,38 +224,6 @@ public class BoundingPolygonView extends Polygon implements
     @Override
     public BoundingShapeTreeItem toTreeItem() {
         return new BoundingPolygonTreeItem(this);
-    }
-
-    /**
-     * Returns the associated {@link TreeItem} object.
-     *
-     * @return the {@link TreeItem} object
-     */
-    BoundingShapeTreeItem getTreeItem() {
-        return boundingShapeViewData.getTreeItem();
-    }
-
-    /**
-     * Sets the associated {@link TreeItem} object.
-     */
-    void setTreeItem(BoundingShapeTreeItem treeItem) {
-        boundingShapeViewData.setTreeItem(treeItem);
-    }
-
-    /**
-     * Creates a new {@link BoundingPolygonView} object from stored bounding-shape data. This function is called
-     * when bounding-shape data stored in the model-component should be transformed to the visual bounding-shape
-     * component which is displayed to the user.
-     *
-     * @param boundingPolygonData the stored {@link BoundingPolygonData} object used to construct the new {@link BoundingPolygonView} object
-     * @param metaData            the {@link ImageMetaData} object that should be assigned to the new {@link BoundingPolygonView} object
-     * @return the new {@link BoundingPolygonView} object
-     */
-    static BoundingPolygonView fromData(BoundingPolygonData boundingPolygonData, ImageMetaData metaData) {
-        BoundingPolygonView boundingPolygon = new BoundingPolygonView(boundingPolygonData.getCategory(), metaData);
-        boundingPolygon.pointsInImage = boundingPolygonData.getPointsInImage();
-        boundingPolygon.getTags().setAll(boundingPolygonData.getTags());
-        return boundingPolygon;
     }
 
     /**
@@ -565,11 +531,11 @@ public class BoundingPolygonView extends Polygon implements
         private static final String VERTEX_HANDLE_ID = "vertex-handle";
         private static final String EDITING_PSEUDO_CLASS_NAME = "editing";
         private static final double BRIGHTNESS_BLACK_SWITCH_THRESHOLD = 0.75;
-        private final PseudoClass editingPseudoClass = PseudoClass.getPseudoClass(EDITING_PSEUDO_CLASS_NAME);
+        private final PseudoClass editingPseudoClass = PseudoClass.getPseudoClass(VertexHandle.EDITING_PSEUDO_CLASS_NAME);
         private final BooleanProperty editing = createEditingProperty();
-        DragAnchor dragAnchor = new DragAnchor();
-        BooleanProperty selected = new SimpleBooleanProperty(false);
-        private IntegerProperty pointIndex;
+        private final DragAnchor dragAnchor = new DragAnchor();
+        private final BooleanProperty selected = new SimpleBooleanProperty(false);
+        private final IntegerProperty pointIndex;
 
         VertexHandle(double pointX, double pointY, int pointIndex) {
             super(pointX, pointY, RADIUS);
@@ -592,6 +558,18 @@ public class BoundingPolygonView extends Polygon implements
 
         public BooleanProperty editingProperty() {
             return this.editing;
+        }
+
+        public boolean isSelected() {
+            return selected.get();
+        }
+
+        public void setSelected(boolean selected) {
+            this.selected.set(selected);
+        }
+
+        public BooleanProperty selectedProperty() {
+            return selected;
         }
 
         int getPointIndex() {
@@ -684,12 +662,12 @@ public class BoundingPolygonView extends Polygon implements
             return new BooleanPropertyBase(false) {
                 @Override
                 public Object getBean() {
-                    return BoundingPolygonView.this;
+                    return VertexHandle.this;
                 }
 
                 @Override
                 public String getName() {
-                    return EDITING_PSEUDO_CLASS_NAME;
+                    return VertexHandle.EDITING_PSEUDO_CLASS_NAME;
                 }
 
                 @Override

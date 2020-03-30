@@ -170,31 +170,16 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         TreeItem<Object> treeItem = getTreeItem();
 
         if(treeItem instanceof ObjectCategoryTreeItem) {
-            for(TreeItem<Object> child : treeItem.getChildren()) {
-                if(child instanceof BoundingBoxTreeItem) {
-                    final BoundingBoxView childBoundingBox = (BoundingBoxView) child.getValue();
+            treeItem.getChildren().stream()
+                    .filter(child -> child.getValue() instanceof BoundingShapeViewable)
+                    .map(child -> ((BoundingShapeViewable) child.getValue()).getViewData())
+                    .filter(viewData -> !viewData.isSelected())
+                    .forEach(viewData -> viewData.setHighlighted(highlightStatus));
+        } else if(treeItem instanceof BoundingShapeTreeItem) {
+            final BoundingShapeViewData viewData = ((BoundingShapeViewable) treeItem.getValue()).getViewData();
 
-                    if(!childBoundingBox.isSelected()) {
-                        childBoundingBox.setHighlighted(highlightStatus);
-                    }
-                } else if(child instanceof BoundingPolygonTreeItem) {
-                    final BoundingPolygonView childBoundingPolygon = (BoundingPolygonView) child.getValue();
-
-                    if(!childBoundingPolygon.isSelected()) {
-                        childBoundingPolygon.setHighlighted(highlightStatus);
-                    }
-                }
-            }
-        } else if(treeItem instanceof BoundingBoxTreeItem) {
-            final BoundingBoxView boundingBox = (BoundingBoxView) treeItem.getValue();
-            if(!boundingBox.isSelected()) {
-                boundingBox.setHighlighted(highlightStatus);
-            }
-        } else if(treeItem instanceof BoundingPolygonTreeItem) {
-            final BoundingPolygonView boundingPolygon = (BoundingPolygonView) treeItem.getValue();
-
-            if(!boundingPolygon.isSelected()) {
-                boundingPolygon.setHighlighted(highlightStatus);
+            if(!viewData.isSelected()) {
+                viewData.setHighlighted(highlightStatus);
             }
         }
     }

@@ -14,11 +14,11 @@ import java.util.logging.Logger;
  */
 public class ImageMetaData {
     private static final Logger log = Logger.getLogger(ImageMetaData.class.getName());
-    private String fileName;
-    private String folderName;
-    private double imageWidth;
-    private double imageHeight;
-    private int imageDepth;
+    private final String fileName;
+    private final String folderName;
+    private final double imageWidth;
+    private final double imageHeight;
+    private final int imageDepth;
 
     /**
      * Creates a new ImageMetaData object.
@@ -142,7 +142,7 @@ public class ImageMetaData {
     }
 
     private static class ImageDimensions {
-        private static ImageDimensions zero = new ImageDimensions(0, 0, 0);
+        private static final ImageDimensions zero = new ImageDimensions(0, 0, 0);
         private final double width;
         private final double height;
         private final int depth;

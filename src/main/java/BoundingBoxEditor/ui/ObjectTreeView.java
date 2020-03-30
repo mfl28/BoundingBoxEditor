@@ -2,7 +2,9 @@ package boundingboxeditor.ui;
 
 import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
-import boundingboxeditor.model.io.*;
+import boundingboxeditor.model.io.BoundingBoxData;
+import boundingboxeditor.model.io.BoundingShapeData;
+import boundingboxeditor.model.io.ImageAnnotation;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.skin.TreeViewSkin;
@@ -122,14 +124,13 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     List<BoundingShapeViewable> extractBoundingShapesAndBuildTreeFromAnnotation(ImageAnnotation annotation) {
         ImageMetaData metaData = annotation.getImageMetaData();
         annotation.getBoundingShapeData().forEach(boundingShapeData ->
-                boundingShapeData.accept(new TreeItemGenerator(getRoot(), boundingShapeData, metaData)));
+                generateNewTreeItem(getRoot(), boundingShapeData, metaData));
 
         return IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot())).stream()
                 .filter(treeItem -> treeItem.getValue() instanceof BoundingShapeViewable)
                 .map(item -> (BoundingShapeViewable) item.getValue())
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Returns a list containing all {@link BoundingShapeViewable} objects contained in the tree
@@ -180,6 +181,27 @@ public class ObjectTreeView extends TreeView<Object> implements View {
      */
     void expandAllTreeItems() {
         IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot())).forEach(treeItem -> treeItem.setExpanded(true));
+    }
+
+    private void generateNewTreeItem(TreeItem<Object> root, BoundingShapeData boundingShapeData, ImageMetaData metaData) {
+        ObjectCategoryTreeItem objectCategoryTreeItem = findObjectCategoryTreeItem(root, boundingShapeData);
+        BoundingShapeViewable newBoundingShape = boundingShapeData.toBoundingShapeView(metaData);
+        BoundingShapeTreeItem newTreeItem = newBoundingShape.toTreeItem();
+        newBoundingShape.getViewData().setTreeItem(newTreeItem);
+
+        objectCategoryTreeItem.attachBoundingShapeTreeItemChild(newTreeItem);
+        boundingShapeData.getParts().forEach(part -> generateNewTreeItem(newTreeItem, part, metaData));
+    }
+
+    private ObjectCategoryTreeItem findObjectCategoryTreeItem(TreeItem<Object> root, BoundingShapeData boundingShapeData) {
+        ObjectCategoryTreeItem objectCategoryTreeItem = findParentCategoryTreeItemForCategory(root, boundingShapeData.getCategory());
+
+        if(objectCategoryTreeItem == null) {
+            objectCategoryTreeItem = new ObjectCategoryTreeItem(boundingShapeData.getCategory());
+            root.getChildren().add(objectCategoryTreeItem);
+        }
+
+        return objectCategoryTreeItem;
     }
 
     private void setUpInternalListeners() {
@@ -254,53 +276,6 @@ public class ObjectTreeView extends TreeView<Object> implements View {
             nextItem.getChildren().forEach(stack::push);
 
             return nextItem;
-        }
-    }
-
-    private class TreeItemGenerator implements BoundingShapeDataVisitor<Object> {
-        TreeItem<Object> root;
-        BoundingShapeData boundingShapeData;
-        ImageMetaData metaData;
-
-        public TreeItemGenerator(TreeItem<Object> root, BoundingShapeData boundingShapeData, ImageMetaData metaData) {
-            this.root = root;
-            this.boundingShapeData = boundingShapeData;
-            this.metaData = metaData;
-        }
-
-        @Override
-        public Object visit(BoundingBoxData boundingBoxData) {
-            ObjectCategoryTreeItem objectCategoryTreeItem = findObjectCategoryTreeItem();
-            BoundingBoxView newBoundingBoxView = BoundingBoxView.fromData(boundingBoxData, metaData);
-            BoundingShapeTreeItem newTreeItem = new BoundingBoxTreeItem(newBoundingBoxView);
-            newBoundingBoxView.setTreeItem(newTreeItem);
-
-            objectCategoryTreeItem.attachBoundingShapeTreeItemChild(newTreeItem);
-            boundingShapeData.getParts().forEach(part -> part.accept(new TreeItemGenerator(newTreeItem, part, metaData)));
-            return null;
-        }
-
-        @Override
-        public Object visit(BoundingPolygonData boundingPolygonData) {
-            ObjectCategoryTreeItem objectCategoryTreeItem = findObjectCategoryTreeItem();
-            BoundingPolygonView newBoundingPolygonView = BoundingPolygonView.fromData(boundingPolygonData, metaData);
-            BoundingShapeTreeItem newTreeItem = new BoundingPolygonTreeItem(newBoundingPolygonView);
-            newBoundingPolygonView.setTreeItem(newTreeItem);
-
-            objectCategoryTreeItem.attachBoundingShapeTreeItemChild(newTreeItem);
-            boundingShapeData.getParts().forEach(part -> part.accept(new TreeItemGenerator(newTreeItem, part, metaData)));
-            return null;
-        }
-
-        private ObjectCategoryTreeItem findObjectCategoryTreeItem() {
-            ObjectCategoryTreeItem objectCategoryTreeItem = findParentCategoryTreeItemForCategory(root, boundingShapeData.getCategory());
-
-            if(objectCategoryTreeItem == null) {
-                objectCategoryTreeItem = new ObjectCategoryTreeItem(boundingShapeData.getCategory());
-                root.getChildren().add(objectCategoryTreeItem);
-            }
-
-            return objectCategoryTreeItem;
         }
     }
 }

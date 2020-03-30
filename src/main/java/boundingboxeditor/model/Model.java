@@ -26,20 +26,11 @@ import java.util.*;
 public class Model {
     private static final String BOUNDING_SHAPE_COORDINATES_PATTERN = "#0.0000";
     private static final DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
-
-    /**
-     * Maps the filenames of the currently loaded image-files onto the corresponding {@link File} objects. A
-     * {@link ListOrderedMap} data-structure is used to preserve an order (in this case the input order) to
-     * allow consistent iteration through the files.
-     */
-    private ListOrderedMap<String, File> imageFileNameToFile = new ListOrderedMap<>();
-
     /**
      * Maps the filenames of the currently loaded image-files onto corresponding {@link ImageMetaData} objects. Image-metadata for
      * an image is constructed (at most) once when the first bounding-shape on an image is created and is reused subsequently.
      */
-    private Map<String, ImageMetaData> imageFileNameToMetaData = new HashMap<>();
-
+    private final Map<String, ImageMetaData> imageFileNameToMetaData = new HashMap<>();
     /**
      * Maps the filenames of the currently loaded image-files onto corresponding {@link ImageAnnotation} objects. This is the
      * main data-structure for storing data of the bounding-shapes and image-metadata of image annotations. {@link ImageAnnotation} objects
@@ -52,23 +43,26 @@ public class Model {
      * <li>Requesting to open a different image-folder (in this case all current annotations are removed).</li>
      * </ul>
      */
-    private Map<String, ImageAnnotation> imageFileNameToAnnotation = new HashMap<>();
-
+    private final Map<String, ImageAnnotation> imageFileNameToAnnotation = new HashMap<>();
     /**
      * Contains all currently existing {@link ObjectCategory} objects.
      */
-    private ObservableList<ObjectCategory> objectCategories = FXCollections.observableArrayList();
-
+    private final ObservableList<ObjectCategory> objectCategories = FXCollections.observableArrayList();
     /**
      * Maps the name of a currently existing bounding-shape category to the current number of existing bounding-shape elements
      * assigned to the category.
      */
-    private Map<String, Integer> categoryToAssignedBoundingShapesCount = new HashMap<>();
-
-    private IntegerProperty fileIndex = new SimpleIntegerProperty(0);
-    private IntegerProperty nrImageFiles = new SimpleIntegerProperty(0);
-    private BooleanProperty nextImageFileExists = new SimpleBooleanProperty(false);
-    private BooleanProperty previousImageFileExists = new SimpleBooleanProperty(false);
+    private final Map<String, Integer> categoryToAssignedBoundingShapesCount = new HashMap<>();
+    private final IntegerProperty fileIndex = new SimpleIntegerProperty(0);
+    private final IntegerProperty nrImageFiles = new SimpleIntegerProperty(0);
+    private final BooleanProperty nextImageFileExists = new SimpleBooleanProperty(false);
+    private final BooleanProperty previousImageFileExists = new SimpleBooleanProperty(false);
+    /**
+     * Maps the filenames of the currently loaded image-files onto the corresponding {@link File} objects. A
+     * {@link ListOrderedMap} data-structure is used to preserve an order (in this case the input order) to
+     * allow consistent iteration through the files.
+     */
+    private ListOrderedMap<String, File> imageFileNameToFile = new ListOrderedMap<>();
 
     /**
      * Creates the app's model-component.

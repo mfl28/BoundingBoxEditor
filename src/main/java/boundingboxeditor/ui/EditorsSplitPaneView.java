@@ -280,10 +280,8 @@ public class EditorsSplitPaneView extends SplitPane implements View {
                 objectTree.getRoot().getChildren().forEach(child -> child.setExpanded(false)));
 
         objectTree.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if(newValue instanceof BoundingBoxTreeItem) {
-                tagScrollPaneView.setTags(((BoundingBoxView) newValue.getValue()).getTags());
-            } else if(newValue instanceof BoundingPolygonTreeItem) {
-                tagScrollPaneView.setTags(((BoundingPolygonView) newValue.getValue()).getTags());
+            if(newValue instanceof BoundingShapeTreeItem) {
+                tagScrollPaneView.setTags(((BoundingShapeViewable) newValue.getValue()).getViewData().getTags());
             } else {
                 tagScrollPaneView.setTags(null);
             }

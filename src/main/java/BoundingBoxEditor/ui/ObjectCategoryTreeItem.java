@@ -107,10 +107,8 @@ class ObjectCategoryTreeItem extends TreeItem<Object> {
         toggleIcon.setToggledOn(toggledOn);
 
         for(TreeItem<Object> child : getChildren()) {
-            if(child instanceof BoundingBoxTreeItem) {
-                ((BoundingBoxTreeItem) child).setIconToggledOn(toggledOn);
-            } else if(child instanceof BoundingPolygonTreeItem) {
-                ((BoundingPolygonTreeItem) child).setIconToggledOn(toggledOn);
+            if(child instanceof BoundingShapeTreeItem) {
+                ((BoundingShapeTreeItem) child).setIconToggledOn(toggledOn);
             }
         }
     }
@@ -146,8 +144,7 @@ class ObjectCategoryTreeItem extends TreeItem<Object> {
                 int numToggledChildrenToRemove = 0;
 
                 for(TreeItem<Object> treeItem : c.getRemoved()) {
-                    if((treeItem instanceof BoundingBoxTreeItem && ((BoundingBoxTreeItem) treeItem).isIconToggledOn()) ||
-                            (treeItem instanceof BoundingPolygonTreeItem && ((BoundingPolygonTreeItem) treeItem).isIconToggledOn())) {
+                    if(treeItem instanceof BoundingShapeTreeItem && ((BoundingShapeTreeItem) treeItem).isIconToggledOn()) {
                         numToggledChildrenToRemove++;
                     }
                 }
@@ -168,10 +165,8 @@ class ObjectCategoryTreeItem extends TreeItem<Object> {
     private void detachChildId(int id) {
         List<TreeItem<Object>> children = getChildren();
         for(int i = id; i < children.size(); ++i) {
-            if(children.get(i) instanceof BoundingBoxTreeItem) {
-                ((BoundingBoxTreeItem) children.get(i)).setId(i);
-            } else if(children.get(i) instanceof BoundingPolygonTreeItem) {
-                ((BoundingPolygonTreeItem) children.get(i)).setId(i);
+            if(children.get(i) instanceof BoundingShapeTreeItem) {
+                ((BoundingShapeTreeItem) children.get(i)).setId(i);
             }
         }
     }

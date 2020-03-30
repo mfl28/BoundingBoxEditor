@@ -46,11 +46,6 @@ public class BoundingPolygonTreeItem extends BoundingShapeTreeItem {
         return id == other.id && getValue().equals(other.getValue()) && getChildren().equals(other.getChildren());
     }
 
-    @Override
-    void setHighlightShape(boolean value) {
-        ((BoundingPolygonView) getValue()).setHighlighted(value);
-    }
-
     private void setUpInternalListeners() {
         ((Shape) toggleIcon).fillProperty().bind(((BoundingPolygonView) getValue()).getObjectCategory().colorProperty());
 

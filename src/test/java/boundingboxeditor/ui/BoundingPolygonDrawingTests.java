@@ -245,5 +245,26 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(newBoundingPolygonView.isEditing(), Matchers.equalTo(false));
         verifyThat(newBoundingPolygonView.isSelected(), Matchers.equalTo(true));
 
+        // Select some vertices.
+        final BoundingPolygonView.VertexHandle vertexHandle1 = newBoundingPolygonView.getVertexHandles().get(0);
+        final BoundingPolygonView.VertexHandle vertexHandle2 = newBoundingPolygonView.getVertexHandles().get(1);
+
+        robot.clickOn(vertexHandle1, MouseButton.MIDDLE).clickOn(vertexHandle2, MouseButton.MIDDLE);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(vertexHandle1.isEditing(), Matchers.equalTo(true));
+        verifyThat(vertexHandle2.isEditing(), Matchers.equalTo(true));
+
+        // Delete selected vertices.
+        robot.rightClickOn(newBoundingPolygonView).clickOn("Remove Vertices");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(newBoundingPolygonView.getVertexHandles(), Matchers.hasSize(6));
+        verifyThat(newBoundingPolygonView.getVertexHandles(), Matchers.not(Matchers.contains(vertexHandle1, vertexHandle2)));
+        verifyThat(newBoundingPolygonView.getVertexHandles().stream().map(BoundingPolygonView.VertexHandle::getPointIndex).collect(Collectors.toList()),
+                Matchers.containsInRelativeOrder(0, 2, 4, 6, 8, 10));
+        verifyThat(newBoundingPolygonView.getVertexHandles().stream().allMatch(BoundingPolygonView.VertexHandle::isEditing), Matchers.equalTo(false));
+        verifyThat(newBoundingPolygonView.isEditing(), Matchers.equalTo(false));
+        verifyThat(newBoundingPolygonView.isSelected(), Matchers.equalTo(true));
     }
 }

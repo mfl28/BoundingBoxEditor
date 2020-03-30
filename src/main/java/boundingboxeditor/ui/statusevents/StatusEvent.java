@@ -12,7 +12,7 @@ import java.util.Locale;
  */
 public abstract class StatusEvent {
     static DecimalFormat secondsFormat = new DecimalFormat("0.0##", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
-    private String eventMessage;
+    private final String eventMessage;
 
     /**
      * Base class constructor
