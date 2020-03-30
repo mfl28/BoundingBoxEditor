@@ -82,8 +82,8 @@ jacocoTestReport {
 }
 
 libSassParameters {
-    inputFilePath = "$projectDir/src/main/resources/stylesheets/scss/styles.scss"
-    outputFilePath = "$projectDir/src/main/resources/stylesheets/css/styles.css"
+    inputFilePath = "${projectDir}/src/main/resources/stylesheets/scss/styles.scss"
+    outputFilePath = "${projectDir}/src/main/resources/stylesheets/css/styles.css"
     watchedDirectoryPath = "scss"
     sourceComments = true
 }
