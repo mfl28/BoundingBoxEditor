@@ -80,7 +80,10 @@ public class Controller {
     private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT = "Do you want to keep existing categories and annotation data?";
     private static final String EXIT_APPLICATION_OPTION_DIALOG_TITLE = "Exit Application";
     private static final String EXIT_APPLICATION_OPTION_DIALOG_CONTENT = "Do you want to save the existing annotation data?";
-    private static final String IS_WINDOW_MAXIMIZED_PROPERTY_NAME = "isMaximized";
+    private static final String IS_WINDOW_MAXIMIZED_PREFERENCE_NAME = "isMaximized";
+    private static final String CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME = "currentImageLoadingDirectory";
+    private static final String CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME = "currentAnnotationLoadingDirectory";
+    private static final String CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME = "currentAnnotationSavingDirectory";
 
     private final Stage stage;
     private final MainView view = new MainView();
@@ -93,6 +96,10 @@ public class Controller {
     private final BooleanProperty navigateNextKeyPressed = new SimpleBooleanProperty(false);
     private String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
+
+    private File currentImageLoadingDirectory;
+    private File currentAnnotationSavingDirectory;
+    private File currentAnnotationLoadingDirectory;
 
     /**
      * Creates a new controller object that is responsible for handling the application logic and
@@ -119,10 +126,11 @@ public class Controller {
      * Handles the event of the user requesting to open a new image folder.
      */
     public void onRegisterOpenImageFolderAction() {
-        final File imageFolder = MainView.displayDirectoryChooserAndGetChoice(IMAGE_FOLDER_CHOOSER_TITLE, stage);
+        final File imageFolder = MainView.displayDirectoryChooserAndGetChoice(IMAGE_FOLDER_CHOOSER_TITLE, stage, currentImageLoadingDirectory);
 
         if(imageFolder != null) {
             initiateImageFolderLoading(imageFolder);
+            currentImageLoadingDirectory = imageFolder;
         }
     }
 
@@ -141,12 +149,14 @@ public class Controller {
                     OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
 
             if(answer == ButtonBar.ButtonData.YES) {
-                final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage);
+                final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
+                        currentAnnotationSavingDirectory);
 
                 if(saveDirectory != null) {
                     AnnotationSaverService annotationSaverService = new AnnotationSaverService(saveDirectory);
                     annotationSaverService.runOnSuccess(() -> loadImageFiles(imageFolder));
                     annotationSaverService.startAndShowProgressDialog();
+                    currentAnnotationSavingDirectory = saveDirectory;
                 }
                 return;
             } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
@@ -201,10 +211,12 @@ public class Controller {
             return;
         }
 
-        final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage);
+        final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
+                currentAnnotationSavingDirectory);
 
         if(saveDirectory != null) {
             new AnnotationSaverService(saveDirectory).startAndShowProgressDialog();
+            currentAnnotationSavingDirectory = saveDirectory;
         }
     }
 
@@ -212,10 +224,12 @@ public class Controller {
      * Handles the event of the user requesting to save the current image-annotations.
      */
     public void onRegisterImportAnnotationsAction() {
-        final File importDirectory = MainView.displayDirectoryChooserAndGetChoice(IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE, stage);
+        final File importDirectory = MainView.displayDirectoryChooserAndGetChoice(IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE, stage,
+                currentAnnotationLoadingDirectory);
 
         if(importDirectory != null) {
             initiateAnnotationFolderImport(importDirectory);
+            currentAnnotationLoadingDirectory = importDirectory;
         }
     }
 
@@ -296,15 +310,17 @@ public class Controller {
                     EXIT_APPLICATION_OPTION_DIALOG_CONTENT);
 
             if(answer == ButtonBar.ButtonData.YES) {
-                final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage);
+                final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
+                        currentAnnotationSavingDirectory);
 
                 if(saveDirectory != null) {
                     AnnotationSaverService saverService = new AnnotationSaverService(saveDirectory);
                     saverService.runOnSuccess(() -> {
-                        Preferences.userNodeForPackage(getClass()).putBoolean(IS_WINDOW_MAXIMIZED_PROPERTY_NAME, stage.isMaximized());
+                        savePreferences();
                         Platform.exit();
                     });
                     saverService.startAndShowProgressDialog();
+                    currentAnnotationSavingDirectory = saveDirectory;
                 }
                 return;
             } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
@@ -312,7 +328,8 @@ public class Controller {
             }
         }
 
-        Preferences.userNodeForPackage(getClass()).putBoolean(IS_WINDOW_MAXIMIZED_PROPERTY_NAME, stage.isMaximized());
+        savePreferences();
+
         Platform.exit();
     }
 
@@ -708,7 +725,55 @@ public class Controller {
 
     private void loadPreferences() {
         Preferences preferences = Preferences.userNodeForPackage(getClass());
-        stage.setMaximized(preferences.getBoolean(IS_WINDOW_MAXIMIZED_PROPERTY_NAME, false));
+        stage.setMaximized(preferences.getBoolean(IS_WINDOW_MAXIMIZED_PREFERENCE_NAME, false));
+
+        String imageLoadingDirectoryPathPreference = preferences.get(CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME, null);
+
+        if(imageLoadingDirectoryPathPreference != null) {
+            File imageLoadingDirectoryPreference = new File(imageLoadingDirectoryPathPreference);
+
+            if(imageLoadingDirectoryPreference.exists() && imageLoadingDirectoryPreference.isDirectory()) {
+                currentImageLoadingDirectory = imageLoadingDirectoryPreference;
+            }
+        }
+
+        String annotationLoadingDirectoryPathPreference = preferences.get(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME, null);
+
+        if(annotationLoadingDirectoryPathPreference != null) {
+            File annotationLoadingDirectoryPreference = new File(annotationLoadingDirectoryPathPreference);
+
+            if(annotationLoadingDirectoryPreference.exists() && annotationLoadingDirectoryPreference.isDirectory()) {
+                currentAnnotationLoadingDirectory = annotationLoadingDirectoryPreference;
+            }
+        }
+
+        String annotationSavingDirectoryPathPreference = preferences.get(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME, null);
+
+        if(annotationSavingDirectoryPathPreference != null) {
+            File annotationSavingDirectoryPreference = new File(annotationSavingDirectoryPathPreference);
+
+            if(annotationSavingDirectoryPreference.exists() && annotationSavingDirectoryPreference.isDirectory()) {
+                currentAnnotationSavingDirectory = annotationSavingDirectoryPreference;
+            }
+        }
+    }
+
+    private void savePreferences() {
+        Preferences preferences = Preferences.userNodeForPackage(getClass());
+
+        preferences.putBoolean(IS_WINDOW_MAXIMIZED_PREFERENCE_NAME, stage.isMaximized());
+
+        if(currentImageLoadingDirectory != null) {
+            preferences.put(CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME, currentImageLoadingDirectory.toString());
+        }
+
+        if(currentAnnotationLoadingDirectory != null) {
+            preferences.put(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME, currentAnnotationLoadingDirectory.toString());
+        }
+
+        if(currentAnnotationSavingDirectory != null) {
+            preferences.put(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME, currentAnnotationSavingDirectory.toString());
+        }
     }
 
     /**

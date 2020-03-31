@@ -99,9 +99,13 @@ public class MainView extends BorderPane implements View {
      * @param stage The stage on top of which the window will be shown
      * @return The chosen directory, or null if the user closed the window without choosing.
      */
-    public static File displayDirectoryChooserAndGetChoice(String title, Stage stage) {
+    public static File displayDirectoryChooserAndGetChoice(String title, Stage stage, File initialDirectory) {
         final DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle(title);
+
+        if(initialDirectory != null && initialDirectory.exists()) {
+            directoryChooser.setInitialDirectory(initialDirectory);
+        }
 
         return directoryChooser.showDialog(stage);
     }
