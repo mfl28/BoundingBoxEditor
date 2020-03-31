@@ -825,3 +825,40 @@
   -fx-border-style: hidden hidden solid hidden;
   -fx-border-color: derive(#2e3440, -15%);
   -fx-border-width: 2px; }
+
+/* line 904, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane {
+  -fx-background-color: #2e3440; }
+
+/* line 908, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .label {
+  -fx-text-fill: #d8dee9; }
+
+/* line 912, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane:header .header-panel {
+  -fx-background-color: #2e3440, linear-gradient(derive(#3b4252, 10%) 5%, #2e3440); }
+
+/* line 916, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .button {
+  -fx-background-color: #3b4252;
+  -fx-text-fill: #d8dee9;
+  -fx-background-insets: 0; }
+  /* line 921, src/main/resources/stylesheets/scss/styles.scss */
+  .dialog-pane .button:selected, .dialog-pane .button:focused, .dialog-pane .button:armed {
+    -fx-background-color: #4c566a;
+    -fx-text-fill: #eceff4;
+    -fx-background-insets: 0; }
+  /* line 929, src/main/resources/stylesheets/scss/styles.scss */
+  .dialog-pane .button:hover {
+    -fx-background-color: #4c566a;
+    -fx-text-fill: #eceff4;
+    -fx-background-insets: 0; }
+  /* line 935, src/main/resources/stylesheets/scss/styles.scss */
+  .dialog-pane .button:pressed {
+    -fx-background-color: derive(#4c566a, 25%);
+    -fx-text-fill: #eceff4;
+    -fx-background-insets: 0; }
+
+/* line 942, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane > .button-bar > .container > .details-button {
+  -fx-text-fill: #88c0d0; }

@@ -899,3 +899,46 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-border-width: 2px;
 }
 
+// --Dialogs--
+
+.dialog-pane {
+    -fx-background-color: $base-background-color;
+}
+
+.dialog-pane .label {
+    -fx-text-fill: $base-font-color;
+}
+
+.dialog-pane:header .header-panel {
+    -fx-background-color: $base-background-color, linear-gradient(derive($base-background-light-color, 10%) 5%, $base-background-color);
+}
+
+.dialog-pane .button {
+    -fx-background-color: $base-background-light-color;
+    -fx-text-fill: $base-font-color;
+    -fx-background-insets: 0;
+
+    &:selected,
+    &:focused,
+    &:armed {
+        -fx-background-color: $base-highlight-light-color;
+        -fx-text-fill: $base-font-highlight-color;
+        -fx-background-insets: 0;
+    }
+
+    &:hover {
+        -fx-background-color: $base-highlight-light-color;
+        -fx-text-fill: $base-font-highlight-color;
+        -fx-background-insets: 0;
+    }
+
+    &:pressed {
+        -fx-background-color: derive($base-highlight-light-color, +25%);
+        -fx-text-fill: $base-font-highlight-color;
+        -fx-background-insets: 0;
+    }
+}
+
+.dialog-pane > .button-bar > .container > .details-button {
+    -fx-text-fill: $base-alt-accent-color;
+}

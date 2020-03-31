@@ -36,6 +36,7 @@ public class MainView extends BorderPane implements View {
     private static final String MAIN_VIEW_ID = "main-view";
     private static final String ANNOTATION_IMPORT_ERROR_REPORT_TITLE = "Annotation import error report";
     private static final String ANNOTATION_SAVING_ERROR_REPORT_TITLE = "Annotation saving error report";
+    private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
 
     private final HeaderView header = new HeaderView();
     private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
@@ -66,6 +67,7 @@ public class MainView extends BorderPane implements View {
 
         alert.setContentText(content);
         alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        alert.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         alert.showAndWait();
     }
 
@@ -84,6 +86,7 @@ public class MainView extends BorderPane implements View {
         dialog.setHeaderText(null);
         dialog.setContentText(content);
         dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        dialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         dialog.showAndWait();
 
         return dialog.getResult().getButtonData();
@@ -157,6 +160,7 @@ public class MainView extends BorderPane implements View {
         final ProgressDialog progressDialog = new ProgressDialog(service);
         progressDialog.setTitle(title);
         progressDialog.setHeaderText(header);
+        progressDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
     }
 
     @Override
@@ -341,6 +345,7 @@ public class MainView extends BorderPane implements View {
         alert.setHeaderText(header);
         alert.setContentText(content);
         alert.getDialogPane().setMinWidth(INFO_DIALOGUE_MIN_WIDTH);
+        alert.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
 
         GridPane.setVgrow(additionalInfoNode, Priority.ALWAYS);
         GridPane.setHgrow(additionalInfoNode, Priority.ALWAYS);
