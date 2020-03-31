@@ -942,3 +942,19 @@ $base-separator-line-color: derive($base-background-color, -15%);
 .dialog-pane > .button-bar > .container > .details-button {
     -fx-text-fill: $base-alt-accent-color;
 }
+
+.dialog-pane .progress-bar > .bar {
+    -fx-background-color: $base-accent-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+.dialog-pane .progress-bar:indeterminate > .bar {
+    -fx-background-color: linear-gradient(to left, transparent, $base-accent-color);
+}
+
+.dialog-pane .progress-bar > .track {
+    -fx-background-color: $base-background-light-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}

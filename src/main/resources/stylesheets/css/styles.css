@@ -862,3 +862,19 @@
 /* line 942, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane > .button-bar > .container > .details-button {
   -fx-text-fill: #88c0d0; }
+
+/* line 946, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .progress-bar > .bar {
+  -fx-background-color: #8fbcbb;
+  -fx-background-insets: 0;
+  -fx-background-radius: 0; }
+
+/* line 952, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .progress-bar:indeterminate > .bar {
+  -fx-background-color: linear-gradient(to left, transparent, #8fbcbb); }
+
+/* line 956, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .progress-bar > .track {
+  -fx-background-color: #3b4252;
+  -fx-background-insets: 0;
+  -fx-background-radius: 0; }
