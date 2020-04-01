@@ -14,7 +14,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Modality;
@@ -120,12 +119,19 @@ public class BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
-    protected void waitUntilCurrentImageIsLoaded() throws TimeoutException {
-        final Image image = mainView.getCurrentImage();
-
+    protected void waitUntilCurrentImageIsLoaded() {
         WaitForAsyncUtils.waitForFxEvents();
-        WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, () -> image != null);
-        WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, image.progressProperty().isEqualTo(1));
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, () -> mainView.getCurrentImage() != null),
+                "Image not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                mainView.getCurrentImage().progressProperty().isEqualTo(1)),
+                "Image not fully loaded within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> mainView.getEditorsSplitPane().isVisible()),
+                "EditorSplitPane not visible within " + TIMEOUT_DURATION_IN_SEC + " sec.");
     }
 
     @Start
