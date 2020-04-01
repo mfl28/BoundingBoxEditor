@@ -5,11 +5,14 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
 import org.testfx.util.WaitForAsyncUtils;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -28,7 +31,7 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     }
 
     private void verifyMenuBarFunctionality(FxRobot robot) {
-        robot.clickOn("File");
+        timeOutClickOn(robot, "File");
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -36,7 +39,8 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertTrue(openFolderItem.isVisible());
         assertFalse(openFolderItem.isDisable());
 
-        robot.clickOn("Open Folder...").push(KeyCode.ESCAPE);
+        timeOutClickOn(robot, "Open Folder...");
+        robot.push(KeyCode.ESCAPE);
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -44,21 +48,26 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertTrue(saveItem.isVisible());
         assertFalse(saveItem.isDisable());
 
-        robot.clickOn("File").clickOn("Save Annotations...");
-
+        timeOutClickOn(robot, "File");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Save Annotations...");
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(getTopModalStage(robot, "Save Error"), Matchers.notNullValue());
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Save Error") != null),
+                "Expected save error dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
-        robot.clickOn("OK");
+        Stage categoryCreationErrorStage = getTopModalStage(robot, "Save Error");
+        verifyThat(categoryCreationErrorStage, Matchers.notNullValue());
 
+        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem exitItem = getSubMenuItem(robot, "File", "Exit");
         assertTrue(exitItem.isVisible());
         assertFalse(exitItem.isDisable());
 
-        robot.clickOn("View");
+        timeOutClickOn(robot, "View");
 
         WaitForAsyncUtils.waitForFxEvents();
 

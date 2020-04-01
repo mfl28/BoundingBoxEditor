@@ -38,7 +38,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
 
-        robot.clickOn("#next-button");
+        timeOutClickOn(robot, "#next-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -46,7 +46,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
 
         // Select polygon drawing mode:
-        robot.clickOn("Polygon");
+        timeOutClickOn(robot, "Polygon");
         WaitForAsyncUtils.waitForFxEvents();
 
         // Draw a bounding polygon.
@@ -102,7 +102,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(drawnBoundingPolygon.isEditing(), Matchers.equalTo(false));
         verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(), Matchers.equalTo(drawnBoundingPolygon));
 
-        robot.clickOn("#previous-button");
+        timeOutClickOn(robot, "#previous-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -115,7 +115,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getImageFileListView().getItems().get(drawnBoundingPolygonFileIndex)
                 .isHasAssignedBoundingShapes(), Matchers.is(true));
 
-        robot.clickOn("#next-button");
+        timeOutClickOn(robot, "#next-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -194,7 +194,9 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(reloadedBoundingPolygon.isSelected(), Matchers.equalTo(true));
 
         // Remove polygon.
-        robot.rightClickOn(reloadedBoundingPolygon).clickOn("Delete");
+        robot.rightClickOn(reloadedBoundingPolygon);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Delete");
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty());
@@ -209,7 +211,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         // Change drawing mode while construction is in progress.
-        robot.clickOn("Rectangle");
+        timeOutClickOn(robot, "Rectangle");
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(1));
@@ -256,7 +258,9 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(vertexHandle2.isEditing(), Matchers.equalTo(true));
 
         // Delete selected vertices.
-        robot.rightClickOn(newBoundingPolygonView).clickOn("Remove Vertices");
+        robot.rightClickOn(newBoundingPolygonView);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Remove Vertices");
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(newBoundingPolygonView.getVertexHandles(), Matchers.hasSize(6));

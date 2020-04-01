@@ -11,14 +11,12 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -118,7 +116,7 @@ public class BoundingBoxEditorTestBase {
             WaitForAsyncUtils.waitForFxEvents();
         }
 
-        timeOutClickOn(robot,"#add-button");
+        timeOutClickOn(robot, "#add-button");
         WaitForAsyncUtils.waitForFxEvents();
     }
 
@@ -176,33 +174,27 @@ public class BoundingBoxEditorTestBase {
         return PointQueryUtils.atPositionFactors(imageViewParentBounds, ratios);
     }
 
-    // Source (slightly modified): https://stackoverflow.com/a/54742235
-    protected void selectComboBoxItem(FxRobot robot, String comboBoxId, String itemToSelect) {
-        ComboBox<?> comboBox = robot.lookup(comboBoxId).queryComboBox();
-        Assertions.assertNotNull(comboBox, "Could not find a combo-box by id = " + comboBoxId);
-
-        for(Node child : comboBox.getChildrenUnmodifiable()) {
-            if(child.getStyleClass().contains("arrow-button")) {
-                Node arrowRegion = ((Pane) child).getChildren().get(0);
-                robot.clickOn(arrowRegion);
-                WaitForAsyncUtils.waitForFxEvents();
-                timeOutLookUpInSceneAndClickOn(robot, comboBox.getScene(), itemToSelect);
-                return;
-            }
-        }
-        Assertions.fail("Couldn't find an arrow-button.");
-    }
-
-    protected void timeOutLookUpInScene(FxRobot robot, Scene scene, String id) {
+    protected void timeOutLookUpInStage(FxRobot robot, Stage stage, String id) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> robot.targetWindow(scene).lookup(id).tryQuery().isPresent()),
+                () -> robot.targetWindow(stage).lookup(id).tryQuery().isPresent()),
                 "Element with id = " + id + " was not found in scene " +
-                        scene + " within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                        stage.getTitle() + " within " + TIMEOUT_DURATION_IN_SEC + " sec.");
     }
 
-    protected void timeOutLookUpInSceneAndClickOn(FxRobot robot, Scene scene, String id) {
-        timeOutLookUpInScene(robot, scene, id);
-        robot.targetWindow(scene).clickOn(id);
+    protected void timeOutLookUpFrom(FxRobot robot, Node node, String id) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> robot.from(node).lookup(id).tryQuery().isPresent()),
+                "Element with id = " + id + " was not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+    }
+
+    protected void timeOutClickOnFrom(FxRobot robot, Node node, String id) {
+        timeOutLookUpFrom(robot, node, id);
+        robot.clickOn((Node) robot.from(node).lookup(id).query());
+    }
+
+    protected void timeOutLookUpInStageAndClickOn(FxRobot robot, Stage stage, String id) {
+        timeOutLookUpInStage(robot, stage, id);
+        robot.targetWindow(stage).clickOn(id);
     }
 
     protected void timeOutLookUp(FxRobot robot, String id) {

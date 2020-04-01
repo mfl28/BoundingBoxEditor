@@ -37,7 +37,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
 
-        robot.clickOn("#next-button");
+        timeOutClickOn(robot, "#next-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -62,7 +62,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class));
         final BoundingBoxView drawnBoundingBox = (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
 
-        robot.clickOn("#previous-button");
+        timeOutClickOn(robot, "#previous-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -75,7 +75,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getImageFileListView().getItems().get(drawnBoundingBoxFileIndex)
                 .isHasAssignedBoundingShapes(), Matchers.is(true));
 
-        robot.clickOn("#next-button");
+        timeOutClickOn(robot, "#next-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -119,10 +119,11 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                 () -> getTopModalStage(robot, "Open image folder") != null),
                 "Expected info dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
-        verifyThat(getTopModalStage(robot, "Open image folder"), Matchers.notNullValue());
+        Stage dialogStage = getTopModalStage(robot, "Open image folder");
+        verifyThat(dialogStage, Matchers.notNullValue());
 
         // Do not save existing bounding box annotations.
-        robot.clickOn("No");
+        timeOutLookUpInStageAndClickOn(robot, dialogStage, "No");
         WaitForAsyncUtils.waitForFxEvents();
 
         waitUntilCurrentImageIsLoaded();
@@ -163,9 +164,18 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(boundingBoxView3.getY() + boundingBoxView3.getHeight(), Matchers.closeTo(preResizeMaxY, MathUtils.DOUBLE_EQUAL_THRESHOLD));
 
         // Try to exit application:
-        robot.clickOn("File").clickOn("Exit");
+        timeOutClickOn(robot, "File");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Exit");
+        WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(getTopModalStage(robot, "Exit Application"), Matchers.notNullValue());
-        robot.clickOn("Cancel");
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Exit Application") != null),
+                "Expected info dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        Stage exitDialogStage = getTopModalStage(robot, "Exit Application");
+        verifyThat(exitDialogStage, Matchers.notNullValue());
+
+        timeOutLookUpInStageAndClickOn(robot, exitDialogStage, "Cancel");
     }
 }

@@ -155,11 +155,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1, referenceErrorInfoEntry2));
 
         // Close error report dialog.
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> robot.lookup("OK").tryQuery().isPresent()),
-                "Expected error report dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
-
-        Assertions.assertDoesNotThrow(() -> robot.clickOn("OK"));
+        timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
@@ -215,11 +211,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry));
 
         // Close error report dialog.
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> robot.lookup("OK").tryQuery().isPresent()),
-                "Expected error report dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
-
-        Assertions.assertDoesNotThrow(() -> robot.clickOn("OK"));
+        timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().isEmpty(), Matchers.is(true));
@@ -239,7 +231,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.clickOn("#next-button");
+        timeOutClickOn(robot, "#next-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -323,7 +315,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 Matchers.is(true));
 
         // Remove the imported Annotations manually to reset for next test.
-        robot.clickOn("#previous-button");
+        timeOutClickOn(robot, "#previous-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -340,7 +332,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getObjectCategoryTable(), TableViewMatchers.hasNumRows(1));
         verifyThat(mainView.getObjectCategoryTable().getItems().get(0).getName(), Matchers.equalTo("Test"));
 
-        robot.clickOn("#next-button");
+        timeOutClickOn(robot, "#next-button");
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
     }
@@ -364,7 +356,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 () -> getTopModalStage(robot, "Import annotation data") != null),
                 "Expected info dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
-        robot.clickOn(userChoice);
+        Stage topModalStage = getTopModalStage(robot, "Import annotation data");
+        timeOutLookUpInStageAndClickOn(robot, topModalStage, userChoice);
         WaitForAsyncUtils.waitForFxEvents();
     }
 }
