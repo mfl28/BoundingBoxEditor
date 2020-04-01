@@ -110,7 +110,7 @@ public class BoundingBoxEditorTestBase {
     }
 
     protected void enterNewCategory(FxRobot robot, String categoryName) {
-        robot.clickOn("#category-input-field");
+        timeOutClickOn(robot, "#category-input-field");
         WaitForAsyncUtils.waitForFxEvents();
 
         if(categoryName != null) {
@@ -118,7 +118,7 @@ public class BoundingBoxEditorTestBase {
             WaitForAsyncUtils.waitForFxEvents();
         }
 
-        robot.clickOn("#add-button");
+        timeOutClickOn(robot,"#add-button");
         WaitForAsyncUtils.waitForFxEvents();
     }
 
