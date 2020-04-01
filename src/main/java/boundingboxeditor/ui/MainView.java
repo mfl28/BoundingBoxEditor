@@ -21,7 +21,9 @@ import javafx.stage.Stage;
 import org.controlsfx.dialog.ProgressDialog;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The main view-component of the application (MVC architecture). Contains all other UI-elements.
@@ -165,6 +167,17 @@ public class MainView extends BorderPane implements View {
         progressDialog.setTitle(title);
         progressDialog.setHeaderText(header);
         progressDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+    }
+
+    public static <T> Optional<T> displayChoiceDialogAndGetResult(T defaultChoice, Collection<T> choices,
+                                                                  String title, String header, String content) {
+        ChoiceDialog<T> choiceDialog = new ChoiceDialog<>(defaultChoice, choices);
+        choiceDialog.setTitle(title);
+        choiceDialog.setHeaderText(header);
+        choiceDialog.setContentText(content);
+        choiceDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+
+        return choiceDialog.showAndWait();
     }
 
     @Override

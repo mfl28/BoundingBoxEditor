@@ -878,3 +878,36 @@
   -fx-background-color: #3b4252;
   -fx-background-insets: 0;
   -fx-background-radius: 0; }
+
+/* line 962, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .combo-box {
+  -fx-background-color: #3b4252;
+  -fx-font-weight: bold;
+  -fx-padding: 0; }
+
+/* line 968, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .combo-box > .list-cell {
+  -fx-text-fill: #d8dee9;
+  -fx-padding: 5px;
+  -fx-background-insets: 0; }
+
+/* line 974, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .combo-box-popup > .list-view {
+  -fx-background-color: #3b4252;
+  -fx-effect: none; }
+
+/* line 979, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+  -fx-padding: 4 0 4 5;
+  -fx-background-insets: 0;
+  -fx-background: #3b4252; }
+
+/* line 985, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover {
+  -fx-background-color: #434c5e;
+  -fx-text-fill: #eceff4; }
+
+/* line 991, src/main/resources/stylesheets/scss/styles.scss */
+.dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+  -fx-background-color: #4c566a;
+  -fx-text-fill: #d8dee9; }

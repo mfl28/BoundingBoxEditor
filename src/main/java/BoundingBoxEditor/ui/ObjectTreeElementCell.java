@@ -43,17 +43,20 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private static final String DELETE_VERTICES_CONTEXT_MENU_ITEM_ID = "delete-vertices-context-menu";
     private static final String REFINE_MENU_ITEM_TOOLTIP_TEXT = "Add new vertices between selected vertices";
     private static final String DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT = "Delete selected vertices";
+    private static final String CHANGE_CATEGORY_MENU_ITEM_TEXT = "Change Category";
+    private static final String CHANGE_CATEGORY_CONTEXT_MENU_ITEM_ID = "change-category-menu";
 
     private final MenuItem deleteBoundingShapeMenuItem = createDeleteBoundingShapeMenuItem();
     private final MenuItem hideBoundingShapeMenuItem = createHideBoundingShapeMenuItem();
     private final MenuItem refineMenuItem = createRefineMenuItem();
     private final MenuItem deleteVerticesMenuItem = createDeleteVerticesMenuItem();
+    private final MenuItem changeObjectCategoryMenuItem = createChangeObjectCategoryMenuItem();
 
     private final BooleanProperty draggedOver = new SimpleBooleanProperty(false);
     private final Text nameText = new Text();
     private final Text additionalInfoText = new Text();
     private final Region tagIconRegion = createTagIconRegion();
-    protected ObjectTreeElementContextMenu contextMenu = new ObjectTreeElementContextMenu();
+    private final ObjectTreeElementContextMenu contextMenu = new ObjectTreeElementContextMenu();
     private final EventHandler<ContextMenuEvent> showContextMenuEventHandler = createShowContextMenuEventHandler();
     private final ChangeListener<Boolean> boundingShapeVisibilityListener = createBoundingShapeVisibilityListener();
 
@@ -136,6 +139,16 @@ class ObjectTreeElementCell extends TreeCell<Object> {
      */
     MenuItem getDeleteBoundingShapeMenuItem() {
         return deleteBoundingShapeMenuItem;
+    }
+
+    /**
+     * Returns the menu-item of the context-menu which allows
+     * the user to change the object category of the currently associated bounding shape view object.
+     *
+     * @return the menu-item
+     */
+    MenuItem getChangeObjectCategoryMenuItem() {
+        return changeObjectCategoryMenuItem;
     }
 
     private void setUpInternalListeners() {
@@ -272,9 +285,17 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         return menuItem;
     }
 
+    private MenuItem createChangeObjectCategoryMenuItem() {
+        CustomMenuItem menuItem = new CustomMenuItem(new Label(CHANGE_CATEGORY_MENU_ITEM_TEXT));
+        menuItem.setId(CHANGE_CATEGORY_CONTEXT_MENU_ITEM_ID);
+
+        // TODO: Tooltip
+        return menuItem;
+    }
+
     private class ObjectTreeElementContextMenu extends ContextMenu {
         ObjectTreeElementContextMenu() {
-            super(hideBoundingShapeMenuItem, deleteBoundingShapeMenuItem);
+            super(hideBoundingShapeMenuItem, deleteBoundingShapeMenuItem, changeObjectCategoryMenuItem);
             setUpInternalListeners();
         }
 

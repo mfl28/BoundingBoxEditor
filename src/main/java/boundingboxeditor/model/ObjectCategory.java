@@ -67,7 +67,7 @@ public class ObjectCategory {
 
     @Override
     public String toString() {
-        return "ObjectCategory[name=" + name.get() + ", color=" + color.get() + "]";
+        return getName();
     }
 
     /**

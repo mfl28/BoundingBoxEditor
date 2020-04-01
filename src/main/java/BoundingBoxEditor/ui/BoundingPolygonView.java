@@ -297,8 +297,6 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     private void setUpInternalListeners() {
-        strokeProperty().bind(boundingShapeViewData.getObjectCategory().colorProperty());
-
         fillProperty().bind(Bindings.when(selectedProperty())
                 .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY), strokeProperty()))
                 .otherwise(Bindings.when(boundingShapeViewData.highlightedProperty())

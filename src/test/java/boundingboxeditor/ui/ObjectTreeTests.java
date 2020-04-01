@@ -2,6 +2,7 @@ package boundingboxeditor.ui;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import javafx.geometry.Point2D;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
@@ -211,5 +212,35 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
+
+        /* ---- Object category change ---- */
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingShapes().get(0).getViewData().getObjectCategory().getName(), Matchers.equalTo("Dummy"));
+
+        robot.rightClickOn("Dummy 1").clickOn("Change Category");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Stage changeCategoryStage = getTopModalStage(robot, "Change Category");
+        verifyThat(changeCategoryStage, Matchers.notNullValue());
+
+        final DialogPane changeCategoryDialog = (DialogPane) changeCategoryStage.getScene().getRoot();
+        verifyThat(changeCategoryDialog.getHeaderText(), Matchers.equalTo("Select new Category (current: \"Dummy\")"));
+        verifyThat(changeCategoryDialog.getContentText(), Matchers.equalTo("Object Category:"));
+
+        selectComboBoxItem(robot, ".combo-box", "Test");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.targetWindow(changeCategoryStage).clickOn("OK");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingShapes().get(0).getViewData().getObjectCategory().getName(), Matchers.equalTo("Test"));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("Test"), Matchers.equalTo(1));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("Dummy"), Matchers.equalTo(0));
     }
 }

@@ -47,7 +47,7 @@ class BoundingBoxTreeItem extends BoundingShapeTreeItem {
     }
 
     private void setUpInternalListeners() {
-        ((Shape) toggleIcon).fillProperty().bind(((BoundingBoxView) getValue()).getObjectCategory().colorProperty());
+        ((Shape) toggleIcon).fillProperty().bind(((BoundingBoxView) getValue()).strokeProperty());
 
         ((Shape) toggleIcon).setOnMousePressed(event -> {
             setIconToggledOn(!isIconToggledOn());

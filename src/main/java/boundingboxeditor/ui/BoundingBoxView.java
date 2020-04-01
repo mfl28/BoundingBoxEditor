@@ -277,8 +277,6 @@ public class BoundingBoxView extends Rectangle implements
                         .otherwise(Bindings.min(widthProperty(), heightProperty()))
         );
 
-        strokeProperty().bind(boundingShapeViewData.getObjectCategory().colorProperty());
-
         fillProperty().bind(Bindings.when(boundingShapeViewData.selectedProperty())
                 .then(Bindings.createObjectBinding(() -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY), strokeProperty()))
                 .otherwise(Bindings.when(boundingShapeViewData.getHighlighted())

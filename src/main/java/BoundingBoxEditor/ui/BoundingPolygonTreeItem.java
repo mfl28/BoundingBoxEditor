@@ -47,7 +47,7 @@ public class BoundingPolygonTreeItem extends BoundingShapeTreeItem {
     }
 
     private void setUpInternalListeners() {
-        ((Shape) toggleIcon).fillProperty().bind(((BoundingPolygonView) getValue()).getObjectCategory().colorProperty());
+        ((Shape) toggleIcon).fillProperty().bind(((BoundingPolygonView) getValue()).strokeProperty());
 
         ((Shape) toggleIcon).setOnMousePressed(event -> {
             setIconToggledOn(!isIconToggledOn());

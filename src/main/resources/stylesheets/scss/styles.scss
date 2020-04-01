@@ -958,3 +958,38 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-background-insets: 0;
     -fx-background-radius: 0;
 }
+
+.dialog-pane .combo-box {
+    -fx-background-color: $base-background-light-color;
+    -fx-font-weight: bold;
+    -fx-padding: 0;
+}
+
+.dialog-pane .combo-box > .list-cell {
+    -fx-text-fill: $base-font-color;
+    -fx-padding: 5px;
+    -fx-background-insets: 0;
+}
+
+.dialog-pane .combo-box-popup > .list-view {
+    -fx-background-color:$base-background-light-color;
+    -fx-effect: none;
+}
+
+.dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet >  .list-cell {
+    -fx-padding: 4 0 4 5;
+    -fx-background-insets: 0;
+    -fx-background: $base-background-light-color;
+}
+    
+.dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet   
+    > .list-cell:filled:hover {
+    -fx-background-color: $base-highlight-color;
+    -fx-text-fill: $base-font-highlight-color;
+}
+
+.dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet   
+    > .list-cell:filled:selected {
+    -fx-background-color: $base-highlight-light-color;
+    -fx-text-fill: $base-font-color;
+}

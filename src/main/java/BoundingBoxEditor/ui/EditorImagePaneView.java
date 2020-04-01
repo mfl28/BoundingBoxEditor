@@ -4,6 +4,7 @@ import boundingboxeditor.controller.Controller;
 import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.utils.MathUtils;
+import javafx.beans.Observable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -55,7 +56,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     private final Group boundingShapeSceneGroup = new Group();
     private final ToggleGroup boundingShapeSelectionGroup = new ToggleGroup();
-    private final ObservableList<BoundingShapeViewable> currentBoundingShapes = FXCollections.observableArrayList();
+    private final ObservableList<BoundingShapeViewable> currentBoundingShapes = FXCollections.observableArrayList(
+            item -> new Observable[]{item.getViewData().objectCategoryProperty()});
     private final ObjectProperty<ObjectCategory> selectedCategory = new SimpleObjectProperty<>(null);
 
     private final Rectangle initializerRectangle = createInitializerRectangle();

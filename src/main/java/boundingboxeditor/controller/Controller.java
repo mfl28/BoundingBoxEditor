@@ -706,18 +706,31 @@ public class Controller {
     @SuppressWarnings("UnnecessaryLambda")
     private ListChangeListener<BoundingShapeViewable> createBoundingShapeCountPerCategoryListener() {
         return change -> {
+            Map<String, Integer> categoryToShapesCountMap = model.getCategoryToAssignedBoundingShapesCountMap();
+
             while(change.next()) {
                 if(change.wasAdded()) {
                     change.getAddedSubList().forEach(item ->
-                            model.getCategoryToAssignedBoundingShapesCountMap()
-                                    .merge(item.getViewData().getObjectCategory().getName(), 1, Integer::sum));
+                            categoryToShapesCountMap.merge(item.getViewData().getObjectCategory().getName(),
+                                    1, Integer::sum));
                 }
 
                 if(change.wasRemoved()) {
                     change.getRemoved().forEach(item ->
-                            model.getCategoryToAssignedBoundingShapesCountMap()
-                                    .computeIfPresent(item.getViewData().getObjectCategory().getName(),
-                                            (key, value) -> --value));
+                            categoryToShapesCountMap.computeIfPresent(item.getViewData().getObjectCategory().getName(),
+                                    (key, value) -> --value));
+                }
+
+                if(change.wasUpdated()) {
+                    for(int i = change.getFrom(); i != change.getTo(); ++i) {
+                        BoundingShapeViewData changedShapeViewData = change.getList().get(i).getViewData();
+
+                        categoryToShapesCountMap.computeIfPresent(changedShapeViewData.getPreviousObjectCategoryName(),
+                                (key, value) -> --value);
+
+                        categoryToShapesCountMap.merge(changedShapeViewData.getObjectCategory().getName(),
+                                1, Integer::sum);
+                    }
                 }
             }
         };

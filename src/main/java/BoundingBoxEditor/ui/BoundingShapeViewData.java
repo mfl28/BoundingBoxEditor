@@ -24,15 +24,18 @@ public class BoundingShapeViewData {
     private final ObjectProperty<ToggleGroup> toggleGroup = new SimpleObjectProperty<>();
     private final ObservableList<String> tags = FXCollections.observableArrayList();
     private final Shape baseShape;
-    private ObjectCategory objectCategory;
+    private final ObjectProperty<ObjectCategory> objectCategory = new SimpleObjectProperty<>();
+    private String previousObjectCategoryName;
     private ImageMetaData imageMetaData;
     private BoundingShapeTreeItem treeItem;
 
     public BoundingShapeViewData(Shape shape, ObjectCategory objectCategory, ImageMetaData imageMetaData) {
         this.baseShape = shape;
-        this.objectCategory = objectCategory;
         this.imageMetaData = imageMetaData;
         nodeGroup.getChildren().add(shape);
+
+        setUpInternalListeners();
+        this.objectCategory.set(objectCategory);
     }
 
     public Property<Bounds> autoScaleBounds() {
@@ -119,7 +122,7 @@ public class BoundingShapeViewData {
         BoundingShapeViewData other = (BoundingShapeViewData) obj;
 
         return Objects.equals(imageMetaData, other.imageMetaData) && Objects.equals(tags, other.tags)
-                && Objects.equals(objectCategory, other.objectCategory);
+                && Objects.equals(objectCategory.get(), other.objectCategory.get());
     }
 
     /**
@@ -128,11 +131,19 @@ public class BoundingShapeViewData {
      * @return the {@link ObjectCategory} object
      */
     public ObjectCategory getObjectCategory() {
-        return objectCategory;
+        return objectCategory.get();
     }
 
     public void setObjectCategory(ObjectCategory objectCategory) {
-        this.objectCategory = objectCategory;
+        this.objectCategory.set(objectCategory);
+    }
+
+    public ObjectProperty<ObjectCategory> objectCategoryProperty() {
+        return objectCategory;
+    }
+
+    public String getPreviousObjectCategoryName() {
+        return previousObjectCategoryName;
     }
 
     /**
@@ -169,5 +180,19 @@ public class BoundingShapeViewData {
      */
     Group getNodeGroup() {
         return nodeGroup;
+    }
+
+    private void setUpInternalListeners() {
+        objectCategory.addListener((observable, oldValue, newValue) -> {
+
+            if(oldValue != null) {
+                baseShape.strokeProperty().unbind();
+            }
+
+            if(newValue != null) {
+                baseShape.strokeProperty().bind(newValue.colorProperty());
+                previousObjectCategoryName = newValue.getName();
+            }
+        });
     }
 }
