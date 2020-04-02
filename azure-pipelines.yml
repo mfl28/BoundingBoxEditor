@@ -35,6 +35,7 @@ stages:
         vmImage: 'macOS-10.14'
 
 - stage: Test
+  condition: false
   dependsOn: Build
   jobs:
   - template: jobs/test.yml
