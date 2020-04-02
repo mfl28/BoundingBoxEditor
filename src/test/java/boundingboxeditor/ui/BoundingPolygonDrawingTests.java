@@ -2,6 +2,7 @@ package boundingboxeditor.ui;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import javafx.geometry.Point2D;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
@@ -15,7 +16,6 @@ import org.testfx.util.WaitForAsyncUtils;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.testfx.api.FxAssert.verifyThat;
@@ -28,7 +28,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onOpeningNewImageFolder_WhenBoundingPolygonsExist_ShouldResetCorrectly(FxRobot robot) throws TimeoutException {
+    void onOpeningNewImageFolder_WhenBoundingPolygonsExist_ShouldResetCorrectly(FxRobot robot) {
         waitUntilCurrentImageIsLoaded();
 
         String testCategoryName = "Test";
@@ -183,7 +183,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(reloadedBoundingPolygon.getEditingIndices(), Matchers.containsInRelativeOrder(0, 2, 6));
 
         // Splice.
-        robot.clickOn(reloadedBoundingPolygon, MouseButton.MIDDLE);
+        robot.press(KeyCode.SHIFT).clickOn(reloadedBoundingPolygon, MouseButton.MIDDLE).release(KeyCode.SHIFT);
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(reloadedBoundingPolygon.getVertexHandles(), Matchers.hasSize(6));
@@ -196,6 +196,10 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         // Remove polygon.
         robot.rightClickOn(reloadedBoundingPolygon);
         WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat("#add-vertices-context-menu", NodeMatchers.isVisible());
+        verifyThat("#delete-vertices-context-menu", NodeMatchers.isVisible());
+
         timeOutClickOn(robot, "Delete");
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -236,8 +240,8 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(newBoundingPolygonView.getVertexHandles().stream().allMatch(BoundingPolygonView.VertexHandle::isEditing), Matchers.equalTo(true));
         verifyThat(newBoundingPolygonView.getEditingIndices(), Matchers.containsInRelativeOrder(0, 2, 4, 6));
 
-        // Splice.
-        robot.clickOn(newBoundingPolygonView, MouseButton.MIDDLE);
+        // Add vertices.
+        robot.press(KeyCode.SHIFT).clickOn(newBoundingPolygonView, MouseButton.MIDDLE).release(KeyCode.SHIFT);
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(newBoundingPolygonView.getVertexHandles(), Matchers.hasSize(8));
@@ -251,7 +255,10 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         final BoundingPolygonView.VertexHandle vertexHandle1 = newBoundingPolygonView.getVertexHandles().get(0);
         final BoundingPolygonView.VertexHandle vertexHandle2 = newBoundingPolygonView.getVertexHandles().get(1);
 
-        robot.clickOn(vertexHandle1, MouseButton.MIDDLE).clickOn(vertexHandle2, MouseButton.MIDDLE);
+        robot.clickOn(vertexHandle1, MouseButton.MIDDLE);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.clickOn(vertexHandle2, MouseButton.MIDDLE);
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(vertexHandle1.isEditing(), Matchers.equalTo(true));
@@ -260,7 +267,8 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         // Delete selected vertices.
         robot.rightClickOn(newBoundingPolygonView);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Remove Vertices");
+
+        timeOutClickOn(robot, "#delete-vertices-context-menu");
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(newBoundingPolygonView.getVertexHandles(), Matchers.hasSize(6));

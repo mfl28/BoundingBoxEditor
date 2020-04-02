@@ -214,6 +214,17 @@ public class BoundingBoxEditorTestBase {
         robot.clickOn(id);
     }
 
+    protected <T extends Node> void timeOutLookupAs(FxRobot robot, String id, Class<T> clazz) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> robot.lookup(id).tryQueryAs(clazz).isPresent()),
+                "Element with id = " + id + " and class " + clazz + " was not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+    }
+
+    protected <T extends Node> T timeOutQueryAs(FxRobot robot, String id, Class<T> clazz) {
+        timeOutLookupAs(robot, id, clazz);
+        return robot.lookup(id).queryAs(clazz);
+    }
+
     private Scene createSceneFromParent(final Parent parent) {
         final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         return new Scene(parent, INITIAL_WINDOW_SCALE * screenBounds.getWidth(),

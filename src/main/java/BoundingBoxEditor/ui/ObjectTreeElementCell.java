@@ -38,7 +38,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private static final String HIDE_BOUNDING_SHAPE_CONTEXT_MENU_ITEM_ID = "hide-context-menu";
     private static final String HIDE_BOUNDING_SHAPE_MENU_ITEM_TEXT = "Hide";
     private static final String REFINE_MENU_ITEM_TEXT = "Add Vertices";
-    private static final String REFINE_CONTEXT_MENU_ITEM_ID = "refine-context-menu";
+    private static final String REFINE_CONTEXT_MENU_ITEM_ID = "add-vertices-context-menu";
     private static final String DELETE_VERTICES_MENU_ITEM_TEXT = "Remove Vertices";
     private static final String DELETE_VERTICES_CONTEXT_MENU_ITEM_ID = "delete-vertices-context-menu";
     private static final String REFINE_MENU_ITEM_TOOLTIP_TEXT = "Add new vertices between selected vertices";
@@ -48,9 +48,10 @@ class ObjectTreeElementCell extends TreeCell<Object> {
 
     private final MenuItem deleteBoundingShapeMenuItem = createDeleteBoundingShapeMenuItem();
     private final MenuItem hideBoundingShapeMenuItem = createHideBoundingShapeMenuItem();
-    private final MenuItem refineMenuItem = createRefineMenuItem();
+    private final MenuItem addVerticesMenuItem = createRefineMenuItem();
     private final MenuItem deleteVerticesMenuItem = createDeleteVerticesMenuItem();
     private final MenuItem changeObjectCategoryMenuItem = createChangeObjectCategoryMenuItem();
+    private final SeparatorMenuItem separatorMenuItem = new SeparatorMenuItem();
 
     private final BooleanProperty draggedOver = new SimpleBooleanProperty(false);
     private final Text nameText = new Text();
@@ -181,7 +182,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         });
 
         draggedOver.addListener((observable, oldValue, newValue) -> pseudoClassStateChanged(draggedOverPseudoClass, newValue));
-        refineMenuItem.setOnAction(event -> ((BoundingPolygonView) getItem()).refine());
+        addVerticesMenuItem.setOnAction(event -> ((BoundingPolygonView) getItem()).refine());
         deleteVerticesMenuItem.setOnAction(event -> ((BoundingPolygonView) getItem()).removeEditingVertices());
     }
 
@@ -255,7 +256,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         CustomMenuItem deleteMenuItem = new CustomMenuItem(new Label(DELETE_BOUNDING_SHAPE_MENU_ITEM_TEXT));
         deleteMenuItem.setId(DELETE_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(deleteMenuItem.getContent(),
-                UiUtils.createTooltip("", Controller.KeyCombinations.deleteSelectedBoundingShape));
+                UiUtils.createTooltip("",
+                        Controller.KeyCombinations.deleteSelectedBoundingShape));
         return deleteMenuItem;
     }
 
@@ -263,7 +265,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         CustomMenuItem hideMenuItem = new CustomMenuItem(new Label(HIDE_BOUNDING_SHAPE_MENU_ITEM_TEXT));
         hideMenuItem.setId(HIDE_BOUNDING_SHAPE_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(hideMenuItem.getContent(),
-                UiUtils.createTooltip("", Controller.KeyCombinations.hideSelectedBoundingShape));
+                UiUtils.createTooltip("",
+                        Controller.KeyCombinations.hideSelectedBoundingShape));
         return hideMenuItem;
     }
 
@@ -272,7 +275,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(REFINE_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                UiUtils.createTooltip(REFINE_MENU_ITEM_TOOLTIP_TEXT));
+                UiUtils.createTooltip(REFINE_MENU_ITEM_TOOLTIP_TEXT,
+                        Controller.KeyCombinations.addVerticesToPolygon));
         return menuItem;
     }
 
@@ -281,7 +285,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(DELETE_VERTICES_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                UiUtils.createTooltip(DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT));
+                UiUtils.createTooltip(DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT,
+                        Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected));
         return menuItem;
     }
 
@@ -289,7 +294,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         CustomMenuItem menuItem = new CustomMenuItem(new Label(CHANGE_CATEGORY_MENU_ITEM_TEXT));
         menuItem.setId(CHANGE_CATEGORY_CONTEXT_MENU_ITEM_ID);
 
-        // TODO: Tooltip
+        Tooltip.install(menuItem.getContent(),
+                UiUtils.createTooltip("", Controller.KeyCombinations.changeSelectedBoundingShapeCategory));
         return menuItem;
     }
 
@@ -300,18 +306,33 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         }
 
         void addPolygonFeatures() {
-            if(!getItems().contains(refineMenuItem)) {
-                getItems().add(refineMenuItem);
+            if(!getItems().contains(separatorMenuItem)) {
+                getItems().add(separatorMenuItem);
+            }
+
+            if(!getItems().contains(addVerticesMenuItem)) {
+                getItems().add(addVerticesMenuItem);
             }
 
             if(!getItems().contains(deleteVerticesMenuItem)) {
                 getItems().add(deleteVerticesMenuItem);
             }
+
+            addVerticesMenuItem.disableProperty().bind(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
+                    .getEditingIndices()).lessThan(2));
+            deleteVerticesMenuItem.disableProperty().bind(
+                    Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem()).getEditingIndices()).isEqualTo(0)
+                            .or(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
+                                    .getEditingIndices()).greaterThan(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
+                                    .getVertexHandles()).subtract(2))));
         }
 
         void removePolygonFeatures() {
-            getItems().remove(refineMenuItem);
+            getItems().remove(addVerticesMenuItem);
             getItems().remove(deleteVerticesMenuItem);
+
+            addVerticesMenuItem.disableProperty().unbind();
+            deleteVerticesMenuItem.disableProperty().unbind();
         }
 
         private void setUpInternalListeners() {

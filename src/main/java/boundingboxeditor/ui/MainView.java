@@ -244,12 +244,34 @@ public class MainView extends BorderPane implements View {
     }
 
     /**
+     * If a {@link BoundingPolygonTreeItem} is currently selected, removes its vertices with state 'editing'.
+     */
+    public void removeEditingVerticesWhenPolygonViewSelected() {
+        final TreeItem<Object> selectedTreeItem = getObjectTree().getSelectionModel().getSelectedItem();
+
+        if(selectedTreeItem instanceof BoundingPolygonTreeItem) {
+            ((BoundingPolygonView) selectedTreeItem.getValue()).removeEditingVertices();
+        }
+    }
+
+    /**
      * Checks if the {@link EditorImagePaneView}-member currently contains bounding shapes.
      *
      * @return true if there exist bounding shapes, false otherwise.
      */
     public boolean containsBoundingShapeViews() {
         return !getCurrentBoundingShapes().isEmpty();
+    }
+
+    /**
+     * Initiates the category change process for the currently selected bounding shape.
+     */
+    public void initiateCurrentSelectedBoundingBoxCategoryChange() {
+        final TreeItem<Object> selectedTreeItem = getObjectTree().getSelectionModel().getSelectedItem();
+
+        if(selectedTreeItem instanceof BoundingShapeTreeItem) {
+            workspaceSplitPane.initiateObjectCategoryChange((BoundingShapeViewable) selectedTreeItem.getValue());
+        }
     }
 
     /* Delegating Getters */

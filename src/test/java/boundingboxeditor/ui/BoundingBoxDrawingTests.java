@@ -15,7 +15,6 @@ import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
@@ -27,7 +26,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onOpeningNewImageFolder_WhenBoundingBoxesExist_ShouldResetCorrectly(FxRobot robot) throws TimeoutException {
+    void onOpeningNewImageFolder_WhenBoundingBoxesExist_ShouldResetCorrectly(FxRobot robot) {
         waitUntilCurrentImageIsLoaded();
 
         String testCategoryName = "Test";

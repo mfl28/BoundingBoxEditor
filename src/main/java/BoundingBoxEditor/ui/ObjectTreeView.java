@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
  * @see View
  */
 public class ObjectTreeView extends TreeView<Object> implements View {
+    private static final String INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE = "Invalid dragged object class type.";
     private static final int FIXED_CELL_SIZE = 20;
     private VirtualFlow<?> virtualFlow;
 
@@ -91,6 +92,19 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         if(selectedTreeItem instanceof BoundingShapeTreeItem) {
             ((BoundingShapeTreeItem) selectedTreeItem).setIconToggledOn(toggleState);
         }
+    }
+
+    /**
+     * Takes a tree-item, detaches it from its parent and attaches it to a new target tree-item.
+     *
+     * @param treeItemToMove the tree-item to relocate
+     * @param targetTreeItem the target parent tree-item
+     */
+    void reattachTreeItemToNewTargetTreeItem(TreeItem<Object> treeItemToMove, TreeItem<Object> targetTreeItem) {
+        detachTreeItemFromParent(treeItemToMove);
+        attachTreeItemToTarget(treeItemToMove, targetTreeItem);
+
+        getSelectionModel().select(treeItemToMove);
     }
 
     /**
@@ -251,6 +265,64 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         }
 
         return boundingShapeData;
+    }
+
+    private void detachTreeItemFromParent(TreeItem<Object> itemToDetach) {
+        TreeItem<Object> itemParent = itemToDetach.getParent();
+
+        if(itemParent instanceof ObjectCategoryTreeItem
+                && itemToDetach instanceof BoundingShapeTreeItem) {
+            ((ObjectCategoryTreeItem) itemParent).detachBoundingShapeTreeItemChild((BoundingShapeTreeItem) itemToDetach);
+        } else {
+            itemParent.getChildren().remove(itemToDetach);
+        }
+
+        if(itemParent instanceof ObjectCategoryTreeItem
+                && itemParent.getChildren().isEmpty()) {
+            itemParent.getParent().getChildren().remove(itemParent);
+        }
+    }
+
+    private void attachTreeItemToTarget(TreeItem<Object> treeItemToAttach, TreeItem<Object> targetItem) {
+        ObjectCategory draggedItemCategory;
+
+        if(treeItemToAttach instanceof ObjectCategoryTreeItem) {
+            draggedItemCategory = ((ObjectCategoryTreeItem) treeItemToAttach).getObjectCategory();
+        } else if(treeItemToAttach instanceof BoundingShapeTreeItem) {
+            draggedItemCategory = ((BoundingShapeViewable) treeItemToAttach.getValue()).getViewData().getObjectCategory();
+        } else {
+            throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
+        }
+
+        // If the target is an empty cell, add the dragged item to a (possibly new) category that is a child of the tree-root.
+        if(targetItem == null) {
+            targetItem = getRoot();
+        }
+        // Add to new location
+        ObjectCategoryTreeItem newParentItem = findParentCategoryTreeItemForCategory(targetItem, draggedItemCategory);
+
+        if(newParentItem == null) {
+            // Category does not exist in new location
+            if(treeItemToAttach instanceof ObjectCategoryTreeItem) {
+                // Full category is added:
+                targetItem.getChildren().add(treeItemToAttach);
+            } else {
+                ObjectCategoryTreeItem newCategoryParent = new ObjectCategoryTreeItem(((BoundingShapeViewable) treeItemToAttach.getValue())
+                        .getViewData().getObjectCategory());
+                newCategoryParent.attachBoundingShapeTreeItemChild((BoundingShapeTreeItem) treeItemToAttach);
+                targetItem.getChildren().add(newCategoryParent);
+            }
+        } else {
+            // Category already exists in new location
+            if(treeItemToAttach instanceof ObjectCategoryTreeItem) {
+                // Full category is added:
+                for(TreeItem<Object> child : treeItemToAttach.getChildren()) {
+                    newParentItem.attachBoundingShapeTreeItemChild((BoundingShapeTreeItem) child);
+                }
+            } else {
+                newParentItem.attachBoundingShapeTreeItemChild((BoundingShapeTreeItem) treeItemToAttach);
+            }
+        }
     }
 
 

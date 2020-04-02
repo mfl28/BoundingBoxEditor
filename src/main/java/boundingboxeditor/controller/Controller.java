@@ -355,6 +355,8 @@ public class Controller {
             handleNavigatePreviousKeyPressed();
         } else if(KeyCombinations.deleteSelectedBoundingShape.match(event)) {
             view.removeSelectedTreeItemAndChildren();
+        } else if(KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected.match(event)) {
+            view.removeEditingVerticesWhenPolygonViewSelected();
         } else if(KeyCombinations.focusCategorySearchField.match(event)) {
             view.getCategorySearchField().requestFocus();
         } else if(KeyCombinations.focusFileSearchField.match(event)) {
@@ -377,6 +379,8 @@ public class Controller {
             view.getEditor().getEditorToolBar().getRectangleModeButton().setSelected(true);
         } else if(KeyCombinations.selectPolygonDrawingMode.match(event)) {
             view.getEditor().getEditorToolBar().getPolygonModeButton().setSelected(true);
+        } else if(KeyCombinations.changeSelectedBoundingShapeCategory.match(event)) {
+            view.initiateCurrentSelectedBoundingBoxCategoryChange();
         }
     }
 
@@ -824,6 +828,9 @@ public class Controller {
         public static final KeyCombination deleteSelectedBoundingShape = new KeyCodeCombination(KeyCode.DELETE);
         public static final KeyCombination selectRectangleDrawingMode = new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination selectPolygonDrawingMode = new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination removeEditingVerticesWhenBoundingPolygonSelected = new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_DOWN);
+        public static final KeyCombination addVerticesToPolygon = KeyCombination.keyCombination("Shift + Middle-Click inside Polygon");
+        public static final KeyCombination changeSelectedBoundingShapeCategory = new KeyCodeCombination(KeyCode.C, KeyCombination.SHIFT_DOWN);
 
         private KeyCombinations() {
             throw new IllegalStateException("Key Combination Class");

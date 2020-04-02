@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
@@ -45,7 +44,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
     @Test
     void onSaveAnnotation_WhenPreviouslyImportedAnnotation_ShouldProduceEquivalentOutput(FxRobot robot, @TempDir Path tempDirectory)
-            throws TimeoutException, IOException {
+            throws IOException {
         final String referenceAnnotationFilePath = "/testannotations/reference/austin-neill-685084-unsplash_jpg_A.xml";
         final String expectedFileName = "austin-neill-685084-unsplash_jpg_A.xml";
 
@@ -112,8 +111,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onLoadAnnotation_WhenFileHasMissingNonCriticalElements_ShouldNotLoadIncompleteBoundingBoxes(FxRobot robot)
-            throws TimeoutException {
+    void onLoadAnnotation_WhenFileHasMissingNonCriticalElements_ShouldNotLoadIncompleteBoundingBoxes(FxRobot robot) {
         final String inputFilePath = "/testannotations/annotation_with_missing_elements.xml";
 
         waitUntilCurrentImageIsLoaded();
@@ -167,8 +165,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onLoadAnnotation_WhenFileHasMissingCriticalElement_ShouldNotLoadAnyBoundingBoxes(FxRobot robot)
-            throws TimeoutException {
+    void onLoadAnnotation_WhenFileHasMissingCriticalElement_ShouldNotLoadAnyBoundingBoxes(FxRobot robot) {
         final String inputFilePath = "/testannotations/annotation_with_missing_filename.xml";
 
         waitUntilCurrentImageIsLoaded();
@@ -224,8 +221,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onLoadAnnotation_WhenAnnotationsPresent_ShouldAskForAndCorrectlyApplyUserChoice(FxRobot robot)
-            throws TimeoutException {
+    void onLoadAnnotation_WhenAnnotationsPresent_ShouldAskForAndCorrectlyApplyUserChoice(FxRobot robot) {
         final String referenceAnnotationFilePath = "/testannotations/reference/austin-neill-685084-unsplash_jpg_A.xml";
 
         waitUntilCurrentImageIsLoaded();
@@ -289,8 +285,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 Matchers.is(true));
     }
 
-    private void userChoosesYesOnAnnotationImportDialogSubtest(FxRobot robot, BoundingBoxView drawnBoundingBox, File annotationFile)
-            throws TimeoutException {
+    private void userChoosesYesOnAnnotationImportDialogSubtest(FxRobot robot, BoundingBoxView drawnBoundingBox, File annotationFile) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "Yes");
 
         // Everything should have stayed the same for the current image...

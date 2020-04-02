@@ -24,6 +24,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     private static final double DEFAULT_FIRST_DIVIDER_RATIO = 0.0;
     private static final double DEFAULT_SECOND_DIVIDER_RATIO = 1.0;
     private static final String WORK_SPACE_ID = "work-space";
+    private static final String CHANGE_CATEGORY_DIALOG_TITLE = "Change Category";
+    private static final String CATEGORY_CHANGE_DIALOG_CONTENT_TEXT = "New Category:";
     private static final SnapshotParameters snapShotParameters = new SnapshotParameters();
     private static final DataFormat dragDataFormat = new DataFormat("box-item");
 
@@ -66,6 +68,34 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     public void reset() {
         setVisible(true);
         editorsSplitPane.reset();
+    }
+
+    /**
+     * Initiates a category change for the provided {@link BoundingShapeViewable}.
+     *
+     * @param boundingShapeViewable the {@link BoundingShapeViewable} associated with the
+     *                              bounding shape whose category should be changed
+     */
+    void initiateObjectCategoryChange(BoundingShapeViewable boundingShapeViewable) {
+        ObjectCategory currentCategory = boundingShapeViewable.getViewData().getObjectCategory();
+
+        MainView.displayChoiceDialogAndGetResult(currentCategory,
+                editorsSplitPane.getObjectCategoryTable().getItems(),
+                CHANGE_CATEGORY_DIALOG_TITLE,
+                "Select new Category (current: \"" + currentCategory.getName() + "\")",
+                CATEGORY_CHANGE_DIALOG_CONTENT_TEXT)
+                .ifPresent(newChoice -> {
+                    if(!Objects.equals(newChoice, currentCategory)) {
+                        // Set new object category.
+                        boundingShapeViewable.getViewData().setObjectCategory(newChoice);
+                        // Get tree-item that should be moved.
+                        TreeItem<Object> treeItemToMove = boundingShapeViewable.getViewData().getTreeItem();
+                        // Get target tree-item.
+                        TreeItem<Object> targetItem = treeItemToMove.getParent().getParent();
+                        // Attach tree-item to new target tree-item.
+                        editorsSplitPane.getObjectTree().reattachTreeItemToNewTargetTreeItem(treeItemToMove, targetItem);
+                    }
+                });
     }
 
     /**
@@ -250,9 +280,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     }
 
     private class ObjectTreeElementCellFactory implements Callback<TreeView<Object>, TreeCell<Object>> {
-        private static final String INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE = "Invalid dragged object class type.";
-        private static final String CHANGE_CATEGORY_DIALOG_TITLE = "Change Category";
-        private static final String CATEGORY_CHANGE_DIALOG_CONTENT_TEXT = "Object Category:";
+
         private TreeItem<Object> draggedItem;
 
         @Override
@@ -260,12 +288,12 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             final ObjectTreeElementCell cell = new ObjectTreeElementCell();
 
             applyOnDeleteBoundingShapeMenuItemListener(cell);
-            applyOnChangeObjectCategoryMenuItemListener(cell);
+            applyChangeObjectCategoryMenuItemListeners(cell);
             applyOnDragDetectedListener(cell);
-            applyOnDragOverListener(cell, treeView);
+            applyOnDragOverListener(cell);
             applyOnDragEnteredListener(cell);
             applyOnDragExitedListener(cell);
-            applyOnDragDroppedListener(cell, treeView);
+            applyOnDragDroppedListener(cell);
 
             return cell;
         }
@@ -278,26 +306,10 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             });
         }
 
-        private void applyOnChangeObjectCategoryMenuItemListener(ObjectTreeElementCell cell) {
+        private void applyChangeObjectCategoryMenuItemListeners(ObjectTreeElementCell cell) {
             cell.getChangeObjectCategoryMenuItem().setOnAction(event -> {
                 if(!cell.isEmpty()) {
-                    ObjectCategory currentCategory = ((BoundingShapeViewable) cell.getItem()).getViewData().getObjectCategory();
-
-                    MainView.displayChoiceDialogAndGetResult(currentCategory,
-                            editorsSplitPane.getObjectCategoryTable().getItems(),
-                            CHANGE_CATEGORY_DIALOG_TITLE,
-                            "Select new Category (current: \"" + currentCategory.getName() + "\")",
-                            CATEGORY_CHANGE_DIALOG_CONTENT_TEXT)
-                            .ifPresent(newChoice -> {
-                                if(!Objects.equals(newChoice, currentCategory)) {
-                                    // Set new object category.
-                                    ((BoundingShapeViewable) cell.getItem()).getViewData().setObjectCategory(newChoice);
-                                    // Get parent tree-item.
-                                    TreeItem<Object> targetItem = cell.getTreeItem().getParent().getParent();
-                                    // Attach item to new parent.
-                                    reattachTreeItemOnTargetTreeItem(cell.getTreeItem(), targetItem, cell.getTreeView());
-                                }
-                            });
+                    initiateObjectCategoryChange(((BoundingShapeViewable) cell.getItem()));
                 }
             });
         }
@@ -320,7 +332,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             });
         }
 
-        private void applyOnDragOverListener(ObjectTreeElementCell cell, TreeView<Object> treeView) {
+        private void applyOnDragOverListener(ObjectTreeElementCell cell) {
             cell.setOnDragOver(event -> {
                 if(!event.getDragboard().hasContent(dragDataFormat)) {
                     return;
@@ -339,8 +351,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 }
 
                 if(thisItem == null && ((draggedItem instanceof ObjectCategoryTreeItem
-                        && draggedItem.getParent().equals(treeView.getRoot()))
-                        || draggedItem.getParent().getParent().equals(treeView.getRoot()))) {
+                        && draggedItem.getParent().equals(cell.getTreeView().getRoot()))
+                        || draggedItem.getParent().getParent().equals(cell.getTreeView().getRoot()))) {
                     return;
                 }
 
@@ -373,7 +385,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             });
         }
 
-        private void applyOnDragDroppedListener(ObjectTreeElementCell cell, TreeView<Object> treeView) {
+        private void applyOnDragDroppedListener(ObjectTreeElementCell cell) {
             cell.setOnDragDropped(event -> {
                 if(!event.getDragboard().hasContent(dragDataFormat)) {
                     return;
@@ -386,78 +398,11 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                     return;
                 }
 
-                reattachTreeItemOnTargetTreeItem(draggedItem, targetItem, treeView);
+                ((ObjectTreeView) cell.getTreeView()).reattachTreeItemToNewTargetTreeItem(draggedItem, targetItem);
 
                 event.setDropCompleted(true);
                 event.consume();
             });
-        }
-
-        private void reattachTreeItemOnTargetTreeItem(TreeItem<Object> treeItem, TreeItem<Object> targetTreeItem,
-                                                      TreeView<Object> treeView) {
-            detachTreeItemFromParent(treeItem);
-            dropTreeItemOnTarget(treeItem, targetTreeItem, treeView);
-
-            treeView.getSelectionModel().select(treeItem);
-        }
-
-        private void detachTreeItemFromParent(TreeItem<Object> itemToDetach) {
-            TreeItem<Object> itemParent = itemToDetach.getParent();
-
-            if(itemParent instanceof ObjectCategoryTreeItem
-                    && itemToDetach instanceof BoundingShapeTreeItem) {
-                ((ObjectCategoryTreeItem) itemParent).detachBoundingShapeTreeItemChild((BoundingShapeTreeItem) itemToDetach);
-            } else {
-                itemParent.getChildren().remove(itemToDetach);
-            }
-
-            if(itemParent instanceof ObjectCategoryTreeItem
-                    && itemParent.getChildren().isEmpty()) {
-                itemParent.getParent().getChildren().remove(itemParent);
-            }
-        }
-
-        private void dropTreeItemOnTarget(TreeItem<Object> treeItemToDrop, TreeItem<Object> targetItem, TreeView<Object> treeView) {
-            ObjectCategory draggedItemCategory;
-
-            if(treeItemToDrop instanceof ObjectCategoryTreeItem) {
-                draggedItemCategory = ((ObjectCategoryTreeItem) treeItemToDrop).getObjectCategory();
-            } else if(treeItemToDrop instanceof BoundingShapeTreeItem) {
-                draggedItemCategory = ((BoundingShapeViewable) treeItemToDrop.getValue()).getViewData().getObjectCategory();
-            } else {
-                throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
-            }
-
-            ObjectTreeView objectTreeView = (ObjectTreeView) treeView;
-            // If the target is an empty cell, add the dragged item to a (possibly new) category that is a child of the tree-root.
-            if(targetItem == null) {
-                targetItem = objectTreeView.getRoot();
-            }
-            // Add to new location
-            ObjectCategoryTreeItem newParentItem = objectTreeView.findParentCategoryTreeItemForCategory(targetItem, draggedItemCategory);
-
-            if(newParentItem == null) {
-                // Category does not exits in new location
-                if(treeItemToDrop instanceof ObjectCategoryTreeItem) {
-                    // Full category is added:
-                    targetItem.getChildren().add(treeItemToDrop);
-                } else {
-                    ObjectCategoryTreeItem newCategoryParent = new ObjectCategoryTreeItem(((BoundingShapeViewable) treeItemToDrop.getValue())
-                            .getViewData().getObjectCategory());
-                    newCategoryParent.attachBoundingShapeTreeItemChild((BoundingShapeTreeItem) treeItemToDrop);
-                    targetItem.getChildren().add(newCategoryParent);
-                }
-            } else {
-                // Category already exists in new location
-                if(treeItemToDrop instanceof ObjectCategoryTreeItem) {
-                    // Full category is added:
-                    for(TreeItem<Object> child : treeItemToDrop.getChildren()) {
-                        newParentItem.attachBoundingShapeTreeItemChild((BoundingShapeTreeItem) child);
-                    }
-                } else {
-                    newParentItem.attachBoundingShapeTreeItemChild((BoundingShapeTreeItem) treeItemToDrop);
-                }
-            }
         }
     }
 }

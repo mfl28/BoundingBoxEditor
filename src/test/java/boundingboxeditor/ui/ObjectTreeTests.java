@@ -21,7 +21,6 @@ import org.testfx.util.WaitForAsyncUtils;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.testfx.api.FxAssert.verifyThat;
@@ -34,7 +33,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onBoundingBoxesDrawnAndInteractedWith_ShouldCorrectlyDisplayTreeItems(FxRobot robot) throws TimeoutException {
+    void onBoundingBoxesDrawnAndInteractedWith_ShouldCorrectlyDisplayTreeItems(FxRobot robot) {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -252,7 +251,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         final DialogPane changeCategoryDialog = (DialogPane) changeCategoryStage.getScene().getRoot();
         verifyThat(changeCategoryDialog.getHeaderText(), Matchers.equalTo("Select new Category (current: \"Dummy\")"));
-        verifyThat(changeCategoryDialog.getContentText(), Matchers.equalTo("Object Category:"));
+        verifyThat(changeCategoryDialog.getContentText(), Matchers.equalTo("New Category:"));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(2));
         verifyThat(model.getObjectCategories().stream().map(ObjectCategory::getName).collect(Collectors.toList()), Matchers.containsInRelativeOrder("Test", "Dummy"));
 
