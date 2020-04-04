@@ -3,8 +3,11 @@ package boundingboxeditor.model.io;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Responsible for holding information about a finished IO-operation (e.g. loading or
@@ -12,9 +15,9 @@ import java.util.Objects;
  */
 public class IOResult {
     private final int nrSuccessfullyProcessedItems;
-    private final long timeTakenInMilliseconds;
     private final List<ErrorInfoEntry> errorTableEntries;
     private final OperationType operationType;
+    private long timeTakenInMilliseconds = 0;
 
     /**
      * Creates a new io-operation result.
@@ -22,16 +25,23 @@ public class IOResult {
      * @param operationType                specifies the result's operation-type
      * @param nrSuccessfullyProcessedItems the number of items (files/annotations) that
      *                                     were successfully processed
-     * @param timeTakenInMilliseconds      the time (in milliseconds) that the operation took to complete
      * @param errorTableEntries            a list of objects of type {@link ErrorInfoEntry} that contain information
      *                                     about where and which errors occurred during the operation.
      */
     public IOResult(OperationType operationType, int nrSuccessfullyProcessedItems,
-                    long timeTakenInMilliseconds, List<ErrorInfoEntry> errorTableEntries) {
+                    List<ErrorInfoEntry> errorTableEntries) {
         this.operationType = operationType;
         this.nrSuccessfullyProcessedItems = nrSuccessfullyProcessedItems;
-        this.timeTakenInMilliseconds = timeTakenInMilliseconds;
         this.errorTableEntries = errorTableEntries;
+    }
+
+    public static IOResult fromOperation(Callable<IOResult> operation) throws Exception {
+        long startTime = System.nanoTime();
+        IOResult result = operation.call();
+        long duration = System.nanoTime() - startTime;
+
+        result.setTimeTakenInMilliseconds(TimeUnit.MILLISECONDS.convert(Duration.ofNanos(duration)));
+        return result;
     }
 
     /**
@@ -59,6 +69,15 @@ public class IOResult {
      */
     public long getTimeTakenInMilliseconds() {
         return timeTakenInMilliseconds;
+    }
+
+    /**
+     * Sets the time (in milliseconds) that the operation took to complete.
+     *
+     * @param timeTakenInMilliseconds the duration in milliseconds
+     */
+    public void setTimeTakenInMilliseconds(long timeTakenInMilliseconds) {
+        this.timeTakenInMilliseconds = timeTakenInMilliseconds;
     }
 
     /**

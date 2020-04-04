@@ -2,6 +2,7 @@ package boundingboxeditor.model;
 
 import boundingboxeditor.model.io.BoundingShapeData;
 import boundingboxeditor.model.io.ImageAnnotation;
+import boundingboxeditor.model.io.ImageAnnotationData;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -149,6 +150,19 @@ public class Model {
         });
     }
 
+    public ImageMetaData createOrGetCurrentImageMetaData() {
+        return imageFileNameToMetaData.computeIfAbsent(getCurrentImageFileName(),
+                key -> {
+                    ImageMetaData newMetaData = ImageMetaData.fromFile(getCurrentImageFile());
+
+                    if(getCurrentImageAnnotation() != null && !getCurrentImageAnnotation().getImageMetaData().hasDetails()) {
+                        getCurrentImageAnnotation().setImageMetaData(newMetaData);
+                    }
+
+                    return newMetaData;
+                });
+    }
+
     /**
      * Returns the image-filename to image-metadata mapping.
      *
@@ -196,12 +210,12 @@ public class Model {
     }
 
     /**
-     * Returns the currently existing image-annotations.
+     * Returns the currently existing image-annotation data.
      *
-     * @return the image-annotations
+     * @return the image-annotation data
      */
-    public Collection<ImageAnnotation> getImageAnnotations() {
-        return imageFileNameToAnnotation.values();
+    public ImageAnnotationData getImageAnnotationData() {
+        return new ImageAnnotationData(imageFileNameToAnnotation.values(), categoryToAssignedBoundingShapesCount);
     }
 
     /**

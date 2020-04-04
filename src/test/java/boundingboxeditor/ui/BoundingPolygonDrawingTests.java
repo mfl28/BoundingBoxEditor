@@ -80,7 +80,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(drawnBoundingPolygon.getVertexHandles().get(0).isEditing(), Matchers.equalTo(true));
         verifyThat(drawnBoundingPolygon.getVertexHandles().get(drawnBoundingPolygon.getVertexHandles().size() - 1).isEditing(), Matchers.equalTo(true));
         verifyThat(drawnBoundingPolygon, NodeMatchers.isVisible());
-        verifyThat(drawnBoundingPolygon.getImageRelativeRatios().toArray(Double[]::new), ratioListCloseTo(targetImageViewPointRatios));
+        verifyThat(drawnBoundingPolygon.getRelativePointsInImageView().toArray(Double[]::new), ratioListCloseTo(targetImageViewPointRatios));
         verifyThat(drawnBoundingPolygon.isSelected(), Matchers.equalTo(true));
         verifyThat(drawnBoundingPolygon.isConstructing(), Matchers.equalTo(true));
 
@@ -150,7 +150,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), dragEndRatiosPoint);
         WaitForAsyncUtils.waitForFxEvents();
 
-        List<Double> actualRatios = reloadedBoundingPolygon.getImageRelativeRatios();
+        List<Double> actualRatios = reloadedBoundingPolygon.getRelativePointsInImageView();
         targetImageViewPointRatios[0] = 0.1;
         targetImageViewPointRatios[1] = 0.1;
 

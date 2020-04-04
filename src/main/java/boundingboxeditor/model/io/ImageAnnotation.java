@@ -10,7 +10,7 @@ import java.util.List;
  * There will be at most one ImageAnnotation-object for each loaded image.
  */
 public class ImageAnnotation {
-    private final ImageMetaData imageMetaData;
+    private ImageMetaData imageMetaData;
     private List<BoundingShapeData> boundingShapeData = new ArrayList<>();
 
     /**
@@ -58,6 +58,10 @@ public class ImageAnnotation {
      */
     public ImageMetaData getImageMetaData() {
         return imageMetaData;
+    }
+
+    public void setImageMetaData(ImageMetaData imageMetaData) {
+        this.imageMetaData = imageMetaData;
     }
 
     /**

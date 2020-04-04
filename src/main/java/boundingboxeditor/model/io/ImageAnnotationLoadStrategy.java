@@ -20,6 +20,8 @@ public interface ImageAnnotationLoadStrategy {
     static ImageAnnotationLoadStrategy createStrategy(Type type) {
         if(type.equals(Type.PASCAL_VOC)) {
             return new PVOCLoadStrategy();
+        } else if(type.equals(Type.YOLO)) {
+            return new YOLOLoadStrategy();
         } else {
             throw new InvalidParameterException();
         }
@@ -37,5 +39,19 @@ public interface ImageAnnotationLoadStrategy {
      */
     IOResult load(Model model, Path path, DoubleProperty progress) throws IOException;
 
-    enum Type {PASCAL_VOC}
+    enum Type {PASCAL_VOC, YOLO}
+
+    @SuppressWarnings("serial")
+    class InvalidAnnotationFileFormatException extends RuntimeException {
+        InvalidAnnotationFileFormatException(String message) {
+            super(message);
+        }
+    }
+
+    @SuppressWarnings("serial")
+    class AnnotationToNonExistentImageException extends RuntimeException {
+        AnnotationToNonExistentImageException(String message) {
+            super(message);
+        }
+    }
 }

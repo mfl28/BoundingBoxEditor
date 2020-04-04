@@ -1,6 +1,8 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
+import boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
+import boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
 import javafx.scene.control.*;
 import javafx.scene.layout.Region;
 
@@ -14,7 +16,7 @@ class MenuBarView extends MenuBar implements View {
     private static final String FILE_MENU_TEXT = "_File";
     private static final String VIEW_MENU_TEXT = "_View";
     private static final String OPEN_FOLDER_TEXT = "_Open Folder...";
-    private static final String SAVE_TEXT = "_Save Annotations...";
+    private static final String SAVE_TEXT = "_Export Annotations";
     private static final String MAXIMIZE_IMAGES_TEXT = "_Maximize Images";
     private static final String SHOW_IMAGE_FILE_EXPLORER_TEXT = "_Show Images Panel";
     private static final String EXIT_TEXT = "E_xit";
@@ -26,8 +28,13 @@ class MenuBarView extends MenuBar implements View {
     private static final String FILE_IMPORT_ICON_ID = "file-import-icon";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
-    private final MenuItem fileSaveItem = new MenuItem(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
-    private final MenuItem fileImportAnnotationsItem = new MenuItem(ANNOTATION_IMPORT_TEXT, createIconRegion(FILE_IMPORT_ICON_ID));
+    private final Menu fileExportMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
+    private final MenuItem PVOCExportMenuItem = new MenuItem("All Boxes to Pascal-VOC format...");
+    private final MenuItem YOLOExportMenuItem = new MenuItem("Rectangular Boxes to YOLO format...");
+
+    private final Menu fileImportAnnotationsItem = new Menu(ANNOTATION_IMPORT_TEXT, createIconRegion(FILE_IMPORT_ICON_ID));
+    private final MenuItem importPVOCAnnotationsMenuItem = new MenuItem("Pascal VOC format");
+    private final MenuItem importYOLOAnnotationsMenuItem = new MenuItem("YOLO format");
     private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT, createIconRegion(EXIT_ICON_ID));
     private final CheckMenuItem viewMaximizeImagesItem = new CheckMenuItem(MAXIMIZE_IMAGES_TEXT);
     private final CheckMenuItem viewShowImagesPanelItem = new CheckMenuItem(SHOW_IMAGE_FILE_EXPLORER_TEXT);
@@ -40,13 +47,20 @@ class MenuBarView extends MenuBar implements View {
         setId(MAIN_MENU_BAR_ID);
         viewShowImagesPanelItem.setSelected(true);
         viewMaximizeImagesItem.setSelected(true);
+
+        fileExportMenu.getItems().addAll(PVOCExportMenuItem, YOLOExportMenuItem);
+        fileImportAnnotationsItem.getItems().addAll(importPVOCAnnotationsMenuItem, importYOLOAnnotationsMenuItem);
     }
 
     @Override
     public void connectToController(final Controller controller) {
         fileOpenFolderItem.setOnAction(action -> controller.onRegisterOpenImageFolderAction());
-        fileSaveItem.setOnAction(action -> controller.onRegisterSaveAnnotationsAction());
-        fileImportAnnotationsItem.setOnAction(action -> controller.onRegisterImportAnnotationsAction());
+        PVOCExportMenuItem.setOnAction(action ->
+                controller.onRegisterSaveAnnotationsAction(ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
+        YOLOExportMenuItem.setOnAction(action ->
+                controller.onRegisterSaveAnnotationsAction(ImageAnnotationSaveStrategy.Type.YOLO));
+        importPVOCAnnotationsMenuItem.setOnAction(action -> controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
+        importYOLOAnnotationsMenuItem.setOnAction(action -> controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.YOLO));
         fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
     }
 
@@ -83,7 +97,7 @@ class MenuBarView extends MenuBar implements View {
 
         fileMenu.getItems().addAll(
                 fileOpenFolderItem,
-                fileSaveItem,
+                fileExportMenu,
                 fileImportAnnotationsItem,
                 fileExitItem
         );

@@ -4,7 +4,6 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
 import java.nio.file.Path;
-import java.util.Collection;
 
 /**
  * Responsible for saving image-annotations.
@@ -32,8 +31,8 @@ public class ImageAnnotationSaver {
      * @param saveFolderPath the path of the destination folder
      * @return an {@link IOResult} containing information about the finished saving
      */
-    public IOResult save(final Collection<ImageAnnotation> annotations, final Path saveFolderPath) {
-        return saveStrategy.save(annotations, saveFolderPath, progress);
+    public IOResult save(final ImageAnnotationData annotations, final Path saveFolderPath) throws Exception {
+        return IOResult.fromOperation(() -> saveStrategy.save(annotations, saveFolderPath, progress));
     }
 
     /**

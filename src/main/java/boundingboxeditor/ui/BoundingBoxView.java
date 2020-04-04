@@ -81,7 +81,7 @@ public class BoundingBoxView extends Rectangle implements
      */
     public static BoundingBoxView fromData(BoundingBoxData boundingBoxData, ImageMetaData metaData) {
         BoundingBoxView boundingBox = new BoundingBoxView(boundingBoxData.getCategory(), metaData);
-        boundingBox.setBoundsInImage(boundingBoxData.getBoundsInImage());
+        boundingBox.setBoundsInImage(boundingBoxData.getAbsoluteBoundsInImage(metaData));
         boundingBox.getTags().setAll(boundingBoxData.getTags());
         return boundingBox;
     }
@@ -162,7 +162,8 @@ public class BoundingBoxView extends Rectangle implements
      */
     @Override
     public BoundingShapeData toBoundingShapeData() {
-        return new BoundingBoxData(boundingShapeViewData.getObjectCategory(), getImageRelativeBounds(), boundingShapeViewData.getTags());
+        return new BoundingBoxData(boundingShapeViewData.getObjectCategory(),
+                getRelativeBoundsInImageView(), boundingShapeViewData.getTags());
     }
 
     @Override
@@ -296,18 +297,15 @@ public class BoundingBoxView extends Rectangle implements
                 confinementBoundsValue.getWidth() - getWidth(), confinementBoundsValue.getHeight() - getHeight());
     }
 
-    private Bounds getImageRelativeBounds() {
+    private Bounds getRelativeBoundsInImageView() {
         final Bounds imageViewBounds = boundingShapeViewData.autoScaleBounds().getValue();
 
-        double widthScaleFactor = boundingShapeViewData.getImageMetaData().getImageWidth() / imageViewBounds.getWidth();
-        double heightScaleFactor = boundingShapeViewData.getImageMetaData().getImageHeight() / imageViewBounds.getHeight();
+        double xMin = (getX() - imageViewBounds.getMinX()) / imageViewBounds.getWidth();
+        double yMin = (getY() - imageViewBounds.getMinY()) / imageViewBounds.getHeight();
+        double width = getWidth() / imageViewBounds.getWidth();
+        double height = getHeight() / imageViewBounds.getHeight();
 
-        double xMinRelative = (getX() - imageViewBounds.getMinX()) * widthScaleFactor;
-        double yMinRelative = (getY() - imageViewBounds.getMinY()) * heightScaleFactor;
-        double widthRelative = getWidth() * widthScaleFactor;
-        double heightRelative = getHeight() * heightScaleFactor;
-
-        return new BoundingBox(xMinRelative, yMinRelative, widthRelative, heightRelative);
+        return new BoundingBox(xMin, yMin, width, height);
     }
 
     private void addAutoScaleListener() {

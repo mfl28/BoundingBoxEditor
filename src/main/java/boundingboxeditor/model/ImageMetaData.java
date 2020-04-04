@@ -15,10 +15,7 @@ import java.util.logging.Logger;
 public class ImageMetaData {
     private static final Logger log = Logger.getLogger(ImageMetaData.class.getName());
     private final String fileName;
-    private final String folderName;
-    private final double imageWidth;
-    private final double imageHeight;
-    private final int imageDepth;
+    private ImageMetaDataDetails details;
 
     /**
      * Creates a new ImageMetaData object.
@@ -31,10 +28,11 @@ public class ImageMetaData {
      */
     public ImageMetaData(String fileName, String folderName, double imageWidth, double imageHeight, int imageDepth) {
         this.fileName = fileName;
-        this.folderName = folderName;
-        this.imageWidth = imageWidth;
-        this.imageHeight = imageHeight;
-        this.imageDepth = imageDepth;
+        this.details = new ImageMetaDataDetails(folderName, imageWidth, imageHeight, imageDepth);
+    }
+
+    public ImageMetaData(String fileName) {
+        this.fileName = fileName;
     }
 
     /**
@@ -55,7 +53,7 @@ public class ImageMetaData {
      * @return the width
      */
     public double getImageWidth() {
-        return imageWidth;
+        return details.imageWidth;
     }
 
     /**
@@ -64,7 +62,7 @@ public class ImageMetaData {
      * @return the height
      */
     public double getImageHeight() {
-        return imageHeight;
+        return details.imageHeight;
     }
 
     /**
@@ -73,7 +71,7 @@ public class ImageMetaData {
      * @return the depth
      */
     public int getImageDepth() {
-        return imageDepth;
+        return details.imageDepth;
     }
 
     /**
@@ -91,20 +89,23 @@ public class ImageMetaData {
      * @return the folder-name
      */
     public String getFolderName() {
-        return folderName;
+        return details.folderName;
+    }
+
+    public boolean hasDetails() {
+        return details != null;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fileName, folderName, imageWidth, imageHeight, imageDepth);
+        return Objects.hash(fileName, details);
     }
 
     @Override
     public boolean equals(Object obj) {
         if(obj instanceof ImageMetaData) {
             ImageMetaData other = (ImageMetaData) obj;
-            return Objects.equals(fileName, other.fileName) && Objects.equals(folderName, other.folderName) &&
-                    imageWidth == other.imageWidth && imageHeight == other.imageHeight && imageDepth == other.imageDepth;
+            return Objects.equals(fileName, other.fileName) && Objects.equals(details, other.details);
         }
         return false;
     }
@@ -113,6 +114,43 @@ public class ImageMetaData {
     public String toString() {
         return "ImageMetaData[fileName=" + getFileName() + ", folderName=" + getFolderName()
                 + ", image-width=" + getImageWidth() + ", image-height=" + getImageHeight() + ", image-depth=" + getImageDepth();
+    }
+
+    public static class ImageMetaDataDetails {
+        private final String folderName;
+        private final double imageWidth;
+        private final double imageHeight;
+        private final int imageDepth;
+
+        ImageMetaDataDetails(String folderName, double imageWidth, double imageHeight, int imageDepth) {
+            this.folderName = folderName;
+            this.imageWidth = imageWidth;
+            this.imageHeight = imageHeight;
+            this.imageDepth = imageDepth;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if(this == o) {
+                return true;
+            }
+
+            if(!(o instanceof ImageMetaDataDetails)) {
+                return false;
+            }
+
+            ImageMetaDataDetails that = (ImageMetaDataDetails) o;
+
+            return Double.compare(that.imageWidth, imageWidth) == 0 &&
+                    Double.compare(that.imageHeight, imageHeight) == 0 &&
+                    imageDepth == that.imageDepth &&
+                    Objects.equals(folderName, that.folderName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(folderName, imageWidth, imageHeight, imageDepth);
+        }
     }
 
     private static ImageDimensions readImageDimensionsFromFile(File imageFile) {

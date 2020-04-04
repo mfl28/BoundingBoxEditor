@@ -2,6 +2,7 @@ package boundingboxeditor.controller;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import boundingboxeditor.model.io.IOResult;
+import boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
 import boundingboxeditor.ui.BoundingBoxView;
 import boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
@@ -43,7 +44,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onSaveAnnotation_WhenPreviouslyImportedAnnotation_ShouldProduceEquivalentOutput(FxRobot robot, @TempDir Path tempDirectory)
+    void onExportAnnotation_PVOC_WhenPreviouslyImportedAnnotation_ShouldProduceEquivalentOutput(FxRobot robot, @TempDir Path tempDirectory)
             throws IOException {
         final String referenceAnnotationFilePath = "/testannotations/reference/austin-neill-685084-unsplash_jpg_A.xml";
         final String expectedFileName = "austin-neill-685084-unsplash_jpg_A.xml";
@@ -88,7 +89,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(), Matchers.startsWith("Successfully imported annotations from 1 file in"));
 
         // Save the annotations to the temporary folder.
-        Platform.runLater(() -> controller.new AnnotationSaverService(actualDir.toFile()).startAndShowProgressDialog());
+        Platform.runLater(() -> controller.new AnnotationSaverService(actualDir.toFile(), ImageAnnotationSaveStrategy.Type.PASCAL_VOC).startAndShowProgressDialog());
         WaitForAsyncUtils.waitForFxEvents();
 
         Path actualFilePath = actualDir.resolve(expectedFileName);
@@ -111,7 +112,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onLoadAnnotation_WhenFileHasMissingNonCriticalElements_ShouldNotLoadIncompleteBoundingBoxes(FxRobot robot) {
+    void onLoadAnnotation_PVOC_WhenFileHasMissingNonCriticalElements_ShouldNotLoadIncompleteBoundingBoxes(FxRobot robot) {
         final String inputFilePath = "/testannotations/annotation_with_missing_elements.xml";
 
         waitUntilCurrentImageIsLoaded();
@@ -165,7 +166,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onLoadAnnotation_WhenFileHasMissingCriticalElement_ShouldNotLoadAnyBoundingBoxes(FxRobot robot) {
+    void onLoadAnnotation_PVOC_WhenFileHasMissingCriticalElement_ShouldNotLoadAnyBoundingBoxes(FxRobot robot) {
         final String inputFilePath = "/testannotations/annotation_with_missing_filename.xml";
 
         waitUntilCurrentImageIsLoaded();
@@ -213,7 +214,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().isEmpty(), Matchers.is(true));
         verifyThat(model.getObjectCategories(), Matchers.empty());
-        verifyThat(model.getImageAnnotations(), Matchers.empty());
+        verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.empty());
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty());
 
         // Should not have changed the status message.
@@ -221,7 +222,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onLoadAnnotation_WhenAnnotationsPresent_ShouldAskForAndCorrectlyApplyUserChoice(FxRobot robot) {
+    void onLoadAnnotation_PVOC_WhenAnnotationsPresent_ShouldAskForAndCorrectlyApplyUserChoice(FxRobot robot) {
         final String referenceAnnotationFilePath = "/testannotations/reference/austin-neill-685084-unsplash_jpg_A.xml";
 
         waitUntilCurrentImageIsLoaded();
@@ -256,7 +257,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         userChoosesCancelOnAnnotationImportDialogSubtest(robot, drawnBoundingBox, annotationFile);
 
         // (2) User chooses Yes (Keep existing annotations and categories)
-        userChoosesYesOnAnnotationImportDialogSubtest(robot, drawnBoundingBox, annotationFile);
+        userChoosesYesOnAnnotationImportDialogSubTest(robot, drawnBoundingBox, annotationFile);
 
         // (3) User chooses No (Do not keep existing bounding boxes):
         userChoosesNoOnAnnotationImportDialogSubtest(robot, annotationFile);
@@ -326,7 +327,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(3));
-        verifyThat(model.getImageAnnotations(), Matchers.hasSize(1));
+        verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.hasSize(1));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty());
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0));
 
@@ -337,7 +338,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 Matchers.is(true));
     }
 
-    private void userChoosesYesOnAnnotationImportDialogSubtest(FxRobot robot, BoundingBoxView drawnBoundingBox, File annotationFile) {
+    private void userChoosesYesOnAnnotationImportDialogSubTest(FxRobot robot, BoundingBoxView drawnBoundingBox, File annotationFile) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "Yes");
 
         // Everything should have stayed the same for the current image...
@@ -356,7 +357,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(4));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(4));
-        verifyThat(model.getImageAnnotations(), Matchers.hasSize(2));
+        verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.hasSize(2));
+        verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.hasSize(2));
 
         verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingShapes(),
                 Matchers.is(true));

@@ -1,6 +1,8 @@
 package boundingboxeditor.model.io;
 
+import boundingboxeditor.model.ImageMetaData;
 import javafx.beans.property.DoubleProperty;
+import javafx.geometry.Bounds;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -18,9 +20,10 @@ import java.io.File;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -30,7 +33,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @see <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC</a>
  */
 public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
-
     private static final String ROOT_ELEMENT_NAME = "annotation";
     private static final String FOLDER_ELEMENT_NAME = "folder";
     private static final String FILENAME_ELEMENT_NAME = "filename";
@@ -57,17 +59,16 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private Path saveFolderPath;
 
     @Override
-    public IOResult save(Collection<ImageAnnotation> annotations, Path saveFolderPath, DoubleProperty progress) {
-        long startTime = System.nanoTime();
+    public IOResult save(ImageAnnotationData annotations, Path saveFolderPath, DoubleProperty progress) {
         this.saveFolderPath = saveFolderPath;
 
         List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
-        int totalNrOfAnnotations = annotations.size();
+        int totalNrOfAnnotations = annotations.getImageAnnotations().size();
         AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
 
 
-        annotations.parallelStream().forEach(annotation -> {
+        annotations.getImageAnnotations().parallelStream().forEach(annotation -> {
             try {
                 createXmlFileFromImageAnnotationDataElement(annotation);
             } catch(TransformerException | ParserConfigurationException e) {
@@ -77,12 +78,9 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
             progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrOfAnnotations);
         });
 
-        long duration = System.nanoTime() - startTime;
-
         return new IOResult(
                 IOResult.OperationType.ANNOTATION_SAVING,
-                annotations.size() - unParsedFileErrorMessages.size(),
-                TimeUnit.MILLISECONDS.convert(Duration.ofNanos(duration)),
+                annotations.getImageAnnotations().size() - unParsedFileErrorMessages.size(),
                 unParsedFileErrorMessages
         );
     }
@@ -99,7 +97,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         dataElement.getBoundingShapeData().forEach(boundingShape ->
                 annotationElement.appendChild(createXmlElementFromBoundingShapeData(document,
-                        BOUNDING_SHAPE_ENTRY_ELEMENT_NAME, boundingShape))
+                        BOUNDING_SHAPE_ENTRY_ELEMENT_NAME, boundingShape, dataElement.getImageMetaData()))
         );
 
         DOMSource domSource = new DOMSource(document);
@@ -126,7 +124,9 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         sizeElement.appendChild(createIntegerValueElement(document, IMAGE_DEPTH_ELEMENT_NAME, dataElement.getImageDepth()));
     }
 
-    private Element createXmlElementFromBoundingShapeData(final Document document, String elementName, final BoundingShapeData boundingShapeData) {
+    private Element createXmlElementFromBoundingShapeData(final Document document, String elementName,
+                                                          final BoundingShapeData boundingShapeData,
+                                                          final ImageMetaData imageMetaData) {
         final Element element = document.createElement(elementName);
         element.appendChild(createStringValueElement(document, BOUNDING_SHAPE_CATEGORY_NAME, boundingShapeData.getCategoryName()));
 
@@ -168,11 +168,11 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         }
 
         // Add coordinates:
-        element.appendChild(boundingShapeData.accept(new XmlElementVisitor(document)));
+        element.appendChild(boundingShapeData.accept(new XmlElementVisitor(document, imageMetaData)));
 
         // Add parts:
         boundingShapeData.getParts().forEach(part ->
-                element.appendChild(createXmlElementFromBoundingShapeData(document, BOUNDING_SHAPE_PART_NAME, part))
+                element.appendChild(createXmlElementFromBoundingShapeData(document, BOUNDING_SHAPE_PART_NAME, part, imageMetaData))
         );
 
         return element;
@@ -198,19 +198,23 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
     private class XmlElementVisitor implements BoundingShapeDataVisitor<Element> {
         private final Document document;
+        private final ImageMetaData imageMetaData;
 
-        public XmlElementVisitor(Document document) {
+        public XmlElementVisitor(Document document, ImageMetaData imageMetaData) {
             this.document = document;
+            this.imageMetaData = imageMetaData;
         }
 
         @Override
         public Element visit(BoundingBoxData boundingBoxData) {
             Element coordinateElement = document.createElement(BOUNDING_BOX_SIZE_GROUP_NAME);
 
-            coordinateElement.appendChild(createDoubleValueElement(document, XMIN_TAG, boundingBoxData.getXMin()));
-            coordinateElement.appendChild(createDoubleValueElement(document, XMAX_TAG, boundingBoxData.getXMax()));
-            coordinateElement.appendChild(createDoubleValueElement(document, YMIN_TAG, boundingBoxData.getYMin()));
-            coordinateElement.appendChild(createDoubleValueElement(document, YMAX_TAG, boundingBoxData.getYMax()));
+            Bounds absoluteBounds = boundingBoxData.getAbsoluteBoundsInImage(imageMetaData);
+
+            coordinateElement.appendChild(createDoubleValueElement(document, XMIN_TAG, absoluteBounds.getMinX()));
+            coordinateElement.appendChild(createDoubleValueElement(document, XMAX_TAG, absoluteBounds.getMaxX()));
+            coordinateElement.appendChild(createDoubleValueElement(document, YMIN_TAG, absoluteBounds.getMinY()));
+            coordinateElement.appendChild(createDoubleValueElement(document, YMAX_TAG, absoluteBounds.getMaxY()));
 
             return coordinateElement;
         }
@@ -219,11 +223,11 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         public Element visit(BoundingPolygonData boundingPolygonData) {
             Element coordinateElement = document.createElement(BOUNDING_POLYGON_SIZE_GROUP_NAME);
 
-            List<Double> polygonPoints = boundingPolygonData.getPointsInImage();
+            List<Double> absolutePoints = boundingPolygonData.getAbsolutePointsInImage(imageMetaData);
 
-            for(int i = 0; i < polygonPoints.size(); i += 2) {
-                coordinateElement.appendChild(createDoubleValueElement(document, "x", polygonPoints.get(i)));
-                coordinateElement.appendChild(createDoubleValueElement(document, "y", polygonPoints.get(i + 1)));
+            for(int i = 0; i < absolutePoints.size(); i += 2) {
+                coordinateElement.appendChild(createDoubleValueElement(document, "x", absolutePoints.get(i)));
+                coordinateElement.appendChild(createDoubleValueElement(document, "y", absolutePoints.get(i + 1)));
             }
 
             return coordinateElement;

@@ -18,6 +18,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.controlsfx.dialog.ExceptionDialog;
 import org.controlsfx.dialog.ProgressDialog;
 
 import java.io.File;
@@ -178,6 +179,12 @@ public class MainView extends BorderPane implements View {
         choiceDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
 
         return choiceDialog.showAndWait();
+    }
+
+    public static void displayExceptionDialog(Throwable throwable) {
+        ExceptionDialog exceptionDialog = new ExceptionDialog(throwable);
+        exceptionDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        exceptionDialog.showAndWait();
     }
 
     @Override

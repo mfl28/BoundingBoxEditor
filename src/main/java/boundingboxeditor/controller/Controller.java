@@ -24,6 +24,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import org.controlsfx.dialog.ExceptionDialog;
 
 import java.io.File;
 import java.io.IOException;
@@ -154,7 +155,8 @@ public class Controller {
                         currentAnnotationSavingDirectory);
 
                 if(saveDirectory != null) {
-                    AnnotationSaverService annotationSaverService = new AnnotationSaverService(saveDirectory);
+                    // TODO: Ask for sought save format (or use previous).
+                    AnnotationSaverService annotationSaverService = new AnnotationSaverService(saveDirectory, ImageAnnotationSaveStrategy.Type.PASCAL_VOC);
                     annotationSaverService.runOnSuccess(() -> loadImageFiles(imageFolder));
                     annotationSaverService.startAndShowProgressDialog();
                     currentAnnotationSavingDirectory = saveDirectory;
@@ -203,7 +205,7 @@ public class Controller {
     /**
      * Handles the event of the user requesting to save the image annotations.
      */
-    public void onRegisterSaveAnnotationsAction() {
+    public void onRegisterSaveAnnotationsAction(ImageAnnotationSaveStrategy.Type saveFormat) {
         if(model.containsImageFiles()) {
             model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
         }
@@ -218,7 +220,7 @@ public class Controller {
                 currentAnnotationSavingDirectory);
 
         if(saveDirectory != null) {
-            new AnnotationSaverService(saveDirectory).startAndShowProgressDialog();
+            new AnnotationSaverService(saveDirectory, saveFormat).startAndShowProgressDialog();
             currentAnnotationSavingDirectory = saveDirectory;
         }
     }
@@ -226,12 +228,12 @@ public class Controller {
     /**
      * Handles the event of the user requesting to save the current image-annotations.
      */
-    public void onRegisterImportAnnotationsAction() {
+    public void onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type loadFormat) {
         final File importDirectory = MainView.displayDirectoryChooserAndGetChoice(IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE, stage,
                 currentAnnotationLoadingDirectory);
 
         if(importDirectory != null) {
-            initiateAnnotationFolderImport(importDirectory);
+            initiateAnnotationFolderImport(importDirectory, loadFormat);
             currentAnnotationLoadingDirectory = importDirectory;
         }
     }
@@ -241,7 +243,7 @@ public class Controller {
      *
      * @param importFolder the folder containing the image files to load
      */
-    public void initiateAnnotationFolderImport(File importFolder) {
+    public void initiateAnnotationFolderImport(File importFolder, ImageAnnotationLoadStrategy.Type loadFormat) {
         if(model.containsImageFiles()) {
             model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
         }
@@ -262,7 +264,7 @@ public class Controller {
             }
         }
 
-        new AnnotationLoaderService(importFolder).startAndShowProgressDialog();
+        new AnnotationLoaderService(importFolder, loadFormat).startAndShowProgressDialog();
     }
 
     /**
@@ -317,7 +319,8 @@ public class Controller {
                         currentAnnotationSavingDirectory);
 
                 if(saveDirectory != null) {
-                    AnnotationSaverService saverService = new AnnotationSaverService(saveDirectory);
+                    // TODO: Ask for sought save format (or use previous).
+                    AnnotationSaverService saverService = new AnnotationSaverService(saveDirectory, ImageAnnotationSaveStrategy.Type.PASCAL_VOC);
                     saverService.runOnSuccess(() -> {
                         savePreferences();
                         Platform.exit();
@@ -601,8 +604,7 @@ public class Controller {
         view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
         imagePane.getImageLoadingProgressIndicator().setVisible(true);
 
-        ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
-                key -> ImageMetaData.fromFile(model.getCurrentImageFile()));
+        ImageMetaData metaData = model.createOrGetCurrentImageMetaData();
         view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
         view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
 
@@ -704,8 +706,7 @@ public class Controller {
     }
 
     private void updateViewImageFromModel() {
-        ImageMetaData metaData = model.getImageFileNameToMetaDataMap().computeIfAbsent(model.getCurrentImageFileName(),
-                key -> ImageMetaData.fromFile(model.getCurrentImageFile()));
+        ImageMetaData metaData = model.createOrGetCurrentImageMetaData();
         view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
         view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
     }
@@ -842,10 +843,13 @@ public class Controller {
 
     class AnnotationSaverService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
         private final File saveDirectory;
+        private final ImageAnnotationSaveStrategy.Type saveFormat;
 
-        AnnotationSaverService(File saveDirectory) {
+        AnnotationSaverService(File saveDirectory, ImageAnnotationSaveStrategy.Type saveFormat) {
             this.saveDirectory = saveDirectory;
+            this.saveFormat = saveFormat;
             setOnSucceeded(successEvent -> defaultOnSucceededHandler());
+            setOnFailed(failedEvent -> defaultOnFailedHandler());
         }
 
         @Override
@@ -867,12 +871,12 @@ public class Controller {
         protected Task<IOResult> createTask() {
             return new Task<>() {
                 @Override
-                protected IOResult call() {
-                    final ImageAnnotationSaver saver = new ImageAnnotationSaver(ImageAnnotationSaveStrategy.Type.PASCAL_VOC);
+                protected IOResult call() throws Exception {
+                    final ImageAnnotationSaver saver = new ImageAnnotationSaver(saveFormat);
 
                     saver.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
 
-                    return saver.save(model.getImageAnnotations(), Paths.get(saveDirectory.getPath()));
+                    return saver.save(model.getImageAnnotationData(), Paths.get(saveDirectory.getPath()));
                 }
             };
         }
@@ -888,15 +892,24 @@ public class Controller {
                 MainView.displayIOResultErrorInfoAlert(saveResult);
             }
         }
+
+        private void defaultOnFailedHandler() {
+            if(getException() != null) {
+                MainView.displayExceptionDialog(getException());
+            }
+        }
     }
 
     class AnnotationLoaderService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
         private final File loadDirectory;
+        private final ImageAnnotationLoadStrategy.Type loadFormat;
 
-        AnnotationLoaderService(File loadDirectory) {
+        AnnotationLoaderService(File loadDirectory, ImageAnnotationLoadStrategy.Type loadFormat) {
             this.loadDirectory = loadDirectory;
+            this.loadFormat = loadFormat;
 
             setOnSucceeded(successEvent -> defaultOnSuccessHandler());
+            setOnFailed(failedEvent -> defaultOnFailedHandler());
         }
 
         @Override
@@ -919,7 +932,7 @@ public class Controller {
             return new Task<>() {
                 @Override
                 protected IOResult call() throws Exception {
-                    ImageAnnotationLoader loader = new ImageAnnotationLoader(ImageAnnotationLoadStrategy.Type.PASCAL_VOC);
+                    ImageAnnotationLoader loader = new ImageAnnotationLoader(loadFormat);
                     loader.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
                     return loader.load(model, Paths.get(loadDirectory.getPath()));
                 }
@@ -950,6 +963,12 @@ public class Controller {
                 MainView.displayIOResultErrorInfoAlert(loadResult);
             } else if(loadResult.getNrSuccessfullyProcessedItems() == 0) {
                 MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE, ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
+            }
+        }
+
+        private void defaultOnFailedHandler() {
+            if(getException() != null) {
+                MainView.displayExceptionDialog(getException());
             }
         }
 

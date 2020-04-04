@@ -5,6 +5,8 @@ import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingPolygonView;
 import boundingboxeditor.ui.BoundingShapeViewable;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,15 +18,42 @@ import java.util.List;
  * @see BoundingShapeData#setParts(List)
  */
 public class BoundingPolygonData extends BoundingShapeData {
-    private final List<Double> pointsInImage;
+    private final List<Double> relativePointsInImage;
 
     public BoundingPolygonData(ObjectCategory category, List<Double> points, List<String> tags) {
         super(category, tags);
-        this.pointsInImage = points;
+        this.relativePointsInImage = points;
     }
 
-    public List<Double> getPointsInImage() {
-        return pointsInImage;
+    public List<Double> getRelativePointsInImage() {
+        return relativePointsInImage;
+    }
+
+    public List<Double> getAbsolutePointsInImage(ImageMetaData imageMetaData) {
+        return BoundingPolygonData.relativeToAbsolutePoints(relativePointsInImage,
+                imageMetaData.getImageWidth(), imageMetaData.getImageHeight());
+    }
+
+    public static List<Double> absoluteToRelativePoints(List<Double> absolutePoints, double width, double height) {
+        List<Double> relativePoints = new ArrayList<>(absolutePoints.size());
+
+        for(int i = 0; i < absolutePoints.size(); i += 2) {
+            relativePoints.add(absolutePoints.get(i) / width);
+            relativePoints.add(absolutePoints.get(i + 1) / height);
+        }
+
+        return relativePoints;
+    }
+
+    public static List<Double> relativeToAbsolutePoints(List<Double> relativePoints, double width, double height) {
+        List<Double> absolutePoints = new ArrayList<>(relativePoints.size());
+
+        for(int i = 0; i < relativePoints.size(); i += 2) {
+            absolutePoints.add(relativePoints.get(i) * width);
+            absolutePoints.add(relativePoints.get(i + 1) * height);
+        }
+
+        return absolutePoints;
     }
 
     @Override

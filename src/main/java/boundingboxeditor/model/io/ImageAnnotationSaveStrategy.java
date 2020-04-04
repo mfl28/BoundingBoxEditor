@@ -4,7 +4,6 @@ import javafx.beans.property.DoubleProperty;
 
 import java.nio.file.Path;
 import java.security.InvalidParameterException;
-import java.util.Collection;
 
 /**
  * The interface of an image annotation saving-strategy.
@@ -19,6 +18,8 @@ public interface ImageAnnotationSaveStrategy {
     static ImageAnnotationSaveStrategy createStrategy(Type type) {
         if(type.equals(Type.PASCAL_VOC)) {
             return new PVOCSaveStrategy();
+        } else if(type.equals(Type.YOLO)) {
+            return new YOLOSaveStrategy();
         } else {
             throw new InvalidParameterException();
         }
@@ -32,7 +33,7 @@ public interface ImageAnnotationSaveStrategy {
      * @param progress       the progress-property that will be updated during the saving-operation
      * @return an {@link IOResult} containing information about the finished saving
      */
-    IOResult save(Collection<ImageAnnotation> annotations, Path saveFolderPath, DoubleProperty progress);
+    IOResult save(ImageAnnotationData annotations, Path saveFolderPath, DoubleProperty progress);
 
-    enum Type {PASCAL_VOC}
+    enum Type {PASCAL_VOC, YOLO}
 }

@@ -18,19 +18,18 @@ import java.util.List;
  * @see BoundingShapeData#setParts(List)
  */
 public class BoundingBoxData extends BoundingShapeData {
-    private final Bounds boundsInImage;
+    private final Bounds relativeBoundsInImage;
 
     /**
      * Creates a new object to store the "blueprint" of a {@link boundingboxeditor.ui.BoundingBoxView BoundingBoxView}.
      *
      * @param category        the category of the bounding-box
-     * @param rectangleBounds the rectangular bounds of the bounding-box with respect to the image it belongs to
-     *                        (considering the image's original measurements)
+     * @param relativeBoundsInImage the rectangular bounds of the bounding-box in relative coordinates
      * @param tags            the tags that are registered for the bounding-box
      */
-    public BoundingBoxData(ObjectCategory category, Bounds rectangleBounds, List<String> tags) {
+    public BoundingBoxData(ObjectCategory category, Bounds relativeBoundsInImage, List<String> tags) {
         super(category, tags);
-        this.boundsInImage = rectangleBounds;
+        this.relativeBoundsInImage = relativeBoundsInImage;
     }
 
     /**
@@ -39,15 +38,17 @@ public class BoundingBoxData extends BoundingShapeData {
      * (considering the image's original measurements).
      *
      * @param category the category of the bounding-box
-     * @param xMin     the x-coordinate of the upper left corner of the bounding-box
-     * @param yMin     the y-coordinate of the upper left corner of the bounding-box
-     * @param xMax     the x-coordinate of the lower right corner of the bounding-box
-     * @param yMax     the y-coordinate of the lower right corner of the bounding-box
+     * @param xMinRelative     the x-coordinate of the upper left corner of the bounding-box
+     * @param yMinRelative     the y-coordinate of the upper left corner of the bounding-box
+     * @param xMaxRelative     the x-coordinate of the lower right corner of the bounding-box
+     * @param yMaxRelative     the y-coordinate of the lower right corner of the bounding-box
      * @param tags     the tags that are registered for the bounding-box
      */
-    BoundingBoxData(ObjectCategory category, double xMin, double yMin, double xMax, double yMax, List<String> tags) {
+    BoundingBoxData(ObjectCategory category, double xMinRelative, double yMinRelative,
+                    double xMaxRelative, double yMaxRelative, List<String> tags) {
         super(category, tags);
-        this.boundsInImage = new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin);
+        this.relativeBoundsInImage = new BoundingBox(xMinRelative, yMinRelative,
+                xMaxRelative - xMinRelative, yMaxRelative - yMinRelative);
     }
 
     /**
@@ -56,8 +57,8 @@ public class BoundingBoxData extends BoundingShapeData {
      *
      * @return the x-coordinate
      */
-    public double getXMin() {
-        return boundsInImage.getMinX();
+    public double getXMinRelative() {
+        return relativeBoundsInImage.getMinX();
     }
 
     /**
@@ -66,8 +67,8 @@ public class BoundingBoxData extends BoundingShapeData {
      *
      * @return the y-coordinate
      */
-    public double getYMin() {
-        return boundsInImage.getMinY();
+    public double getYMinRelative() {
+        return relativeBoundsInImage.getMinY();
     }
 
     /**
@@ -76,8 +77,8 @@ public class BoundingBoxData extends BoundingShapeData {
      *
      * @return the x-coordinate
      */
-    public double getXMax() {
-        return boundsInImage.getMaxX();
+    public double getXMaxRelative() {
+        return relativeBoundsInImage.getMaxX();
     }
 
     /**
@@ -86,18 +87,26 @@ public class BoundingBoxData extends BoundingShapeData {
      *
      * @return the y-coordinate
      */
-    public double getYMax() {
-        return boundsInImage.getMaxY();
+    public double getYMaxRelative() {
+        return relativeBoundsInImage.getMaxY();
     }
 
     /**
-     * Returns the bounds of the bounding-box with respect to the image
-     * it belongs to (considering the image's original measurements).
+     * Returns the relative bounds of the bounding-box.
      *
      * @return the bounds in the coordinate system defined by the originally loaded image.
      */
-    public Bounds getBoundsInImage() {
-        return boundsInImage;
+    public Bounds getRelativeBoundsInImage() {
+        return relativeBoundsInImage;
+    }
+
+    public Bounds getAbsoluteBoundsInImage(ImageMetaData metaData) {
+            double xMin = getXMinRelative() * metaData.getImageWidth();
+            double yMin = getYMinRelative() * metaData.getImageHeight();
+            double xMax = getXMaxRelative() * metaData.getImageWidth();
+            double yMax = getYMaxRelative() * metaData.getImageHeight();
+
+            return new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin);
     }
 
     @Override

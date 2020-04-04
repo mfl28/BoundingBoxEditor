@@ -110,6 +110,10 @@ $base-separator-line-color: derive($base-background-color, -15%);
         & .label {
             @include menu-label;
         }   
+
+        & .arrow {
+            -fx-background-color: $base-font-light-color;
+        }
     }
 }
 

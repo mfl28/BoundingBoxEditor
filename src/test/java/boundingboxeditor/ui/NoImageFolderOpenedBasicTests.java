@@ -44,13 +44,15 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        MenuItem saveItem = getSubMenuItem(robot, "File", "Save Annotations...");
+        MenuItem saveItem = getSubMenuItem(robot, "File", "Export Annotations");
         assertTrue(saveItem.isVisible());
         assertFalse(saveItem.isDisable());
 
         timeOutClickOn(robot, "File");
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Save Annotations...");
+        timeOutClickOn(robot, "Export Annotations");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "All Boxes to Pascal-VOC format...");
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,

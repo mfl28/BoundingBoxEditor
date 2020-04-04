@@ -83,7 +83,7 @@ public class BoundingPolygonView extends Polygon implements
      */
     public static BoundingPolygonView fromData(BoundingPolygonData boundingPolygonData, ImageMetaData metaData) {
         BoundingPolygonView boundingPolygon = new BoundingPolygonView(boundingPolygonData.getCategory(), metaData);
-        boundingPolygon.pointsInImage = boundingPolygonData.getPointsInImage();
+        boundingPolygon.pointsInImage = boundingPolygonData.getAbsolutePointsInImage(metaData);
         boundingPolygon.getTags().setAll(boundingPolygonData.getTags());
         return boundingPolygon;
     }
@@ -190,7 +190,7 @@ public class BoundingPolygonView extends Polygon implements
     @Override
     public BoundingShapeData toBoundingShapeData() {
         return new BoundingPolygonData(boundingShapeViewData.getObjectCategory(),
-                getImageRelativePoints(), boundingShapeViewData.getTags());
+                getRelativePointsInImageView(), boundingShapeViewData.getTags());
     }
 
     /**
@@ -246,31 +246,17 @@ public class BoundingPolygonView extends Polygon implements
         return boundingShapeViewData.getTags();
     }
 
-    List<Double> getImageRelativePoints() {
+    List<Double> getRelativePointsInImageView() {
         final Bounds imageViewBounds = boundingShapeViewData.autoScaleBounds().getValue();
 
-        double widthScaleFactor = boundingShapeViewData.getImageMetaData().getImageWidth() / imageViewBounds.getWidth();
-        double heightScaleFactor = boundingShapeViewData.getImageMetaData().getImageHeight() / imageViewBounds.getHeight();
-
-        List<Double> imageRelativePoints = new ArrayList<>(getPoints().size());
+        List<Double> points = new ArrayList<>(getPoints().size());
 
         for(VertexHandle vertexHandle : vertexHandles) {
-            imageRelativePoints.add((vertexHandle.getCenterX() - imageViewBounds.getMinX()) * widthScaleFactor);
-            imageRelativePoints.add((vertexHandle.getCenterY() - imageViewBounds.getMinY()) * heightScaleFactor);
+            points.add((vertexHandle.getCenterX() - imageViewBounds.getMinX()) / imageViewBounds.getWidth());
+            points.add((vertexHandle.getCenterY() - imageViewBounds.getMinY()) / imageViewBounds.getHeight());
         }
 
-        return imageRelativePoints;
-    }
-
-    List<Double> getImageRelativeRatios() {
-        List<Double> result = getImageRelativePoints();
-
-        for(int i = 0; i < result.size(); i += 2) {
-            result.set(i, result.get(i) / boundingShapeViewData.getImageMetaData().getImageWidth());
-            result.set(i + 1, result.get(i + 1) / boundingShapeViewData.getImageMetaData().getImageHeight());
-        }
-
-        return result;
+        return points;
     }
 
     ObservableList<VertexHandle> getVertexHandles() {
