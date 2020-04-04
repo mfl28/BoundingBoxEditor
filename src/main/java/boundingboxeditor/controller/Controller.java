@@ -94,12 +94,13 @@ public class Controller {
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
     private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
     private final BooleanProperty navigateNextKeyPressed = new SimpleBooleanProperty(false);
-    private String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
 
     private File currentImageLoadingDirectory;
     private File currentAnnotationSavingDirectory;
     private File currentAnnotationLoadingDirectory;
+
+    String lastLoadedImageUrl;
 
     /**
      * Creates a new controller object that is responsible for handling the application logic and
@@ -187,6 +188,8 @@ public class Controller {
             MainView.displayErrorAlert(LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE, LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT);
             return;
         }
+
+        lastLoadedImageUrl = null;
 
         model.fileIndexProperty().removeListener(selectedFileIndexListener);
         model.resetDataAndSetImageFiles(imageFiles);

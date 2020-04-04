@@ -293,6 +293,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getCurrentFileIndex(), Matchers.equalTo(0));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));
+        verifyThat(model.getImageAnnotations(), Matchers.hasSize(0));
+        verifyThat(controller.lastLoadedImageUrl, Matchers.nullValue());
 
         // Reload bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile));
