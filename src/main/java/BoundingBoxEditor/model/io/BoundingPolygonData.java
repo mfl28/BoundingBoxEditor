@@ -5,7 +5,6 @@ import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingPolygonView;
 import boundingboxeditor.ui.BoundingShapeViewable;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,15 +22,6 @@ public class BoundingPolygonData extends BoundingShapeData {
     public BoundingPolygonData(ObjectCategory category, List<Double> points, List<String> tags) {
         super(category, tags);
         this.relativePointsInImage = points;
-    }
-
-    public List<Double> getRelativePointsInImage() {
-        return relativePointsInImage;
-    }
-
-    public List<Double> getAbsolutePointsInImage(ImageMetaData imageMetaData) {
-        return BoundingPolygonData.relativeToAbsolutePoints(relativePointsInImage,
-                imageMetaData.getImageWidth(), imageMetaData.getImageHeight());
     }
 
     public static List<Double> absoluteToRelativePoints(List<Double> absolutePoints, double width, double height) {
@@ -54,6 +44,15 @@ public class BoundingPolygonData extends BoundingShapeData {
         }
 
         return absolutePoints;
+    }
+
+    public List<Double> getRelativePointsInImage() {
+        return relativePointsInImage;
+    }
+
+    public List<Double> getAbsolutePointsInImage(ImageMetaData imageMetaData) {
+        return BoundingPolygonData.relativeToAbsolutePoints(relativePointsInImage,
+                imageMetaData.getImageWidth(), imageMetaData.getImageHeight());
     }
 
     @Override

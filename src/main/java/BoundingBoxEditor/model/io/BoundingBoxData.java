@@ -23,9 +23,9 @@ public class BoundingBoxData extends BoundingShapeData {
     /**
      * Creates a new object to store the "blueprint" of a {@link boundingboxeditor.ui.BoundingBoxView BoundingBoxView}.
      *
-     * @param category        the category of the bounding-box
+     * @param category              the category of the bounding-box
      * @param relativeBoundsInImage the rectangular bounds of the bounding-box in relative coordinates
-     * @param tags            the tags that are registered for the bounding-box
+     * @param tags                  the tags that are registered for the bounding-box
      */
     public BoundingBoxData(ObjectCategory category, Bounds relativeBoundsInImage, List<String> tags) {
         super(category, tags);
@@ -37,12 +37,12 @@ public class BoundingBoxData extends BoundingShapeData {
      * All coordinate arguments are considered to be with respect to the image the bounding-box belongs to
      * (considering the image's original measurements).
      *
-     * @param category the category of the bounding-box
-     * @param xMinRelative     the x-coordinate of the upper left corner of the bounding-box
-     * @param yMinRelative     the y-coordinate of the upper left corner of the bounding-box
-     * @param xMaxRelative     the x-coordinate of the lower right corner of the bounding-box
-     * @param yMaxRelative     the y-coordinate of the lower right corner of the bounding-box
-     * @param tags     the tags that are registered for the bounding-box
+     * @param category     the category of the bounding-box
+     * @param xMinRelative the x-coordinate of the upper left corner of the bounding-box
+     * @param yMinRelative the y-coordinate of the upper left corner of the bounding-box
+     * @param xMaxRelative the x-coordinate of the lower right corner of the bounding-box
+     * @param yMaxRelative the y-coordinate of the lower right corner of the bounding-box
+     * @param tags         the tags that are registered for the bounding-box
      */
     BoundingBoxData(ObjectCategory category, double xMinRelative, double yMinRelative,
                     double xMaxRelative, double yMaxRelative, List<String> tags) {
@@ -101,12 +101,12 @@ public class BoundingBoxData extends BoundingShapeData {
     }
 
     public Bounds getAbsoluteBoundsInImage(ImageMetaData metaData) {
-            double xMin = getXMinRelative() * metaData.getImageWidth();
-            double yMin = getYMinRelative() * metaData.getImageHeight();
-            double xMax = getXMaxRelative() * metaData.getImageWidth();
-            double yMax = getYMaxRelative() * metaData.getImageHeight();
+        double xMin = getXMinRelative() * metaData.getImageWidth();
+        double yMin = getYMinRelative() * metaData.getImageHeight();
+        double xMax = getXMaxRelative() * metaData.getImageWidth();
+        double yMax = getYMaxRelative() * metaData.getImageHeight();
 
-            return new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin);
+        return new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin);
     }
 
     @Override

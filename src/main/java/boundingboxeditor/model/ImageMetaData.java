@@ -43,7 +43,7 @@ public class ImageMetaData {
      */
     public static ImageMetaData fromFile(File imageFile) {
         ImageDimensions imageDimensions = readImageDimensionsFromFile(imageFile);
-        return new ImageMetaData(imageFile.getName(), imageFile.getParent(),
+        return new ImageMetaData(imageFile.getName(), imageFile.toPath().getParent().toFile().getName(),
                 imageDimensions.getWidth(), imageDimensions.getHeight(), imageDimensions.getDepth());
     }
 
@@ -116,43 +116,6 @@ public class ImageMetaData {
                 + ", image-width=" + getImageWidth() + ", image-height=" + getImageHeight() + ", image-depth=" + getImageDepth();
     }
 
-    public static class ImageMetaDataDetails {
-        private final String folderName;
-        private final double imageWidth;
-        private final double imageHeight;
-        private final int imageDepth;
-
-        ImageMetaDataDetails(String folderName, double imageWidth, double imageHeight, int imageDepth) {
-            this.folderName = folderName;
-            this.imageWidth = imageWidth;
-            this.imageHeight = imageHeight;
-            this.imageDepth = imageDepth;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if(this == o) {
-                return true;
-            }
-
-            if(!(o instanceof ImageMetaDataDetails)) {
-                return false;
-            }
-
-            ImageMetaDataDetails that = (ImageMetaDataDetails) o;
-
-            return Double.compare(that.imageWidth, imageWidth) == 0 &&
-                    Double.compare(that.imageHeight, imageHeight) == 0 &&
-                    imageDepth == that.imageDepth &&
-                    Objects.equals(folderName, that.folderName);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(folderName, imageWidth, imageHeight, imageDepth);
-        }
-    }
-
     private static ImageDimensions readImageDimensionsFromFile(File imageFile) {
         // Source: https://stackoverflow.com/a/1560052
         try(ImageInputStream imageStream = ImageIO.createImageInputStream(imageFile)) {
@@ -177,6 +140,43 @@ public class ImageMetaData {
 
         log.severe("Could not read image-size data from file " + imageFile.getName());
         return ImageDimensions.zeroDimensions();
+    }
+
+    private static class ImageMetaDataDetails {
+        private final String folderName;
+        private final double imageWidth;
+        private final double imageHeight;
+        private final int imageDepth;
+
+        ImageMetaDataDetails(String folderName, double imageWidth, double imageHeight, int imageDepth) {
+            this.folderName = folderName;
+            this.imageWidth = imageWidth;
+            this.imageHeight = imageHeight;
+            this.imageDepth = imageDepth;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(folderName, imageWidth, imageHeight, imageDepth);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if(this == o) {
+                return true;
+            }
+
+            if(!(o instanceof ImageMetaDataDetails)) {
+                return false;
+            }
+
+            ImageMetaDataDetails that = (ImageMetaDataDetails) o;
+
+            return Double.compare(that.imageWidth, imageWidth) == 0 &&
+                    Double.compare(that.imageHeight, imageHeight) == 0 &&
+                    imageDepth == that.imageDepth &&
+                    Objects.equals(folderName, that.folderName);
+        }
     }
 
     private static class ImageDimensions {

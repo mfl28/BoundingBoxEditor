@@ -228,7 +228,7 @@ public class BoundingBoxEditorTestBase {
         return robot.lookup(id).queryAs(clazz);
     }
 
-    protected void loadImageFolderAndClickDialogOption(FxRobot robot, String imageFolderPath,  String optionText) {
+    protected void loadImageFolderAndClickDialogOption(FxRobot robot, String imageFolderPath, String optionText) {
         Platform.runLater(() -> controller.initiateImageFolderLoading(new File(getClass().getResource(imageFolderPath).getFile())));
         WaitForAsyncUtils.waitForFxEvents();
 

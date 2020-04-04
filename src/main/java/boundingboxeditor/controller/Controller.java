@@ -24,7 +24,6 @@ import javafx.scene.image.Image;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import org.controlsfx.dialog.ExceptionDialog;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,13 +94,11 @@ public class Controller {
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
     private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
     private final BooleanProperty navigateNextKeyPressed = new SimpleBooleanProperty(false);
+    String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
-
     private File currentImageLoadingDirectory;
     private File currentAnnotationSavingDirectory;
     private File currentAnnotationLoadingDirectory;
-
-    String lastLoadedImageUrl;
 
     /**
      * Creates a new controller object that is responsible for handling the application logic and

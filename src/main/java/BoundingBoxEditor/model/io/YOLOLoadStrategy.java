@@ -5,13 +5,10 @@ import boundingboxeditor.model.Model;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.utils.ColorUtils;
 import javafx.beans.property.DoubleProperty;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -24,11 +21,11 @@ import java.util.stream.Stream;
 public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final boolean INCLUDE_SUBDIRECTORIES = false;
     private static final String OBJECT_DATA_FILE_NAME = "object.data";
+    private final List<String> categories = new ArrayList<>();
     private Set<String> fileNamesToLoad;
     private Map<String, ObjectCategory> nameToObjectCategoryMap;
     private Map<String, Integer> boundingShapeCountPerCategory;
     private List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages;
-    private final List<String> categories = new ArrayList<>();
     private Map<String, ImageMetaData> imageMetaDataMap;
 
     @Override

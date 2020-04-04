@@ -2,6 +2,7 @@ package boundingboxeditor.controller;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import boundingboxeditor.model.io.IOResult;
+import boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
 import boundingboxeditor.ui.BoundingBoxView;
 import boundingboxeditor.ui.BoundingPolygonView;
@@ -57,7 +58,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
 
         // Load bounding-boxes defined in the reference annotation-file.
-        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile));
+        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
         // Create temporary folder to save annotations to.
@@ -121,7 +122,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFile = new File(getClass().getResource(inputFilePath).getFile());
 
         // Load bounding-boxes defined in annotation-file.
-        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile));
+        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
@@ -175,7 +176,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFile = new File(getClass().getResource(inputFilePath).getFile());
 
         // Load bounding-boxes defined in annotation-file.
-        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile));
+        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
@@ -275,7 +276,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
 
         // Load bounding-boxes defined in the reference annotation-file.
-        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile));
+        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
@@ -294,11 +295,11 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getCurrentFileIndex(), Matchers.equalTo(0));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));
-        verifyThat(model.getImageAnnotations(), Matchers.hasSize(0));
+        verifyThat(model.getImageFileNameToAnnotationMap().size(), Matchers.equalTo(0));
         verifyThat(controller.lastLoadedImageUrl, Matchers.nullValue());
 
         // Reload bounding-boxes defined in the reference annotation-file.
-        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile));
+        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
         final Map<String, Integer> countsReloaded = model.getCategoryToAssignedBoundingShapesCountMap();
@@ -398,7 +399,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     }
 
     private void importAnnotationAndClickDialogOption(FxRobot robot, File annotationFile, String userChoice) {
-        Platform.runLater(() -> controller.initiateAnnotationFolderImport(annotationFile));
+        Platform.runLater(() -> controller.initiateAnnotationFolderImport(annotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,

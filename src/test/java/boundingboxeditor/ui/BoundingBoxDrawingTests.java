@@ -2,7 +2,6 @@ package boundingboxeditor.ui;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import boundingboxeditor.utils.MathUtils;
-import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
@@ -111,7 +110,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(boundingBoxView.getWidth(), Matchers.closeTo(boundingBoxWidth, MathUtils.DOUBLE_EQUAL_THRESHOLD));
         verifyThat(boundingBoxView.getHeight(), Matchers.closeTo(boundingBoxHeight, MathUtils.DOUBLE_EQUAL_THRESHOLD));
 
-        loadImageFolderAndClickDialogOption(robot, TEST_IMAGE_FOLDER_PATH_2,"No");
+        loadImageFolderAndClickDialogOption(robot, TEST_IMAGE_FOLDER_PATH_2, "No");
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));
