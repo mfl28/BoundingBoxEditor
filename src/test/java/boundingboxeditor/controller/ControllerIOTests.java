@@ -262,6 +262,56 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         userChoosesNoOnAnnotationImportDialogSubtest(robot, annotationFile);
     }
 
+    @Test
+    void onReloadAnnotations_afterImageFilesReopened_shouldCorrectlyDisplayBoundingShapes(FxRobot robot) {
+        final String referenceAnnotationFilePath = "/testannotations/reference/austin-neill-685084-unsplash_jpg_A.xml";
+
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(), Matchers.startsWith("Successfully loaded 4 image-files from folder "));
+
+        final File referenceAnnotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
+
+        // Load bounding-boxes defined in the reference annotation-file.
+        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> Objects.equals(counts.get("Boat"), 2) && Objects.equals(counts.get("Sail"), 6) && Objects.equals(counts.get("Flag"), 1)),
+                "Correct bounding box per-category-counts were not read within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        timeOutClickOn(robot, "#next-button");
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));
+        verifyThat(mainView.getObjectTree().getRoot().getChildren(), Matchers.hasSize(0));
+
+        loadImageFolderAndClickDialogOption(robot, TEST_IMAGE_FOLDER_PATH_1, "No");
+
+        verifyThat(model.getCurrentFileIndex(), Matchers.equalTo(0));
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));
+
+        // Reload bounding-boxes defined in the reference annotation-file.
+        Platform.runLater(() -> controller.initiateAnnotationFolderImport(referenceAnnotationFile));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Map<String, Integer> countsReloaded = model.getCategoryToAssignedBoundingShapesCountMap();
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> Objects.equals(countsReloaded.get("Boat"), 2) && Objects.equals(countsReloaded.get("Sail"), 6)
+                        && Objects.equals(countsReloaded.get("Flag"), 1)),
+                "Correct bounding box per-category-counts were not read within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        timeOutClickOn(robot, "#next-button");
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));
+        verifyThat(mainView.getObjectTree().getRoot().getChildren(), Matchers.hasSize(0));
+    }
+
     private void userChoosesNoOnAnnotationImportDialogSubtest(FxRobot robot, File annotationFile) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "No");
 

@@ -111,22 +111,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(boundingBoxView.getWidth(), Matchers.closeTo(boundingBoxWidth, MathUtils.DOUBLE_EQUAL_THRESHOLD));
         verifyThat(boundingBoxView.getHeight(), Matchers.closeTo(boundingBoxHeight, MathUtils.DOUBLE_EQUAL_THRESHOLD));
 
-        Platform.runLater(() -> controller.initiateImageFolderLoading(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_2).getFile())));
-        WaitForAsyncUtils.waitForFxEvents();
-
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> getTopModalStage(robot, "Open image folder") != null),
-                "Expected info dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
-
-        Stage dialogStage = getTopModalStage(robot, "Open image folder");
-        verifyThat(dialogStage, Matchers.notNullValue());
-
-        // Do not save existing bounding box annotations.
-        timeOutLookUpInStageAndClickOn(robot, dialogStage, "No");
-        WaitForAsyncUtils.waitForFxEvents();
-
-        waitUntilCurrentImageIsLoaded();
-        WaitForAsyncUtils.waitForFxEvents();
+        loadImageFolderAndClickDialogOption(robot, TEST_IMAGE_FOLDER_PATH_2,"No");
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));

@@ -31,10 +31,13 @@ import org.testfx.framework.junit5.Start;
 import org.testfx.util.PointQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import static org.testfx.api.FxAssert.verifyThat;
 
 @ExtendWith(ApplicationExtension.class)
 public class BoundingBoxEditorTestBase {
@@ -223,6 +226,24 @@ public class BoundingBoxEditorTestBase {
     protected <T extends Node> T timeOutQueryAs(FxRobot robot, String id, Class<T> clazz) {
         timeOutLookupAs(robot, id, clazz);
         return robot.lookup(id).queryAs(clazz);
+    }
+
+    protected void loadImageFolderAndClickDialogOption(FxRobot robot, String imageFolderPath,  String optionText) {
+        Platform.runLater(() -> controller.initiateImageFolderLoading(new File(getClass().getResource(imageFolderPath).getFile())));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Open image folder") != null),
+                "Expected info dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        Stage dialogStage = getTopModalStage(robot, "Open image folder");
+        verifyThat(dialogStage, Matchers.notNullValue());
+
+        timeOutLookUpInStageAndClickOn(robot, dialogStage, optionText);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     private Scene createSceneFromParent(final Parent parent) {
