@@ -157,7 +157,7 @@ public class ImageMetaData {
 
         @Override
         public int hashCode() {
-            return Objects.hash(folderName, imageWidth, imageHeight, imageDepth);
+            return Objects.hash(imageWidth, imageHeight, imageDepth);
         }
 
         @Override
@@ -174,8 +174,7 @@ public class ImageMetaData {
 
             return Double.compare(that.imageWidth, imageWidth) == 0 &&
                     Double.compare(that.imageHeight, imageHeight) == 0 &&
-                    imageDepth == that.imageDepth &&
-                    Objects.equals(folderName, that.folderName);
+                    imageDepth == that.imageDepth;
         }
     }
 

@@ -16,6 +16,7 @@ $base-alt-highlight-color:            $nord10;
 $base-colorful-component-color:       $nord11;
 $base-alt-colorful-component-color:   $nord12;
 $base-alt-colorful-component-color-2: $nord13;
+$base-alt-colorful-component-color-3: $nord14;
 
 $base-separator-line-color: derive($base-background-color, -15%);
 
@@ -569,7 +570,15 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-font-weight: normal;
 
     &:has-assigned-bounding-boxes {
-        -fx-text-fill: $base-alt-colorful-component-color-2;
+        -fx-text-fill: $base-alt-accent-color;
+        -fx-font-weight: bold;
+        -fx-border-width: 0px 0px 0px 5px;
+        -fx-border-color: $base-alt-accent-color;
+        -fx-padding: 5px 5px 5px 0px;
+    }
+
+    &:selected {
+        -fx-text-fill: $base-background-color;
         -fx-font-weight: bold;
     }
 }
@@ -870,7 +879,8 @@ $base-separator-line-color: derive($base-background-color, -15%);
         }
 
         &:selected {
-            -fx-background-color: $base-colorful-component-color;
+            -fx-background-color: $base-alt-accent-color;
+            -fx-text-fill: $base-background-color;
             -fx-background-insets: 0;
             -fx-border-width: 0;
             -fx-padding: 5px; 

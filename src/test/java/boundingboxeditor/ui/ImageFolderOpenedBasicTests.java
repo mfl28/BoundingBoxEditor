@@ -65,7 +65,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Export Annotations");
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "All Boxes to Pascal-VOC format...");
+        timeOutClickOn(robot, "Pascal-VOC format...");
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
@@ -76,6 +76,25 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         verifyThat(errorDialogStage, Matchers.notNullValue());
 
         timeOutLookUpInStageAndClickOn(robot, errorDialogStage, "OK");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutClickOn(robot, "File");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Export Annotations");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutMoveTo(robot, "Pascal-VOC format...");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "YOLO format...");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Save Error") != null),
+                "Expected save error dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        Stage errorDialogStage2 = getTopModalStage(robot, "Save Error");
+        verifyThat(errorDialogStage, Matchers.notNullValue());
+
+        timeOutLookUpInStageAndClickOn(robot, errorDialogStage2, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem exitItem = getSubMenuItem(robot, "File", "Exit");

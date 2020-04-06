@@ -35,6 +35,9 @@ import java.util.Optional;
  * @see boundingboxeditor.model.Model Model
  */
 public class MainView extends BorderPane implements View {
+    public static final String APPLICATION_ICON_PATH = "/icons/app_icon.png";
+    public static final Image APPLICATION_ICON = new Image(MainView.class.getResource(APPLICATION_ICON_PATH).toExternalForm());
+
     private static final int INFO_DIALOGUE_MIN_WIDTH = 600;
     private static final String MAIN_VIEW_ID = "main-view";
     private static final String ANNOTATION_IMPORT_ERROR_REPORT_TITLE = "Annotation import error report";
@@ -71,6 +74,7 @@ public class MainView extends BorderPane implements View {
         alert.setContentText(content);
         alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alert.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
         alert.showAndWait();
     }
 
@@ -90,6 +94,7 @@ public class MainView extends BorderPane implements View {
         dialog.setContentText(content);
         dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         dialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
         dialog.showAndWait();
 
         return dialog.getResult().getButtonData();
@@ -168,6 +173,7 @@ public class MainView extends BorderPane implements View {
         progressDialog.setTitle(title);
         progressDialog.setHeaderText(header);
         progressDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        ((Stage) progressDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
     }
 
     public static <T> Optional<T> displayChoiceDialogAndGetResult(T defaultChoice, Collection<T> choices,
@@ -177,6 +183,7 @@ public class MainView extends BorderPane implements View {
         choiceDialog.setHeaderText(header);
         choiceDialog.setContentText(content);
         choiceDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        ((Stage) choiceDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
 
         return choiceDialog.showAndWait();
     }
@@ -184,6 +191,7 @@ public class MainView extends BorderPane implements View {
     public static void displayExceptionDialog(Throwable throwable) {
         ExceptionDialog exceptionDialog = new ExceptionDialog(throwable);
         exceptionDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        ((Stage) exceptionDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
         exceptionDialog.showAndWait();
     }
 
@@ -392,6 +400,7 @@ public class MainView extends BorderPane implements View {
         alert.setContentText(content);
         alert.getDialogPane().setMinWidth(INFO_DIALOGUE_MIN_WIDTH);
         alert.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
 
         GridPane.setVgrow(additionalInfoNode, Priority.ALWAYS);
         GridPane.setHgrow(additionalInfoNode, Priority.ALWAYS);

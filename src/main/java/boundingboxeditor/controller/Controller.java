@@ -62,7 +62,6 @@ public class Controller {
 
     private static final String IMAGE_FOLDER_CHOOSER_TITLE = "Choose an image folder";
     private static final String IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE = "Choose a folder containing image annotation files";
-    private static final String APPLICATION_ICON_PATH = "/icons/app_icon.png";
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
     private static final String SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE = "Save Error";
@@ -109,7 +108,7 @@ public class Controller {
     public Controller(final Stage mainStage) {
         stage = mainStage;
         stage.setTitle(PROGRAM_NAME);
-        stage.getIcons().add(new Image(getClass().getResource(APPLICATION_ICON_PATH).toExternalForm()));
+        stage.getIcons().add(MainView.APPLICATION_ICON);
         stage.setOnCloseRequest(event -> {
             onRegisterExitAction();
             event.consume();

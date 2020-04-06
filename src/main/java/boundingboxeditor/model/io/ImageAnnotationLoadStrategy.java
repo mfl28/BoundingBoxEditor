@@ -42,8 +42,8 @@ public interface ImageAnnotationLoadStrategy {
     enum Type {PASCAL_VOC, YOLO}
 
     @SuppressWarnings("serial")
-    class InvalidAnnotationFileFormatException extends RuntimeException {
-        InvalidAnnotationFileFormatException(String message) {
+    class InvalidAnnotationFormatException extends RuntimeException {
+        InvalidAnnotationFormatException(String message) {
             super(message);
         }
     }

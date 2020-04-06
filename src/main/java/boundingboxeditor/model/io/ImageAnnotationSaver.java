@@ -32,7 +32,7 @@ public class ImageAnnotationSaver {
      * @return an {@link IOResult} containing information about the finished saving
      */
     public IOResult save(final ImageAnnotationData annotations, final Path saveFolderPath) throws Exception {
-        return IOResult.fromOperation(() -> saveStrategy.save(annotations, saveFolderPath, progress));
+        return IOOperationTimer.time(() -> saveStrategy.save(annotations, saveFolderPath, progress));
     }
 
     /**

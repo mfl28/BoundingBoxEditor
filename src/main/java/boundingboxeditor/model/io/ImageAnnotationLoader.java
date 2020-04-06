@@ -35,8 +35,8 @@ public class ImageAnnotationLoader {
      * @return an {@link IOResult} containing information about the finished loading
      * @throws IOException if the directory denoted by the path could not be opened
      */
-    public IOResult load(final Model model, final Path annotationsFolderPath) throws IOException {
-        return loadStrategy.load(model, annotationsFolderPath, progress);
+    public IOResult load(final Model model, final Path annotationsFolderPath) throws Exception {
+        return IOOperationTimer.time(() -> loadStrategy.load(model, annotationsFolderPath, progress));
     }
 
     /**

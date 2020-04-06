@@ -3,11 +3,8 @@ package boundingboxeditor.model.io;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Responsible for holding information about a finished IO-operation (e.g. loading or
@@ -33,15 +30,6 @@ public class IOResult {
         this.operationType = operationType;
         this.nrSuccessfullyProcessedItems = nrSuccessfullyProcessedItems;
         this.errorTableEntries = errorTableEntries;
-    }
-
-    public static IOResult fromOperation(Callable<IOResult> operation) throws Exception {
-        long startTime = System.nanoTime();
-        IOResult result = operation.call();
-        long duration = System.nanoTime() - startTime;
-
-        result.setTimeTakenInMilliseconds(TimeUnit.MILLISECONDS.convert(Duration.ofNanos(duration)));
-        return result;
     }
 
     /**

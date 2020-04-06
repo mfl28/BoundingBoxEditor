@@ -217,6 +217,11 @@ public class BoundingBoxEditorTestBase {
         robot.clickOn(id);
     }
 
+    protected void timeOutMoveTo(FxRobot robot, String id) {
+        timeOutLookUp(robot, id);
+        robot.moveTo(id);
+    }
+
     protected <T extends Node> void timeOutLookupAs(FxRobot robot, String id, Class<T> clazz) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> robot.lookup(id).tryQueryAs(clazz).isPresent()),

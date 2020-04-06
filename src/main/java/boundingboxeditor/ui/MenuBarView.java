@@ -21,20 +21,24 @@ class MenuBarView extends MenuBar implements View {
     private static final String SHOW_IMAGE_FILE_EXPLORER_TEXT = "_Show Images Panel";
     private static final String EXIT_TEXT = "E_xit";
     private static final String MAIN_MENU_BAR_ID = "main-menu-bar";
-    private static final String ANNOTATION_IMPORT_TEXT = "_Import Annotations...";
+    private static final String ANNOTATION_IMPORT_TEXT = "_Import Annotations";
     private static final String SAVE_ICON_ID = "save-icon";
     private static final String OPEN_FOLDER_ICON_ID = "folder-icon";
     private static final String EXIT_ICON_ID = "exit-icon";
     private static final String FILE_IMPORT_ICON_ID = "file-import-icon";
+    private static final String PASCAL_VOC_FORMAT_IMPORT_TEXT = "Pascal-VOC format...";
+    private static final String YOLO_FORMAT_IMPORT_TEXT = "YOLO format...";
+    private static final String PASCAL_VOC_FORMAT_EXPORT_TEXT = "Pascal-VOC format...";
+    private static final String YOLO_FORMAT_EXPORT_TEXT = "YOLO format...";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
     private final Menu fileExportMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
-    private final MenuItem PVOCExportMenuItem = new MenuItem("All Boxes to Pascal-VOC format...");
-    private final MenuItem YOLOExportMenuItem = new MenuItem("Rectangular Boxes to YOLO format...");
+    private final MenuItem PVOCExportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_EXPORT_TEXT);
+    private final MenuItem YOLOExportMenuItem = new MenuItem(YOLO_FORMAT_EXPORT_TEXT);
 
     private final Menu fileImportAnnotationsItem = new Menu(ANNOTATION_IMPORT_TEXT, createIconRegion(FILE_IMPORT_ICON_ID));
-    private final MenuItem importPVOCAnnotationsMenuItem = new MenuItem("Pascal VOC format");
-    private final MenuItem importYOLOAnnotationsMenuItem = new MenuItem("YOLO format");
+    private final MenuItem importPVOCAnnotationsMenuItem = new MenuItem(PASCAL_VOC_FORMAT_IMPORT_TEXT);
+    private final MenuItem importYOLOAnnotationsMenuItem = new MenuItem(YOLO_FORMAT_IMPORT_TEXT);
     private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT, createIconRegion(EXIT_ICON_ID));
     private final CheckMenuItem viewMaximizeImagesItem = new CheckMenuItem(MAXIMIZE_IMAGES_TEXT);
     private final CheckMenuItem viewShowImagesPanelItem = new CheckMenuItem(SHOW_IMAGE_FILE_EXPLORER_TEXT);

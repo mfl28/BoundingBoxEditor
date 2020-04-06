@@ -21,11 +21,12 @@ import java.util.stream.Stream;
 public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final boolean INCLUDE_SUBDIRECTORIES = false;
     private static final String OBJECT_DATA_FILE_NAME = "object.data";
+    private static final String YOLO_IMAGE_EXTENSION = ".jpg";
     private final List<String> categories = new ArrayList<>();
+    private final List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
     private Set<String> fileNamesToLoad;
     private Map<String, ObjectCategory> nameToObjectCategoryMap;
     private Map<String, Integer> boundingShapeCountPerCategory;
-    private List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages;
     private Map<String, ImageMetaData> imageMetaDataMap;
 
     @Override
@@ -38,8 +39,14 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
 
         try {
             loadObjectCategories(path);
-        } catch(IOException e) {
-            unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(path.resolve(OBJECT_DATA_FILE_NAME).toString(), e.getMessage()));
+        } catch(Exception e) {
+            unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(OBJECT_DATA_FILE_NAME, e.getMessage()));
+            return new IOResult(IOResult.OperationType.ANNOTATION_IMPORT, 0, unParsedFileErrorMessages);
+        }
+
+        if(categories.isEmpty()) {
+            unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(OBJECT_DATA_FILE_NAME, "Does not contain any category names."));
+            return new IOResult(IOResult.OperationType.ANNOTATION_IMPORT, 0, unParsedFileErrorMessages);
         }
 
         try(Stream<Path> fileStream = Files.walk(path, INCLUDE_SUBDIRECTORIES ? Integer.MAX_VALUE : 1)) {
@@ -48,18 +55,16 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                     .map(Path::toFile)
                     .collect(Collectors.toList());
 
-            unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
-
             int totalNrOfFiles = annotationFiles.size();
             AtomicInteger nrProcessedFiles = new AtomicInteger(0);
 
-            List<ImageAnnotation> imageAnnotations = annotationFiles.stream()
+            List<ImageAnnotation> imageAnnotations = annotationFiles.parallelStream()
                     .map(file -> {
                         progress.set(1.0 * nrProcessedFiles.incrementAndGet() / totalNrOfFiles);
 
                         try {
                             return loadAnnotationFromFile(file);
-                        } catch(InvalidAnnotationFileFormatException | AnnotationToNonExistentImageException | IOException e) {
+                        } catch(InvalidAnnotationFormatException | AnnotationToNonExistentImageException | IOException e) {
                             unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(file.getName(), e.getMessage()));
                             return null;
                         }
@@ -80,6 +85,10 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private void loadObjectCategories(Path root) throws IOException {
+        if(!root.resolve(OBJECT_DATA_FILE_NAME).toFile().exists()) {
+            throw new InvalidAnnotationFormatException("Does not exist in annotation folder \"" + root.getFileName().toString() + "\".");
+        }
+
         try(BufferedReader fileReader = Files.newBufferedReader(root.resolve(OBJECT_DATA_FILE_NAME))) {
             String line;
 
@@ -94,10 +103,10 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private ImageAnnotation loadAnnotationFromFile(File file) throws IOException {
-        String annotatedImageFileName = file.getName().substring(0, file.getName().lastIndexOf('.')) + ".jpg";
+        String annotatedImageFileName = file.getName().substring(0, file.getName().lastIndexOf('.')) + YOLO_IMAGE_EXTENSION;
 
         if(!fileNamesToLoad.contains(annotatedImageFileName)) {
-            throw new AnnotationToNonExistentImageException("The image file does not belong to the currently loaded images.");
+            throw new AnnotationToNonExistentImageException("The image file \"" + annotatedImageFileName + "\" does not belong to the currently loaded images.");
         }
 
         try(BufferedReader fileReader = Files.newBufferedReader(file.toPath())) {
@@ -105,37 +114,20 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
 
             List<BoundingShapeData> boundingShapeDataList = new ArrayList<>();
 
+            int counter = 1;
+
             while((line = fileReader.readLine()) != null) {
                 line = line.strip();
 
                 if(!line.isBlank()) {
-                    Scanner scanner = new Scanner(line);
-                    scanner.useLocale(Locale.ENGLISH);
-
-                    int categoryId = scanner.nextInt();
-                    double xMidRelative = scanner.nextDouble();
-                    double yMidRelative = scanner.nextDouble();
-                    double widthRelative = scanner.nextDouble();
-                    double heightRelative = scanner.nextDouble();
-
-                    double xMinRelative = xMidRelative - widthRelative / 2;
-                    double yMinRelative = yMidRelative - heightRelative / 2;
-                    double xMaxRelative = xMidRelative + widthRelative / 2;
-                    double yMaxRelative = yMidRelative + heightRelative / 2;
-
-                    String categoryName = categories.get(categoryId);
-
-                    ObjectCategory objectCategory = nameToObjectCategoryMap.computeIfAbsent(categoryName,
-                            key -> new ObjectCategory(key, ColorUtils.createRandomColor()));
-
-                    // Note that there are no tags or parts in YOLO-format.
-                    BoundingBoxData boundingBoxData = new BoundingBoxData(objectCategory,
-                            xMinRelative, yMinRelative, xMaxRelative, yMaxRelative, Collections.emptyList());
-
-                    boundingShapeCountPerCategory.merge(categoryName, 1, Integer::sum);
-
-                    boundingShapeDataList.add(boundingBoxData);
+                    try {
+                        boundingShapeDataList.add(parseBoundingBoxData(line, counter));
+                    } catch(InvalidAnnotationFormatException e) {
+                        unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(file.getName(), e.getMessage()));
+                    }
                 }
+
+                ++counter;
             }
 
             if(boundingShapeDataList.isEmpty()) {
@@ -147,6 +139,82 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
 
             // ImageMetaData will be loaded when the corresponding image is displayed for the first time.
             return new ImageAnnotation(imageMetaData, boundingShapeDataList);
+        }
+    }
+
+    private BoundingBoxData parseBoundingBoxData(String line, int lineNumber) {
+        Scanner scanner = new Scanner(line);
+        scanner.useLocale(Locale.ENGLISH);
+
+        int categoryId = parseCategoryIndex(scanner, lineNumber);
+
+        double xMidRelative = parseRatio(scanner, lineNumber);
+        double yMidRelative = parseRatio(scanner, lineNumber);
+        double widthRelative = parseRatio(scanner, lineNumber);
+        double heightRelative = parseRatio(scanner, lineNumber);
+
+        double xMinRelative = xMidRelative - widthRelative / 2;
+        assertRatio(xMinRelative, "Invalid bounding-box coordinates on line " + lineNumber + ".");
+
+        double yMinRelative = yMidRelative - heightRelative / 2;
+        assertRatio(yMinRelative, "Invalid bounding-box coordinates on line " + lineNumber + ".");
+
+        double xMaxRelative = xMidRelative + widthRelative / 2;
+        assertRatio(xMaxRelative, "Invalid bounding-box coordinates on line " + lineNumber + ".");
+
+        double yMaxRelative = yMidRelative + heightRelative / 2;
+        assertRatio(yMaxRelative, "Invalid bounding-box coordinates on line " + lineNumber + ".");
+
+        String categoryName = categories.get(categoryId);
+
+        ObjectCategory objectCategory = nameToObjectCategoryMap.computeIfAbsent(categoryName,
+                key -> new ObjectCategory(key, ColorUtils.createRandomColor()));
+
+        // Note that there are no tags or parts in YOLO-format.
+        BoundingBoxData boundingBoxData = new BoundingBoxData(objectCategory,
+                xMinRelative, yMinRelative, xMaxRelative, yMaxRelative, Collections.emptyList());
+
+        boundingShapeCountPerCategory.merge(categoryName, 1, Integer::sum);
+
+        return boundingBoxData;
+    }
+
+    private double parseRatio(Scanner scanner, int lineNumber) {
+        if(!scanner.hasNextDouble()) {
+            throw new InvalidAnnotationFormatException("Missing or invalid bounding-box bounds on line " + lineNumber + ".");
+        }
+
+        double ratio = scanner.nextDouble();
+
+        assertRatio(ratio, lineNumber);
+
+        return ratio;
+    }
+
+    private int parseCategoryIndex(Scanner scanner, int lineNumber) {
+        if(!scanner.hasNextInt()) {
+            throw new InvalidAnnotationFormatException("Missing or invalid category index on line " + lineNumber + ".");
+        }
+
+        int categoryId = scanner.nextInt();
+
+        if(categoryId < 0 || categoryId >= categories.size()) {
+            throw new InvalidAnnotationFormatException("Invalid category index " + categoryId
+                    + " (of " + categories.size() + " categories) on line " + lineNumber + ".");
+        }
+
+        return categoryId;
+    }
+
+    private void assertRatio(double ratio, int lineNumber) {
+        if(ratio < 0 || ratio > 1) {
+            throw new InvalidAnnotationFormatException("Bounds ratio not within [0, 1] on line " + lineNumber + ".");
+        }
+    }
+
+    private void assertRatio(double ratio, String message) {
+        if(ratio < 0 || ratio > 1) {
+            throw new InvalidAnnotationFormatException(message);
         }
     }
 }

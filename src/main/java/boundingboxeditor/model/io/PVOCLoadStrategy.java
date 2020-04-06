@@ -70,7 +70,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
                         try {
                             return parseAnnotationFile(file);
-                        } catch(SAXException | IOException | InvalidAnnotationFileFormatException
+                        } catch(SAXException | IOException | InvalidAnnotationFormatException
                                 | ParserConfigurationException | AnnotationToNonExistentImageException e) {
                             unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(file.getName(), e.getMessage()));
                             return null;
@@ -123,7 +123,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         ImageMetaData existingMetaData = imageMetaDataMap.getOrDefault(fileName, parsedMetaData);
 
         if(!Objects.equals(parsedMetaData, existingMetaData)) {
-            throw new InvalidAnnotationFileFormatException("Annotation image file data does not agree with data from loaded image file " + fileName);
+            throw new InvalidAnnotationFormatException("Annotation image file data does not agree with data from loaded image file \"" + fileName + "\".");
         }
 
         return existingMetaData;
@@ -141,7 +141,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 try {
                     BoundingShapeData boundingShapeData = parseBoundingShapeElement((Element) objectNode, filename, imageMetaData);
                     boundingShapeDataList.add(boundingShapeData);
-                } catch(InvalidAnnotationFileFormatException e) {
+                } catch(InvalidAnnotationFormatException e) {
                     unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(filename, e.getMessage()));
                 }
             }
@@ -160,21 +160,21 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         parseNonPartElements(childElements, boxDataParseResult);
 
         if(boxDataParseResult.getCategoryName() == null) {
-            throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + "name");
+            throw new InvalidAnnotationFormatException(MISSING_ELEMENT_PREFIX + "name");
         }
 
         if(boxDataParseResult.isBoundingBox() && boxDataParseResult.isBoundingPolygon()) {
-            throw new InvalidAnnotationFileFormatException(INVALID_OBJECT_ELEMENT_DUPL_ERROR);
+            throw new InvalidAnnotationFormatException(INVALID_OBJECT_ELEMENT_DUPL_ERROR);
         } else if(!boxDataParseResult.isBoundingBox() && !boxDataParseResult.isBoundingPolygon()) {
-            throw new InvalidAnnotationFileFormatException(INVALID_OBJECT_ELEMENT_MISSING_ERROR);
+            throw new InvalidAnnotationFormatException(INVALID_OBJECT_ELEMENT_MISSING_ERROR);
         } else if(boxDataParseResult.isBoundingBox()) {
             if(boxDataParseResult.getxMin() == null || boxDataParseResult.getxMax() == null
                     || boxDataParseResult.getyMin() == null || boxDataParseResult.getyMax() == null) {
-                throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + "bndbox");
+                throw new InvalidAnnotationFormatException(MISSING_ELEMENT_PREFIX + "bndbox");
             }
         } else {
             if(boxDataParseResult.getPoints() == null) {
-                throw new InvalidAnnotationFileFormatException(INVALID_POLYGON_ELEMENT_ERROR);
+                throw new InvalidAnnotationFormatException(INVALID_POLYGON_ELEMENT_ERROR);
             }
         }
 
@@ -215,7 +215,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 String categoryName = tagElement.getTextContent();
 
                 if(categoryName == null || categoryName.isBlank()) {
-                    throw new InvalidAnnotationFileFormatException("Blank object name");
+                    throw new InvalidAnnotationFormatException("Blank object name");
                 }
 
                 boxDataParseResult.setCategoryName(categoryName);
@@ -267,7 +267,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     private void parsePart(Element tagElement, BoundingShapeDataParseResult boxDataParseResult, String filename, ImageMetaData imageMetaData) {
         try {
             boxDataParseResult.getParts().add(parseBoundingShapeElement(tagElement, filename, imageMetaData));
-        } catch(InvalidAnnotationFileFormatException e) {
+        } catch(InvalidAnnotationFormatException e) {
             unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(filename, e.getMessage()));
         }
     }
@@ -326,7 +326,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         Node textNode = document.getElementsByTagName(tagName).item(0);
 
         if(textNode == null) {
-            throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + tagName);
+            throw new InvalidAnnotationFormatException(MISSING_ELEMENT_PREFIX + tagName);
         }
 
         return textNode.getTextContent();
@@ -337,7 +337,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         NodeList yNodes = element.getElementsByTagName("y");
 
         if(xNodes.getLength() == 0 || yNodes.getLength() == 0 || xNodes.getLength() != yNodes.getLength()) {
-            throw new InvalidAnnotationFileFormatException("Invalid polygon element.");
+            throw new InvalidAnnotationFormatException("Invalid polygon element.");
         }
 
         List<Double> points = new ArrayList<>();
@@ -354,7 +354,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         Node doubleNode = document.getElementsByTagName(tagName).item(0);
 
         if(doubleNode == null) {
-            throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + tagName);
+            throw new InvalidAnnotationFormatException(MISSING_ELEMENT_PREFIX + tagName);
         }
 
         return Double.parseDouble(doubleNode.getTextContent());
@@ -364,7 +364,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         Node doubleNode = element.getElementsByTagName(tagName).item(0);
 
         if(doubleNode == null) {
-            throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + tagName);
+            throw new InvalidAnnotationFormatException(MISSING_ELEMENT_PREFIX + tagName);
         }
 
         return Double.parseDouble(doubleNode.getTextContent());
@@ -374,7 +374,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         Node intNode = document.getElementsByTagName(tagName).item(0);
 
         if(intNode == null) {
-            throw new InvalidAnnotationFileFormatException(MISSING_ELEMENT_PREFIX + tagName);
+            throw new InvalidAnnotationFormatException(MISSING_ELEMENT_PREFIX + tagName);
         }
 
         return Integer.parseInt(intNode.getTextContent());
