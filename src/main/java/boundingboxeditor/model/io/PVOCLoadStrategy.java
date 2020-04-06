@@ -96,18 +96,21 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         final Document document = documentBuilderFactory.newDocumentBuilder().parse(file);
         document.normalize();
 
-        ImageMetaData imageMetaData = parseImageMetaData(document);
+        final ImageMetaData parsedImageMetaData = parseImageMetaData(document);
 
-        if(!fileNamesToLoad.contains(imageMetaData.getFileName())) {
+        if(!fileNamesToLoad.contains(parsedImageMetaData.getFileName())) {
             throw new AnnotationToNonExistentImageException("The image file does not belong to the currently loaded images.");
         }
 
-        List<BoundingShapeData> boundingShapeData = parseBoundingShapeData(document, file.getName(), imageMetaData);
+        List<BoundingShapeData> boundingShapeData = parseBoundingShapeData(document, file.getName(), parsedImageMetaData);
 
         if(boundingShapeData.isEmpty()) {
             // No image annotation will be constructed if it does not contain any bounding boxes.
             return null;
         }
+
+        ImageMetaData imageMetaData = imageMetaDataMap.getOrDefault(parsedImageMetaData.getFileName(),
+                new ImageMetaData(parsedImageMetaData.getFileName()));
 
         return new ImageAnnotation(imageMetaData, boundingShapeData);
     }
@@ -119,14 +122,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         double height = parseDoubleElement(document, "height");
         int depth = parseIntElement(document, "depth");
 
-        ImageMetaData parsedMetaData = new ImageMetaData(fileName, folderName, width, height, depth);
-        ImageMetaData existingMetaData = imageMetaDataMap.getOrDefault(fileName, parsedMetaData);
-
-        if(!Objects.equals(parsedMetaData, existingMetaData)) {
-            throw new InvalidAnnotationFormatException("Annotation image file data does not agree with data from loaded image file \"" + fileName + "\".");
-        }
-
-        return existingMetaData;
+        return new ImageMetaData(fileName, folderName, width, height, depth);
     }
 
     private List<BoundingShapeData> parseBoundingShapeData(Document document, String filename, ImageMetaData imageMetaData) {
@@ -168,8 +164,8 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         } else if(!boxDataParseResult.isBoundingBox() && !boxDataParseResult.isBoundingPolygon()) {
             throw new InvalidAnnotationFormatException(INVALID_OBJECT_ELEMENT_MISSING_ERROR);
         } else if(boxDataParseResult.isBoundingBox()) {
-            if(boxDataParseResult.getxMin() == null || boxDataParseResult.getxMax() == null
-                    || boxDataParseResult.getyMin() == null || boxDataParseResult.getyMax() == null) {
+            if(boxDataParseResult.getMinX() == null || boxDataParseResult.getMaxX() == null
+                    || boxDataParseResult.getMinY() == null || boxDataParseResult.getMaxY() == null) {
                 throw new InvalidAnnotationFormatException(MISSING_ELEMENT_PREFIX + "bndbox");
             }
         } else {
@@ -177,6 +173,8 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 throw new InvalidAnnotationFormatException(INVALID_POLYGON_ELEMENT_ERROR);
             }
         }
+
+        boxDataParseResult.validateCoordinates(imageMetaData);
 
         ObjectCategory category = existingObjectCategories.computeIfAbsent(boxDataParseResult.getCategoryName(),
                 key -> new ObjectCategory(key, ColorUtils.createRandomColor()));
@@ -187,10 +185,10 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
         if(boxDataParseResult.isBoundingBox()) {
             boundingShapeData = new BoundingBoxData(category,
-                    boxDataParseResult.getxMin() / imageMetaData.getImageWidth(),
-                    boxDataParseResult.getyMin() / imageMetaData.getImageHeight(),
-                    boxDataParseResult.getxMax() / imageMetaData.getImageWidth(),
-                    boxDataParseResult.getyMax() / imageMetaData.getImageHeight(),
+                    boxDataParseResult.getMinX() / imageMetaData.getImageWidth(),
+                    boxDataParseResult.getMinY() / imageMetaData.getImageHeight(),
+                    boxDataParseResult.getMaxX() / imageMetaData.getImageWidth(),
+                    boxDataParseResult.getMaxY() / imageMetaData.getImageHeight(),
                     boxDataParseResult.getTags());
         } else {
             boundingShapeData = new BoundingPolygonData(category,
@@ -222,10 +220,10 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 break;
             case "bndbox":
                 boxDataParseResult.setBoundingBox(true);
-                boxDataParseResult.setxMin(parseDoubleElement(tagElement, "xmin"));
-                boxDataParseResult.setxMax(parseDoubleElement(tagElement, "xmax"));
-                boxDataParseResult.setyMin(parseDoubleElement(tagElement, "ymin"));
-                boxDataParseResult.setyMax(parseDoubleElement(tagElement, "ymax"));
+                boxDataParseResult.setMinX(parseDoubleElement(tagElement, "xmin"));
+                boxDataParseResult.setMaxX(parseDoubleElement(tagElement, "xmax"));
+                boxDataParseResult.setMinY(parseDoubleElement(tagElement, "ymin"));
+                boxDataParseResult.setMaxY(parseDoubleElement(tagElement, "ymax"));
                 break;
             case "polygon":
                 boxDataParseResult.setBoundingPolygon(true);
@@ -264,7 +262,8 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         }
     }
 
-    private void parsePart(Element tagElement, BoundingShapeDataParseResult boxDataParseResult, String filename, ImageMetaData imageMetaData) {
+    private void parsePart(Element tagElement, BoundingShapeDataParseResult boxDataParseResult,
+                           String filename, ImageMetaData imageMetaData) {
         try {
             boxDataParseResult.getParts().add(parseBoundingShapeElement(tagElement, filename, imageMetaData));
         } catch(InvalidAnnotationFormatException e) {
@@ -392,7 +391,6 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         private boolean isBoundingBox = false;
         private boolean isBoundingPolygon = false;
 
-
         public String getCategoryName() {
             return categoryName;
         }
@@ -401,35 +399,35 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             this.categoryName = categoryName;
         }
 
-        public Double getxMin() {
+        public Double getMinX() {
             return xMin;
         }
 
-        public void setxMin(Double xMin) {
+        public void setMinX(Double xMin) {
             this.xMin = xMin;
         }
 
-        public Double getxMax() {
+        public Double getMaxX() {
             return xMax;
         }
 
-        public void setxMax(Double xMax) {
+        public void setMaxX(Double xMax) {
             this.xMax = xMax;
         }
 
-        public Double getyMin() {
+        public Double getMinY() {
             return yMin;
         }
 
-        public void setyMin(Double yMin) {
+        public void setMinY(Double yMin) {
             this.yMin = yMin;
         }
 
-        public Double getyMax() {
+        public Double getMaxY() {
             return yMax;
         }
 
-        public void setyMax(Double yMax) {
+        public void setMaxY(Double yMax) {
             this.yMax = yMax;
         }
 
@@ -471,6 +469,22 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
         public void setBoundingPolygon(boolean boundingPolygon) {
             isBoundingPolygon = boundingPolygon;
+        }
+
+        void validateCoordinates(ImageMetaData metaData) {
+            if(isBoundingBox) {
+                if((xMin < 0 || xMin > metaData.getImageWidth()) || (xMax < 0 || xMax > metaData.getImageWidth())
+                        || (yMin < 0 || yMin > metaData.getImageHeight()) || (yMax < 0 || yMax > metaData.getImageHeight())) {
+                    throw new InvalidAnnotationFormatException("Invalid bounding-box bounds for the given image size.");
+                }
+            } else if(isBoundingPolygon) {
+                for(int i = 0; i < points.size(); i += 2) {
+                    if((points.get(i) < 0 || points.get(i) > metaData.getImageWidth())
+                            || (points.get(i + 1) < 0 || points.get(i + 1) > metaData.getImageHeight())) {
+                        throw new InvalidAnnotationFormatException("Invalid bounding-polygon point coordinates for the given image size.");
+                    }
+                }
+            }
         }
     }
 }

@@ -94,6 +94,27 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
         public BooleanProperty hasAssignedBoundingBoxesProperty() {
             return hasAssignedBoundingBoxes;
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(file, hasAssignedBoundingBoxes);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if(this == o) {
+                return true;
+            }
+
+            if(!(o instanceof FileInfo)) {
+                return false;
+            }
+
+            FileInfo fileInfo = (FileInfo) o;
+
+            return Objects.equals(file, fileInfo.file) &&
+                    Objects.equals(hasAssignedBoundingBoxes, fileInfo.hasAssignedBoundingBoxes);
+        }
     }
 
     private class ImageFileInfoCell extends ListCell<FileInfo> {

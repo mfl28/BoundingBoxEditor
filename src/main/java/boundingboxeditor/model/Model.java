@@ -154,9 +154,10 @@ public class Model {
         return imageFileNameToMetaData.computeIfAbsent(getCurrentImageFileName(),
                 key -> {
                     ImageMetaData newMetaData = ImageMetaData.fromFile(getCurrentImageFile());
+                    ImageAnnotation currentImageAnnotation = getCurrentImageAnnotation();
 
-                    if(getCurrentImageAnnotation() != null && !getCurrentImageAnnotation().getImageMetaData().hasDetails()) {
-                        getCurrentImageAnnotation().setImageMetaData(newMetaData);
+                    if(currentImageAnnotation != null && !currentImageAnnotation.getImageMetaData().hasDetails()) {
+                        currentImageAnnotation.setImageMetaData(newMetaData);
                     }
 
                     return newMetaData;
