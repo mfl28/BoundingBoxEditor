@@ -13,6 +13,7 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Color;
 
+
 /**
  * The object category-table UI-element. Shows information about the currently existing {@link ObjectCategory} objects
  * such as color and name. Each category row-entry in the table also includes a button to delete the corresponding category.
@@ -52,8 +53,8 @@ public class ObjectCategoryTableView extends TableView<ObjectCategory> implement
         setFocusTraversable(false);
         setPlaceholder(new Label(PLACEHOLDER_TEXT));
         getSortOrder().add(nameColumn);
-        setContextMenu(contextMenu);
         setUpInternalListeners();
+        setUpFactories();
     }
 
     @Override
@@ -88,21 +89,8 @@ public class ObjectCategoryTableView extends TableView<ObjectCategory> implement
         return getSelectionModel().getSelectedItem();
     }
 
-    private void setUpInternalListeners() {
-        // Due to a javafx-bug a null-pointer exception is thrown when clicking
-        // on the "Custom Color" hyperlink of the color-palette of a color-picker that is part of a menu-item.
-        // To remove the "Custom Color" hyperlink, a stylesheet needs to be loaded when the color-picker is requested,
-        // (and removed afterwards). See https://community.oracle.com/thread/2562936.
-
-        contextMenu.setOnAction(event -> {
-            getSelectedCategory().setColor(categoryColorPicker.getValue());
-            categoryColorPicker.getStylesheets().remove(NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET);
-        });
-
-        setOnContextMenuRequested(event -> {
-            categoryColorPicker.getStylesheets().add(NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET);
-            categoryColorPicker.setValue(getSelectedCategory().getColor());
-        });
+    ContextMenu getRowContextMenu() {
+        return contextMenu;
     }
 
     private TableColumn<ObjectCategory, Color> createColorColumn() {
@@ -160,6 +148,36 @@ public class ObjectCategoryTableView extends TableView<ObjectCategory> implement
         tableColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
         tableColumn.setSortable(false);
         return tableColumn;
+    }
+
+    private void setUpInternalListeners() {
+        // Due to a javafx-bug a null-pointer exception is thrown when clicking
+        // on the "Custom Color" hyperlink of the color-palette of a color-picker that is part of a menu-item.
+        // To remove the "Custom Color" hyperlink, a stylesheet needs to be loaded when the color-picker is requested,
+        // (and removed afterwards). See https://community.oracle.com/thread/2562936.
+
+        contextMenu.setOnAction(event -> {
+            getSelectedCategory().setColor(categoryColorPicker.getValue());
+            categoryColorPicker.getStylesheets().remove(NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET);
+        });
+    }
+
+    private void setUpFactories() {
+        setRowFactory(tableView -> {
+            final TableRow<ObjectCategory> row = new TableRow<>();
+
+            row.contextMenuProperty().bind(Bindings
+                    .when(row.emptyProperty())
+                    .then((ContextMenu) null)
+                    .otherwise(contextMenu));
+
+            row.setOnContextMenuRequested(event -> {
+                categoryColorPicker.getStylesheets().add(NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET);
+                categoryColorPicker.setValue(getSelectedCategory().getColor());
+            });
+
+            return row;
+        });
     }
 
     private static class ColorTableCell extends TableCell<ObjectCategory, Color> {

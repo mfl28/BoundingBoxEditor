@@ -441,7 +441,12 @@ public class Controller {
         final ObjectCategory objectCategory = event.getRowValue();
         final Map<String, Integer> boundingShapesPerCategoryNameMap = model.getCategoryToAssignedBoundingShapesCountMap();
 
-        if(boundingShapesPerCategoryNameMap.containsKey(newName)) {
+        if(newName.isBlank()) {
+            MainView.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
+                    "Please provide a non-blank category name.");
+            objectCategory.setName(oldName);
+            event.getTableView().refresh();
+        } else if(boundingShapesPerCategoryNameMap.containsKey(newName)) {
             MainView.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
                     "The category \"" + newName + "\" already exists.");
             objectCategory.setName(oldName);

@@ -173,14 +173,15 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         verifyThat("#category-selector", TableViewMatchers.hasTableCell("Dummy"));
 
-        // Entering a category with a name that previously exited but is not currently in the category-selector
+        // Entering a category with a name that previously existed but is not currently in the category-selector
         enterNewCategory(robot, "Test");
         WaitForAsyncUtils.waitForFxEvents();
         // There should be no error message
         verifyThat(getTopModalStage(robot, "Category Creation Error"), Matchers.nullValue());
 
-        // Renaming a category to a name that already exits
+        // Renaming a category to a name that already exists
         timeOutClickOn(robot, "Test");
+        WaitForAsyncUtils.waitForFxEvents();
         robot.write("Dummy").push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -194,9 +195,36 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage3, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
-        // Deleting remaining categories
-        timeOutClickOn(robot, "#delete-button");
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Test"));
+
+        // Renaming a category to a blank string
+        timeOutClickOn(robot, "Dummy");
         WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Dummy"));
+
+        timeOutClickOn(robot, "Dummy");
+        robot.write("    ").push(KeyCode.ENTER);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Category Creation Error") != null),
+                "Expected category creation error dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        Stage categoryCreationErrorStage4 = getTopModalStage(robot, "Category Creation Error");
+        verifyThat(categoryCreationErrorStage4, Matchers.notNullValue());
+
+        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage4, "OK");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Deleting remaining categories
+        timeOutClickOnNth(robot, "#delete-button", 1);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.rightClickOn();
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mainView.getObjectCategoryTable().getRowContextMenu().isShowing(), Matchers.equalTo(false));
+
         timeOutClickOn(robot, "#delete-button");
         WaitForAsyncUtils.waitForFxEvents();
 

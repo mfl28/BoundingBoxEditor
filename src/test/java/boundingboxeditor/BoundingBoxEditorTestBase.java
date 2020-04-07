@@ -212,9 +212,20 @@ public class BoundingBoxEditorTestBase {
                 "Element with id = " + id + " was not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
     }
 
+    protected void timeOutLookUpNth(FxRobot robot, String id, int n) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> robot.lookup(id).nth(n).tryQuery().isPresent()),
+                "Element with id = " + id + " and index " + n + " was not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+    }
+
     protected void timeOutClickOn(FxRobot robot, String id) {
         timeOutLookUp(robot, id);
         robot.clickOn(id);
+    }
+
+    protected void timeOutClickOnNth(FxRobot robot, String id, int n) {
+        timeOutLookUpNth(robot, id, n);
+        robot.clickOn((Node) robot.lookup(id).nth(n).query());
     }
 
     protected void timeOutMoveTo(FxRobot robot, String id) {
