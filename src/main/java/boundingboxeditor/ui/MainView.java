@@ -101,6 +101,28 @@ public class MainView extends BorderPane implements View {
     }
 
     /**
+     * Displays a a dialog with 'Yes', 'No' buttons and returns the chosen option.
+     *
+     * @param title   The title of the dialog window
+     * @param content The content text of the dialog window
+     * @return {@link ButtonBar.ButtonData}.YES/NO
+     */
+    public static ButtonBar.ButtonData displayYesNoDialogAndGetResult(String title, String content) {
+        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
+                content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
+                new ButtonType("No", ButtonBar.ButtonData.NO));
+        dialog.setTitle(title);
+        dialog.setHeaderText(null);
+        dialog.setContentText(content);
+        dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        dialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+        dialog.showAndWait();
+
+        return dialog.getResult().getButtonData();
+    }
+
+    /**
      * Displays a directory chooser window and returns the chosen directory.
      *
      * @param title The title of the directory chooser window
@@ -151,13 +173,27 @@ public class MainView extends BorderPane implements View {
                 .count();
 
         if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_IMPORT)) {
-            MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE, "There were errors while loading annotations.",
-                    "Some bounding boxes could not be loaded from " + numErrorEntries + " image-annotation file"
-                            + (numErrorEntries > 1 ? "s" : "") + ".", errorTable);
+            if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
+                MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE, "There were errors while loading annotations.",
+                        "The folder does not contain any valid annotation files.", errorTable);
+            } else {
+                MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE, "There were errors while loading annotations.",
+                        "Some bounding boxes could not be loaded from " + numErrorEntries + " image-annotation file"
+                                + (numErrorEntries > 1 ? "s" : "") + ".", errorTable);
+            }
+
         } else if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_SAVING)) {
             MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE, "There were errors while saving annotations.",
                     numErrorEntries + " image-annotation file"
                             + (numErrorEntries > 1 ? "s" : "") + " could not be saved.", errorTable);
+        } else if(ioResult.getOperationType().equals(IOResult.OperationType.IMAGE_METADATA_LOADING)) {
+            if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
+                MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
+                        "The folder does not contain any valid image files.", errorTable);
+            } else {
+                MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
+                        numErrorEntries + " image file" + (numErrorEntries > 1 ? "s" : "") + " could not be loaded.", errorTable);
+            }
         }
     }
 

@@ -149,7 +149,11 @@ public class EditorImagePaneView extends ScrollPane implements View {
      * @param value true to switch on, false to switch off
      */
     public void setZoomableAndPannable(boolean value) {
-        currentBoundingShapes.forEach(viewable -> viewable.getViewData().getBaseShape().setMouseTransparent(value));
+        currentBoundingShapes.forEach(viewable -> {
+            if(!(!value && viewable instanceof BoundingPolygonView && ((BoundingPolygonView) viewable).isConstructing())) {
+                viewable.getViewData().getBaseShape().setMouseTransparent(value);
+            }
+        });
         imageView.setCursor(value ? Cursor.OPEN_HAND : Cursor.DEFAULT);
         setPannable(value);
     }

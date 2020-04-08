@@ -7,13 +7,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.logging.Logger;
 
 /**
  * Holds metadata information about an image.
  */
 public class ImageMetaData {
-    private static final Logger log = Logger.getLogger(ImageMetaData.class.getName());
     private final String fileName;
     private ImageMetaDataDetails details;
 
@@ -41,7 +39,7 @@ public class ImageMetaData {
      * @param imageFile the image-file
      * @return an ImageMetaData object containing metadata about the provided image-file
      */
-    public static ImageMetaData fromFile(File imageFile) {
+    public static ImageMetaData fromFile(File imageFile) throws IOException {
         ImageDimensions imageDimensions = readImageDimensionsFromFile(imageFile);
         return new ImageMetaData(imageFile.getName(), imageFile.toPath().getParent().toFile().getName(),
                 imageDimensions.getWidth(), imageDimensions.getHeight(), imageDimensions.getDepth());
@@ -116,30 +114,39 @@ public class ImageMetaData {
                 + ", image-width=" + getImageWidth() + ", image-height=" + getImageHeight() + ", image-depth=" + getImageDepth();
     }
 
-    private static ImageDimensions readImageDimensionsFromFile(File imageFile) {
+    public String getDimensionsString() {
+        if(details == null) {
+            return "[]";
+        }
+
+        return "[" + (int) getImageWidth() + " x " + (int) getImageHeight() + " x " + getImageDepth() + "]";
+    }
+
+    private static ImageDimensions readImageDimensionsFromFile(File imageFile) throws IOException {
+        double width = 0;
+        double height = 0;
+        int numComponents = 0;
         // Source: https://stackoverflow.com/a/1560052
         try(ImageInputStream imageStream = ImageIO.createImageInputStream(imageFile)) {
             Iterator<ImageReader> readers = ImageIO.getImageReaders(imageStream);
+
             if(readers.hasNext()) {
                 ImageReader reader = readers.next();
                 try {
                     reader.setInput(imageStream);
-                    return new ImageDimensions(
-                            reader.getWidth(0),
-                            reader.getHeight(0),
-                            reader.getRawImageType(0).getNumComponents()
-                    );
+
+                    width = reader.getWidth(0);
+                    height = reader.getHeight(0);
+                    numComponents = reader.getRawImageType(0).getNumComponents();
                 } finally {
                     reader.dispose();
                 }
+            } else {
+                throw new RuntimeException("Could not read image meta-data.");
             }
-        } catch(IOException e) {
-            log.severe("Could not open image-file " + imageFile.getName());
-            return ImageDimensions.zeroDimensions();
         }
 
-        log.severe("Could not read image-size data from file " + imageFile.getName());
-        return ImageDimensions.zeroDimensions();
+        return new ImageDimensions(width, height, numComponents);
     }
 
     private static class ImageMetaDataDetails {
@@ -179,7 +186,6 @@ public class ImageMetaData {
     }
 
     private static class ImageDimensions {
-        private static final ImageDimensions zero = new ImageDimensions(0, 0, 0);
         private final double width;
         private final double height;
         private final int depth;
@@ -188,10 +194,6 @@ public class ImageMetaData {
             this.width = width;
             this.height = height;
             this.depth = depth;
-        }
-
-        static ImageDimensions zeroDimensions() {
-            return zero;
         }
 
         double getWidth() {

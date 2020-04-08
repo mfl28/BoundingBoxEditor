@@ -213,7 +213,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         final Stage errorReportStage = getTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
 
-        final String errorReportDialogContentReferenceText = "Some bounding boxes could not be loaded from 1 image-annotation file.";
+        final String errorReportDialogContentReferenceText = "The folder does not contain any valid annotation files.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText));
 
@@ -387,7 +387,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         final Stage errorReportStage = getTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
 
-        final String errorReportDialogContentReferenceText = "Some bounding boxes could not be loaded from 1 image-annotation file.";
+        final String errorReportDialogContentReferenceText = "The folder does not contain any valid annotation files.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText));
 

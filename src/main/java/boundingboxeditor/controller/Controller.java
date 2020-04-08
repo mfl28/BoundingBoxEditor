@@ -30,9 +30,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -95,6 +94,7 @@ public class Controller {
     private final BooleanProperty navigateNextKeyPressed = new SimpleBooleanProperty(false);
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
+    Thread directoryWatcher;
     private File currentImageLoadingDirectory;
     private File currentAnnotationSavingDirectory;
     private File currentAnnotationLoadingDirectory;
@@ -166,6 +166,34 @@ public class Controller {
         loadImageFiles(imageFolder);
     }
 
+    public void reloadCurrentImageFolder() {
+        if(model.containsImageFiles()) {
+            model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
+        }
+
+        if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
+            ButtonBar.ButtonData answer = MainView.displayYesNoDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                    OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
+
+            if(answer == ButtonBar.ButtonData.YES) {
+                final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
+                        currentAnnotationSavingDirectory);
+
+                if(saveDirectory != null) {
+                    // TODO: Ask for sought save format (or use previous).
+                    AnnotationSaverService annotationSaverService = new AnnotationSaverService(saveDirectory, ImageAnnotationSaveStrategy.Type.PASCAL_VOC);
+                    annotationSaverService.runOnSuccess(() -> loadImageFiles(currentImageLoadingDirectory));
+                    annotationSaverService.startAndShowProgressDialog();
+                    currentAnnotationSavingDirectory = saveDirectory;
+                }
+                return;
+            }
+            // TODO: Make sure user knows that CANCEL/CLOSE will also reload the image folder.
+        }
+
+        loadImageFiles(currentImageLoadingDirectory);
+    }
+
     /**
      * Loads image-files from the provided directory into the model and updates
      * the view.
@@ -189,13 +217,7 @@ public class Controller {
 
         lastLoadedImageUrl = null;
 
-        model.fileIndexProperty().removeListener(selectedFileIndexListener);
-        model.resetDataAndSetImageFiles(imageFiles);
-        model.fileIndexProperty().addListener(selectedFileIndexListener);
-
-        updateViewImageFiles();
-
-        view.getStatusBar().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(imageFiles.size(), imageFileDirectory));
+        new ImageFilesLoaderService(imageFiles, imageFileDirectory).startAndShowProgressDialog();
     }
 
     /**
@@ -302,6 +324,10 @@ public class Controller {
      * Handles the event of the user requesting to exit the application.
      */
     public void onRegisterExitAction() {
+        if(directoryWatcher != null && directoryWatcher.isAlive()) {
+            directoryWatcher.interrupt();
+        }
+
         if(model.containsImageFiles()) {
             model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
         }
@@ -593,6 +619,7 @@ public class Controller {
         try(Stream<Path> imageFiles = Files.walk(path, MAX_DIRECTORY_DEPTH)) {
             return imageFiles.filter(file -> Arrays.stream(imageExtensions).anyMatch(file.toString()::endsWith))
                     .map(file -> new File(file.toString()))
+                    .filter(File::isFile)
                     .collect(Collectors.toList());
         }
     }
@@ -605,11 +632,9 @@ public class Controller {
         view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
         imagePane.getImageLoadingProgressIndicator().setVisible(true);
 
-        ImageMetaData metaData = model.createOrGetCurrentImageMetaData();
-        view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
-        view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
+        updateViewImageFromModel();
 
-        stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
+        updateStageTitle();
 
         ObjectCategoryTableView objectCategoryTableView = view.getObjectCategoryTable();
         objectCategoryTableView.setItems(model.getObjectCategories());
@@ -621,6 +646,12 @@ public class Controller {
         ImageFileListView imageFileListView = view.getImageFileListView();
         imageFileListView.getSelectionModel().selectFirst();
         imageFileListView.scrollTo(0);
+    }
+
+    private void updateStageTitle() {
+        ImageMetaData currentImageMetaData = model.createOrGetCurrentImageMetaData();
+        stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR
+                + model.getCurrentImageFilePath() + " " + currentImageMetaData.getDimensionsString());
     }
 
     @SuppressWarnings("UnnecessaryLambda")
@@ -672,7 +703,7 @@ public class Controller {
                 lastLoadedImageUrl = oldImage.getUrl();
             }
 
-            stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR + model.getCurrentImageFilePath());
+            updateStageTitle();
 
             if(navigateNextKeyPressed.get() ^ navigatePreviousKeyPressed.get()) {
                 // If a navigation key is pressed, image loading is skipped (but the image file index is still updated).
@@ -707,7 +738,17 @@ public class Controller {
     }
 
     private void updateViewImageFromModel() {
-        ImageMetaData metaData = model.createOrGetCurrentImageMetaData();
+        ImageMetaData metaData;
+
+        try {
+            metaData = model.createOrGetCurrentImageMetaData();
+        } catch(Exception e) {
+            view.getEditorImagePane().getImageLoadingProgressIndicator().setVisible(false);
+            MainView.displayErrorAlert("Image loading error",
+                    "Could not read meta-data from image file \"" + model.getCurrentImageFileName() + "\".");
+            return;
+        }
+
         view.updateImageFromFile(model.getCurrentImageFile(), metaData.getImageWidth(), metaData.getImageHeight());
         view.getCurrentImage().progressProperty().addListener(imageLoadProgressListener);
     }
@@ -982,6 +1023,104 @@ public class Controller {
                 if(annotation != null && !annotation.getBoundingShapeData().isEmpty()) {
                     fileInfo.setHasAssignedBoundingShapes(true);
                 }
+            }
+        }
+    }
+
+    class ImageFilesLoaderService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
+        private static final String IMAGE_IMPORT_ERROR_ALERT_TITLE = "Image Import Error";
+        private static final String IMAGE_IMPORT_ERROR_ALERT_CONTENT = "The folder does not contain any valid image files.";
+        private final List<File> imageFiles;
+        private final File imageSource;
+        private List<File> validImageFiles;
+
+        ImageFilesLoaderService(List<File> imageFiles, File imageSource) {
+            this.imageFiles = imageFiles;
+            this.imageSource = imageSource;
+
+            setOnSucceeded(successEvent -> defaultOnSucceededHandler());
+            setOnFailed(failedEvent -> defaultOnFailedHandler());
+        }
+
+        @Override
+        public void runOnSuccess(Runnable runnable) {
+            setOnSucceeded(successEvent -> {
+                defaultOnSucceededHandler();
+                runnable.run();
+            });
+        }
+
+        @Override
+        public void startAndShowProgressDialog() {
+            MainView.displayServiceProgressDialog(this, "Loading Images",
+                    "Loading image meta-data");
+            start();
+        }
+
+        @Override
+        protected Task<IOResult> createTask() {
+            return new Task<>() {
+                @Override
+                protected IOResult call() throws Exception {
+                    return IOOperationTimer.time(() -> {
+                        Map<String, ImageMetaData> fileNameToMetaDataMap = model.getImageFileNameToMetaDataMap();
+
+                        fileNameToMetaDataMap.clear();
+                        model.clearAnnotationData();
+
+                        List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
+
+                        int totalNrOfFiles = imageFiles.size();
+                        AtomicInteger nrProcessedFiles = new AtomicInteger(0);
+
+                        fileNameToMetaDataMap.putAll(imageFiles.parallelStream().collect(HashMap::new, (map, item) -> {
+                            updateProgress(1.0 * nrProcessedFiles.incrementAndGet() / totalNrOfFiles, 1.0);
+                            try {
+                                map.put(item.getName(), ImageMetaData.fromFile(item));
+                            } catch(Exception e) {
+                                unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(item.getName(), e.getMessage()));
+                            }
+                        }, Map::putAll));
+
+                        validImageFiles = imageFiles.stream().filter(item -> fileNameToMetaDataMap.containsKey(item.getName()))
+                                .collect(Collectors.toList());
+
+                        return new IOResult(IOResult.OperationType.IMAGE_METADATA_LOADING, fileNameToMetaDataMap.size(), unParsedFileErrorMessages);
+                    });
+                }
+            };
+        }
+
+        private void defaultOnSucceededHandler() {
+            IOResult saveResult = getValue();
+
+            if(saveResult.getNrSuccessfullyProcessedItems() != 0) {
+                if(directoryWatcher != null && directoryWatcher.isAlive()) {
+                    directoryWatcher.interrupt();
+                }
+
+                model.fileIndexProperty().removeListener(selectedFileIndexListener);
+                model.setImageFiles(validImageFiles);
+                model.fileIndexProperty().addListener(selectedFileIndexListener);
+
+                updateViewImageFiles();
+
+                view.getStatusBar().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(saveResult, imageSource));
+
+                directoryWatcher = new Thread(new FileWatcher(imageSource.toPath(), Controller.this, model.getImageFileNameSet()));
+                directoryWatcher.start();
+            }
+
+            if(!saveResult.getErrorTableEntries().isEmpty()) {
+                MainView.displayIOResultErrorInfoAlert(saveResult);
+            } else if(saveResult.getNrSuccessfullyProcessedItems() == 0) {
+                MainView.displayErrorAlert(IMAGE_IMPORT_ERROR_ALERT_TITLE, IMAGE_IMPORT_ERROR_ALERT_CONTENT);
+            }
+        }
+
+        private void defaultOnFailedHandler() {
+            if(getException() != null) {
+                MainView.displayExceptionDialog(getException());
             }
         }
     }

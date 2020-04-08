@@ -13,6 +13,8 @@ import javafx.collections.ObservableList;
 import org.apache.commons.collections4.map.ListOrderedMap;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -153,7 +155,14 @@ public class Model {
     public ImageMetaData createOrGetCurrentImageMetaData() {
         return imageFileNameToMetaData.computeIfAbsent(getCurrentImageFileName(),
                 key -> {
-                    ImageMetaData newMetaData = ImageMetaData.fromFile(getCurrentImageFile());
+                    ImageMetaData newMetaData;
+
+                    try {
+                        newMetaData = ImageMetaData.fromFile(getCurrentImageFile());
+                    } catch(IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+
                     ImageAnnotation currentImageAnnotation = getCurrentImageAnnotation();
 
                     if(currentImageAnnotation != null && !currentImageAnnotation.getImageMetaData().hasDetails()) {
@@ -347,6 +356,14 @@ public class Model {
      */
     public List<File> getImageFiles() {
         return Collections.unmodifiableList(imageFileNameToFile.valueList());
+    }
+
+    public void setImageFiles(Collection<File> imageFiles) {
+        imageFileNameToFile = ListOrderedMap.listOrderedMap(imageFiles.parallelStream()
+                .collect(LinkedHashMap::new, (map, item) -> map.put(item.getName(), item), Map::putAll));
+
+        nrImageFiles.set(imageFileNameToFile.size());
+        fileIndex.set(0);
     }
 
     /**
