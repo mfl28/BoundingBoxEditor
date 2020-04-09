@@ -85,19 +85,15 @@ public class Model {
     }
 
     /**
-     * Clears all existing annotation- and category-data, resets properties and sets
-     * new image-files.
-     *
-     * @param imageFiles the new image-files
+     * Clears all existing annotation- and category-data and resets properties.
      */
-    public void resetDataAndSetImageFiles(Collection<File> imageFiles) {
+    public void clear() {
         imageFileNameToMetaData.clear();
-        clearAnnotationData();
+        clearAnnotationData(false);
 
-        imageFileNameToFile = ListOrderedMap.listOrderedMap(imageFiles.parallelStream()
-                .collect(LinkedHashMap::new, (map, item) -> map.put(item.getName(), item), Map::putAll));
+        imageFileNameToFile = new ListOrderedMap<>();
 
-        nrImageFiles.set(imageFileNameToFile.size());
+        nrImageFiles.set(imageFileNameToMetaData.size());
         fileIndex.set(0);
     }
 
@@ -383,10 +379,13 @@ public class Model {
     /**
      * Clears all data relating to annotations (including created categories).
      */
-    public void clearAnnotationData() {
+    public void clearAnnotationData(boolean keepCategories) {
         imageFileNameToAnnotation.clear();
 
-        objectCategories.clear();
+        if(!keepCategories) {
+            objectCategories.clear();
+        }
+
         categoryToAssignedBoundingShapesCount.clear();
     }
 

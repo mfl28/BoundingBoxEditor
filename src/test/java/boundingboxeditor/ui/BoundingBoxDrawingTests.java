@@ -21,7 +21,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
-        controller.loadImageFiles(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()));
+        controller.loadImageFiles(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()), false);
     }
 
     @Test
@@ -110,7 +110,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(boundingBoxView.getWidth(), Matchers.closeTo(boundingBoxWidth, MathUtils.DOUBLE_EQUAL_THRESHOLD));
         verifyThat(boundingBoxView.getHeight(), Matchers.closeTo(boundingBoxHeight, MathUtils.DOUBLE_EQUAL_THRESHOLD));
 
-        loadImageFolderAndClickDialogOption(robot, TEST_IMAGE_FOLDER_PATH_2, "No");
+        loadImageFolderAndClickKeepCategoriesAndSaveAnnotationOptions(robot, TEST_IMAGE_FOLDER_PATH_2, "No", "No");
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));

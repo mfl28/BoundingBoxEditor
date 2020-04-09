@@ -35,5 +35,18 @@ public interface ImageAnnotationSaveStrategy {
      */
     IOResult save(ImageAnnotationData annotations, Path saveFolderPath, DoubleProperty progress);
 
-    enum Type {PASCAL_VOC, YOLO}
+    enum Type {
+        PASCAL_VOC {
+            @Override
+            public String toString() {
+                return "Pascal VOC";
+            }
+        },
+        YOLO {
+            @Override
+            public String toString() {
+                return "YOLO";
+            }
+        }
+    }
 }

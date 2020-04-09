@@ -242,6 +242,10 @@ public class MainView extends BorderPane implements View {
         workspaceSplitPane.reset();
     }
 
+    public void setWorkspaceVisible(boolean value) {
+        workspaceSplitPane.setVisible(value);
+    }
+
     /**
      * Updates the displayed image in the main image-pane from a provided image-{@link File}.
      *

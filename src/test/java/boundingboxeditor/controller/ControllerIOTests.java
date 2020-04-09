@@ -41,7 +41,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
-        controller.loadImageFiles(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()));
+        controller.loadImageFiles(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()), false);
     }
 
     @Test
@@ -492,7 +492,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));
         verifyThat(mainView.getObjectTree().getRoot().getChildren(), Matchers.hasSize(0));
 
-        loadImageFolderAndClickDialogOption(robot, TEST_IMAGE_FOLDER_PATH_1, "No");
+        loadImageFolderAndClickKeepCategoriesAndSaveAnnotationOptions(robot, TEST_IMAGE_FOLDER_PATH_1, "No", "No");
 
         verifyThat(model.getCurrentFileIndex(), Matchers.equalTo(0));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));

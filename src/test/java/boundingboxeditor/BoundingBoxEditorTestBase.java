@@ -11,6 +11,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -34,10 +35,9 @@ import org.testfx.util.WaitForAsyncUtils;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import static org.testfx.api.FxAssert.verifyThat;
 
 @ExtendWith(ApplicationExtension.class)
 public class BoundingBoxEditorTestBase {
@@ -248,18 +248,50 @@ public class BoundingBoxEditorTestBase {
         Platform.runLater(() -> controller.initiateImageFolderLoading(new File(getClass().getResource(imageFolderPath).getFile())));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> getTopModalStage(robot, "Open image folder") != null),
-                "Expected info dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+        Stage saveAnnotationsDialogStage = timeOutAssertDialogOpenedAndGetStage(robot, "Open image folder",
+                "Opening a new image folder will remove any existing annotation data. " +
+                        "Do you want to save the currently existing annotation data?");
 
-        Stage dialogStage = getTopModalStage(robot, "Open image folder");
-        verifyThat(dialogStage, Matchers.notNullValue());
-
-        timeOutLookUpInStageAndClickOn(robot, dialogStage, optionText);
+        timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialogStage, optionText);
         WaitForAsyncUtils.waitForFxEvents();
 
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    protected void loadImageFolderAndClickKeepCategoriesAndSaveAnnotationOptions(FxRobot robot, String imageFolderPath, String keepCategoriesOption,
+                                                                                 String saveAnnotationsOption) {
+        Platform.runLater(() -> controller.initiateImageFolderLoading(new File(getClass().getResource(imageFolderPath).getFile())));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Stage keepExistingCategoriesDialogStage = timeOutAssertDialogOpenedAndGetStage(robot,
+                "Open image folder", "Keep existing categories?");
+
+        timeOutLookUpInStageAndClickOn(robot, keepExistingCategoriesDialogStage, keepCategoriesOption);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Stage saveAnnotationsDialogStage = timeOutAssertDialogOpenedAndGetStage(robot, "Open image folder",
+                "Opening a new image folder will remove any existing annotation data. " +
+                        "Do you want to save the currently existing annotation data?");
+
+        timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialogStage, saveAnnotationsOption);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    protected Stage timeOutAssertDialogOpenedAndGetStage(FxRobot robot, String title, String content) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> {
+                    Stage topModalStage = getTopModalStage(robot, title);
+                    return topModalStage != null && topModalStage.getScene().getRoot() instanceof DialogPane &&
+                            Objects.equals(((DialogPane) topModalStage.getScene().getRoot()).getContentText(), content);
+                }),
+                "Expected info dialog with title \"" + title + "\" and content \"" +
+                        content + "\" did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        return getTopModalStage(robot, title);
     }
 
     private Scene createSceneFromParent(final Parent parent) {

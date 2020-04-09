@@ -46,4 +46,9 @@ public class StatusBarView extends HBox implements View {
     public String getCurrentEventMessage() {
         return eventMessageLabel.getText();
     }
+
+    public void clear() {
+        timeStampLabel.setText(null);
+        eventMessageLabel.setText(null);
+    }
 }
