@@ -88,6 +88,7 @@ public class Controller {
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE = "Save annotations";
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER = "Choose the format for the saved annotations.";
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT = "Annotation format: ";
+    private static final String KEEP_EXISTING_CATEGORIES_DIALOG_TEXT = "Keep existing categories?";
 
     private final Stage stage;
     private final MainView view = new MainView();
@@ -134,7 +135,6 @@ public class Controller {
 
         if(imageFolder != null) {
             initiateImageFolderLoading(imageFolder);
-            currentImageLoadingDirectory = imageFolder;
         }
     }
 
@@ -144,71 +144,14 @@ public class Controller {
      * @param imageFolder the folder containing the image files to load
      */
     public void initiateImageFolderLoading(File imageFolder) {
-        if(model.containsImageFiles()) {
-            model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
-        }
-
-        boolean keepExistingCategories = false;
-
-        if(model.containsCategories()) {
-            ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                    "Keep existing categories?");
-
-            keepExistingCategories = (answer == ButtonBar.ButtonData.YES);
-
-            if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
-                return;
-            }
-        }
-
-        if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
-            // First ask if user wants to save the existing annotations.
-            ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                    OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
-
-            if(answer == ButtonBar.ButtonData.YES) {
-                boolean finalKeepExistingCategories = keepExistingCategories;
-                initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(() -> loadImageFiles(imageFolder, finalKeepExistingCategories));
-                return;
-            } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
-                return;
-            }
-        }
-
-        loadImageFiles(imageFolder, keepExistingCategories);
+        updateModelFromView();
+        loadImageFiles(imageFolder);
+        currentImageLoadingDirectory = imageFolder;
     }
 
-    public void reloadCurrentImageFolder() {
-        if(model.containsImageFiles()) {
-            model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
-        }
-
-        boolean keepExistingCategories = false;
-
-        if(model.containsCategories()) {
-            ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                    "Keep existing categories?");
-
-            keepExistingCategories = (answer == ButtonBar.ButtonData.YES);
-
-            if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
-                return;
-            }
-        }
-
-        if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
-            ButtonBar.ButtonData answer = MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                    RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
-
-            if(answer == ButtonBar.ButtonData.YES) {
-                boolean finalKeepExistingCategories = keepExistingCategories;
-                initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(() ->
-                        forceLoadImageFiles(currentImageLoadingDirectory, finalKeepExistingCategories));
-                return;
-            }
-        }
-
-        forceLoadImageFiles(currentImageLoadingDirectory, keepExistingCategories);
+    public void initiateCurrentFolderReloading() {
+        updateModelFromView();
+        forceLoadImageFiles(currentImageLoadingDirectory);
     }
 
     /**
@@ -217,7 +160,7 @@ public class Controller {
      *
      * @param imageFileDirectory the directory containing the image-files to be loaded
      */
-    public void loadImageFiles(File imageFileDirectory, boolean keepCategories) {
+    public void loadImageFiles(File imageFileDirectory) {
         List<File> imageFiles;
 
         try {
@@ -234,16 +177,14 @@ public class Controller {
 
         lastLoadedImageUrl = null;
 
-        new ImageFilesLoaderService(imageFiles, imageFileDirectory, keepCategories).startAndShowProgressDialog();
+        new ImageFilesLoaderService(imageFiles, imageFileDirectory).startAndShowProgressDialog();
     }
 
     /**
      * Handles the event of the user requesting to save the image annotations.
      */
     public void onRegisterSaveAnnotationsAction(ImageAnnotationSaveStrategy.Type saveFormat) {
-        if(model.containsImageFiles()) {
-            model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
-        }
+        updateModelFromView();
 
         if(!model.containsAnnotations() && !view.containsBoundingShapeViews()) {
             MainView.displayErrorAlert(SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE,
@@ -279,9 +220,7 @@ public class Controller {
      * @param importFolder the folder containing the image files to load
      */
     public void initiateAnnotationFolderImport(File importFolder, ImageAnnotationLoadStrategy.Type loadFormat) {
-        if(model.containsImageFiles()) {
-            model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
-        }
+        updateModelFromView();
 
         if(model.containsCategories()) {
             ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE,
@@ -341,9 +280,7 @@ public class Controller {
      * Handles the event of the user requesting to exit the application.
      */
     public void onRegisterExitAction() {
-        if(model.containsImageFiles()) {
-            model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
-        }
+        updateModelFromView();
 
         if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
             ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(EXIT_APPLICATION_OPTION_DIALOG_TITLE,
@@ -557,33 +494,49 @@ public class Controller {
         return model;
     }
 
-    private void forceLoadImageFiles(File imageFileDirectory, boolean keepCategories) {
+    private void updateModelFromView() {
+        if(model.containsImageFiles()) {
+            model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
+        }
+    }
+
+    private void forceLoadImageFiles(File imageFileDirectory) {
         List<File> imageFiles;
 
         try {
             imageFiles = getImageFilesFromDirectory(imageFileDirectory);
         } catch(IOException e) {
             MainView.displayErrorAlert(OPEN_FOLDER_ERROR_DIALOG_TITLE, OPEN_FOLDER_ERROR_DIALOG_HEADER);
-            clearViewAndModel();
+            askToSaveExistingAnnotationDataAndClearModelAndView();
             return;
         }
 
         if(imageFiles.isEmpty()) {
             MainView.displayErrorAlert(LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE, LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT);
-            clearViewAndModel();
+            askToSaveExistingAnnotationDataAndClearModelAndView();
             return;
         }
 
         lastLoadedImageUrl = null;
 
-        ImageFilesLoaderService imageFilesLoaderService = new ImageFilesLoaderService(imageFiles, imageFileDirectory, keepCategories);
-        imageFilesLoaderService.runOnSuccess(() -> {
-            if(imageFilesLoaderService.getValue().getNrSuccessfullyProcessedItems() == 0) {
-                clearViewAndModel();
-            }
-        });
-
+        ImageFilesLoaderService imageFilesLoaderService = new ImageFilesLoaderService(imageFiles, imageFileDirectory);
+        imageFilesLoaderService.setReloadFolder(true);
         imageFilesLoaderService.startAndShowProgressDialog();
+    }
+
+    private void askToSaveExistingAnnotationDataAndClearModelAndView() {
+        if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
+            // First ask if user wants to save the existing annotations.
+            ButtonBar.ButtonData answer = MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                    RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
+
+            if(answer == ButtonBar.ButtonData.YES) {
+                initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(this::clearViewAndModel);
+                return;
+            }
+        }
+
+        clearViewAndModel();
     }
 
     private void initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(Runnable runnable) {
@@ -1153,19 +1106,28 @@ public class Controller {
         private static final String IMAGE_IMPORT_ERROR_ALERT_CONTENT = "The folder does not contain any valid image files.";
         private static final String IMAGE_FILES_LOADING_DIALOG_TITLE = "Loading images";
         private static final String IMAGE_FILES_LOADING_DIALOG_HEADER = "Loading image meta-data";
+        private static final String IMAGE_FILES_CHANGED_ERROR_TITLE = "Image files changed";
+        private static final String IMAGE_FILES_CHANGED_ERROR_CONTENT = "Image files were changed externally, will reload folder.";
         private final List<File> imageFiles;
         private final File imageSource;
         private final Map<String, ImageMetaData> fileNameToMetaDataMap = new HashMap<>();
-        private final boolean keepCategories;
         private List<File> validImageFiles;
+        private boolean reloadFolder = false;
 
-        ImageFilesLoaderService(List<File> imageFiles, File imageSource, boolean keepCategories) {
+        ImageFilesLoaderService(List<File> imageFiles, File imageSource) {
             this.imageFiles = imageFiles;
             this.imageSource = imageSource;
-            this.keepCategories = keepCategories;
 
             setOnSucceeded(successEvent -> defaultOnSucceededHandler());
             setOnFailed(failedEvent -> defaultOnFailedHandler());
+        }
+
+        public boolean isReloadFolder() {
+            return reloadFolder;
+        }
+
+        public void setReloadFolder(boolean reloadFolder) {
+            this.reloadFolder = reloadFolder;
         }
 
         @Override
@@ -1218,23 +1180,48 @@ public class Controller {
             IOResult ioResult = getValue();
 
             if(ioResult.getNrSuccessfullyProcessedItems() != 0) {
-                interruptDirectoryWatcher();
+                updateModelFromView();
 
-                model.clearAnnotationData(keepCategories);
-                model.getImageFileNameToMetaDataMap().clear();
-                model.getImageFileNameToMetaDataMap().putAll(fileNameToMetaDataMap);
+                boolean keepExistingCategories = false;
 
-                model.fileIndexProperty().removeListener(selectedFileIndexListener);
-                model.setImageFiles(validImageFiles);
-                model.fileIndexProperty().addListener(selectedFileIndexListener);
+                if(model.containsCategories()) {
+                    ButtonBar.ButtonData answer = reloadFolder ?
+                            MainView.displayYesNoDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                                    KEEP_EXISTING_CATEGORIES_DIALOG_TEXT) :
+                            MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                                    KEEP_EXISTING_CATEGORIES_DIALOG_TEXT);
 
-                updateViewImageFiles();
+                    keepExistingCategories = (answer == ButtonBar.ButtonData.YES);
 
-                view.getStatusBar().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(ioResult, imageSource));
+                    if(answer == ButtonBar.ButtonData.CANCEL_CLOSE && !reloadFolder) {
+                        return;
+                    }
+                }
 
-                directoryWatcher = new Thread(new FileChangeWatcher(imageSource.toPath(),
-                        model.getImageFileNameSet(), Controller.this::reloadCurrentImageFolder));
-                directoryWatcher.start();
+                if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
+                    // First ask if user wants to save the existing annotations.
+                    ButtonBar.ButtonData answer = reloadFolder ?
+                            MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                                    RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT) :
+                            MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                                    OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
+
+                    if(answer == ButtonBar.ButtonData.YES) {
+                        boolean finalKeepExistingCategories = keepExistingCategories;
+
+                        if(reloadFolder) {
+                            initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(() ->
+                                    onValidFilesPresentHandler(finalKeepExistingCategories));
+                        } else {
+                            initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(() ->
+                                    onValidFilesPresentHandler(finalKeepExistingCategories));
+                        }
+                    } else if(answer == ButtonBar.ButtonData.NO || reloadFolder) {
+                        onValidFilesPresentHandler(keepExistingCategories);
+                    }
+                } else {
+                    onValidFilesPresentHandler(keepExistingCategories);
+                }
             }
 
             if(!ioResult.getErrorTableEntries().isEmpty()) {
@@ -1242,12 +1229,39 @@ public class Controller {
             } else if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
                 MainView.displayErrorAlert(IMAGE_IMPORT_ERROR_ALERT_TITLE, IMAGE_IMPORT_ERROR_ALERT_CONTENT);
             }
+
+            if(reloadFolder && ioResult.getNrSuccessfullyProcessedItems() == 0) {
+                Controller.this.askToSaveExistingAnnotationDataAndClearModelAndView();
+            }
         }
 
         private void defaultOnFailedHandler() {
             if(getException() != null) {
                 MainView.displayExceptionDialog(getException());
             }
+        }
+
+        private void onValidFilesPresentHandler(boolean keepCategories) {
+            interruptDirectoryWatcher();
+
+            model.clearAnnotationData(keepCategories);
+            model.getImageFileNameToMetaDataMap().clear();
+            model.getImageFileNameToMetaDataMap().putAll(fileNameToMetaDataMap);
+
+            model.fileIndexProperty().removeListener(selectedFileIndexListener);
+            model.setImageFiles(validImageFiles);
+            model.fileIndexProperty().addListener(selectedFileIndexListener);
+
+            updateViewImageFiles();
+
+            view.getStatusBar().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(getValue(), imageSource));
+
+            directoryWatcher = new Thread(new FileChangeWatcher(imageSource.toPath(),
+                    model.getImageFileNameSet(), () -> {
+                MainView.displayErrorAlert(IMAGE_FILES_CHANGED_ERROR_TITLE, IMAGE_FILES_CHANGED_ERROR_CONTENT);
+                Controller.this.initiateCurrentFolderReloading();
+            }));
+            directoryWatcher.start();
         }
     }
 }

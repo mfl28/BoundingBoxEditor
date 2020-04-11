@@ -14,6 +14,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * Saves rectangular bounding-box annotations in the YOLO-format described at
+ * https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885
+ */
 public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     private static final String YOLO_ANNOTATION_FILE_EXTENSION = ".txt";

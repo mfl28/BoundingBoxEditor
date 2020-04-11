@@ -1,21 +1,26 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.ui.MainView;
 import javafx.application.Platform;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.Set;
 
+/**
+ * Used to check if (image) files of the currently loaded folder were modified/removed and initiate folder reload when necessary.
+ */
 public class FileChangeWatcher implements Runnable {
-    private static final String IMAGE_FILES_CHANGED_ERROR_TITLE = "Image files changed";
-    private static final String IMAGE_FILES_CHANGED_ERROR_CONTENT = "Image files were changed externally, will reload folder.";
-    private static final String IMAGE_FILE_CHANGE_WATCHER_ERROR_TITLE = "Image file-change watcher error";
-    private static final String IMAGE_FILE_CHANGE_WATCHER_ERROR_CONTENT = "Image file-change watcher has encountered an IO error, will reload folder.";
     private final Path directoryToWatch;
     private final Set<String> fileNamesToWatch;
     private final Runnable onFilesChangedHandler;
 
+    /**
+     * Creates a new file change watcher
+     *
+     * @param directoryToWatch      the path to the directory that should be watched
+     * @param fileNamesToWatch      the set of names of files to watch
+     * @param onFilesChangedHandler what should be done when files were modified/removed
+     */
     public FileChangeWatcher(Path directoryToWatch, Set<String> fileNamesToWatch, Runnable onFilesChangedHandler) {
         this.directoryToWatch = directoryToWatch;
         this.fileNamesToWatch = fileNamesToWatch;
@@ -35,10 +40,7 @@ public class FileChangeWatcher implements Runnable {
 
                 if(watchKey != null) {
                     if(watchKey.pollEvents().stream().anyMatch(watchEvent -> fileNamesToWatch.contains(watchEvent.context().toString()))) {
-                        Platform.runLater(() -> {
-                            MainView.displayErrorAlert(IMAGE_FILES_CHANGED_ERROR_TITLE, IMAGE_FILES_CHANGED_ERROR_CONTENT);
-                            onFilesChangedHandler.run();
-                        });
+                        Platform.runLater(onFilesChangedHandler);
                     } else {
                         watchKey.reset();
                     }
@@ -46,10 +48,7 @@ public class FileChangeWatcher implements Runnable {
             }
         } catch(InterruptedException ignored) {
         } catch(IOException e) {
-            Platform.runLater(() -> {
-                MainView.displayErrorAlert(IMAGE_FILE_CHANGE_WATCHER_ERROR_TITLE, IMAGE_FILE_CHANGE_WATCHER_ERROR_CONTENT);
-                onFilesChangedHandler.run();
-            });
+            Platform.runLater(onFilesChangedHandler);
         }
     }
 }

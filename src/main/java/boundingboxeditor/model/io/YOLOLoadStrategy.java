@@ -18,6 +18,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Loads rectangular bounding-box annotations in the YOLO-format described at
+ * https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885
+ */
 public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final boolean INCLUDE_SUBDIRECTORIES = false;
     private static final String OBJECT_DATA_FILE_NAME = "object.data";

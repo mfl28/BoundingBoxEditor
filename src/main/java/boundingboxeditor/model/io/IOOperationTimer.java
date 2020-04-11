@@ -4,7 +4,19 @@ import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Times a {@link Callable<IOResult>}'s call method and sets the time in the
+ * returned {@link IOResult} object.
+ */
 public class IOOperationTimer {
+    /**
+     * Times the callable and sets the time in the
+     * returned {@link IOResult} object.
+     *
+     * @param callable the callable whose call() method should be timed
+     * @return an {@link IOResult} object with the set time
+     * @throws Exception any that might be thrown by the callable's call() method
+     */
     public static IOResult time(Callable<IOResult> callable) throws Exception {
         long startTime = System.nanoTime();
         IOResult result = callable.call();

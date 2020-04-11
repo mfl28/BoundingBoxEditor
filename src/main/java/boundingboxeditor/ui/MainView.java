@@ -212,6 +212,17 @@ public class MainView extends BorderPane implements View {
         ((Stage) progressDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
     }
 
+    /**
+     * Displays a dialog with a choice box and returns the user's choice.
+     *
+     * @param defaultChoice the pre-selected choice
+     * @param choices       the available choices
+     * @param title         the title of the dialog-window
+     * @param header        the header-text of the dialog-window
+     * @param content       the content-text of the dialog-window
+     * @param <T>           the type of the choices
+     * @return an {@link Optional<T>} (possibly) containing the user's choice
+     */
     public static <T> Optional<T> displayChoiceDialogAndGetResult(T defaultChoice, Collection<T> choices,
                                                                   String title, String header, String content) {
         ChoiceDialog<T> choiceDialog = new ChoiceDialog<>(defaultChoice, choices);
@@ -224,6 +235,11 @@ public class MainView extends BorderPane implements View {
         return choiceDialog.showAndWait();
     }
 
+    /**
+     * Shows a dialog for a thrown exception.
+     *
+     * @param throwable the exception thrown
+     */
     public static void displayExceptionDialog(Throwable throwable) {
         ExceptionDialog exceptionDialog = new ExceptionDialog(throwable);
         exceptionDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
@@ -242,6 +258,11 @@ public class MainView extends BorderPane implements View {
         workspaceSplitPane.reset();
     }
 
+    /**
+     * Sets the visibility of the workspace split pane.
+     *
+     * @param value the visibility
+     */
     public void setWorkspaceVisible(boolean value) {
         workspaceSplitPane.setVisible(value);
     }

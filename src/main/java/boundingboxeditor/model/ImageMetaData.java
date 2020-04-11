@@ -119,7 +119,7 @@ public class ImageMetaData {
             return "[]";
         }
 
-        return "[" + (int) getImageWidth() + " x " + (int) getImageHeight() + " x " + getImageDepth() + "]";
+        return "[" + (int) getImageWidth() + " x " + (int) getImageHeight() + "]";
     }
 
     private static ImageDimensions readImageDimensionsFromFile(File imageFile) throws IOException {
