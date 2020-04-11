@@ -125,6 +125,10 @@ public class BoundingBoxEditorTestBase {
     protected void waitUntilCurrentImageIsLoaded() {
         WaitForAsyncUtils.waitForFxEvents();
 
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> mainView.isWorkspaceVisible()),
+                "WorkspaceSplitPane not visible within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, () -> mainView.getCurrentImage() != null),
                 "Image not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
@@ -132,9 +136,7 @@ public class BoundingBoxEditorTestBase {
                 mainView.getCurrentImage().progressProperty().isEqualTo(1)),
                 "Image not fully loaded within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> mainView.getEditorsSplitPane().isVisible()),
-                "EditorSplitPane not visible within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     @Start

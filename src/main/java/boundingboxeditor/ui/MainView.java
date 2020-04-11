@@ -268,6 +268,15 @@ public class MainView extends BorderPane implements View {
     }
 
     /**
+     * Gets the visibility of the workspace split pane.
+     *
+     * @return visibility
+     */
+    public boolean isWorkspaceVisible() {
+        return workspaceSplitPane.isVisible();
+    }
+
+    /**
      * Updates the displayed image in the main image-pane from a provided image-{@link File}.
      *
      * @param imageFile the file of the new image
