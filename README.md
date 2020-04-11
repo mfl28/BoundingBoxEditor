@@ -5,32 +5,31 @@
 </p>
 
 [![Build Status](https://dev.azure.com/mfl28/BoundingBoxEditor/_apis/build/status/mfl28.BoundingBoxEditor?branchName=master)](https://dev.azure.com/mfl28/BoundingBoxEditor/_build/latest?definitionId=1&branchName=master)
-![Azure DevOps tests (master)](https://img.shields.io/azure-devops/tests/mfl28/BoundingBoxEditor/1/master)
-![Azure DevOps coverage (master)](https://img.shields.io/azure-devops/coverage/mfl28/BoundingBoxEditor/1/master)
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java)
+<!--![Azure DevOps tests (master)](https://img.shields.io/azure-devops/tests/mfl28/BoundingBoxEditor/1/master)-->
+<!--![Azure DevOps coverage (master)](https://img.shields.io/azure-devops/coverage/mfl28/BoundingBoxEditor/1/master)-->
 
-This is a desktop application written in Java using the JavaFX application platform. It allows you to create image annotations using bounding box object-labels. 
-Annotations can be imported and saved from/to xml-files using the [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format. The saved annotation data can then further be used, e.g. as ground-truths in the training (and evaluation) of neural networks in order to perform object-detection tasks. How this can be done for any kind of labeled objects using Python and the [Pytorch](https://pytorch.org/) deep learning library is shown exemplarily in the [Humpback Whale Fluke Detection - Jupyter notebook](https://nbviewer.jupyter.org/github/mfl28/MachineLearning/blob/master/notebooks/Humpback_Whale_Fluke_Detection.ipynb) which you can find in my [Machine Learning repo](https://github.com/mfl28/MachineLearning).
+This is an image annotation desktop-application written in Java using the JavaFX application platform. It allows you to create bounding box annotations using rectangular and polygonal shapes. 
+Annotations can be imported and saved from/to [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format xml-files or [YOLO](https://pjreddie.com/darknet/yolo/) format txt-files.
 
 <p align="center">
-  <img src="demo-media/demo_v1_2_0.png" align="center">
+  <img src="demo-media/demo_v2_0_0.png" align="center">
   </br>
-  <em>Demo screenshot of release v1.2.0.</em>
+  <em>Demo screenshot of release v2.0.0.</em>
 </p>
 
 ## Main Features
-* Creating bounding box annotations for objects in images
-* Saving of bounding box annotations in the  [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format
-* Importing of existing bounding box annotation data in Pascal VOC format (for example from [Pascal VOC 2012 dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)) including format validation and error reporting
-* Nesting of bounding box labels (which is then reflected in the output xml-file)
-* Image files side-panel with thumbnails for easy and fast navigation including image-file search
-* Tagging of bounding boxes using tags defined in the Pascal VOC format (truncated, difficult, occluded, pose: *, action: *)
-* Color-coded object categories
-### Planned future features
-* Creating general polygonal bounding boxes
-* Supporting more input/output formats
-* Undo/Redo functionality
-* ...
+* Create rectangular and polygonal bounding box annotations for objects in images
+* Export and import (e.g. from [Pascal VOC 2012 dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)) rectangular and polygonal bounding box annotations using the [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format
+* Export and import rectangular bounding box annotations using the [YOLO](https://pjreddie.com/darknet/yolo/) format
+* Format validation and error reporting when importing annotations
+* Nest bounding box labels (which is then reflected in the output xml-file if using Pascal VOC format)
+* Easily and swiftly navigate and search the loaded image files via a side-panel with thumbnails
+* Tag bounding boxes using tags defined in the Pascal VOC format (truncated, difficult, occluded, pose: *, action: *)
+* Color-coded, searchable and fully dynamic object categories
+
+## Using Annotations for Object Detection
+After having created annotations for your images, you can use the saved bounding boxes as ground-truths in the training and evaluation of neural networks in order to perform object-detection tasks. How this can be done for any kind of labeled objects using Python and the [Pytorch](https://pytorch.org/) deep learning library is shown exemplarily in the [Humpback Whale Fluke Detection - Jupyter notebook](https://nbviewer.jupyter.org/github/mfl28/MachineLearning/blob/master/notebooks/Humpback_Whale_Fluke_Detection.ipynb) which you can find in my [Machine Learning repo](https://github.com/mfl28/MachineLearning).
 
 ## Latest Release ![GitHub release](https://img.shields.io/github/v/release/mfl28/BoundingBoxEditor)
 Download the latest release of *Bounding Box Editor* for your operating system from the links below. The files are zipped, custom runtime images (created using the [Badass JLink plugin](https://github.com/beryx/badass-jlink-plugin)) that contain binaries to start the application on your system.
@@ -42,7 +41,7 @@ Download the latest release of *Bounding Box Editor* for your operating system f
 | [Windows](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-win.zip)        | 
 
 ## How to use the application
-Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) in the [Wiki](https://github.com/mfl28/BoundingBoxEditor/wiki) for a detailed guide to the usage of the application's main functions.
+Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) for a detailed guide to the usage of the application's main functions.
 
 ## How to build the application
 The project uses [Gradle](https://gradle.org/) as build-system.
