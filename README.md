@@ -85,6 +85,14 @@ gradlew test
 * [Nord Color-Palette](https://github.com/arcticicestudio/nord)
 * [Unsplash](https://unsplash.com/) (used as source for test- & demo-images)
 
+<p align=center>
+<a href=https://www.jetbrains.com/?from=BoundingBoxEditor>
+<img src=https://upload.wikimedia.org/wikipedia/commons/1/1a/JetBrains_Logo_2016.svg>
+</a>
+</p>
+<p align=center>Special thanks to <a href=https://www.jetbrains.com/?from=BoundingBoxEditor> JetBrains</a> for supporting this project with an Open Source license to their developer tools!
+</p>
+
 ## License
 This project is licensed under GPL v3. See [LICENSE](LICENSE).
 
