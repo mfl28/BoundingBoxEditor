@@ -28,11 +28,8 @@ Annotations can be imported and saved from/to [Pascal VOC](http://host.robots.ox
 * Tag bounding boxes using tags defined in the Pascal VOC format (truncated, difficult, occluded, pose: *, action: *)
 * Color-coded, searchable and fully dynamic object categories
 
-## Using Annotations for Object Detection
-After having created annotations for your images, you can use the saved bounding boxes as ground-truths in the training and evaluation of neural networks in order to perform object-detection tasks. How this can be done for any kind of labeled objects using Python and the [Pytorch](https://pytorch.org/) deep learning library is shown exemplarily in the [Humpback Whale Fluke Detection - Jupyter notebook](https://nbviewer.jupyter.org/github/mfl28/MachineLearning/blob/master/notebooks/Humpback_Whale_Fluke_Detection.ipynb) which you can find in my [Machine Learning repo](https://github.com/mfl28/MachineLearning).
-
 ## Latest Release ![GitHub release](https://img.shields.io/github/v/release/mfl28/BoundingBoxEditor)
-Download the latest release of *Bounding Box Editor* for your operating system from the links below. The files are zipped, custom runtime images (created using the [Badass JLink plugin](https://github.com/beryx/badass-jlink-plugin)) that contain binaries to start the application on your system.
+Download the latest release of *Bounding Box Editor* for your operating system from the links below. The files are zipped, custom runtime images (created using the [Badass JLink plugin](https://github.com/beryx/badass-jlink-plugin)) that contain binaries (inside the `image/bin/` folder) to start the application on your system.
 
 | OS            |
 | ------------- |
@@ -41,7 +38,10 @@ Download the latest release of *Bounding Box Editor* for your operating system f
 | [Windows](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-win.zip)        | 
 
 ## How to use the application
-Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) for a detailed guide to the usage of the application's main functions.
+Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) in the Wiki for a detailed usage guide and presentation (including gifs) of the application's main functions.
+
+## Using annotations for object detection
+After having created annotations for your images, you can use the saved bounding boxes as ground-truths in the training and evaluation of neural networks in order to perform object-detection tasks. How this can be done for any kind of labeled objects using Python and the [Pytorch](https://pytorch.org/) deep learning library is shown exemplarily in the [Humpback Whale Fluke Detection - Jupyter notebook](https://nbviewer.jupyter.org/github/mfl28/MachineLearning/blob/master/notebooks/Humpback_Whale_Fluke_Detection.ipynb) which you can find in my [Machine Learning repo](https://github.com/mfl28/MachineLearning).
 
 ## How to build the application
 The project uses [Gradle](https://gradle.org/) as build-system.
@@ -69,6 +69,7 @@ To run the tests, use :
 ```bash
 gradlew test
 ```
+
 ## Acknowledgements
 * [OpenJDK](https://openjdk.java.net/) (open-source implementation of the Java platform)
 * [OpenJFX](https://openjfx.io/) (open-source implementation of the JavaFX platform)
