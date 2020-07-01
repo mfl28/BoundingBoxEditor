@@ -18,21 +18,21 @@ stages:
       name: Windows
       platform: win
       pool:
-        vmImage: 'windows-2019'
+        vmImage: 'windows-latest'
 
   - template: jobs/build.yml
     parameters:
       name: Linux
       platform: linux
       pool:
-        vmImage: 'ubuntu-16.04'
+        vmImage: 'ubuntu-latest'
 
   - template: jobs/build.yml
     parameters:
       name: MacOS
       platform: mac
       pool:
-        vmImage: 'macOS-10.14'
+        vmImage: 'macOS-latest'
 
 - stage: Test
   condition: false

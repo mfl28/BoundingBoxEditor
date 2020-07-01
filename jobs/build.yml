@@ -16,6 +16,7 @@ jobs:
       displayName: 'Create runtime image'
       inputs:
         gradleWrapperFile: 'gradlew'
+        gradleOptions: '-Xmx3072m'
         javaHomeOption: 'JDKVersion'
         jdkVersionOption: '1.11'
         jdkArchitectureOption: 'x64'

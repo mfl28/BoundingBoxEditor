@@ -7,7 +7,7 @@ jobs:
 - job: UITest
   displayName: 'UI'
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'windows-latest'
   steps:
   - task: SonarCloudPrepare@1
     inputs:
@@ -19,6 +19,7 @@ jobs:
     inputs:
       workingDirectory: ''
       gradleWrapperFile: 'gradlew'
+      gradleOptions: '-Xmx3072m'
       javaHomeOption: 'JDKVersion'
       jdkVersionOption: '1.11'
       jdkArchitectureOption: 'x64'
