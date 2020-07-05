@@ -634,5 +634,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                 () -> getTopModalStage(robot, "Import annotation data") == null),
                 "Expected info dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        WaitForAsyncUtils.waitForFxEvents();
     }
 }

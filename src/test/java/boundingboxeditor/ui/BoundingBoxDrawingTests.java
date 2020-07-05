@@ -3,7 +3,6 @@ package boundingboxeditor.ui;
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import boundingboxeditor.utils.MathUtils;
 import javafx.geometry.Point2D;
-import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;

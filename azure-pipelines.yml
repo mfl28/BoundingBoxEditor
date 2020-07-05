@@ -40,6 +40,6 @@ stages:
   - template: jobs/test.yml
 
 - stage: Release
-  dependsOn: Build
+  dependsOn: Test
   jobs:
   - template: jobs/release.yml

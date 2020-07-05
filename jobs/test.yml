@@ -14,6 +14,11 @@ jobs:
       SonarCloud: 'Sonarcloud'
       organization: 'mfl28'
       scannerMode: 'Other'
+  - task: ScreenResolutionUtility@1
+    inputs:
+      displaySettings: 'specific'
+      width: '1920'
+      height: '1080'
   - task: Gradle@2
     displayName: 'Gradle test'
     inputs:
