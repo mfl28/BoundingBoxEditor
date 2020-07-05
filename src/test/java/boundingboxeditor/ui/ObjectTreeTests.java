@@ -161,6 +161,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         /* ----Reloading On Image Change---- */
         // Switch to the next image.
         timeOutClickOn(robot, "#next-button");
+
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
         // Now the tree-should be empty, as no bounding-boxes have been created for the current image.
@@ -285,6 +286,10 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         timeOutLookUpInStageAndClickOn(robot, changeCategoryStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Change Category") == null),
+                "Expected change category dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));

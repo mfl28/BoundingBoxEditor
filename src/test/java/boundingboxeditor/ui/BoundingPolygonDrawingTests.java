@@ -39,6 +39,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
 
         timeOutClickOn(robot, "#next-button");
+
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -116,6 +117,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                 .isHasAssignedBoundingShapes(), Matchers.is(true));
 
         timeOutClickOn(robot, "#next-button");
+
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 

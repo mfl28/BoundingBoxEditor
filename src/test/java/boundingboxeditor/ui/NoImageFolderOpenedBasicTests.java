@@ -65,6 +65,10 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Save Error") == null),
+                "Expected save error dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
         timeOutClickOn(robot, "File");
         WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Export Annotations");
@@ -83,6 +87,10 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage2, "OK");
         WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Save Error") == null),
+                "Expected save error dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         MenuItem exitItem = getSubMenuItem(robot, "File", "Exit");
         assertTrue(exitItem.isVisible());

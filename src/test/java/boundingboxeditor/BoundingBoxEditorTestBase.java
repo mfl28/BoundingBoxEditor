@@ -42,9 +42,9 @@ import java.util.concurrent.TimeoutException;
 @ExtendWith(ApplicationExtension.class)
 public class BoundingBoxEditorTestBase {
     protected static final double RATIO_EQUAL_THRESHOLD = 1e-2;
-    private static final double INITIAL_WINDOW_SCALE = 0.75;
+    private static final double INITIAL_WINDOW_SCALE = 1.0;
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
-    protected static int TIMEOUT_DURATION_IN_SEC = 20;
+    protected static int TIMEOUT_DURATION_IN_SEC = 60;
     protected static String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
     protected static String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
     protected Controller controller;

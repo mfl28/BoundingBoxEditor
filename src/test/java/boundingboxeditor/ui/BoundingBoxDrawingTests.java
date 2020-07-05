@@ -3,6 +3,7 @@ package boundingboxeditor.ui;
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import boundingboxeditor.utils.MathUtils;
 import javafx.geometry.Point2D;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -36,6 +37,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                 .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
 
         timeOutClickOn(robot, "#next-button");
+
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -74,6 +76,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                 .isHasAssignedBoundingShapes(), Matchers.is(true));
 
         timeOutClickOn(robot, "#next-button");
+
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -160,5 +163,10 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(exitDialogStage, Matchers.notNullValue());
 
         timeOutLookUpInStageAndClickOn(robot, exitDialogStage, "Cancel");
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Exit Application") == null),
+                "Expected info dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
     }
 }

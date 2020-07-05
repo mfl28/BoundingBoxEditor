@@ -238,6 +238,11 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
+        // Check if closed
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Annotation import error report") == null),
+                "Expected error report dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         verifyThat(counts.size(), Matchers.equalTo(0));
 
@@ -304,6 +309,10 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Annotation import error report") == null),
+                "Expected error report dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         verifyThat(counts.size(), Matchers.equalTo(1));
         verifyThat(counts.get("Ship"), Matchers.equalTo(1));
@@ -358,6 +367,10 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Annotation import error report") == null),
+                "Expected error report dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
@@ -414,6 +427,10 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Annotation import error report") == null),
+                "Expected error report dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().isEmpty(), Matchers.is(true));
         verifyThat(model.getObjectCategories(), Matchers.empty());
         verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.empty());
@@ -431,6 +448,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         timeOutClickOn(robot, "#next-button");
+
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -486,6 +504,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 "Correct bounding box per-category-counts were not read within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         timeOutClickOn(robot, "#next-button");
+
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -584,6 +603,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getObjectCategoryTable().getItems().get(0).getName(), Matchers.equalTo("Test"));
 
         timeOutClickOn(robot, "#next-button");
+
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
     }
@@ -610,5 +630,9 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         Stage topModalStage = getTopModalStage(robot, "Import annotation data");
         timeOutLookUpInStageAndClickOn(robot, topModalStage, userChoice);
         WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                () -> getTopModalStage(robot, "Import annotation data") == null),
+                "Expected info dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
     }
 }
