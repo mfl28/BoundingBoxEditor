@@ -10,6 +10,10 @@ trigger:
     include: 
     - '*'
 
+pr:
+- master
+- dev
+
 stages:
 - stage: Build   
   jobs:
