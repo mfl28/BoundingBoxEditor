@@ -47,6 +47,7 @@ public class FileChangeWatcher implements Runnable {
                 }
             }
         } catch(InterruptedException ignored) {
+            // Nothing to be done.
         } catch(IOException e) {
             Platform.runLater(onFilesChangedHandler);
         }

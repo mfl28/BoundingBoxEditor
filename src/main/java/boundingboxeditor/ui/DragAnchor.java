@@ -24,7 +24,7 @@ public class DragAnchor {
      * Convenience method to set both coordinates from
      * a {@link MouseEvent} object's position relative to the event's source.
      *
-     * @param event
+     * @param event The mouse event.
      */
     public void setFromMouseEvent(MouseEvent event) {
         x = event.getX();

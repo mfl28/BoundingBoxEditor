@@ -15,7 +15,7 @@ public abstract class BoundingShapeData {
     private final List<String> tags;
     private List<BoundingShapeData> parts = Collections.emptyList();
 
-    public BoundingShapeData(ObjectCategory category, List<String> tags) {
+    protected BoundingShapeData(ObjectCategory category, List<String> tags) {
         this.category = category;
         this.tags = tags;
     }
