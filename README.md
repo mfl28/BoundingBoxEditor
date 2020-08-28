@@ -37,6 +37,11 @@ Download the latest release of *Bounding Box Editor* for your operating system f
 | [MacOs](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-mac.zip)          |
 | [Windows](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-win.zip)        | 
 
+> **Note for Linux users with Hi-DPI screens**  
+> Currently JavaFX does not follow the system-wide scale settings in Linux (see e.g. bug reports [here](https://bugs.openjdk.java.net/browse/JDK-8248126) and [here](https://bugs.openjdk.java.net/browse/JDK-8238077)). The easiest way to set the desired scaling manually is by setting the `GDK_SCALE` variable when starting the application from the terminal, for example:
+> ```bash 
+> GDK_SCALE=2x ./boundingboxeditor
+> ``` 
 ## How to use the application
 Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) in the Wiki for a detailed usage guide and presentation (including gifs) of the application's main functions.
 
