@@ -75,6 +75,26 @@ To run the tests, use :
 gradlew test
 ```
 
+## How to build latest Linux runtime image using Docker
+First build the Docker image from the cloned repo's root directory using:
+```bash
+docker image build -t bbeditor .
+```
+Then create a writable container layer over the image (without starting a container):
+```bash
+docker container create --name bbeditor bbeditor
+```
+Finally, copy the directory containing the built image to the host:
+```bash
+docker container cp bbeditor:/image .
+```
+> **Alternative**:  
+> If you have a recent Docker version that supports BuildKit engine (version >= 19.03) you can do 
+> the whole image creation using a one-line command:
+>```bash
+> DOCKER_BUILDKIT=1 docker image build --target image --output type=local,dest=. . 
+>```
+
 ## Acknowledgements
 * [OpenJDK](https://openjdk.java.net/) (open-source implementation of the Java platform)
 * [OpenJFX](https://openjfx.io/) (open-source implementation of the JavaFX platform)
