@@ -94,8 +94,8 @@ compileJava {
 compileJava.finalizedBy('compileLibSass')
 
 application {
-    mainModule = "$moduleName"
-    mainClass = "$moduleName/boundingboxeditor.BoundingBoxEditorApp"
+    mainModule = "boundingboxeditor"
+    mainClass = "boundingboxeditor.BoundingBoxEditorApp"
     applicationDefaultJvmArgs = ['-Dprism.forceGPU=true']
 }
 
