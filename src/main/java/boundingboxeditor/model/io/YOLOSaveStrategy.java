@@ -26,8 +26,8 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     private List<String> categories;
 
     @Override
-    public IOResult save(ImageAnnotationData annotations, Path saveFolderPath, DoubleProperty progress) {
-        this.saveFolderPath = saveFolderPath;
+    public IOResult save(ImageAnnotationData annotations, Path destination, DoubleProperty progress) {
+        this.saveFolderPath = destination;
         this.categories = annotations.getCategoryToShapeCountMap().entrySet().stream()
                 .filter(stringIntegerEntry -> stringIntegerEntry.getValue() > 0)
                 .map(Map.Entry::getKey)

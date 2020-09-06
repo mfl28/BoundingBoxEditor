@@ -20,6 +20,8 @@ public interface ImageAnnotationSaveStrategy {
             return new PVOCSaveStrategy();
         } else if(type.equals(Type.YOLO)) {
             return new YOLOSaveStrategy();
+        } else if(type.equals(Type.JSON)) {
+            return new JSONSaveStrategy();
         } else {
             throw new InvalidParameterException();
         }
@@ -28,12 +30,12 @@ public interface ImageAnnotationSaveStrategy {
     /**
      * Saves image-annotations to the provided folder-path.
      *
-     * @param annotations    the collection of image-annotations to save
-     * @param saveFolderPath the path of the directory to which the annotations will be saved
-     * @param progress       the progress-property that will be updated during the saving-operation
+     * @param annotations the collection of image-annotations to save
+     * @param destination the path of the directory to which the annotations will be saved
+     * @param progress    the progress-property that will be updated during the saving-operation
      * @return an {@link IOResult} containing information about the finished saving
      */
-    IOResult save(ImageAnnotationData annotations, Path saveFolderPath, DoubleProperty progress);
+    IOResult save(ImageAnnotationData annotations, Path destination, DoubleProperty progress);
 
     enum Type {
         PASCAL_VOC {
@@ -46,6 +48,12 @@ public interface ImageAnnotationSaveStrategy {
             @Override
             public String toString() {
                 return "YOLO";
+            }
+        },
+        JSON {
+            @Override
+            public String toString() {
+                return "JSON";
             }
         }
     }

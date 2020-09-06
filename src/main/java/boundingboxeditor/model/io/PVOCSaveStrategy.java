@@ -59,8 +59,8 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private Path saveFolderPath;
 
     @Override
-    public IOResult save(ImageAnnotationData annotations, Path saveFolderPath, DoubleProperty progress) {
-        this.saveFolderPath = saveFolderPath;
+    public IOResult save(ImageAnnotationData annotations, Path destination, DoubleProperty progress) {
+        this.saveFolderPath = destination;
 
         List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 

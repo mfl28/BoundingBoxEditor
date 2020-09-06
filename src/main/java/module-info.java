@@ -8,8 +8,9 @@ module boundingboxeditor {
     requires org.apache.commons.lang3;
     requires java.prefs;
     requires java.logging;
+    requires com.google.gson;
 
-    opens boundingboxeditor.model to javafx.base;
-    opens boundingboxeditor.model.io to javafx.base;
+    opens boundingboxeditor.model to javafx.base, com.google.gson;
+    opens boundingboxeditor.model.io to javafx.base, com.google.gson;
     exports boundingboxeditor to javafx.graphics;
 }

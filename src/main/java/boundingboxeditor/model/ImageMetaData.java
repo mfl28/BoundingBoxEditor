@@ -1,5 +1,7 @@
 package boundingboxeditor.model;
 
+import com.google.gson.annotations.SerializedName;
+
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
@@ -151,8 +153,11 @@ public class ImageMetaData {
 
     private static class ImageMetaDataDetails {
         private final String folderName;
+        @SerializedName("width")
         private final double imageWidth;
+        @SerializedName("height")
         private final double imageHeight;
+        @SerializedName("depth")
         private final int imageDepth;
 
         ImageMetaDataDetails(String folderName, double imageWidth, double imageHeight, int imageDepth) {

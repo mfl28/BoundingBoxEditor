@@ -27,12 +27,12 @@ public class ImageAnnotationSaver {
     /**
      * Saves the provided annotation as specified by the wrapped {@link ImageAnnotationSaveStrategy}.
      *
-     * @param annotations    the annotations to save
-     * @param saveFolderPath the path of the destination folder
+     * @param annotations the annotations to save
+     * @param destination the path of the destination folder
      * @return an {@link IOResult} containing information about the finished saving
      */
-    public IOResult save(final ImageAnnotationData annotations, final Path saveFolderPath) throws Exception {
-        return IOOperationTimer.time(() -> saveStrategy.save(annotations, saveFolderPath, progress));
+    public IOResult save(final ImageAnnotationData annotations, final Path destination) throws Exception {
+        return IOOperationTimer.time(() -> saveStrategy.save(annotations, destination, progress));
     }
 
     /**

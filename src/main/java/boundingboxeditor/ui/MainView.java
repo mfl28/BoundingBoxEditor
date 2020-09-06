@@ -17,6 +17,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.controlsfx.dialog.ProgressDialog;
@@ -140,6 +141,37 @@ public class MainView extends BorderPane implements View {
         return directoryChooser.showDialog(stage);
     }
 
+    /***
+     * Displays a file chooser window and returns the chosen directory.
+     *
+     * @param title The title of the file chooser window
+     * @param stage The stage on top of which the window will be shown
+     * @param initialDirectory The initial directory
+     * @param initialFileName The initial default filename
+     * @param extensionFilter The extension filter to apply
+     * @return The chosen file, or null if the user closed the window without choosing.
+     */
+    public static File displayFileChooserAndGetChoice(String title, Stage stage, File initialDirectory,
+                                                      String initialFileName, FileChooser.ExtensionFilter extensionFilter) {
+        final FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(title);
+
+        if(initialFileName != null) {
+            fileChooser.setInitialFileName(initialFileName);
+        }
+
+        if(initialDirectory != null && initialDirectory.exists()) {
+            fileChooser.setInitialDirectory(initialDirectory);
+        }
+
+        if(extensionFilter != null) {
+            fileChooser.getExtensionFilters().add(extensionFilter);
+            fileChooser.setSelectedExtensionFilter(extensionFilter);
+        }
+
+        return fileChooser.showSaveDialog(stage);
+    }
+
     /**
      * Displays a dialog-window that shows information about the result of an
      * IO-operation.
@@ -259,21 +291,21 @@ public class MainView extends BorderPane implements View {
     }
 
     /**
-     * Sets the visibility of the workspace split pane.
-     *
-     * @param value the visibility
-     */
-    public void setWorkspaceVisible(boolean value) {
-        workspaceSplitPane.setVisible(value);
-    }
-
-    /**
      * Gets the visibility of the workspace split pane.
      *
      * @return visibility
      */
     public boolean isWorkspaceVisible() {
         return workspaceSplitPane.isVisible();
+    }
+
+    /**
+     * Sets the visibility of the workspace split pane.
+     *
+     * @param value the visibility
+     */
+    public void setWorkspaceVisible(boolean value) {
+        workspaceSplitPane.setVisible(value);
     }
 
     /**

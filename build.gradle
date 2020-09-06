@@ -53,6 +53,9 @@ dependencies {
 
     // Gradle plugin to use the error-prone compiler https://github.com/tbroyer/gradle-errorprone-plugin
     errorprone 'com.google.errorprone:error_prone_core:2.4.0'
+
+    // Google GSON https://github.com/google/gson
+    implementation 'com.google.code.gson:gson:2.8.6'
 }
 
 javafx {

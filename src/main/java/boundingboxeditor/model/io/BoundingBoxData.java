@@ -4,6 +4,7 @@ import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingBoxView;
 import boundingboxeditor.ui.BoundingShapeViewable;
+import com.google.gson.annotations.SerializedName;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 
@@ -18,6 +19,7 @@ import java.util.List;
  * @see BoundingShapeData#setParts(List)
  */
 public class BoundingBoxData extends BoundingShapeData {
+    @SerializedName("bndbox")
     private final Bounds relativeBoundsInImage;
 
     /**

@@ -23,6 +23,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.image.Image;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -51,7 +52,8 @@ public class Controller {
     private static final String PROGRAM_NAME_EXTENSION_SEPARATOR = " - ";
     private static final String OPEN_FOLDER_ERROR_DIALOG_TITLE = "Error while opening image folder";
     private static final String OPEN_FOLDER_ERROR_DIALOG_HEADER = "The selected folder is not a valid image folder.";
-    private static final String SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE = "Save image annotations";
+    private static final String SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE = "Save image annotations to a folder";
+    private static final String SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Save image annotations to a file";
     private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE = "Error loading image folder";
     private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT = "The chosen folder does not contain any valid image files.";
     private static final String CATEGORY_INPUT_ERROR_DIALOG_TITLE = "Category Creation Error";
@@ -89,6 +91,7 @@ public class Controller {
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER = "Choose the format for the saved annotations.";
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT = "Annotation format: ";
     private static final String KEEP_EXISTING_CATEGORIES_DIALOG_TEXT = "Keep existing categories?";
+    private static final String DEFAULT_JSON_EXPORT_FILENAME = "annotations.json";
 
     private final Stage stage;
     private final MainView view = new MainView();
@@ -192,12 +195,11 @@ public class Controller {
             return;
         }
 
-        final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
-                currentAnnotationSavingDirectory);
+        File destination = getAnnotationSavingDestination(saveFormat);
 
-        if(saveDirectory != null) {
-            new AnnotationSaverService(saveDirectory, saveFormat).startAndShowProgressDialog();
-            currentAnnotationSavingDirectory = saveDirectory;
+        if(destination != null) {
+            new AnnotationSaverService(destination, saveFormat).startAndShowProgressDialog();
+            setCurrentAnnotationSavingDirectory(destination);
         }
     }
 
@@ -550,19 +552,27 @@ public class Controller {
 
         formatChoice.ifPresent(choice -> {
             // Ask for annotation save directory.
-            final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
-                    currentAnnotationSavingDirectory);
+            final File destination = getAnnotationSavingDestination(choice);
 
-            if(saveDirectory != null) {
+            if(destination != null) {
                 // Save annotations.
-                AnnotationSaverService annotationSaverService = new AnnotationSaverService(saveDirectory, choice);
+                AnnotationSaverService annotationSaverService = new AnnotationSaverService(destination, choice);
                 annotationSaverService.runOnSuccess(() -> {
-                    currentAnnotationSavingDirectory = saveDirectory;
+                    setCurrentAnnotationSavingDirectory(destination);
                     runnable.run();
                 });
                 annotationSaverService.startAndShowProgressDialog();
             }
         });
+    }
+
+    private void setCurrentAnnotationSavingDirectory(File destination) {
+        if(destination.isDirectory()) {
+            currentAnnotationSavingDirectory = destination;
+        } else if(destination.isFile() && destination.getParentFile().isDirectory()
+                && destination.getParentFile().exists()) {
+            currentAnnotationSavingDirectory = destination.getParentFile();
+        }
     }
 
     private void initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(Runnable runnable) {
@@ -576,14 +586,13 @@ public class Controller {
 
         formatChoice.ifPresentOrElse(choice -> {
             // Ask for annotation save directory.
-            final File saveDirectory = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
-                    currentAnnotationSavingDirectory);
+            final File destination = getAnnotationSavingDestination(choice);
 
-            if(saveDirectory != null) {
+            if(destination != null) {
                 // Save annotations.
-                AnnotationSaverService annotationSaverService = new AnnotationSaverService(saveDirectory, choice);
+                AnnotationSaverService annotationSaverService = new AnnotationSaverService(destination, choice);
                 annotationSaverService.runOnSuccess(() -> {
-                    currentAnnotationSavingDirectory = saveDirectory;
+                    setCurrentAnnotationSavingDirectory(destination);
                     runnable.run();
                 });
                 annotationSaverService.startAndShowProgressDialog();
@@ -591,6 +600,21 @@ public class Controller {
                 runnable.run();
             }
         }, runnable);
+    }
+
+    private File getAnnotationSavingDestination(ImageAnnotationSaveStrategy.Type saveFormat) {
+        File destination;
+
+        if(saveFormat.equals(ImageAnnotationSaveStrategy.Type.JSON)) {
+            destination = MainView.displayFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
+                    currentAnnotationSavingDirectory, DEFAULT_JSON_EXPORT_FILENAME,
+                    new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON"));
+        } else {
+            destination = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
+                    currentAnnotationSavingDirectory);
+        }
+
+        return destination;
     }
 
     private void interruptDirectoryWatcher() {
@@ -958,11 +982,11 @@ public class Controller {
     }
 
     class AnnotationSaverService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
-        private final File saveDirectory;
+        private final File destination;
         private final ImageAnnotationSaveStrategy.Type saveFormat;
 
-        AnnotationSaverService(File saveDirectory, ImageAnnotationSaveStrategy.Type saveFormat) {
-            this.saveDirectory = saveDirectory;
+        AnnotationSaverService(File destination, ImageAnnotationSaveStrategy.Type saveFormat) {
+            this.destination = destination;
             this.saveFormat = saveFormat;
             setOnSucceeded(successEvent -> defaultOnSucceededHandler());
             setOnFailed(failedEvent -> defaultOnFailedHandler());
@@ -992,7 +1016,7 @@ public class Controller {
 
                     saver.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
 
-                    return saver.save(model.getImageAnnotationData(), Paths.get(saveDirectory.getPath()));
+                    return saver.save(model.getImageAnnotationData(), Paths.get(destination.getPath()));
                 }
             };
         }

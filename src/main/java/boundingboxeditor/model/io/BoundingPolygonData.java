@@ -4,6 +4,7 @@ import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingPolygonView;
 import boundingboxeditor.ui.BoundingShapeViewable;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.List;
  * @see BoundingShapeData#setParts(List)
  */
 public class BoundingPolygonData extends BoundingShapeData {
+    @SerializedName("polygon")
     private final List<Double> relativePointsInImage;
 
     public BoundingPolygonData(ObjectCategory category, List<Double> points, List<String> tags) {

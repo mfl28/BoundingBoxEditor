@@ -30,11 +30,13 @@ class MenuBarView extends MenuBar implements View {
     private static final String YOLO_FORMAT_IMPORT_TEXT = "YOLO format...";
     private static final String PASCAL_VOC_FORMAT_EXPORT_TEXT = "Pascal-VOC format...";
     private static final String YOLO_FORMAT_EXPORT_TEXT = "YOLO format...";
+    private static final String JSON_FORMAT_EXPORT_TEXT = "JSON format...";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
     private final Menu fileExportMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
     private final MenuItem PVOCExportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_EXPORT_TEXT);
     private final MenuItem YOLOExportMenuItem = new MenuItem(YOLO_FORMAT_EXPORT_TEXT);
+    private final MenuItem JSONExportMenuItem = new MenuItem(JSON_FORMAT_EXPORT_TEXT);
 
     private final Menu fileImportAnnotationsItem = new Menu(ANNOTATION_IMPORT_TEXT, createIconRegion(FILE_IMPORT_ICON_ID));
     private final MenuItem importPVOCAnnotationsMenuItem = new MenuItem(PASCAL_VOC_FORMAT_IMPORT_TEXT);
@@ -52,7 +54,7 @@ class MenuBarView extends MenuBar implements View {
         viewShowImagesPanelItem.setSelected(true);
         viewMaximizeImagesItem.setSelected(true);
 
-        fileExportMenu.getItems().addAll(PVOCExportMenuItem, YOLOExportMenuItem);
+        fileExportMenu.getItems().addAll(PVOCExportMenuItem, YOLOExportMenuItem, JSONExportMenuItem);
         fileImportAnnotationsItem.getItems().addAll(importPVOCAnnotationsMenuItem, importYOLOAnnotationsMenuItem);
     }
 
@@ -63,6 +65,8 @@ class MenuBarView extends MenuBar implements View {
                 controller.onRegisterSaveAnnotationsAction(ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
         YOLOExportMenuItem.setOnAction(action ->
                 controller.onRegisterSaveAnnotationsAction(ImageAnnotationSaveStrategy.Type.YOLO));
+        JSONExportMenuItem.setOnAction(action ->
+                controller.onRegisterSaveAnnotationsAction(ImageAnnotationSaveStrategy.Type.JSON));
         importPVOCAnnotationsMenuItem.setOnAction(action -> controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         importYOLOAnnotationsMenuItem.setOnAction(action -> controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.YOLO));
         fileExitItem.setOnAction(action -> controller.onRegisterExitAction());

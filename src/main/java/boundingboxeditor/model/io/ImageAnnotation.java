@@ -1,6 +1,7 @@
 package boundingboxeditor.model.io;
 
 import boundingboxeditor.model.ImageMetaData;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +11,9 @@ import java.util.List;
  * There will be at most one ImageAnnotation-object for each loaded image.
  */
 public class ImageAnnotation {
+    @SerializedName("image")
     private ImageMetaData imageMetaData;
+    @SerializedName("objects")
     private List<BoundingShapeData> boundingShapeData = new ArrayList<>();
 
     /**
