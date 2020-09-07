@@ -31,6 +31,7 @@ class MenuBarView extends MenuBar implements View {
     private static final String PASCAL_VOC_FORMAT_EXPORT_TEXT = "Pascal-VOC format...";
     private static final String YOLO_FORMAT_EXPORT_TEXT = "YOLO format...";
     private static final String JSON_FORMAT_EXPORT_TEXT = "JSON format...";
+    private static final String JSON_FORMAT_IMPORT_TEXT = "JSON format...";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
     private final Menu fileExportMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
@@ -39,8 +40,9 @@ class MenuBarView extends MenuBar implements View {
     private final MenuItem JSONExportMenuItem = new MenuItem(JSON_FORMAT_EXPORT_TEXT);
 
     private final Menu fileImportAnnotationsItem = new Menu(ANNOTATION_IMPORT_TEXT, createIconRegion(FILE_IMPORT_ICON_ID));
-    private final MenuItem importPVOCAnnotationsMenuItem = new MenuItem(PASCAL_VOC_FORMAT_IMPORT_TEXT);
-    private final MenuItem importYOLOAnnotationsMenuItem = new MenuItem(YOLO_FORMAT_IMPORT_TEXT);
+    private final MenuItem PVOCImportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_IMPORT_TEXT);
+    private final MenuItem YOLORImportMenuItem = new MenuItem(YOLO_FORMAT_IMPORT_TEXT);
+    private final MenuItem JSONImportMenuItem = new MenuItem(JSON_FORMAT_IMPORT_TEXT);
     private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT, createIconRegion(EXIT_ICON_ID));
     private final CheckMenuItem viewMaximizeImagesItem = new CheckMenuItem(MAXIMIZE_IMAGES_TEXT);
     private final CheckMenuItem viewShowImagesPanelItem = new CheckMenuItem(SHOW_IMAGE_FILE_EXPLORER_TEXT);
@@ -55,21 +57,28 @@ class MenuBarView extends MenuBar implements View {
         viewMaximizeImagesItem.setSelected(true);
 
         fileExportMenu.getItems().addAll(PVOCExportMenuItem, YOLOExportMenuItem, JSONExportMenuItem);
-        fileImportAnnotationsItem.getItems().addAll(importPVOCAnnotationsMenuItem, importYOLOAnnotationsMenuItem);
+        fileImportAnnotationsItem.getItems().addAll(PVOCImportMenuItem,
+                YOLORImportMenuItem, JSONImportMenuItem);
     }
 
     @Override
     public void connectToController(final Controller controller) {
-        fileOpenFolderItem.setOnAction(action -> controller.onRegisterOpenImageFolderAction());
+        fileOpenFolderItem.setOnAction(action ->
+                controller.onRegisterOpenImageFolderAction());
         PVOCExportMenuItem.setOnAction(action ->
                 controller.onRegisterSaveAnnotationsAction(ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
         YOLOExportMenuItem.setOnAction(action ->
                 controller.onRegisterSaveAnnotationsAction(ImageAnnotationSaveStrategy.Type.YOLO));
         JSONExportMenuItem.setOnAction(action ->
                 controller.onRegisterSaveAnnotationsAction(ImageAnnotationSaveStrategy.Type.JSON));
-        importPVOCAnnotationsMenuItem.setOnAction(action -> controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
-        importYOLOAnnotationsMenuItem.setOnAction(action -> controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.YOLO));
-        fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
+        PVOCImportMenuItem.setOnAction(action ->
+                controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
+        YOLORImportMenuItem.setOnAction(action ->
+                controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.YOLO));
+        JSONImportMenuItem.setOnAction(action ->
+                controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.JSON));
+        fileExitItem.setOnAction(action ->
+                controller.onRegisterExitAction());
     }
 
     /**

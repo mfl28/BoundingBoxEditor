@@ -54,6 +54,8 @@ public class Controller {
     private static final String OPEN_FOLDER_ERROR_DIALOG_HEADER = "The selected folder is not a valid image folder.";
     private static final String SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE = "Save image annotations to a folder";
     private static final String SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Save image annotations to a file";
+    private static final String LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE = "Load image annotations from a folder containing annotation files";
+    private static final String LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Load image annotations from a file";
     private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE = "Error loading image folder";
     private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT = "The chosen folder does not contain any valid image files.";
     private static final String CATEGORY_INPUT_ERROR_DIALOG_TITLE = "Category Creation Error";
@@ -62,7 +64,6 @@ public class Controller {
     private static final String CATEGORY_DELETION_ERROR_DIALOG_CONTENT = "You cannot delete a category that has existing bounding-boxes assigned to it.";
 
     private static final String IMAGE_FOLDER_CHOOSER_TITLE = "Choose an image folder";
-    private static final String IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE = "Choose a folder containing image annotation files";
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
     private static final String SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE = "Save Error";
@@ -207,21 +208,20 @@ public class Controller {
      * Handles the event of the user requesting to save the current image-annotations.
      */
     public void onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type loadFormat) {
-        final File importDirectory = MainView.displayDirectoryChooserAndGetChoice(IMPORT_ANNOTATIONS_FOLDER_CHOOSER_TITLE, stage,
-                currentAnnotationLoadingDirectory);
+        final File source = getAnnotationLoadingSource(loadFormat);
 
-        if(importDirectory != null) {
-            initiateAnnotationFolderImport(importDirectory, loadFormat);
-            currentAnnotationLoadingDirectory = importDirectory;
+        if(source != null) {
+            initiateAnnotationImport(source, loadFormat);
+            setCurrentAnnotationLoadingDirectory(source);
         }
     }
 
     /**
-     * Initiates the import of image files from a folder.
+     * Initiates the import of annotations.
      *
-     * @param importFolder the folder containing the image files to load
+     * @param source the source of the annotations, either a folder or a single file
      */
-    public void initiateAnnotationFolderImport(File importFolder, ImageAnnotationLoadStrategy.Type loadFormat) {
+    public void initiateAnnotationImport(File source, ImageAnnotationLoadStrategy.Type loadFormat) {
         updateModelFromView();
 
         if(model.containsCategories()) {
@@ -240,7 +240,7 @@ public class Controller {
             }
         }
 
-        new AnnotationLoaderService(importFolder, loadFormat).startAndShowProgressDialog();
+        new AnnotationLoaderService(source, loadFormat).startAndShowProgressDialog();
     }
 
     /**
@@ -575,6 +575,15 @@ public class Controller {
         }
     }
 
+    private void setCurrentAnnotationLoadingDirectory(File source) {
+        if(source.isDirectory()) {
+            currentAnnotationSavingDirectory = source;
+        } else if(source.isFile() && source.getParentFile().isDirectory()
+                && source.getParentFile().exists()) {
+            currentAnnotationSavingDirectory = source.getParentFile();
+        }
+    }
+
     private void initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(Runnable runnable) {
         // Ask for annotation save format.
         Optional<ImageAnnotationSaveStrategy.Type> formatChoice =
@@ -606,15 +615,30 @@ public class Controller {
         File destination;
 
         if(saveFormat.equals(ImageAnnotationSaveStrategy.Type.JSON)) {
-            destination = MainView.displayFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
+            destination = MainView.displaySaveFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
                     currentAnnotationSavingDirectory, DEFAULT_JSON_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON"));
+                    new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON"), MainView.FileChooserType.SAVE);
         } else {
             destination = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
                     currentAnnotationSavingDirectory);
         }
 
         return destination;
+    }
+
+    private File getAnnotationLoadingSource(ImageAnnotationLoadStrategy.Type loadFormat) {
+        File source;
+
+        if(loadFormat.equals(ImageAnnotationLoadStrategy.Type.JSON)) {
+            source = MainView.displaySaveFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
+                    currentAnnotationLoadingDirectory, DEFAULT_JSON_EXPORT_FILENAME,
+                    new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON"), MainView.FileChooserType.OPEN);
+        } else {
+            source = MainView.displayDirectoryChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
+                    currentAnnotationLoadingDirectory);
+        }
+
+        return source;
     }
 
     private void interruptDirectoryWatcher() {
@@ -1041,11 +1065,11 @@ public class Controller {
     }
 
     class AnnotationLoaderService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
-        private final File loadDirectory;
+        private final File source;
         private final ImageAnnotationLoadStrategy.Type loadFormat;
 
-        AnnotationLoaderService(File loadDirectory, ImageAnnotationLoadStrategy.Type loadFormat) {
-            this.loadDirectory = loadDirectory;
+        AnnotationLoaderService(File source, ImageAnnotationLoadStrategy.Type loadFormat) {
+            this.source = source;
             this.loadFormat = loadFormat;
 
             setOnSucceeded(successEvent -> defaultOnSuccessHandler());
@@ -1074,7 +1098,7 @@ public class Controller {
                 protected IOResult call() throws Exception {
                     ImageAnnotationLoader loader = new ImageAnnotationLoader(loadFormat);
                     loader.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
-                    return loader.load(model, Paths.get(loadDirectory.getPath()));
+                    return loader.load(model, Paths.get(source.getPath()));
                 }
             };
         }

@@ -22,6 +22,8 @@ public interface ImageAnnotationLoadStrategy {
             return new PVOCLoadStrategy();
         } else if(type.equals(Type.YOLO)) {
             return new YOLOLoadStrategy();
+        } else if(type.equals(Type.JSON)) {
+            return new JSONLoadStrategy();
         } else {
             throw new InvalidParameterException();
         }
@@ -39,7 +41,7 @@ public interface ImageAnnotationLoadStrategy {
      */
     IOResult load(Model model, Path path, DoubleProperty progress) throws IOException;
 
-    enum Type {PASCAL_VOC, YOLO}
+    enum Type {PASCAL_VOC, YOLO, JSON}
 
     @SuppressWarnings("serial")
     class InvalidAnnotationFormatException extends RuntimeException {

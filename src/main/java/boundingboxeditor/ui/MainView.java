@@ -151,8 +151,9 @@ public class MainView extends BorderPane implements View {
      * @param extensionFilter The extension filter to apply
      * @return The chosen file, or null if the user closed the window without choosing.
      */
-    public static File displayFileChooserAndGetChoice(String title, Stage stage, File initialDirectory,
-                                                      String initialFileName, FileChooser.ExtensionFilter extensionFilter) {
+    public static File displaySaveFileChooserAndGetChoice(String title, Stage stage, File initialDirectory,
+                                                          String initialFileName, FileChooser.ExtensionFilter extensionFilter,
+                                                          FileChooserType type) {
         final FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(title);
 
@@ -169,7 +170,15 @@ public class MainView extends BorderPane implements View {
             fileChooser.setSelectedExtensionFilter(extensionFilter);
         }
 
-        return fileChooser.showSaveDialog(stage);
+        File result;
+
+        if(type.equals(FileChooserType.SAVE)) {
+            result = fileChooser.showSaveDialog(stage);
+        } else {
+            result = fileChooser.showOpenDialog(stage);
+        }
+
+        return result;
     }
 
     /**
@@ -391,11 +400,11 @@ public class MainView extends BorderPane implements View {
         }
     }
 
-    /* Delegating Getters */
-
     public ImageFileExplorerView getImageFileExplorer() {
         return workspaceSplitPane.getImageFileExplorer();
     }
+
+    /* Delegating Getters */
 
     public EditorView getEditor() {
         return workspaceSplitPane.getEditor();
@@ -514,4 +523,6 @@ public class MainView extends BorderPane implements View {
         alert.getDialogPane().setExpandableContent(expandableContent);
         alert.showAndWait();
     }
+
+    public enum FileChooserType {SAVE, OPEN}
 }
