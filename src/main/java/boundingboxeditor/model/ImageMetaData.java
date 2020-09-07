@@ -144,7 +144,7 @@ public class ImageMetaData {
                     reader.dispose();
                 }
             } else {
-                throw new RuntimeException("Could not read image meta-data.");
+                throw new ImageMetaDataReadException("Could not read image meta-data.");
             }
         }
 
@@ -187,6 +187,14 @@ public class ImageMetaData {
             return Double.compare(that.imageWidth, imageWidth) == 0 &&
                     Double.compare(that.imageHeight, imageHeight) == 0 &&
                     imageDepth == that.imageDepth;
+        }
+    }
+
+    public static class ImageMetaDataReadException extends RuntimeException {
+        private static final long serialVersionUID = -4143199502921469708L;
+
+        public ImageMetaDataReadException(String errorMessage) {
+            super(errorMessage);
         }
     }
 

@@ -9,6 +9,10 @@ import java.util.concurrent.TimeUnit;
  * returned {@link IOResult} object.
  */
 public class IOOperationTimer {
+    private IOOperationTimer() {
+        throw new IllegalStateException("Utility class");
+    }
+
     /**
      * Times the callable and sets the time in the
      * returned {@link IOResult} object.

@@ -414,7 +414,7 @@ public class Controller {
 
         if(newName.isBlank()) {
             MainView.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                    "Please provide a non-blank category name.");
+                    INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT);
             objectCategory.setName(oldName);
             event.getTableView().refresh();
         } else if(boundingShapesPerCategoryNameMap.containsKey(newName)) {

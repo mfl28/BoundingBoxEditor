@@ -35,19 +35,16 @@ public class FileChangeWatcher implements Runnable {
             directoryToWatch.register(watchService, StandardWatchEventKinds.ENTRY_DELETE,
                     StandardWatchEventKinds.ENTRY_MODIFY);
 
-            while(true) {
-                WatchKey watchKey = watchService.take();
-
-                if(watchKey != null) {
-                    if(watchKey.pollEvents().stream().anyMatch(watchEvent -> fileNamesToWatch.contains(watchEvent.context().toString()))) {
-                        Platform.runLater(onFilesChangedHandler);
-                    } else {
-                        watchKey.reset();
-                    }
+            WatchKey key;
+            while((key = watchService.take()) != null) {
+                if(key.pollEvents().stream().anyMatch(watchEvent -> fileNamesToWatch.contains(watchEvent.context().toString()))) {
+                    Platform.runLater(onFilesChangedHandler);
+                } else {
+                    key.reset();
                 }
             }
         } catch(InterruptedException ignored) {
-            // Nothing to be done.
+            Thread.currentThread().interrupt();
         } catch(IOException e) {
             Platform.runLater(onFilesChangedHandler);
         }

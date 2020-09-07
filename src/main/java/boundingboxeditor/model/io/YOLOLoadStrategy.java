@@ -23,6 +23,7 @@ import java.util.stream.Stream;
  * https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885
  */
 public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
+    public static final String INVALID_BOUNDING_BOX_COORDINATES_MESSAGE = "Invalid bounding-box coordinates on line ";
     private static final boolean INCLUDE_SUBDIRECTORIES = false;
     private static final String OBJECT_DATA_FILE_NAME = "object.data";
     private static final String YOLO_IMAGE_EXTENSION = ".jpg";
@@ -158,16 +159,16 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
         double heightRelative = parseRatio(scanner, lineNumber);
 
         double xMinRelative = xMidRelative - widthRelative / 2;
-        assertRatio(xMinRelative, "Invalid bounding-box coordinates on line " + lineNumber + ".");
+        assertRatio(xMinRelative, INVALID_BOUNDING_BOX_COORDINATES_MESSAGE + lineNumber + ".");
 
         double yMinRelative = yMidRelative - heightRelative / 2;
-        assertRatio(yMinRelative, "Invalid bounding-box coordinates on line " + lineNumber + ".");
+        assertRatio(yMinRelative, INVALID_BOUNDING_BOX_COORDINATES_MESSAGE + lineNumber + ".");
 
         double xMaxRelative = xMidRelative + widthRelative / 2;
-        assertRatio(xMaxRelative, "Invalid bounding-box coordinates on line " + lineNumber + ".");
+        assertRatio(xMaxRelative, INVALID_BOUNDING_BOX_COORDINATES_MESSAGE + lineNumber + ".");
 
         double yMaxRelative = yMidRelative + heightRelative / 2;
-        assertRatio(yMaxRelative, "Invalid bounding-box coordinates on line " + lineNumber + ".");
+        assertRatio(yMaxRelative, INVALID_BOUNDING_BOX_COORDINATES_MESSAGE + lineNumber + ".");
 
         String categoryName = categories.get(categoryId);
 
