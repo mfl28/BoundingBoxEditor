@@ -44,7 +44,7 @@ public class ImageMetaData {
     public static ImageMetaData fromFile(File imageFile) throws IOException {
         ImageDimensions imageDimensions = readImageDimensionsFromFile(imageFile);
         return new ImageMetaData(imageFile.getName(), imageFile.toPath().getParent().toFile().getName(),
-                imageDimensions.getWidth(), imageDimensions.getHeight(), imageDimensions.getDepth());
+                                 imageDimensions.getWidth(), imageDimensions.getHeight(), imageDimensions.getDepth());
     }
 
     /**
@@ -113,7 +113,8 @@ public class ImageMetaData {
     @Override
     public String toString() {
         return "ImageMetaData[fileName=" + getFileName() + ", folderName=" + getFolderName()
-                + ", image-width=" + getImageWidth() + ", image-height=" + getImageHeight() + ", image-depth=" + getImageDepth();
+                + ", image-width=" + getImageWidth() + ", image-height=" + getImageHeight() + ", image-depth=" +
+                getImageDepth();
     }
 
     public String getDimensionsString() {

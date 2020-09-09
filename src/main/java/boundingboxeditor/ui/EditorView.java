@@ -63,7 +63,8 @@ public class EditorView extends BorderPane implements View {
         colorAdjust.contrastProperty().bind(editorToolBarView.getContrastSlider().valueProperty());
         colorAdjust.saturationProperty().bind(editorToolBarView.getSaturationSlider().valueProperty());
 
-        editorToolBarView.getResetSizeAndCenterImageButton().setOnAction(event -> editorImagePaneView.resetImageViewSize());
+        editorToolBarView.getResetSizeAndCenterImageButton()
+                         .setOnAction(event -> editorImagePaneView.resetImageViewSize());
 
         editorToolBarView.getRectangleModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
             editorImagePaneView.setBoundingPolygonsEditingAndConstructing(false);

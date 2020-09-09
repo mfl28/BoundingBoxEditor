@@ -18,7 +18,8 @@ import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
-    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+    private static final DecimalFormat DECIMAL_FORMAT =
+            new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     private static final String OBJECT_CATEGORY_SERIALIZED_NAME = "name";
     private static final String OBJECT_COLOR_SERIALIZED_NAME = "color";
     private static final String BOUNDS_MIN_X_SERIALIZED_NAME = "minX";
@@ -33,24 +34,29 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
 
         final Gson gson = new GsonBuilder()
                 .setPrettyPrinting()
-                .registerTypeAdapter(ImageAnnotationData.class, (JsonSerializer<ImageAnnotationData>) (src, typeOfSrc, context) -> {
-                    JsonArray serializedAnnotations = new JsonArray();
+                .registerTypeAdapter(ImageAnnotationData.class,
+                                     (JsonSerializer<ImageAnnotationData>) (src, typeOfSrc, context) -> {
+                                         JsonArray serializedAnnotations = new JsonArray();
 
-                    for(ImageAnnotation annotation : src.getImageAnnotations()) {
-                        serializedAnnotations.add(context.serialize(annotation));
-                        progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrAnnotations);
-                    }
+                                         for(ImageAnnotation annotation : src.getImageAnnotations()) {
+                                             serializedAnnotations.add(context.serialize(annotation));
+                                             progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() /
+                                                                  totalNrAnnotations);
+                                         }
 
-                    return serializedAnnotations;
-                })
-                .registerTypeAdapter(ObjectCategory.class, (JsonSerializer<ObjectCategory>) (src, typeOfSrc, context) -> {
-                    JsonObject categoryObject = new JsonObject();
-                    categoryObject.add(OBJECT_CATEGORY_SERIALIZED_NAME, context.serialize(src.getName()));
-                    categoryObject.add(OBJECT_COLOR_SERIALIZED_NAME,
-                            context.serialize(ColorUtils.colorToHexString(src.getColor())));
+                                         return serializedAnnotations;
+                                     })
+                .registerTypeAdapter(ObjectCategory.class,
+                                     (JsonSerializer<ObjectCategory>) (src, typeOfSrc, context) -> {
+                                         JsonObject categoryObject = new JsonObject();
+                                         categoryObject.add(OBJECT_CATEGORY_SERIALIZED_NAME,
+                                                            context.serialize(src.getName()));
+                                         categoryObject.add(OBJECT_COLOR_SERIALIZED_NAME,
+                                                            context.serialize(
+                                                                    ColorUtils.colorToHexString(src.getColor())));
 
-                    return categoryObject;
-                })
+                                         return categoryObject;
+                                     })
                 .registerTypeHierarchyAdapter(Bounds.class, (JsonSerializer<Bounds>) (src, typeOfSrc, context) -> {
                     JsonObject boundsObject = new JsonObject();
                     boundsObject.add(BOUNDS_MIN_X_SERIALIZED_NAME, context.serialize(src.getMinX()));

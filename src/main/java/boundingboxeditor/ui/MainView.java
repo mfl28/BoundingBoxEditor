@@ -37,7 +37,8 @@ import java.util.Optional;
  */
 public class MainView extends BorderPane implements View {
     public static final String APPLICATION_ICON_PATH = "/icons/app_icon.png";
-    public static final Image APPLICATION_ICON = new Image(MainView.class.getResource(APPLICATION_ICON_PATH).toExternalForm());
+    public static final Image APPLICATION_ICON =
+            new Image(MainView.class.getResource(APPLICATION_ICON_PATH).toExternalForm());
 
     private static final int INFO_DIALOGUE_MIN_WIDTH = 600;
     private static final String MAIN_VIEW_ID = "main-view";
@@ -88,8 +89,9 @@ public class MainView extends BorderPane implements View {
      */
     public static ButtonBar.ButtonData displayYesNoCancelDialogAndGetResult(String title, String content) {
         Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
-                content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
-                new ButtonType("No", ButtonBar.ButtonData.NO), new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
+                                 content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
+                                 new ButtonType("No", ButtonBar.ButtonData.NO),
+                                 new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
         dialog.setTitle(title);
         dialog.setHeaderText(null);
         dialog.setContentText(content);
@@ -110,8 +112,8 @@ public class MainView extends BorderPane implements View {
      */
     public static ButtonBar.ButtonData displayYesNoDialogAndGetResult(String title, String content) {
         Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
-                content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
-                new ButtonType("No", ButtonBar.ButtonData.NO));
+                                 content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
+                                 new ButtonType("No", ButtonBar.ButtonData.NO));
         dialog.setTitle(title);
         dialog.setHeaderText(null);
         dialog.setContentText(content);
@@ -152,7 +154,8 @@ public class MainView extends BorderPane implements View {
      * @return The chosen file, or null if the user closed the window without choosing.
      */
     public static File displaySaveFileChooserAndGetChoice(String title, Stage stage, File initialDirectory,
-                                                          String initialFileName, FileChooser.ExtensionFilter extensionFilter,
+                                                          String initialFileName,
+                                                          FileChooser.ExtensionFilter extensionFilter,
                                                           FileChooserType type) {
         final FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(title);
@@ -209,31 +212,36 @@ public class MainView extends BorderPane implements View {
         errorTable.sort();
 
         long numErrorEntries = ioResult.getErrorTableEntries().stream()
-                .map(IOResult.ErrorInfoEntry::getFileName)
-                .distinct()
-                .count();
+                                       .map(IOResult.ErrorInfoEntry::getFileName)
+                                       .distinct()
+                                       .count();
 
         if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_IMPORT)) {
             if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
-                MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE, "There were errors while loading annotations.",
-                        "The folder does not contain any valid annotation files.", errorTable);
+                MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
+                                          "There were errors while loading annotations.",
+                                          "The folder does not contain any valid annotation files.", errorTable);
             } else {
-                MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE, "There were errors while loading annotations.",
-                        "Some bounding boxes could not be loaded from " + numErrorEntries + " image-annotation file"
-                                + (numErrorEntries > 1 ? "s" : "") + ".", errorTable);
+                MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
+                                          "There were errors while loading annotations.",
+                                          "Some bounding boxes could not be loaded from " + numErrorEntries +
+                                                  " image-annotation file"
+                                                  + (numErrorEntries > 1 ? "s" : "") + ".", errorTable);
             }
 
         } else if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_SAVING)) {
-            MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE, "There were errors while saving annotations.",
-                    numErrorEntries + " image-annotation file"
-                            + (numErrorEntries > 1 ? "s" : "") + " could not be saved.", errorTable);
+            MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE,
+                                      "There were errors while saving annotations.",
+                                      numErrorEntries + " image-annotation file"
+                                              + (numErrorEntries > 1 ? "s" : "") + " could not be saved.", errorTable);
         } else if(ioResult.getOperationType().equals(IOResult.OperationType.IMAGE_METADATA_LOADING)) {
             if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
                 MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
-                        "The folder does not contain any valid image files.", errorTable);
+                                          "The folder does not contain any valid image files.", errorTable);
             } else {
                 MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
-                        numErrorEntries + " image file" + (numErrorEntries > 1 ? "s" : "") + " could not be loaded.", errorTable);
+                                          numErrorEntries + " image file" + (numErrorEntries > 1 ? "s" : "") +
+                                                  " could not be loaded.", errorTable);
             }
         }
     }
@@ -249,7 +257,8 @@ public class MainView extends BorderPane implements View {
         final ProgressDialog progressDialog = new ProgressDialog(service);
         progressDialog.setTitle(title);
         progressDialog.setHeaderText(header);
-        progressDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        progressDialog.getDialogPane().getStylesheets()
+                      .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) progressDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
     }
 
@@ -283,7 +292,8 @@ public class MainView extends BorderPane implements View {
      */
     public static void displayExceptionDialog(Throwable throwable) {
         ExceptionDialog exceptionDialog = new ExceptionDialog(throwable);
-        exceptionDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        exceptionDialog.getDialogPane().getStylesheets()
+                       .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) exceptionDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
         exceptionDialog.showAndWait();
     }

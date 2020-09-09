@@ -19,7 +19,8 @@ import java.util.stream.Collectors;
  * https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885
  */
 public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
-    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+    private static final DecimalFormat DECIMAL_FORMAT =
+            new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     private static final String YOLO_ANNOTATION_FILE_EXTENSION = ".txt";
     private static final String OBJECT_DATA_FILE_NAME = "object.data";
     private Path saveFolderPath;
@@ -29,10 +30,10 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     public IOResult save(ImageAnnotationData annotations, Path destination, DoubleProperty progress) {
         this.saveFolderPath = destination;
         this.categories = annotations.getCategoryToShapeCountMap().entrySet().stream()
-                .filter(stringIntegerEntry -> stringIntegerEntry.getValue() > 0)
-                .map(Map.Entry::getKey)
-                .sorted()
-                .collect(Collectors.toList());
+                                     .filter(stringIntegerEntry -> stringIntegerEntry.getValue() > 0)
+                                     .map(Map.Entry::getKey)
+                                     .sorted()
+                                     .collect(Collectors.toList());
 
         List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
@@ -49,7 +50,8 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
             try {
                 createAnnotationFile(annotation);
             } catch(IOException e) {
-                unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
+                unParsedFileErrorMessages
+                        .add(new IOResult.ErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
             }
 
             progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrOfAnnotations);
@@ -64,7 +66,7 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
 
     private void createObjectDataFile() throws IOException {
         try(BufferedWriter fileWriter = Files.newBufferedWriter(saveFolderPath
-                .resolve(OBJECT_DATA_FILE_NAME))) {
+                                                                        .resolve(OBJECT_DATA_FILE_NAME))) {
             for(int i = 0; i < categories.size() - 1; ++i) {
                 fileWriter.write(categories.get(i));
                 fileWriter.newLine();
@@ -81,7 +83,8 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         String imageFileNameWithoutExtension = imageFileName.substring(0, imageFileName.lastIndexOf('.'));
 
         try(BufferedWriter fileWriter = Files.newBufferedWriter(saveFolderPath
-                .resolve(imageFileNameWithoutExtension + YOLO_ANNOTATION_FILE_EXTENSION))) {
+                                                                        .resolve(imageFileNameWithoutExtension +
+                                                                                         YOLO_ANNOTATION_FILE_EXTENSION))) {
             List<BoundingShapeData> boundingShapeDataList = annotation.getBoundingShapeData();
 
             for(int i = 0; i < boundingShapeDataList.size() - 1; ++i) {

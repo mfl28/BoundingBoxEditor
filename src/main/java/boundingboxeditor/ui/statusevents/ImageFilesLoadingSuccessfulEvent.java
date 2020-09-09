@@ -16,8 +16,9 @@ public class ImageFilesLoadingSuccessfulEvent extends StatusEvent {
      */
     public ImageFilesLoadingSuccessfulEvent(IOResult ioResult, File loadedImageDirectory) {
         super("Successfully loaded " + ioResult.getNrSuccessfullyProcessedItems() + " image-file" +
-                (ioResult.getNrSuccessfullyProcessedItems() != 1 ? "s" : "") + " from folder " + loadedImageDirectory.getPath()
-                + " in "
-                + secondsFormat.format(ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.");
+                      (ioResult.getNrSuccessfullyProcessedItems() != 1 ? "s" : "") + " from folder " +
+                      loadedImageDirectory.getPath()
+                      + " in "
+                      + secondsFormat.format(ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.");
     }
 }

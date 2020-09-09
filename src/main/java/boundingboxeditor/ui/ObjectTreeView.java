@@ -63,11 +63,11 @@ public class ObjectTreeView extends TreeView<Object> implements View {
      */
     public List<BoundingShapeData> extractCurrentBoundingShapeData() {
         return getRoot().getChildren().stream()
-                .map(TreeItem::getChildren)
-                .flatMap(Collection::stream)
-                .filter(child -> child.getValue() instanceof BoundingShapeDataConvertible)
-                .map(this::treeItemToBoundingShapeData)
-                .collect(Collectors.toList());
+                        .map(TreeItem::getChildren)
+                        .flatMap(Collection::stream)
+                        .filter(child -> child.getValue() instanceof BoundingShapeDataConvertible)
+                        .map(this::treeItemToBoundingShapeData)
+                        .collect(Collectors.toList());
     }
 
     /**
@@ -138,12 +138,12 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     List<BoundingShapeViewable> extractBoundingShapesAndBuildTreeFromAnnotation(ImageAnnotation annotation) {
         ImageMetaData metaData = annotation.getImageMetaData();
         annotation.getBoundingShapeData().forEach(boundingShapeData ->
-                generateNewTreeItem(getRoot(), boundingShapeData, metaData));
+                                                          generateNewTreeItem(getRoot(), boundingShapeData, metaData));
 
         return IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot())).stream()
-                .filter(treeItem -> treeItem.getValue() instanceof BoundingShapeViewable)
-                .map(item -> (BoundingShapeViewable) item.getValue())
-                .collect(Collectors.toList());
+                            .filter(treeItem -> treeItem.getValue() instanceof BoundingShapeViewable)
+                            .map(item -> (BoundingShapeViewable) item.getValue())
+                            .collect(Collectors.toList());
     }
 
     /**
@@ -155,15 +155,16 @@ public class ObjectTreeView extends TreeView<Object> implements View {
      */
     static List<BoundingShapeViewable> getBoundingShapesRecursively(TreeItem<Object> root) {
         if(root.isLeaf()) {
-            return root instanceof BoundingShapeTreeItem ? List.of((BoundingShapeViewable) root.getValue()) : Collections.emptyList();
+            return root instanceof BoundingShapeTreeItem ? List.of((BoundingShapeViewable) root.getValue()) :
+                    Collections.emptyList();
         }
 
         BoundingShapeTreeItemIterator iterator = new BoundingShapeTreeItemIterator(root);
 
         return IteratorUtils.toList(iterator).stream()
-                .filter(child -> child.getValue() instanceof BoundingShapeViewable)
-                .map(child -> (BoundingShapeViewable) child.getValue())
-                .collect(Collectors.toList());
+                            .filter(child -> child.getValue() instanceof BoundingShapeViewable)
+                            .map(child -> (BoundingShapeViewable) child.getValue())
+                            .collect(Collectors.toList());
     }
 
     /**
@@ -183,21 +184,24 @@ public class ObjectTreeView extends TreeView<Object> implements View {
      * @param objectCategory the category of the sought {@link ObjectCategoryTreeItem}
      * @return the {@link ObjectCategoryTreeItem} if it is found, otherwise null
      */
-    ObjectCategoryTreeItem findParentCategoryTreeItemForCategory(TreeItem<Object> searchRoot, ObjectCategory objectCategory) {
+    ObjectCategoryTreeItem findParentCategoryTreeItemForCategory(TreeItem<Object> searchRoot,
+                                                                 ObjectCategory objectCategory) {
         return (ObjectCategoryTreeItem) searchRoot.getChildren().stream()
-                .filter(category -> category.getValue().equals(objectCategory))
-                .findFirst()
-                .orElse(null);
+                                                  .filter(category -> category.getValue().equals(objectCategory))
+                                                  .findFirst()
+                                                  .orElse(null);
     }
 
     /**
      * Expands all currently existing tree-items.
      */
     void expandAllTreeItems() {
-        IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot())).forEach(treeItem -> treeItem.setExpanded(true));
+        IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot()))
+                     .forEach(treeItem -> treeItem.setExpanded(true));
     }
 
-    private void generateNewTreeItem(TreeItem<Object> root, BoundingShapeData boundingShapeData, ImageMetaData metaData) {
+    private void generateNewTreeItem(TreeItem<Object> root, BoundingShapeData boundingShapeData,
+                                     ImageMetaData metaData) {
         ObjectCategoryTreeItem objectCategoryTreeItem = findObjectCategoryTreeItem(root, boundingShapeData);
         BoundingShapeViewable newBoundingShape = boundingShapeData.toBoundingShapeView(metaData);
         BoundingShapeTreeItem newTreeItem = newBoundingShape.toTreeItem();
@@ -207,8 +211,10 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         boundingShapeData.getParts().forEach(part -> generateNewTreeItem(newTreeItem, part, metaData));
     }
 
-    private ObjectCategoryTreeItem findObjectCategoryTreeItem(TreeItem<Object> root, BoundingShapeData boundingShapeData) {
-        ObjectCategoryTreeItem objectCategoryTreeItem = findParentCategoryTreeItemForCategory(root, boundingShapeData.getCategory());
+    private ObjectCategoryTreeItem findObjectCategoryTreeItem(TreeItem<Object> root,
+                                                              BoundingShapeData boundingShapeData) {
+        ObjectCategoryTreeItem objectCategoryTreeItem =
+                findParentCategoryTreeItemForCategory(root, boundingShapeData.getCategory());
 
         if(objectCategoryTreeItem == null) {
             objectCategoryTreeItem = new ObjectCategoryTreeItem(boundingShapeData.getCategory());
@@ -236,12 +242,15 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         boundingShape.getViewData().setTreeItem(boundingShapeTreeItem);
 
         ObjectCategoryTreeItem parentObjectCategoryTreeItem = findParentCategoryTreeItemForCategory(root,
-                boundingShape.getViewData().getObjectCategory());
+                                                                                                    boundingShape
+                                                                                                            .getViewData()
+                                                                                                            .getObjectCategory());
 
         if(parentObjectCategoryTreeItem != null) {
             parentObjectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingShapeTreeItem);
         } else {
-            ObjectCategoryTreeItem objectCategoryTreeItem = new ObjectCategoryTreeItem(boundingShape.getViewData().getObjectCategory());
+            ObjectCategoryTreeItem objectCategoryTreeItem =
+                    new ObjectCategoryTreeItem(boundingShape.getViewData().getObjectCategory());
             root.getChildren().add(objectCategoryTreeItem);
             objectCategoryTreeItem.attachBoundingShapeTreeItemChild(boundingShapeTreeItem);
         }
@@ -252,14 +261,15 @@ public class ObjectTreeView extends TreeView<Object> implements View {
             throw new IllegalStateException("Invalid tree item class type.");
         }
 
-        BoundingShapeData boundingShapeData = ((BoundingShapeDataConvertible) treeItem.getValue()).toBoundingShapeData();
+        BoundingShapeData boundingShapeData =
+                ((BoundingShapeDataConvertible) treeItem.getValue()).toBoundingShapeData();
 
         if(!treeItem.isLeaf()) {
             List<BoundingShapeData> parts = treeItem.getChildren().stream()
-                    .map(TreeItem::getChildren)
-                    .flatMap(Collection::stream)
-                    .map(this::treeItemToBoundingShapeData)
-                    .collect(Collectors.toList());
+                                                    .map(TreeItem::getChildren)
+                                                    .flatMap(Collection::stream)
+                                                    .map(this::treeItemToBoundingShapeData)
+                                                    .collect(Collectors.toList());
 
             boundingShapeData.setParts(parts);
         }
@@ -272,7 +282,8 @@ public class ObjectTreeView extends TreeView<Object> implements View {
 
         if(itemParent instanceof ObjectCategoryTreeItem
                 && itemToDetach instanceof BoundingShapeTreeItem) {
-            ((ObjectCategoryTreeItem) itemParent).detachBoundingShapeTreeItemChild((BoundingShapeTreeItem) itemToDetach);
+            ((ObjectCategoryTreeItem) itemParent)
+                    .detachBoundingShapeTreeItemChild((BoundingShapeTreeItem) itemToDetach);
         } else {
             itemParent.getChildren().remove(itemToDetach);
         }
@@ -289,7 +300,8 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         if(treeItemToAttach instanceof ObjectCategoryTreeItem) {
             draggedItemCategory = ((ObjectCategoryTreeItem) treeItemToAttach).getObjectCategory();
         } else if(treeItemToAttach instanceof BoundingShapeTreeItem) {
-            draggedItemCategory = ((BoundingShapeViewable) treeItemToAttach.getValue()).getViewData().getObjectCategory();
+            draggedItemCategory =
+                    ((BoundingShapeViewable) treeItemToAttach.getValue()).getViewData().getObjectCategory();
         } else {
             throw new IllegalStateException(INVALID_DRAGGED_OBJECT_CLASS_TYPE_ERROR_MESSAGE);
         }
@@ -307,8 +319,9 @@ public class ObjectTreeView extends TreeView<Object> implements View {
                 // Full category is added:
                 targetItem.getChildren().add(treeItemToAttach);
             } else {
-                ObjectCategoryTreeItem newCategoryParent = new ObjectCategoryTreeItem(((BoundingShapeViewable) treeItemToAttach.getValue())
-                        .getViewData().getObjectCategory());
+                ObjectCategoryTreeItem newCategoryParent =
+                        new ObjectCategoryTreeItem(((BoundingShapeViewable) treeItemToAttach.getValue())
+                                                           .getViewData().getObjectCategory());
                 newCategoryParent.attachBoundingShapeTreeItemChild((BoundingShapeTreeItem) treeItemToAttach);
                 targetItem.getChildren().add(newCategoryParent);
             }

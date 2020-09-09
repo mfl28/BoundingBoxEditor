@@ -49,8 +49,10 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     private final Button addCategoryButton = new Button(OBJECT_CATEGORY_ADD_BUTTON_TEXT);
 
     private final ObjectTreeView objectTree = new ObjectTreeView();
-    private final IconButton expandTreeItemsButton = new IconButton(EXPAND_TREE_ITEMS_ICON_ID, IconButton.IconType.BACKGROUND);
-    private final IconButton collapseTreeItemsButton = new IconButton(COLLAPSE_TREE_ITEMS_ICON_ID, IconButton.IconType.BACKGROUND);
+    private final IconButton expandTreeItemsButton =
+            new IconButton(EXPAND_TREE_ITEMS_ICON_ID, IconButton.IconType.BACKGROUND);
+    private final IconButton collapseTreeItemsButton =
+            new IconButton(COLLAPSE_TREE_ITEMS_ICON_ID, IconButton.IconType.BACKGROUND);
 
     private final TagScrollPaneView tagScrollPaneView = new TagScrollPaneView();
 
@@ -175,7 +177,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
         addCategoryButton.setFocusTraversable(false);
 
         HBox addCategoryBox = new HBox(categoryColorPicker, UiUtils.createHSpacer(),
-                categoryNameTextField, UiUtils.createHSpacer(), addCategoryButton);
+                                       categoryNameTextField, UiUtils.createHSpacer(), addCategoryButton);
         categoryNameTextField.setPromptText(CATEGORY_INPUT_FIELD_PROMPT_TEXT);
 
         addCategoryBox.setId(ADD_CATEGORY_BOX_ID);
@@ -237,7 +239,8 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
     private void setUpButtonsAndTextFields() {
         categoryNameTextField.setId(CATEGORY_INPUT_FIELD_ID);
-        categoryNameTextField.setTooltip(UiUtils.createFocusTooltip(Controller.KeyCombinations.focusCategoryNameTextField));
+        categoryNameTextField
+                .setTooltip(UiUtils.createFocusTooltip(Controller.KeyCombinations.focusCategoryNameTextField));
 
         categoryColorPicker.getStyleClass().add(OBJECT_CATEGORY_COLOR_PICKER_STYLE);
         categoryColorPicker.setValue(ColorUtils.createRandomColor());
@@ -259,12 +262,12 @@ public class EditorsSplitPaneView extends SplitPane implements View {
         categorySearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null) {
                 objectCategoryTable.getItems().stream()
-                        .filter(item -> item.getName().startsWith(newValue))
-                        .findAny()
-                        .ifPresent(item -> {
-                            objectCategoryTable.getSelectionModel().select(item);
-                            objectCategoryTable.scrollTo(item);
-                        });
+                                   .filter(item -> item.getName().startsWith(newValue))
+                                   .findAny()
+                                   .ifPresent(item -> {
+                                       objectCategoryTable.getSelectionModel().select(item);
+                                       objectCategoryTable.scrollTo(item);
+                                   });
             }
         });
 
@@ -277,7 +280,8 @@ public class EditorsSplitPaneView extends SplitPane implements View {
         expandTreeItemsButton.setOnAction(event -> objectTree.expandAllTreeItems());
 
         collapseTreeItemsButton.setOnAction(event ->
-                objectTree.getRoot().getChildren().forEach(child -> child.setExpanded(false)));
+                                                    objectTree.getRoot().getChildren()
+                                                              .forEach(child -> child.setExpanded(false)));
 
         objectTree.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue instanceof BoundingShapeTreeItem) {

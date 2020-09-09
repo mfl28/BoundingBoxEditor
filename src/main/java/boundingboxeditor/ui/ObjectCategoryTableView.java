@@ -128,13 +128,15 @@ public class ObjectCategoryTableView extends TableView<ObjectCategory> implement
                 // which is not taken into account by its width-property. If left out, a horizontal scroll-bar
                 // is shown even though the widths of all columns add up perfectly.
                 nameColumn.prefWidthProperty().bind(widthProperty()
-                        .subtract(colorColumn.widthProperty()
-                                .add(deleteColumn.widthProperty())
-                                .add(3)
-                                .add(Bindings
-                                        .when(verticalScrollBar.visibleProperty())
-                                        .then(verticalScrollBar.widthProperty())
-                                        .otherwise(0))));
+                                                            .subtract(colorColumn.widthProperty()
+                                                                                 .add(deleteColumn.widthProperty())
+                                                                                 .add(3)
+                                                                                 .add(Bindings
+                                                                                              .when(verticalScrollBar
+                                                                                                            .visibleProperty())
+                                                                                              .then(verticalScrollBar
+                                                                                                            .widthProperty())
+                                                                                              .otherwise(0))));
             }
         };
 
@@ -167,9 +169,9 @@ public class ObjectCategoryTableView extends TableView<ObjectCategory> implement
             final TableRow<ObjectCategory> row = new TableRow<>();
 
             row.contextMenuProperty().bind(Bindings
-                    .when(row.emptyProperty())
-                    .then((ContextMenu) null)
-                    .otherwise(contextMenu));
+                                                   .when(row.emptyProperty())
+                                                   .then((ContextMenu) null)
+                                                   .otherwise(contextMenu));
 
             row.setOnContextMenuRequested(event -> {
                 categoryColorPicker.getStylesheets().add(NO_CUSTOM_COLORS_PALETTE_STYLE_SHEET);
@@ -196,7 +198,10 @@ public class ObjectCategoryTableView extends TableView<ObjectCategory> implement
 
                 if(categoryItem != null) {
                     backgroundProperty().bind(Bindings.createObjectBinding(() ->
-                            new Background(new BackgroundFill(categoryItem.getColor(), null, null)), categoryItem.colorProperty()));
+                                                                                   new Background(new BackgroundFill(
+                                                                                           categoryItem.getColor(),
+                                                                                           null, null)),
+                                                                           categoryItem.colorProperty()));
                 }
             }
         }

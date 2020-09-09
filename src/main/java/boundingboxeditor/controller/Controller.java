@@ -54,39 +54,51 @@ public class Controller {
     private static final String OPEN_FOLDER_ERROR_DIALOG_HEADER = "The selected folder is not a valid image folder.";
     private static final String SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE = "Save image annotations to a folder";
     private static final String SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Save image annotations to a file";
-    private static final String LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE = "Load image annotations from a folder containing annotation files";
+    private static final String LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE =
+            "Load image annotations from a folder containing annotation files";
     private static final String LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Load image annotations from a file";
     private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE = "Error loading image folder";
-    private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT = "The chosen folder does not contain any valid image files.";
+    private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT =
+            "The chosen folder does not contain any valid image files.";
     private static final String CATEGORY_INPUT_ERROR_DIALOG_TITLE = "Category Creation Error";
-    private static final String INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT = "Please provide a non-blank category name.";
+    private static final String INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT =
+            "Please provide a non-blank category name.";
     private static final String CATEGORY_DELETION_ERROR_DIALOG_TITLE = "Category Deletion Error";
-    private static final String CATEGORY_DELETION_ERROR_DIALOG_CONTENT = "You cannot delete a category that has existing bounding-boxes assigned to it.";
+    private static final String CATEGORY_DELETION_ERROR_DIALOG_CONTENT =
+            "You cannot delete a category that has existing bounding-boxes assigned to it.";
 
     private static final String IMAGE_FOLDER_CHOOSER_TITLE = "Choose an image folder";
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
     private static final String SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE = "Save Error";
-    private static final String NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT = "There are no image annotations to save.";
+    private static final String NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT =
+            "There are no image annotations to save.";
     private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Saving Annotations";
     private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
     private static final String ANNOTATION_IMPORT_ERROR_TITLE = "Annotation Import Error";
-    private static final String ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT = "The folder does not contain any valid annotation files.";
+    private static final String ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT =
+            "The folder does not contain any valid annotation files.";
     private static final String LOADING_ANNOTATIONS_DIALOG_TITLE = "Loading";
     private static final String LOADING_ANNOTATIONS_DIALOG_HEADER = "Loading annotations...";
     private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE = "Open image folder";
-    private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT = "Opening a new image folder will remove any existing annotation data. " +
-            "Do you want to save the currently existing annotation data?";
-    private static final String RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT = "Reloading the image folder will remove any existing annotation data. " +
-            "Do you want to save the currently existing annotation data (Closing = No)?";
+    private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT =
+            "Opening a new image folder will remove any existing annotation data. " +
+                    "Do you want to save the currently existing annotation data?";
+    private static final String RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT =
+            "Reloading the image folder will remove any existing annotation data. " +
+                    "Do you want to save the currently existing annotation data (Closing = No)?";
     private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE = "Import annotation data";
-    private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT = "Do you want to keep existing categories and annotation data?";
+    private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT =
+            "Do you want to keep existing categories and annotation data?";
     private static final String EXIT_APPLICATION_OPTION_DIALOG_TITLE = "Exit Application";
-    private static final String EXIT_APPLICATION_OPTION_DIALOG_CONTENT = "Do you want to save the existing annotation data?";
+    private static final String EXIT_APPLICATION_OPTION_DIALOG_CONTENT =
+            "Do you want to save the existing annotation data?";
     private static final String IS_WINDOW_MAXIMIZED_PREFERENCE_NAME = "isMaximized";
     private static final String CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME = "currentImageLoadingDirectory";
-    private static final String CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME = "currentAnnotationLoadingDirectory";
-    private static final String CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME = "currentAnnotationSavingDirectory";
+    private static final String CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME =
+            "currentAnnotationLoadingDirectory";
+    private static final String CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME =
+            "currentAnnotationSavingDirectory";
     private static final String RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE = "Reload image folder";
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE = "Save annotations";
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER = "Choose the format for the saved annotations.";
@@ -98,7 +110,8 @@ public class Controller {
     private final MainView view = new MainView();
     private final Model model = new Model();
 
-    private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener = createBoundingShapeCountPerCategoryListener();
+    private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener =
+            createBoundingShapeCountPerCategoryListener();
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
     private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
@@ -135,7 +148,8 @@ public class Controller {
      * Handles the event of the user requesting to open a new image folder.
      */
     public void onRegisterOpenImageFolderAction() {
-        final File imageFolder = MainView.displayDirectoryChooserAndGetChoice(IMAGE_FOLDER_CHOOSER_TITLE, stage, currentImageLoadingDirectory);
+        final File imageFolder = MainView.displayDirectoryChooserAndGetChoice(IMAGE_FOLDER_CHOOSER_TITLE, stage,
+                                                                              currentImageLoadingDirectory);
 
         if(imageFolder != null) {
             initiateImageFolderLoading(imageFolder);
@@ -192,7 +206,7 @@ public class Controller {
 
         if(!model.containsAnnotations() && !view.containsBoundingShapeViews()) {
             MainView.displayErrorAlert(SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE,
-                    NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT);
+                                       NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT);
             return;
         }
 
@@ -225,8 +239,9 @@ public class Controller {
         updateModelFromView();
 
         if(model.containsCategories()) {
-            ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE,
-                    IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT);
+            ButtonBar.ButtonData answer =
+                    MainView.displayYesNoCancelDialogAndGetResult(IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE,
+                                                                  IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT);
 
             if(answer == ButtonBar.ButtonData.NO) {
                 model.clearAnnotationData(false);
@@ -251,14 +266,14 @@ public class Controller {
 
         if(categoryName.isBlank()) {
             MainView.displayErrorAlert(CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                    INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT);
+                                       INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT);
             view.getObjectCategoryInputField().clear();
             return;
         }
 
         if(model.getCategoryToAssignedBoundingShapesCountMap().containsKey(categoryName)) {
             MainView.displayErrorAlert(CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                    "The category \"" + categoryName + "\" already exists.");
+                                       "The category \"" + categoryName + "\" already exists.");
             view.getObjectCategoryInputField().clear();
             return;
         }
@@ -269,9 +284,9 @@ public class Controller {
 
         view.getObjectCategoryTable().getSelectionModel().selectLast();
         view.getObjectCategoryTable().scrollTo(view
-                .getObjectCategoryTable()
-                .getSelectionModel()
-                .getSelectedIndex()
+                                                       .getObjectCategoryTable()
+                                                       .getSelectionModel()
+                                                       .getSelectedIndex()
         );
 
         view.getObjectCategoryInputField().clear();
@@ -285,8 +300,9 @@ public class Controller {
         updateModelFromView();
 
         if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
-            ButtonBar.ButtonData answer = MainView.displayYesNoCancelDialogAndGetResult(EXIT_APPLICATION_OPTION_DIALOG_TITLE,
-                    EXIT_APPLICATION_OPTION_DIALOG_CONTENT);
+            ButtonBar.ButtonData answer =
+                    MainView.displayYesNoCancelDialogAndGetResult(EXIT_APPLICATION_OPTION_DIALOG_TITLE,
+                                                                  EXIT_APPLICATION_OPTION_DIALOG_CONTENT);
 
             if(answer == ButtonBar.ButtonData.YES) {
                 initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(() -> {
@@ -410,16 +426,17 @@ public class Controller {
         }
 
         final ObjectCategory objectCategory = event.getRowValue();
-        final Map<String, Integer> boundingShapesPerCategoryNameMap = model.getCategoryToAssignedBoundingShapesCountMap();
+        final Map<String, Integer> boundingShapesPerCategoryNameMap =
+                model.getCategoryToAssignedBoundingShapesCountMap();
 
         if(newName.isBlank()) {
             MainView.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                    INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT);
+                                       INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT);
             objectCategory.setName(oldName);
             event.getTableView().refresh();
         } else if(boundingShapesPerCategoryNameMap.containsKey(newName)) {
             MainView.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                    "The category \"" + newName + "\" already exists.");
+                                       "The category \"" + newName + "\" already exists.");
             objectCategory.setName(oldName);
             event.getTableView().refresh();
         } else {
@@ -442,9 +459,10 @@ public class Controller {
         if(imagePane.isImageFullyLoaded() && event.getButton().equals(MouseButton.PRIMARY)) {
             if(event.isControlDown()) {
                 view.getEditorImageView().setCursor(Cursor.OPEN_HAND);
-            } else if(view.getObjectCategoryTable().isCategorySelected() && imagePane.isBoundingBoxDrawingInProgress()) {
+            } else if(view.getObjectCategoryTable().isCategorySelected() &&
+                    imagePane.isBoundingBoxDrawingInProgress()) {
                 final ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap()
-                        .get(model.getCurrentImageFileName());
+                                                         .get(model.getCurrentImageFileName());
 
                 imagePane.constructAndAddNewBoundingBox(imageMetaData);
                 imagePane.setBoundingBoxDrawingInProgress(false);
@@ -468,7 +486,7 @@ public class Controller {
                     imagePaneView.initializeBoundingRectangle(event);
                 } else if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
                     ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap()
-                            .get(model.getCurrentImageFileName());
+                                                       .get(model.getCurrentImageFileName());
                     imagePaneView.initializeBoundingPolygon(event, imageMetaData);
                 }
             } else if(event.getButton().equals(MouseButton.SECONDARY)
@@ -529,8 +547,9 @@ public class Controller {
     private void askToSaveExistingAnnotationDataAndClearModelAndView() {
         if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
             // First ask if user wants to save the existing annotations.
-            ButtonBar.ButtonData answer = MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                    RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
+            ButtonBar.ButtonData answer =
+                    MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                                                            RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
 
             if(answer == ButtonBar.ButtonData.YES) {
                 initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(this::clearViewAndModel);
@@ -545,10 +564,10 @@ public class Controller {
         // Ask for annotation save format.
         Optional<ImageAnnotationSaveStrategy.Type> formatChoice =
                 MainView.displayChoiceDialogAndGetResult(ImageAnnotationSaveStrategy.Type.PASCAL_VOC,
-                        Arrays.asList(ImageAnnotationSaveStrategy.Type.values()),
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER,
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT);
+                                                         Arrays.asList(ImageAnnotationSaveStrategy.Type.values()),
+                                                         ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
+                                                         ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER,
+                                                         ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT);
 
         formatChoice.ifPresent(choice -> {
             // Ask for annotation save directory.
@@ -588,10 +607,10 @@ public class Controller {
         // Ask for annotation save format.
         Optional<ImageAnnotationSaveStrategy.Type> formatChoice =
                 MainView.displayChoiceDialogAndGetResult(ImageAnnotationSaveStrategy.Type.PASCAL_VOC,
-                        Arrays.asList(ImageAnnotationSaveStrategy.Type.values()),
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER,
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT);
+                                                         Arrays.asList(ImageAnnotationSaveStrategy.Type.values()),
+                                                         ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
+                                                         ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER,
+                                                         ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT);
 
         formatChoice.ifPresentOrElse(choice -> {
             // Ask for annotation save directory.
@@ -616,11 +635,16 @@ public class Controller {
 
         if(saveFormat.equals(ImageAnnotationSaveStrategy.Type.JSON)) {
             destination = MainView.displaySaveFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
-                    currentAnnotationSavingDirectory, DEFAULT_JSON_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON"), MainView.FileChooserType.SAVE);
+                                                                      currentAnnotationSavingDirectory,
+                                                                      DEFAULT_JSON_EXPORT_FILENAME,
+                                                                      new FileChooser.ExtensionFilter("JSON files",
+                                                                                                      "*.json",
+                                                                                                      "*.JSON"),
+                                                                      MainView.FileChooserType.SAVE);
         } else {
-            destination = MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
-                    currentAnnotationSavingDirectory);
+            destination =
+                    MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
+                                                                 currentAnnotationSavingDirectory);
         }
 
         return destination;
@@ -631,11 +655,14 @@ public class Controller {
 
         if(loadFormat.equals(ImageAnnotationLoadStrategy.Type.JSON)) {
             source = MainView.displaySaveFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
-                    currentAnnotationLoadingDirectory, DEFAULT_JSON_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON"), MainView.FileChooserType.OPEN);
+                                                                 currentAnnotationLoadingDirectory,
+                                                                 DEFAULT_JSON_EXPORT_FILENAME,
+                                                                 new FileChooser.ExtensionFilter("JSON files", "*.json",
+                                                                                                 "*.JSON"),
+                                                                 MainView.FileChooserType.OPEN);
         } else {
             source = MainView.displayDirectoryChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
-                    currentAnnotationLoadingDirectory);
+                                                                  currentAnnotationLoadingDirectory);
         }
 
         return source;
@@ -669,17 +696,18 @@ public class Controller {
 
     private void setUpModelListeners() {
         view.getEditor().getEditorToolBar()
-                .getIndexLabel()
-                .textProperty()
-                .bind(model.fileIndexProperty().add(1).asString()
-                        .concat(" | ")
-                        .concat(model.nrImageFilesProperty().asString()));
+            .getIndexLabel()
+            .textProperty()
+            .bind(model.fileIndexProperty().add(1).asString()
+                       .concat(" | ")
+                       .concat(model.nrImageFilesProperty().asString()));
 
-        view.getImageFileExplorer().getImageFileListView().getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
-            if(newValue.intValue() != -1) {
-                model.fileIndexProperty().set(newValue.intValue());
-            }
-        });
+        view.getImageFileExplorer().getImageFileListView().getSelectionModel().selectedIndexProperty()
+            .addListener((observable, oldValue, newValue) -> {
+                if(newValue.intValue() != -1) {
+                    model.fileIndexProperty().set(newValue.intValue());
+                }
+            });
 
         view.getFileImportAnnotationsItem().disableProperty().bind(model.nrImageFilesProperty().isEqualTo(0));
 
@@ -692,14 +720,19 @@ public class Controller {
             cell.getDeleteButton().setOnAction(action -> {
                 final ObjectCategory category = cell.getItem();
 
-                int nrExistingBoundingShapes = model.getCategoryToAssignedBoundingShapesCountMap().getOrDefault(category.getName(), 0);
+                int nrExistingBoundingShapes =
+                        model.getCategoryToAssignedBoundingShapesCountMap().getOrDefault(category.getName(), 0);
 
                 // Only allow to delete a bounding-box category that has no bounding-boxes assigned to it.
                 if(nrExistingBoundingShapes != 0) {
                     MainView.displayErrorAlert(CATEGORY_DELETION_ERROR_DIALOG_TITLE,
-                            CATEGORY_DELETION_ERROR_DIALOG_CONTENT
-                                    + "\nCurrently there " + (nrExistingBoundingShapes == 1 ? "is " : "are ") + nrExistingBoundingShapes
-                                    + " annotated object" + (nrExistingBoundingShapes == 1 ? " " : "s ") + "with the category \"" + category.getName() + "\".");
+                                               CATEGORY_DELETION_ERROR_DIALOG_CONTENT
+                                                       + "\nCurrently there " +
+                                                       (nrExistingBoundingShapes == 1 ? "is " : "are ") +
+                                                       nrExistingBoundingShapes
+                                                       + " annotated object" +
+                                                       (nrExistingBoundingShapes == 1 ? " " : "s ") +
+                                                       "with the category \"" + category.getName() + "\".");
                 } else {
                     cell.getTableView().getItems().remove(category);
                 }
@@ -714,9 +747,9 @@ public class Controller {
 
         try(Stream<Path> imageFiles = Files.walk(path, MAX_DIRECTORY_DEPTH)) {
             return imageFiles.filter(file -> Arrays.stream(imageExtensions).anyMatch(file.toString()::endsWith))
-                    .map(file -> new File(file.toString()))
-                    .filter(File::isFile)
-                    .collect(Collectors.toList());
+                             .map(file -> new File(file.toString()))
+                             .filter(File::isFile)
+                             .collect(Collectors.toList());
         }
     }
 
@@ -747,7 +780,7 @@ public class Controller {
     private void updateStageTitle() {
         ImageMetaData currentImageMetaData = model.createOrGetCurrentImageMetaData();
         stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR
-                + model.getCurrentImageFilePath() + " " + currentImageMetaData.getDimensionsString());
+                               + model.getCurrentImageFilePath() + " " + currentImageMetaData.getDimensionsString());
     }
 
     @SuppressWarnings("UnnecessaryLambda")
@@ -784,7 +817,8 @@ public class Controller {
                 // the old image was fully loaded.
                 if(oldImage.getProgress() == 1.0) {
                     // update model bounding-box-data from previous image:
-                    model.updateBoundingShapeDataAtFileIndex(oldValue.intValue(), view.extractCurrentBoundingShapeData());
+                    model.updateBoundingShapeDataAtFileIndex(oldValue.intValue(),
+                                                             view.extractCurrentBoundingShapeData());
                     // remove old image's bounding boxes
                     view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
                     view.getEditorImagePane().removeAllCurrentBoundingShapes();
@@ -841,7 +875,8 @@ public class Controller {
         } catch(Exception e) {
             view.getEditorImagePane().getImageLoadingProgressIndicator().setVisible(false);
             MainView.displayErrorAlert("Image loading error",
-                    "Could not read meta-data from image file \"" + model.getCurrentImageFileName() + "\".");
+                                       "Could not read meta-data from image file \"" + model.getCurrentImageFileName() +
+                                               "\".");
             return;
         }
 
@@ -857,14 +892,17 @@ public class Controller {
             while(change.next()) {
                 if(change.wasAdded()) {
                     change.getAddedSubList().forEach(item ->
-                            categoryToShapesCountMap.merge(item.getViewData().getObjectCategory().getName(),
-                                    1, Integer::sum));
+                                                             categoryToShapesCountMap
+                                                                     .merge(item.getViewData().getObjectCategory()
+                                                                                .getName(),
+                                                                            1, Integer::sum));
                 }
 
                 if(change.wasRemoved()) {
                     change.getRemoved().forEach(item ->
-                            categoryToShapesCountMap.computeIfPresent(item.getViewData().getObjectCategory().getName(),
-                                    (key, value) -> --value));
+                                                        categoryToShapesCountMap.computeIfPresent(
+                                                                item.getViewData().getObjectCategory().getName(),
+                                                                (key, value) -> --value));
                 }
 
                 if(change.wasUpdated()) {
@@ -872,10 +910,10 @@ public class Controller {
                         BoundingShapeViewData changedShapeViewData = change.getList().get(i).getViewData();
 
                         categoryToShapesCountMap.computeIfPresent(changedShapeViewData.getPreviousObjectCategoryName(),
-                                (key, value) -> --value);
+                                                                  (key, value) -> --value);
 
                         categoryToShapesCountMap.merge(changedShapeViewData.getObjectCategory().getName(),
-                                1, Integer::sum);
+                                                       1, Integer::sum);
                     }
                 }
             }
@@ -886,7 +924,8 @@ public class Controller {
         Preferences preferences = Preferences.userNodeForPackage(getClass());
         stage.setMaximized(preferences.getBoolean(IS_WINDOW_MAXIMIZED_PREFERENCE_NAME, false));
 
-        String imageLoadingDirectoryPathPreference = preferences.get(CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME, null);
+        String imageLoadingDirectoryPathPreference =
+                preferences.get(CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME, null);
 
         if(imageLoadingDirectoryPathPreference != null) {
             File imageLoadingDirectoryPreference = new File(imageLoadingDirectoryPathPreference);
@@ -896,7 +935,8 @@ public class Controller {
             }
         }
 
-        String annotationLoadingDirectoryPathPreference = preferences.get(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME, null);
+        String annotationLoadingDirectoryPathPreference =
+                preferences.get(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME, null);
 
         if(annotationLoadingDirectoryPathPreference != null) {
             File annotationLoadingDirectoryPreference = new File(annotationLoadingDirectoryPathPreference);
@@ -906,7 +946,8 @@ public class Controller {
             }
         }
 
-        String annotationSavingDirectoryPathPreference = preferences.get(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME, null);
+        String annotationSavingDirectoryPathPreference =
+                preferences.get(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME, null);
 
         if(annotationSavingDirectoryPathPreference != null) {
             File annotationSavingDirectoryPreference = new File(annotationSavingDirectoryPathPreference);
@@ -927,11 +968,13 @@ public class Controller {
         }
 
         if(currentAnnotationLoadingDirectory != null) {
-            preferences.put(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME, currentAnnotationLoadingDirectory.toString());
+            preferences.put(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME,
+                            currentAnnotationLoadingDirectory.toString());
         }
 
         if(currentAnnotationSavingDirectory != null) {
-            preferences.put(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME, currentAnnotationSavingDirectory.toString());
+            preferences.put(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME,
+                            currentAnnotationSavingDirectory.toString());
         }
     }
 
@@ -983,22 +1026,36 @@ public class Controller {
     public static class KeyCombinations {
         public static final KeyCombination navigateNext = new KeyCodeCombination(KeyCode.D);
         public static final KeyCombination navigatePrevious = new KeyCodeCombination(KeyCode.A);
-        public static final KeyCombination showAllBoundingShapes = new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
-        public static final KeyCombination hideAllBoundingShapes = new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
-        public static final KeyCombination showSelectedBoundingShape = new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN);
-        public static final KeyCombination hideSelectedBoundingShape = new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination showAllBoundingShapes =
+                new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
+        public static final KeyCombination hideAllBoundingShapes =
+                new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
+        public static final KeyCombination showSelectedBoundingShape =
+                new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination hideSelectedBoundingShape =
+                new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN);
 
-        public static final KeyCombination resetSizeAndCenterImage = new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN);
-        public static final KeyCombination focusCategoryNameTextField = new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN);
-        public static final KeyCombination focusCategorySearchField = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
-        public static final KeyCombination focusTagTextField = new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN);
-        public static final KeyCombination focusFileSearchField = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
+        public static final KeyCombination resetSizeAndCenterImage =
+                new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination focusCategoryNameTextField =
+                new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination focusCategorySearchField =
+                new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination focusTagTextField =
+                new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination focusFileSearchField =
+                new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
         public static final KeyCombination deleteSelectedBoundingShape = new KeyCodeCombination(KeyCode.DELETE);
-        public static final KeyCombination selectRectangleDrawingMode = new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN);
-        public static final KeyCombination selectPolygonDrawingMode = new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
-        public static final KeyCombination removeEditingVerticesWhenBoundingPolygonSelected = new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_DOWN);
-        public static final KeyCombination addVerticesToPolygon = KeyCombination.keyCombination("Shift + Middle-Click inside Polygon");
-        public static final KeyCombination changeSelectedBoundingShapeCategory = new KeyCodeCombination(KeyCode.C, KeyCombination.SHIFT_DOWN);
+        public static final KeyCombination selectRectangleDrawingMode =
+                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination selectPolygonDrawingMode =
+                new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination removeEditingVerticesWhenBoundingPolygonSelected =
+                new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_DOWN);
+        public static final KeyCombination addVerticesToPolygon =
+                KeyCombination.keyCombination("Shift + Middle-Click inside Polygon");
+        public static final KeyCombination changeSelectedBoundingShapeCategory =
+                new KeyCodeCombination(KeyCode.C, KeyCombination.SHIFT_DOWN);
 
         private KeyCombinations() {
             throw new IllegalStateException("Key Combination Class");
@@ -1027,7 +1084,7 @@ public class Controller {
         @Override
         public void startAndShowProgressDialog() {
             MainView.displayServiceProgressDialog(this, SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
-                    SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
+                                                  SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
             start();
         }
 
@@ -1038,7 +1095,8 @@ public class Controller {
                 protected IOResult call() throws Exception {
                     final ImageAnnotationSaver saver = new ImageAnnotationSaver(saveFormat);
 
-                    saver.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
+                    saver.progressProperty()
+                         .addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
 
                     return saver.save(model.getImageAnnotationData(), Paths.get(destination.getPath()));
                 }
@@ -1087,7 +1145,7 @@ public class Controller {
         @Override
         public void startAndShowProgressDialog() {
             MainView.displayServiceProgressDialog(this, LOADING_ANNOTATIONS_DIALOG_TITLE,
-                    LOADING_ANNOTATIONS_DIALOG_HEADER);
+                                                  LOADING_ANNOTATIONS_DIALOG_HEADER);
             start();
         }
 
@@ -1097,7 +1155,8 @@ public class Controller {
                 @Override
                 protected IOResult call() throws Exception {
                     ImageAnnotationLoader loader = new ImageAnnotationLoader(loadFormat);
-                    loader.progressProperty().addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
+                    loader.progressProperty()
+                          .addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
                     return loader.load(model, Paths.get(source.getPath()));
                 }
             };
@@ -1126,7 +1185,8 @@ public class Controller {
             if(!loadResult.getErrorTableEntries().isEmpty()) {
                 MainView.displayIOResultErrorInfoAlert(loadResult);
             } else if(loadResult.getNrSuccessfullyProcessedItems() == 0) {
-                MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE, ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
+                MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE,
+                                           ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
             }
         }
 
@@ -1151,11 +1211,13 @@ public class Controller {
 
     class ImageFilesLoaderService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
         private static final String IMAGE_IMPORT_ERROR_ALERT_TITLE = "Image Import Error";
-        private static final String IMAGE_IMPORT_ERROR_ALERT_CONTENT = "The folder does not contain any valid image files.";
+        private static final String IMAGE_IMPORT_ERROR_ALERT_CONTENT =
+                "The folder does not contain any valid image files.";
         private static final String IMAGE_FILES_LOADING_DIALOG_TITLE = "Loading images";
         private static final String IMAGE_FILES_LOADING_DIALOG_HEADER = "Loading image meta-data";
         private static final String IMAGE_FILES_CHANGED_ERROR_TITLE = "Image files changed";
-        private static final String IMAGE_FILES_CHANGED_ERROR_CONTENT = "Image files were changed externally, will reload folder.";
+        private static final String IMAGE_FILES_CHANGED_ERROR_CONTENT =
+                "Image files were changed externally, will reload folder.";
         private final List<File> imageFiles;
         private final File imageSource;
         private final Map<String, ImageMetaData> fileNameToMetaDataMap = new HashMap<>();
@@ -1189,7 +1251,7 @@ public class Controller {
         @Override
         public void startAndShowProgressDialog() {
             MainView.displayServiceProgressDialog(this, IMAGE_FILES_LOADING_DIALOG_TITLE,
-                    IMAGE_FILES_LOADING_DIALOG_HEADER);
+                                                  IMAGE_FILES_LOADING_DIALOG_HEADER);
             start();
         }
 
@@ -1201,7 +1263,8 @@ public class Controller {
                     return IOOperationTimer.time(() -> {
                         fileNameToMetaDataMap.clear();
 
-                        List<IOResult.ErrorInfoEntry> errorInfoEntries = Collections.synchronizedList(new ArrayList<>());
+                        List<IOResult.ErrorInfoEntry> errorInfoEntries =
+                                Collections.synchronizedList(new ArrayList<>());
 
                         int totalNrOfFiles = imageFiles.size();
                         AtomicInteger nrProcessedFiles = new AtomicInteger(0);
@@ -1215,10 +1278,12 @@ public class Controller {
                             }
                         }, Map::putAll));
 
-                        validImageFiles = imageFiles.stream().filter(item -> fileNameToMetaDataMap.containsKey(item.getName()))
-                                .collect(Collectors.toList());
+                        validImageFiles =
+                                imageFiles.stream().filter(item -> fileNameToMetaDataMap.containsKey(item.getName()))
+                                          .collect(Collectors.toList());
 
-                        return new IOResult(IOResult.OperationType.IMAGE_METADATA_LOADING, fileNameToMetaDataMap.size(), errorInfoEntries);
+                        return new IOResult(IOResult.OperationType.IMAGE_METADATA_LOADING, fileNameToMetaDataMap.size(),
+                                            errorInfoEntries);
                     });
                 }
             };
@@ -1235,9 +1300,9 @@ public class Controller {
                 if(model.containsCategories()) {
                     ButtonBar.ButtonData answer = reloadFolder ?
                             MainView.displayYesNoDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                    KEEP_EXISTING_CATEGORIES_DIALOG_TEXT) :
+                                                                    KEEP_EXISTING_CATEGORIES_DIALOG_TEXT) :
                             MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                    KEEP_EXISTING_CATEGORIES_DIALOG_TEXT);
+                                                                          KEEP_EXISTING_CATEGORIES_DIALOG_TEXT);
 
                     keepExistingCategories = (answer == ButtonBar.ButtonData.YES);
 
@@ -1250,19 +1315,21 @@ public class Controller {
                     // First ask if user wants to save the existing annotations.
                     ButtonBar.ButtonData answer = reloadFolder ?
                             MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                    RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT) :
+                                                                    RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT) :
                             MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                    OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
+                                                                          OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
 
                     if(answer == ButtonBar.ButtonData.YES) {
                         boolean finalKeepExistingCategories = keepExistingCategories;
 
                         if(reloadFolder) {
                             initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(() ->
-                                    onValidFilesPresentHandler(finalKeepExistingCategories));
+                                                                                            onValidFilesPresentHandler(
+                                                                                                    finalKeepExistingCategories));
                         } else {
                             initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(() ->
-                                    onValidFilesPresentHandler(finalKeepExistingCategories));
+                                                                                                onValidFilesPresentHandler(
+                                                                                                        finalKeepExistingCategories));
                         }
                     } else if(answer == ButtonBar.ButtonData.NO || reloadFolder) {
                         onValidFilesPresentHandler(keepExistingCategories);
@@ -1305,7 +1372,7 @@ public class Controller {
             view.getStatusBar().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(getValue(), imageSource));
 
             directoryWatcher = new Thread(new FileChangeWatcher(imageSource.toPath(),
-                    model.getImageFileNameSet(), () -> {
+                                                                model.getImageFileNameSet(), () -> {
                 MainView.displayErrorAlert(IMAGE_FILES_CHANGED_ERROR_TITLE, IMAGE_FILES_CHANGED_ERROR_CONTENT);
                 Controller.this.initiateCurrentFolderReloading();
             }));

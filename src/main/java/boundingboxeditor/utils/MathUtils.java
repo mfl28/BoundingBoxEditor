@@ -32,7 +32,7 @@ public class MathUtils {
      */
     public static Point2D clampWithinBounds(double x, double y, Bounds bounds) {
         return new Point2D(clamp(x, bounds.getMinX(), bounds.getMaxX()),
-                clamp(y, bounds.getMinY(), bounds.getMaxY()));
+                           clamp(y, bounds.getMinY(), bounds.getMaxY()));
     }
 
     /***

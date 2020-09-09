@@ -45,6 +45,6 @@ public class BoundingBoxEditorApp extends Application {
     private Scene createSceneFromParent(Parent parent) {
         final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         return new Scene(parent, INITIAL_WINDOW_SCALE * screenBounds.getWidth(),
-                INITIAL_WINDOW_SCALE * screenBounds.getHeight());
+                         INITIAL_WINDOW_SCALE * screenBounds.getHeight());
     }
 }

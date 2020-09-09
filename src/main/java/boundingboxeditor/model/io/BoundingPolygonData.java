@@ -54,7 +54,8 @@ public class BoundingPolygonData extends BoundingShapeData {
 
     public List<Double> getAbsolutePointsInImage(ImageMetaData imageMetaData) {
         return BoundingPolygonData.relativeToAbsolutePoints(relativePointsInImage,
-                imageMetaData.getImageWidth(), imageMetaData.getImageHeight());
+                                                            imageMetaData.getImageWidth(),
+                                                            imageMetaData.getImageHeight());
     }
 
     @Override

@@ -43,7 +43,8 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String BOUNDING_SHAPE_CATEGORY_NAME = "name";
     private static final String BOUNDING_BOX_SIZE_GROUP_NAME = "bndbox";
 
-    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+    private static final DecimalFormat DECIMAL_FORMAT =
+            new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     private static final String FILE_EXTENSION = ".xml";
     private static final String XMIN_TAG = "xmin";
     private static final String XMAX_TAG = "xmax";
@@ -72,7 +73,8 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
             try {
                 createXmlFileFromImageAnnotationDataElement(annotation);
             } catch(TransformerException | ParserConfigurationException e) {
-                unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
+                unParsedFileErrorMessages
+                        .add(new IOResult.ErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
             }
 
             progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrOfAnnotations);
@@ -85,7 +87,8 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         );
     }
 
-    private void createXmlFileFromImageAnnotationDataElement(final ImageAnnotation dataElement) throws TransformerException, ParserConfigurationException {
+    private void createXmlFileFromImageAnnotationDataElement(final ImageAnnotation dataElement)
+            throws TransformerException, ParserConfigurationException {
         final Document document = documentBuilderFactory.newDocumentBuilder().newDocument();
         final Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -96,8 +99,12 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         appendHeaderFromImageAnnotationDataElement(document, annotationElement, dataElement);
 
         dataElement.getBoundingShapeData().forEach(boundingShape ->
-                annotationElement.appendChild(createXmlElementFromBoundingShapeData(document,
-                        BOUNDING_SHAPE_ENTRY_ELEMENT_NAME, boundingShape, dataElement.getImageMetaData()))
+                                                           annotationElement.appendChild(
+                                                                   createXmlElementFromBoundingShapeData(document,
+                                                                                                         BOUNDING_SHAPE_ENTRY_ELEMENT_NAME,
+                                                                                                         boundingShape,
+                                                                                                         dataElement
+                                                                                                                 .getImageMetaData()))
         );
 
         DOMSource domSource = new DOMSource(document);
@@ -105,30 +112,38 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         String fileName = dataElement.getImageFileName();
         String annotationFileNameBase = fileName.replace('.', '_');
 
-        File outputFile = saveFolderPath.resolve(annotationFileNameBase + ANNOTATION_FILENAME_EXTENSION + FILE_EXTENSION).toFile();
+        File outputFile =
+                saveFolderPath.resolve(annotationFileNameBase + ANNOTATION_FILENAME_EXTENSION + FILE_EXTENSION)
+                              .toFile();
 
         StreamResult streamResult = new StreamResult(outputFile);
 
         transformer.transform(domSource, streamResult);
     }
 
-    private void appendHeaderFromImageAnnotationDataElement(final Document document, final Node root, final ImageAnnotation dataElement) {
-        root.appendChild(createStringValueElement(document, FOLDER_ELEMENT_NAME, dataElement.getContainingFolderName()));
+    private void appendHeaderFromImageAnnotationDataElement(final Document document, final Node root,
+                                                            final ImageAnnotation dataElement) {
+        root.appendChild(
+                createStringValueElement(document, FOLDER_ELEMENT_NAME, dataElement.getContainingFolderName()));
         root.appendChild(createStringValueElement(document, FILENAME_ELEMENT_NAME, dataElement.getImageFileName()));
 
         final Element sizeElement = document.createElement(IMAGE_SIZE_ELEMENT_NAME);
         root.appendChild(sizeElement);
 
-        sizeElement.appendChild(createDoubleValueElement(document, IMAGE_WIDTH_ELEMENT_NAME, dataElement.getImageWidth()));
-        sizeElement.appendChild(createDoubleValueElement(document, IMAGE_HEIGHT_ELEMENT_NAME, dataElement.getImageHeight()));
-        sizeElement.appendChild(createIntegerValueElement(document, IMAGE_DEPTH_ELEMENT_NAME, dataElement.getImageDepth()));
+        sizeElement
+                .appendChild(createDoubleValueElement(document, IMAGE_WIDTH_ELEMENT_NAME, dataElement.getImageWidth()));
+        sizeElement.appendChild(
+                createDoubleValueElement(document, IMAGE_HEIGHT_ELEMENT_NAME, dataElement.getImageHeight()));
+        sizeElement.appendChild(
+                createIntegerValueElement(document, IMAGE_DEPTH_ELEMENT_NAME, dataElement.getImageDepth()));
     }
 
     private Element createXmlElementFromBoundingShapeData(final Document document, String elementName,
                                                           final BoundingShapeData boundingShapeData,
                                                           final ImageMetaData imageMetaData) {
         final Element element = document.createElement(elementName);
-        element.appendChild(createStringValueElement(document, BOUNDING_SHAPE_CATEGORY_NAME, boundingShapeData.getCategoryName()));
+        element.appendChild(
+                createStringValueElement(document, BOUNDING_SHAPE_CATEGORY_NAME, boundingShapeData.getCategoryName()));
 
         // Add tags:
         int difficultValue = 0;
@@ -164,7 +179,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
             element.appendChild(actionsElement);
 
             actionTags.forEach(action ->
-                    actionsElement.appendChild(createIntegerValueElement(document, action, 1)));
+                                       actionsElement.appendChild(createIntegerValueElement(document, action, 1)));
         }
 
         // Add coordinates:
@@ -172,7 +187,10 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         // Add parts:
         boundingShapeData.getParts().forEach(part ->
-                element.appendChild(createXmlElementFromBoundingShapeData(document, BOUNDING_SHAPE_PART_NAME, part, imageMetaData))
+                                                     element.appendChild(createXmlElementFromBoundingShapeData(document,
+                                                                                                               BOUNDING_SHAPE_PART_NAME,
+                                                                                                               part,
+                                                                                                               imageMetaData))
         );
 
         return element;

@@ -80,10 +80,10 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         ObjectCategory currentCategory = boundingShapeViewable.getViewData().getObjectCategory();
 
         MainView.displayChoiceDialogAndGetResult(currentCategory,
-                editorsSplitPane.getObjectCategoryTable().getItems(),
-                CHANGE_CATEGORY_DIALOG_TITLE,
-                "Select new Category (current: \"" + currentCategory.getName() + "\")",
-                CATEGORY_CHANGE_DIALOG_CONTENT_TEXT)
+                                                 editorsSplitPane.getObjectCategoryTable().getItems(),
+                                                 CHANGE_CATEGORY_DIALOG_TITLE,
+                                                 "Select new Category (current: \"" + currentCategory.getName() + "\")",
+                                                 CATEGORY_CHANGE_DIALOG_CONTENT_TEXT)
                 .ifPresent(newChoice -> {
                     if(!Objects.equals(newChoice, currentCategory)) {
                         // Set new object category.
@@ -93,7 +93,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                         // Get target tree-item.
                         TreeItem<Object> targetItem = treeItemToMove.getParent().getParent();
                         // Attach tree-item to new target tree-item.
-                        editorsSplitPane.getObjectTree().reattachTreeItemToNewTargetTreeItem(treeItemToMove, targetItem);
+                        editorsSplitPane.getObjectTree()
+                                        .reattachTreeItemToNewTargetTreeItem(treeItemToMove, targetItem);
                     }
                 });
     }
@@ -133,7 +134,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
      */
     void removeBoundingShapeWithTreeItemRecursively(TreeItem<Object> treeItem) {
         editor.getEditorImagePane()
-                .removeAllFromCurrentBoundingShapes(ObjectTreeView.getBoundingShapesRecursively(treeItem));
+              .removeAllFromCurrentBoundingShapes(ObjectTreeView.getBoundingShapesRecursively(treeItem));
 
         if(treeItem instanceof ObjectCategoryTreeItem) {
             treeItem.getParent().getChildren().remove(treeItem);
@@ -183,32 +184,32 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
     private void setUpEditorSplitPaneListeners() {
         editorsSplitPane.getObjectTree()
-                .getSelectionModel()
-                .selectedItemProperty()
-                .addListener((observable, oldValue, newValue) -> {
-                    ObjectTreeView objectTreeView = getEditorsSplitPane().getObjectTree();
+                        .getSelectionModel()
+                        .selectedItemProperty()
+                        .addListener((observable, oldValue, newValue) -> {
+                            ObjectTreeView objectTreeView = getEditorsSplitPane().getObjectTree();
 
-                    if(oldValue instanceof ObjectCategoryTreeItem) {
-                        for(TreeItem<Object> child : oldValue.getChildren()) {
-                            ((BoundingShapeTreeItem) child).setHighlightShape(false);
-                        }
-                    }
+                            if(oldValue instanceof ObjectCategoryTreeItem) {
+                                for(TreeItem<Object> child : oldValue.getChildren()) {
+                                    ((BoundingShapeTreeItem) child).setHighlightShape(false);
+                                }
+                            }
 
-                    if(newValue instanceof ObjectCategoryTreeItem) {
-                        getEditor().getEditorImagePane()
-                                .getBoundingShapeSelectionGroup().selectToggle(null);
+                            if(newValue instanceof ObjectCategoryTreeItem) {
+                                getEditor().getEditorImagePane()
+                                           .getBoundingShapeSelectionGroup().selectToggle(null);
 
-                        for(TreeItem<Object> child : newValue.getChildren()) {
-                            ((BoundingShapeTreeItem) child).setHighlightShape(true);
-                        }
-                    } else if(newValue instanceof BoundingShapeTreeItem) {
-                        objectTreeView.keepTreeItemInView(newValue);
-                        getEditor().getEditorImagePane()
-                                .getBoundingShapeSelectionGroup().selectToggle((Toggle) newValue.getValue());
-                    } else if(newValue == null) {
-                        getEditor().getEditorImagePane().getBoundingShapeSelectionGroup().selectToggle(null);
-                    }
-                });
+                                for(TreeItem<Object> child : newValue.getChildren()) {
+                                    ((BoundingShapeTreeItem) child).setHighlightShape(true);
+                                }
+                            } else if(newValue instanceof BoundingShapeTreeItem) {
+                                objectTreeView.keepTreeItemInView(newValue);
+                                getEditor().getEditorImagePane()
+                                           .getBoundingShapeSelectionGroup().selectToggle((Toggle) newValue.getValue());
+                            } else if(newValue == null) {
+                                getEditor().getEditorImagePane().getBoundingShapeSelectionGroup().selectToggle(null);
+                            }
+                        });
     }
 
     private void setUpEditorListeners() {
@@ -219,27 +220,31 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         });
 
         editor.getEditorImagePane()
-                .getBoundingShapeSelectionGroup()
-                .selectedToggleProperty()
-                .addListener((observable, oldValue, newValue) -> {
-                    if(newValue instanceof BoundingShapeViewable) {
-                        getEditorsSplitPane().getObjectTree()
-                                .getSelectionModel()
-                                .select(((BoundingShapeViewable) newValue).getViewData().getTreeItem());
-                    }
-                });
+              .getBoundingShapeSelectionGroup()
+              .selectedToggleProperty()
+              .addListener((observable, oldValue, newValue) -> {
+                  if(newValue instanceof BoundingShapeViewable) {
+                      getEditorsSplitPane().getObjectTree()
+                                           .getSelectionModel()
+                                           .select(((BoundingShapeViewable) newValue).getViewData().getTreeItem());
+                  }
+              });
 
         editor.getEditorImagePane().getCurrentBoundingShapes()
-                .addListener(new CurrentBoundingShapeListChangeListener());
+              .addListener(new CurrentBoundingShapeListChangeListener());
 
         editor.getEditorImagePane().selectedCategoryProperty()
-                .bind(editorsSplitPane.getObjectCategoryTable().getSelectionModel().selectedItemProperty());
+              .bind(editorsSplitPane.getObjectCategoryTable().getSelectionModel().selectedItemProperty());
 
         editor.getEditorToolBar().getShowBoundingShapesButton().setOnAction(event ->
-                editorsSplitPane.getObjectTree().setToggleIconStateForAllTreeItems(true));
+                                                                                    editorsSplitPane.getObjectTree()
+                                                                                                    .setToggleIconStateForAllTreeItems(
+                                                                                                            true));
 
         editor.getEditorToolBar().getHideBoundingShapesButton().setOnAction(event ->
-                editorsSplitPane.getObjectTree().setToggleIconStateForAllTreeItems(false));
+                                                                                    editorsSplitPane.getObjectTree()
+                                                                                                    .setToggleIconStateForAllTreeItems(
+                                                                                                            false));
     }
 
     private void setObjectTreeCellFactory() {
@@ -251,7 +256,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         public void onChanged(Change<? extends BoundingShapeViewable> c) {
             while(c.next()) {
                 final ImageFileListView.FileInfo currentSelectedItem = imageFileExplorer.getImageFileListView()
-                        .getSelectionModel().getSelectedItem();
+                                                                                        .getSelectionModel()
+                                                                                        .getSelectedItem();
 
                 if(c.wasAdded()) {
                     List<? extends BoundingShapeViewable> addedItems = c.getAddedSubList();

@@ -65,7 +65,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     private final ProgressIndicator imageLoadingProgressIndicator = new ProgressIndicator();
     private final StackPane contentPane = new StackPane(imageView, boundingShapeSceneGroup,
-            initializerRectangle, imageLoadingProgressIndicator);
+                                                        initializerRectangle, imageLoadingProgressIndicator);
     private boolean boundingBoxDrawingInProgress = false;
     private DrawingMode drawingMode = DrawingMode.BOX;
 
@@ -150,7 +150,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
      */
     public void setZoomableAndPannable(boolean value) {
         currentBoundingShapes.forEach(viewable -> {
-            if(!(!value && viewable instanceof BoundingPolygonView && ((BoundingPolygonView) viewable).isConstructing())) {
+            if(!(!value && viewable instanceof BoundingPolygonView &&
+                    ((BoundingPolygonView) viewable).isConstructing())) {
                 viewable.getViewData().getBaseShape().setMouseTransparent(value);
             }
         });
@@ -213,7 +214,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
         BoundingPolygonView selectedBoundingPolygon;
 
-        if(!(selectedBoundingShape instanceof BoundingPolygonView && ((BoundingPolygonView) selectedBoundingShape).isConstructing())) {
+        if(!(selectedBoundingShape instanceof BoundingPolygonView &&
+                ((BoundingPolygonView) selectedBoundingShape).isConstructing())) {
             selectedBoundingPolygon = new BoundingPolygonView(selectedCategory.get(), currentImageMetaData);
             selectedBoundingPolygon.setToggleGroup(boundingShapeSelectionGroup);
             selectedBoundingPolygon.setConstructing(true);
@@ -235,12 +237,12 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     public void setBoundingPolygonsEditingAndConstructing(boolean editing) {
         currentBoundingShapes.stream()
-                .filter(viewable -> viewable instanceof BoundingPolygonView)
-                .map(viewable -> (BoundingPolygonView) viewable)
-                .forEach(boundingPolygonView -> {
-                    boundingPolygonView.setEditing(editing);
-                    boundingPolygonView.setConstructing(false);
-                });
+                             .filter(viewable -> viewable instanceof BoundingPolygonView)
+                             .map(viewable -> (BoundingPolygonView) viewable)
+                             .forEach(boundingPolygonView -> {
+                                 boundingPolygonView.setEditing(editing);
+                                 boundingPolygonView.setConstructing(false);
+                             });
     }
 
     public boolean isCategorySelected() {
@@ -279,8 +281,9 @@ public class EditorImagePaneView extends ScrollPane implements View {
      */
     void addBoundingShapesToSceneGroup(Collection<? extends BoundingShapeViewable> boundingShapes) {
         boundingShapeSceneGroup.getChildren().addAll(boundingShapes.stream()
-                .map(viewable -> viewable.getViewData().getNodeGroup())
-                .collect(Collectors.toList()));
+                                                                   .map(viewable -> viewable.getViewData()
+                                                                                            .getNodeGroup())
+                                                                   .collect(Collectors.toList()));
     }
 
     /**
@@ -291,8 +294,9 @@ public class EditorImagePaneView extends ScrollPane implements View {
      */
     void removeBoundingShapesFromSceneGroup(Collection<? extends BoundingShapeViewable> boundingShapes) {
         boundingShapeSceneGroup.getChildren().removeAll(boundingShapes.stream()
-                .map(viewable -> viewable.getViewData().getNodeGroup())
-                .collect(Collectors.toList()));
+                                                                      .map(viewable -> viewable.getViewData()
+                                                                                               .getNodeGroup())
+                                                                      .collect(Collectors.toList()));
     }
 
     /**
@@ -306,7 +310,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
         Dimension2D dimension = calculateLoadedImageDimensions(width, height);
 
         imageView.setImage(new Image(imageFile.toURI().toString(),
-                dimension.getWidth(), dimension.getHeight(), true, true, true));
+                                     dimension.getWidth(), dimension.getHeight(), true, true, true));
 
         resetImageViewSize();
     }
@@ -409,9 +413,10 @@ public class EditorImagePaneView extends ScrollPane implements View {
                     && event.getButton().equals(MouseButton.PRIMARY)
                     && isCategorySelected()
                     && drawingMode == DrawingMode.BOX) {
-                Point2D clampedEventXY = MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
+                Point2D clampedEventXY =
+                        MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
                 Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
-                        Math.min(clampedEventXY.getY(), dragAnchor.getY()));
+                                                                    Math.min(clampedEventXY.getY(), dragAnchor.getY()));
 
                 initializerRectangle.setX(parentCoordinates.getX());
                 initializerRectangle.setY(parentCoordinates.getY());
@@ -431,7 +436,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 double offsetY = getVvalue() * (contentPaneBounds.getHeight() - viewportBounds.getHeight());
 
                 double minimumFitWidth = Math.min(ZOOM_MIN_WINDOW_RATIO * getWidth(), imageView.getImage().getWidth());
-                double minimumFitHeight = Math.min(ZOOM_MIN_WINDOW_RATIO * getHeight(), imageView.getImage().getHeight());
+                double minimumFitHeight =
+                        Math.min(ZOOM_MIN_WINDOW_RATIO * getHeight(), imageView.getImage().getHeight());
 
                 double zoomFactor = 1.0 + Math.signum(event.getDeltaY()) * ZOOM_SCALE_DELTA;
 
@@ -444,9 +450,9 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 Point2D mousePointInImageView = imageView.parentToLocal(event.getX(), event.getY());
 
                 setHvalue((mousePointInImageView.getX() * (zoomFactor - 1) + offsetX)
-                        / (newContentPaneBounds.getWidth() - viewportBounds.getWidth()));
+                                  / (newContentPaneBounds.getWidth() - viewportBounds.getWidth()));
                 setVvalue((mousePointInImageView.getY() * (zoomFactor - 1) + offsetY)
-                        / (newContentPaneBounds.getHeight() - viewportBounds.getHeight()));
+                                  / (newContentPaneBounds.getHeight() - viewportBounds.getHeight()));
 
                 event.consume();
             }

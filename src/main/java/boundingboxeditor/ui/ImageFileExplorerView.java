@@ -54,8 +54,8 @@ public class ImageFileExplorerView extends VBox implements View {
     public void setImageFiles(List<File> imageFiles) {
         ObservableList<ImageFileListView.FileInfo> imageInfoItems = FXCollections.unmodifiableObservableList(
                 FXCollections.observableList(imageFiles.stream()
-                        .map(ImageFileListView.FileInfo::new)
-                        .collect(Collectors.toList()))
+                                                       .map(ImageFileListView.FileInfo::new)
+                                                       .collect(Collectors.toList()))
         );
 
         imageFileListView.setItems(imageInfoItems);
@@ -105,17 +105,17 @@ public class ImageFileExplorerView extends VBox implements View {
         imageFileSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null) {
                 imageFileListView.getItems().stream()
-                        .filter(item -> item.getFile().getName().startsWith(newValue))
-                        .findAny()
-                        .ifPresent(item -> {
-                            // We have to temporarily set a fixed cell size, otherwise
-                            // the scroll-to point will not be calculated correctly.
-                            imageFileListView.setFixedCellSize(ImageFileListView.REQUESTED_IMAGE_HEIGHT);
-                            imageFileListView.getSelectionModel().select(item);
-                            imageFileListView.scrollTo(item);
-                            // Disable fixed cell-size.
-                            imageFileListView.setFixedCellSize(0);
-                        });
+                                 .filter(item -> item.getFile().getName().startsWith(newValue))
+                                 .findAny()
+                                 .ifPresent(item -> {
+                                     // We have to temporarily set a fixed cell size, otherwise
+                                     // the scroll-to point will not be calculated correctly.
+                                     imageFileListView.setFixedCellSize(ImageFileListView.REQUESTED_IMAGE_HEIGHT);
+                                     imageFileListView.getSelectionModel().select(item);
+                                     imageFileListView.scrollTo(item);
+                                     // Disable fixed cell-size.
+                                     imageFileListView.setFixedCellSize(0);
+                                 });
             }
         });
 

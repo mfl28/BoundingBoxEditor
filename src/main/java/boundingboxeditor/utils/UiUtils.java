@@ -44,7 +44,7 @@ public class UiUtils {
      */
     public static Tooltip createTooltip(String text, KeyCombination keyCombination) {
         return new Tooltip((text.isEmpty() ? "" : (text + " "))
-                + "(" + keyCombination.getDisplayText() + ")");
+                                   + "(" + keyCombination.getDisplayText() + ")");
     }
 
     /**

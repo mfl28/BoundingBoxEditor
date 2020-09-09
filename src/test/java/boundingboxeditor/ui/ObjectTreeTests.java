@@ -57,10 +57,11 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(testCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
         verifyThat(testCategoryTreeItem.getChildren().get(0), Matchers.instanceOf(BoundingBoxTreeItem.class));
 
-        final BoundingBoxTreeItem firstTestChildTreeItem = (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(0);
+        final BoundingBoxTreeItem firstTestChildTreeItem =
+                (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(0);
 
         verifyThat(((BoundingBoxView) firstTestChildTreeItem.getValue()).getObjectCategory(),
-                Matchers.equalTo(testCategoryTreeItem.getObjectCategory()));
+                   Matchers.equalTo(testCategoryTreeItem.getObjectCategory()));
         verifyThat(firstTestChildTreeItem.getId(), Matchers.equalTo(1));
         verifyThat(((BoundingBoxView) firstTestChildTreeItem.getValue()).isSelected(), Matchers.equalTo(true));
 
@@ -77,10 +78,11 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(testCategoryTreeItem.getChildren().get(0), Matchers.equalTo(firstTestChildTreeItem));
         verifyThat(((BoundingBoxView) firstTestChildTreeItem.getValue()).isSelected(), Matchers.equalTo(false));
 
-        final BoundingBoxTreeItem secondTestChildTreeItem = (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(1);
+        final BoundingBoxTreeItem secondTestChildTreeItem =
+                (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(1);
 
         verifyThat(((BoundingBoxView) secondTestChildTreeItem.getValue()).getObjectCategory(),
-                Matchers.equalTo(testCategoryTreeItem.getObjectCategory()));
+                   Matchers.equalTo(testCategoryTreeItem.getObjectCategory()));
         verifyThat(secondTestChildTreeItem.getId(), Matchers.equalTo(2));
         verifyThat(((BoundingBoxView) secondTestChildTreeItem.getValue()).isSelected(), Matchers.equalTo(true));
 
@@ -118,7 +120,8 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
         WaitForAsyncUtils.waitForFxEvents();
 
-        final BoundingBoxTreeItem thirdTestChildTreeItem = (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(2);
+        final BoundingBoxTreeItem thirdTestChildTreeItem =
+                (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(2);
 
         // Enter new category
         enterNewCategory(robot, "Dummy");
@@ -138,7 +141,8 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(dummyCategoryTreeItem.getObjectCategory().getName(), Matchers.equalTo("Dummy"));
         verifyThat(dummyCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
 
-        final BoundingBoxTreeItem firstDummyChildTreeItem = (BoundingBoxTreeItem) dummyCategoryTreeItem.getChildren().get(0);
+        final BoundingBoxTreeItem firstDummyChildTreeItem =
+                (BoundingBoxTreeItem) dummyCategoryTreeItem.getChildren().get(0);
         verifyThat(firstDummyChildTreeItem.getId(), Matchers.equalTo(1));
         verifyThat(((BoundingBoxView) firstDummyChildTreeItem.getValue()).isSelected(), Matchers.equalTo(true));
 
@@ -153,8 +157,10 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         // The dragged item should be automatically selected after the completion of a successful drag.
         verifyThat(((BoundingBoxView) thirdTestChildTreeItem.getValue()).isSelected(), Matchers.equalTo(true));
 
-        final ObjectCategoryTreeItem nestedTestCategoryTreeItem = (ObjectCategoryTreeItem) firstDummyChildTreeItem.getChildren().get(0);
-        verifyThat(nestedTestCategoryTreeItem.getObjectCategory(), Matchers.equalTo(testCategoryTreeItem.getObjectCategory()));
+        final ObjectCategoryTreeItem nestedTestCategoryTreeItem =
+                (ObjectCategoryTreeItem) firstDummyChildTreeItem.getChildren().get(0);
+        verifyThat(nestedTestCategoryTreeItem.getObjectCategory(),
+                   Matchers.equalTo(testCategoryTreeItem.getObjectCategory()));
         verifyThat(nestedTestCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
         verifyThat(nestedTestCategoryTreeItem.getChildren().get(0), Matchers.equalTo(thirdTestChildTreeItem));
 
@@ -177,13 +183,15 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(newTopLevelTreeItems, Matchers.equalTo(topLevelTreeItems));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
+                           .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         /* ----Deleting---- */
         final ObjectCategoryTreeItem newTestCategoryTreeItem = (ObjectCategoryTreeItem) newTopLevelTreeItems.get(0);
         final ObjectCategoryTreeItem newDummyCategoryTreeItem = (ObjectCategoryTreeItem) newTopLevelTreeItems.get(1);
-        final BoundingBoxTreeItem newFirstTestChildTreeItem = (BoundingBoxTreeItem) newTestCategoryTreeItem.getChildren().get(0);
-        final BoundingBoxTreeItem newSecondTestChildTreeItem = (BoundingBoxTreeItem) newTestCategoryTreeItem.getChildren().get(1);
+        final BoundingBoxTreeItem newFirstTestChildTreeItem =
+                (BoundingBoxTreeItem) newTestCategoryTreeItem.getChildren().get(0);
+        final BoundingBoxTreeItem newSecondTestChildTreeItem =
+                (BoundingBoxTreeItem) newTestCategoryTreeItem.getChildren().get(1);
 
         // Delete first Test-bounding-box via context-menu on the tree-cell.
         robot.rightClickOn("Test 1");
@@ -197,12 +205,12 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(newTestCategoryTreeItem.getChildren().size(), Matchers.equalTo(1));
 
         verifyThat(mainView.getCurrentBoundingShapes(),
-                Matchers.not(Matchers.hasItem((BoundingBoxView) newFirstTestChildTreeItem.getValue())));
+                   Matchers.not(Matchers.hasItem((BoundingBoxView) newFirstTestChildTreeItem.getValue())));
         // After the first bounding-box and its tree-item was deleted, the (formerly) second tree-item's id should have been updated.
         verifyThat(newSecondTestChildTreeItem.getId(), Matchers.equalTo(1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
+                           .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         // Delete second Test-bounding-box via the context-menu on the element itself.
         robot.rightClickOn((BoundingBoxView) newSecondTestChildTreeItem.getValue());
@@ -212,10 +220,10 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         // Now just the Dummy-category item should be left.
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingShapes(),
-                Matchers.not(Matchers.hasItem((BoundingBoxView) newSecondTestChildTreeItem.getValue())));
+                   Matchers.not(Matchers.hasItem((BoundingBoxView) newSecondTestChildTreeItem.getValue())));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
+                           .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         // Delete Dummy-category-item. This should delete all children recursively.
         robot.rightClickOn(newDummyCategoryTreeItem.getGraphic());
@@ -228,7 +236,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
+                           .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
 
         /* ---- Object category change ---- */
         moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
@@ -236,7 +244,8 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
-        verifyThat(mainView.getCurrentBoundingShapes().get(0).getViewData().getObjectCategory().getName(), Matchers.equalTo("Dummy"));
+        verifyThat(mainView.getCurrentBoundingShapes().get(0).getViewData().getObjectCategory().getName(),
+                   Matchers.equalTo("Dummy"));
 
         robot.rightClickOn("Dummy 1");
         WaitForAsyncUtils.waitForFxEvents();
@@ -244,8 +253,11 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> getTopModalStage(robot, "Change Category") != null),
-                "Expected change category dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      () -> getTopModalStage(robot,
+                                                                                             "Change Category") !=
+                                                                              null),
+                                      "Expected change category dialog did not open within " + TIMEOUT_DURATION_IN_SEC +
+                                              " sec.");
 
         final Stage changeCategoryStage = getTopModalStage(robot, "Change Category");
         verifyThat(changeCategoryStage, Matchers.notNullValue());
@@ -254,14 +266,17 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(changeCategoryDialog.getHeaderText(), Matchers.equalTo("Select new Category (current: \"Dummy\")"));
         verifyThat(changeCategoryDialog.getContentText(), Matchers.equalTo("New Category:"));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(2));
-        verifyThat(model.getObjectCategories().stream().map(ObjectCategory::getName).collect(Collectors.toList()), Matchers.containsInRelativeOrder("Test", "Dummy"));
+        verifyThat(model.getObjectCategories().stream().map(ObjectCategory::getName).collect(Collectors.toList()),
+                   Matchers.containsInRelativeOrder("Test", "Dummy"));
 
         ObjectCategory testCategory = model.getObjectCategories().get(0);
         ObjectCategory dummyCategory = model.getObjectCategories().get(1);
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> robot.from(changeCategoryDialog).lookup(".combo-box").tryQuery().isPresent()),
-                "Expected combo-box not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      () -> robot.from(changeCategoryDialog)
+                                                                                 .lookup(".combo-box").tryQuery()
+                                                                                 .isPresent()),
+                                      "Expected combo-box not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
         WaitForAsyncUtils.waitForFxEvents();
 
         ComboBox<ObjectCategory> comboBox = robot.from(changeCategoryDialog).lookup(".combo-box").queryComboBox();
@@ -272,7 +287,8 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         robot.clickOn(comboBox);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, comboBox::isShowing),
+        Assertions.assertDoesNotThrow(
+                () -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, comboBox::isShowing),
                 "Combo-box not shown within " + TIMEOUT_DURATION_IN_SEC + " sec.");
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -288,12 +304,16 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> getTopModalStage(robot, "Change Category") == null),
-                "Expected change category dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      () -> getTopModalStage(robot,
+                                                                                             "Change Category") ==
+                                                                              null),
+                                      "Expected change category dialog did not close within " +
+                                              TIMEOUT_DURATION_IN_SEC + " sec.");
 
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
-        verifyThat(mainView.getCurrentBoundingShapes().get(0).getViewData().getObjectCategory(), Matchers.equalTo(testCategory));
+        verifyThat(mainView.getCurrentBoundingShapes().get(0).getViewData().getObjectCategory(),
+                   Matchers.equalTo(testCategory));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("Test"), Matchers.equalTo(1));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("Dummy"), Matchers.equalTo(0));
     }

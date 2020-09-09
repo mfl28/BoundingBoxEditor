@@ -144,12 +144,14 @@ class ObjectCategoryTreeItem extends TreeItem<Object> {
                 int numToggledChildrenToRemove = 0;
 
                 for(TreeItem<Object> treeItem : c.getRemoved()) {
-                    if(treeItem instanceof BoundingShapeTreeItem && ((BoundingShapeTreeItem) treeItem).isIconToggledOn()) {
+                    if(treeItem instanceof BoundingShapeTreeItem &&
+                            ((BoundingShapeTreeItem) treeItem).isIconToggledOn()) {
                         numToggledChildrenToRemove++;
                     }
                 }
 
-                nrToggledOnChildren.setValue(nrToggledOnChildren.get() + numToggledChildrenToAdd - numToggledChildrenToRemove);
+                nrToggledOnChildren
+                        .setValue(nrToggledOnChildren.get() + numToggledChildrenToAdd - numToggledChildrenToRemove);
             }
         });
 

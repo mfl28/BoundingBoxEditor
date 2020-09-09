@@ -50,7 +50,7 @@ public class BoundingBoxData extends BoundingShapeData {
                     double xMaxRelative, double yMaxRelative, List<String> tags) {
         super(category, tags);
         this.relativeBoundsInImage = new BoundingBox(xMinRelative, yMinRelative,
-                xMaxRelative - xMinRelative, yMaxRelative - yMinRelative);
+                                                     xMaxRelative - xMinRelative, yMaxRelative - yMinRelative);
     }
 
     /**

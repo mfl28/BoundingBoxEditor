@@ -117,7 +117,9 @@ public class Model {
         String fileName = imageFileNameToFile.get(fileIndex);
 
         ImageAnnotation imageAnnotation = imageFileNameToAnnotation.getOrDefault(fileName,
-                new ImageAnnotation(imageFileNameToMetaData.get(fileName)));
+                                                                                 new ImageAnnotation(
+                                                                                         imageFileNameToMetaData
+                                                                                                 .get(fileName)));
 
         if(!boundingShapeData.isEmpty()) {
             imageAnnotation.setBoundingShapeData(boundingShapeData);
@@ -150,23 +152,27 @@ public class Model {
 
     public ImageMetaData createOrGetCurrentImageMetaData() {
         return imageFileNameToMetaData.computeIfAbsent(getCurrentImageFileName(),
-                key -> {
-                    ImageMetaData newMetaData;
+                                                       key -> {
+                                                           ImageMetaData newMetaData;
 
-                    try {
-                        newMetaData = ImageMetaData.fromFile(getCurrentImageFile());
-                    } catch(IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
+                                                           try {
+                                                               newMetaData =
+                                                                       ImageMetaData.fromFile(getCurrentImageFile());
+                                                           } catch(IOException e) {
+                                                               throw new UncheckedIOException(e);
+                                                           }
 
-                    ImageAnnotation currentImageAnnotation = getCurrentImageAnnotation();
+                                                           ImageAnnotation currentImageAnnotation =
+                                                                   getCurrentImageAnnotation();
 
-                    if(currentImageAnnotation != null && !currentImageAnnotation.getImageMetaData().hasDetails()) {
-                        currentImageAnnotation.setImageMetaData(newMetaData);
-                    }
+                                                           if(currentImageAnnotation != null &&
+                                                                   !currentImageAnnotation.getImageMetaData()
+                                                                                          .hasDetails()) {
+                                                               currentImageAnnotation.setImageMetaData(newMetaData);
+                                                           }
 
-                    return newMetaData;
-                });
+                                                           return newMetaData;
+                                                       });
     }
 
     /**
@@ -356,7 +362,8 @@ public class Model {
 
     public void setImageFiles(Collection<File> imageFiles) {
         imageFileNameToFile = ListOrderedMap.listOrderedMap(imageFiles.parallelStream()
-                .collect(LinkedHashMap::new, (map, item) -> map.put(item.getName(), item), Map::putAll));
+                                                                      .collect(LinkedHashMap::new, (map, item) -> map
+                                                                              .put(item.getName(), item), Map::putAll));
 
         nrImageFiles.set(imageFileNameToFile.size());
         fileIndex.set(0);
@@ -397,7 +404,7 @@ public class Model {
             while(c.next()) {
                 if(c.wasAdded()) {
                     c.getAddedSubList().forEach(item ->
-                            categoryToAssignedBoundingShapesCount.put(item.getName(), 0));
+                                                        categoryToAssignedBoundingShapesCount.put(item.getName(), 0));
                 }
 
                 if(c.wasRemoved()) {

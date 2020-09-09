@@ -181,7 +181,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             }
         });
 
-        draggedOver.addListener((observable, oldValue, newValue) -> pseudoClassStateChanged(draggedOverPseudoClass, newValue));
+        draggedOver.addListener(
+                (observable, oldValue, newValue) -> pseudoClassStateChanged(draggedOverPseudoClass, newValue));
         addVerticesMenuItem.setOnAction(event -> ((BoundingPolygonView) getItem()).refine());
         deleteVerticesMenuItem.setOnAction(event -> ((BoundingPolygonView) getItem()).removeEditingVertices());
     }
@@ -211,10 +212,12 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         content.setAlignment(Pos.CENTER_LEFT);
 
         if(treeItem instanceof BoundingShapeTreeItem) {
-            final BoundingShapeViewData boundingShapeViewData = ((BoundingShapeViewable) treeItem.getValue()).getViewData();
+            final BoundingShapeViewData boundingShapeViewData =
+                    ((BoundingShapeViewable) treeItem.getValue()).getViewData();
 
             nameText.textProperty().bind(boundingShapeViewData.getObjectCategory()
-                    .nameProperty().concat(" ").concat(((BoundingShapeTreeItem) treeItem).getId()));
+                                                              .nameProperty().concat(" ")
+                                                              .concat(((BoundingShapeTreeItem) treeItem).getId()));
             tagIconRegion.visibleProperty().bind(Bindings.size(boundingShapeViewData.getTags()).greaterThan(0));
             content.getChildren().add(tagIconRegion);
         } else if(treeItem instanceof ObjectCategoryTreeItem) {
@@ -256,8 +259,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         CustomMenuItem deleteMenuItem = new CustomMenuItem(new Label(DELETE_BOUNDING_SHAPE_MENU_ITEM_TEXT));
         deleteMenuItem.setId(DELETE_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(deleteMenuItem.getContent(),
-                UiUtils.createTooltip("",
-                        Controller.KeyCombinations.deleteSelectedBoundingShape));
+                        UiUtils.createTooltip("",
+                                              Controller.KeyCombinations.deleteSelectedBoundingShape));
         return deleteMenuItem;
     }
 
@@ -265,8 +268,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         CustomMenuItem hideMenuItem = new CustomMenuItem(new Label(HIDE_BOUNDING_SHAPE_MENU_ITEM_TEXT));
         hideMenuItem.setId(HIDE_BOUNDING_SHAPE_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(hideMenuItem.getContent(),
-                UiUtils.createTooltip("",
-                        Controller.KeyCombinations.hideSelectedBoundingShape));
+                        UiUtils.createTooltip("",
+                                              Controller.KeyCombinations.hideSelectedBoundingShape));
         return hideMenuItem;
     }
 
@@ -275,8 +278,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(REFINE_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                UiUtils.createTooltip(REFINE_MENU_ITEM_TOOLTIP_TEXT,
-                        Controller.KeyCombinations.addVerticesToPolygon));
+                        UiUtils.createTooltip(REFINE_MENU_ITEM_TOOLTIP_TEXT,
+                                              Controller.KeyCombinations.addVerticesToPolygon));
         return menuItem;
     }
 
@@ -285,8 +288,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(DELETE_VERTICES_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                UiUtils.createTooltip(DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT,
-                        Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected));
+                        UiUtils.createTooltip(DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT,
+                                              Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected));
         return menuItem;
     }
 
@@ -295,7 +298,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(CHANGE_CATEGORY_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                UiUtils.createTooltip("", Controller.KeyCombinations.changeSelectedBoundingShapeCategory));
+                        UiUtils.createTooltip("", Controller.KeyCombinations.changeSelectedBoundingShapeCategory));
         return menuItem;
     }
 
@@ -318,13 +321,16 @@ class ObjectTreeElementCell extends TreeCell<Object> {
                 getItems().add(deleteVerticesMenuItem);
             }
 
-            addVerticesMenuItem.disableProperty().bind(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
-                    .getEditingIndices()).lessThan(2));
+            addVerticesMenuItem.disableProperty()
+                               .bind(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
+                                                           .getEditingIndices()).lessThan(2));
             deleteVerticesMenuItem.disableProperty().bind(
-                    Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem()).getEditingIndices()).isEqualTo(0)
+                    Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem()).getEditingIndices())
+                            .isEqualTo(0)
                             .or(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
-                                    .getEditingIndices()).greaterThan(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
-                                    .getVertexHandles()).subtract(2))));
+                                                      .getEditingIndices()).greaterThan(
+                                    Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
+                                                          .getVertexHandles()).subtract(2))));
         }
 
         void removePolygonFeatures() {

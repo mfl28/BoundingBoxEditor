@@ -71,7 +71,8 @@ class TagScrollPaneView extends ScrollPane implements View {
     private void setUpInternalListeners() {
         // Auto-scroll to the end if the height of the tag-flow-pane changes. This ensures
         // that the tag-input text-field is always visible.
-        tagFlowPane.heightProperty().addListener((observable, oldValue, newValue) -> vvalueProperty().set(newValue.doubleValue()));
+        tagFlowPane.heightProperty()
+                   .addListener((observable, oldValue, newValue) -> vvalueProperty().set(newValue.doubleValue()));
 
         tagFlowPane.maxWidthProperty().bind(widthProperty());
 
@@ -133,14 +134,14 @@ class TagScrollPaneView extends ScrollPane implements View {
             while(change.next()) {
                 if(change.wasRemoved()) {
                     tagFlowPane.getChildren().subList(change.getFrom(),
-                            change.getFrom() + change.getRemovedSize()).clear();
+                                                      change.getFrom() + change.getRemovedSize()).clear();
                 }
 
                 if(change.wasAdded()) {
                     tagFlowPane.getChildren().addAll(change.getFrom(),
-                            change.getAddedSubList().stream()
-                                    .map(TagBox::new)
-                                    .collect(Collectors.toList()));
+                                                     change.getAddedSubList().stream()
+                                                           .map(TagBox::new)
+                                                           .collect(Collectors.toList()));
                 }
             }
         };
@@ -169,8 +170,8 @@ class TagScrollPaneView extends ScrollPane implements View {
 
         private void setUpInternalListeners() {
             tagNameText.maxWidthProperty().bind(tagFlowPane.maxWidthProperty()
-                    .subtract(deleteButton.widthProperty())
-                    .subtract(25));
+                                                           .subtract(deleteButton.widthProperty())
+                                                           .subtract(25));
 
             deleteButton.setOnAction(event -> tags.get().remove(tagNameText.getText()));
         }

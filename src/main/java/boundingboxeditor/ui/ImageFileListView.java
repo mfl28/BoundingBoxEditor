@@ -34,8 +34,10 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
     private static final int IMAGE_CACHE_SIZE = 500;
 
     private final LoadingCache<String, Image> imageCache = Caffeine.newBuilder()
-            .maximumSize(IMAGE_CACHE_SIZE)
-            .build(key -> new Image(key, REQUESTED_IMAGE_WIDTH, REQUESTED_IMAGE_HEIGHT, true, false, true));
+                                                                   .maximumSize(IMAGE_CACHE_SIZE)
+                                                                   .build(key -> new Image(key, REQUESTED_IMAGE_WIDTH,
+                                                                                           REQUESTED_IMAGE_HEIGHT, true,
+                                                                                           false, true));
 
     /**
      * Creates a new image-file list UI-element.
@@ -64,8 +66,8 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
                 if(newValue != null && newValue.size() <= IMAGE_CACHE_SIZE) {
                     // Triggers loading of the new images into the cache.
                     imageCache.getAll(newValue.stream()
-                            .map(fileInfo -> fileInfo.getFile().toURI().toString())
-                            .collect(Collectors.toList()));
+                                              .map(fileInfo -> fileInfo.getFile().toURI().toString())
+                                              .collect(Collectors.toList()));
                 }
             }
         });
@@ -120,7 +122,8 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
     private class ImageFileInfoCell extends ListCell<FileInfo> {
         private static final String IMAGE_FILE_INFO_CELL_ID = "image-file-info-cell";
         private static final String HAS_ASSIGNED_BOUNDING_BOXES_CLASS_NAME = "has-assigned-bounding-boxes";
-        private final PseudoClass hasAssignedBoundingBoxesClass = PseudoClass.getPseudoClass(HAS_ASSIGNED_BOUNDING_BOXES_CLASS_NAME);
+        private final PseudoClass hasAssignedBoundingBoxesClass =
+                PseudoClass.getPseudoClass(HAS_ASSIGNED_BOUNDING_BOXES_CLASS_NAME);
         private final ImageView imageView = new ImageView();
 
         private final BooleanProperty hasAssignedBoundingBoxes = new BooleanPropertyBase(true) {
