@@ -79,9 +79,11 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
-            model.getObjectCategories().setAll(existingObjectCategories.values());
-            model.getCategoryToAssignedBoundingShapesCountMap().putAll(boundingShapeCountPerCategory);
-            model.updateImageAnnotations(imageAnnotations);
+            if(!imageAnnotations.isEmpty()) {
+                model.getObjectCategories().setAll(existingObjectCategories.values());
+                model.getCategoryToAssignedBoundingShapesCountMap().putAll(boundingShapeCountPerCategory);
+                model.updateImageAnnotations(imageAnnotations);
+            }
 
             return new IOResult(
                     IOResult.OperationType.ANNOTATION_IMPORT,
