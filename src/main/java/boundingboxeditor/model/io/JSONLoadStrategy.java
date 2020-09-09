@@ -22,7 +22,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
-    private static final String OBJECT_CATEGORY_SERIALIZED_NAME = "name";
+    private static final String OBJECT_CATEGORY_NAME_SERIALIZED_NAME = "name";
+    private static final String OBJECT_CATEGORY_SERIALIZED_NAME = "category";
     private static final String OBJECT_COLOR_SERIALIZED_NAME = "color";
     private static final String IMAGE_META_DATA_SERIALIZED_NAME = "image";
     private static final String BOUNDING_SHAPE_DATA_SERIALIZED_NAME = "objects";
@@ -212,7 +213,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                                           JsonDeserializationContext context) throws JsonParseException {
             final JsonObject jsonObject = json.getAsJsonObject();
 
-            if(!jsonObject.has(OBJECT_CATEGORY_SERIALIZED_NAME)) {
+            if(!jsonObject.has(OBJECT_CATEGORY_NAME_SERIALIZED_NAME)) {
                 unParsedFileErrorMessages
                         .add(new IOResult.ErrorInfoEntry(annotationFileName,
                                                          MISSING_CATEGORY_NAME_ERROR_MESSAGE + currentFilename.get() +
@@ -220,7 +221,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                 return null;
             }
 
-            final String categoryName = jsonObject.get(OBJECT_CATEGORY_SERIALIZED_NAME).getAsString();
+            final String categoryName = jsonObject.get(OBJECT_CATEGORY_NAME_SERIALIZED_NAME).getAsString();
 
             Color categoryColor;
 
@@ -431,7 +432,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                                            JsonDeserializationContext context) throws JsonParseException {
             final JsonObject jsonObject = json.getAsJsonObject();
 
-            if(!jsonObject.has(OBJECT_CATEGORY_SERIALIZED_NAME)) {
+            if(!jsonObject.has("category")) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
                                                                           BOX_MISSING_CATEGORY_ERROR_MESSAGE +
                                                                                   currentFileName.get() + "."));
