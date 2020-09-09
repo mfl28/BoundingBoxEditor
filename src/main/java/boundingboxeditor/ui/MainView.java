@@ -153,10 +153,10 @@ public class MainView extends BorderPane implements View {
      * @param extensionFilter The extension filter to apply
      * @return The chosen file, or null if the user closed the window without choosing.
      */
-    public static File displaySaveFileChooserAndGetChoice(String title, Stage stage, File initialDirectory,
-                                                          String initialFileName,
-                                                          FileChooser.ExtensionFilter extensionFilter,
-                                                          FileChooserType type) {
+    public static File displayFileChooserAndGetChoice(String title, Stage stage, File initialDirectory,
+                                                      String initialFileName,
+                                                      FileChooser.ExtensionFilter extensionFilter,
+                                                      FileChooserType type) {
         final FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(title);
 

@@ -588,18 +588,16 @@ public class Controller {
     private void setCurrentAnnotationSavingDirectory(File destination) {
         if(destination.isDirectory()) {
             currentAnnotationSavingDirectory = destination;
-        } else if(destination.isFile() && destination.getParentFile().isDirectory()
-                && destination.getParentFile().exists()) {
+        } else if(destination.isFile() && destination.getParentFile().isDirectory()) {
             currentAnnotationSavingDirectory = destination.getParentFile();
         }
     }
 
     private void setCurrentAnnotationLoadingDirectory(File source) {
         if(source.isDirectory()) {
-            currentAnnotationSavingDirectory = source;
-        } else if(source.isFile() && source.getParentFile().isDirectory()
-                && source.getParentFile().exists()) {
-            currentAnnotationSavingDirectory = source.getParentFile();
+            currentAnnotationLoadingDirectory = source;
+        } else if(source.isFile() && source.getParentFile().isDirectory()) {
+            currentAnnotationLoadingDirectory = source.getParentFile();
         }
     }
 
@@ -634,13 +632,13 @@ public class Controller {
         File destination;
 
         if(saveFormat.equals(ImageAnnotationSaveStrategy.Type.JSON)) {
-            destination = MainView.displaySaveFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
-                                                                      currentAnnotationSavingDirectory,
-                                                                      DEFAULT_JSON_EXPORT_FILENAME,
-                                                                      new FileChooser.ExtensionFilter("JSON files",
+            destination = MainView.displayFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
+                                                                  currentAnnotationSavingDirectory,
+                                                                  DEFAULT_JSON_EXPORT_FILENAME,
+                                                                  new FileChooser.ExtensionFilter("JSON files",
                                                                                                       "*.json",
                                                                                                       "*.JSON"),
-                                                                      MainView.FileChooserType.SAVE);
+                                                                  MainView.FileChooserType.SAVE);
         } else {
             destination =
                     MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
@@ -654,12 +652,12 @@ public class Controller {
         File source;
 
         if(loadFormat.equals(ImageAnnotationLoadStrategy.Type.JSON)) {
-            source = MainView.displaySaveFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
-                                                                 currentAnnotationLoadingDirectory,
-                                                                 DEFAULT_JSON_EXPORT_FILENAME,
-                                                                 new FileChooser.ExtensionFilter("JSON files", "*.json",
+            source = MainView.displayFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
+                                                             currentAnnotationLoadingDirectory,
+                                                             DEFAULT_JSON_EXPORT_FILENAME,
+                                                             new FileChooser.ExtensionFilter("JSON files", "*.json",
                                                                                                  "*.JSON"),
-                                                                 MainView.FileChooserType.OPEN);
+                                                             MainView.FileChooserType.OPEN);
         } else {
             source = MainView.displayDirectoryChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
                                                                   currentAnnotationLoadingDirectory);
