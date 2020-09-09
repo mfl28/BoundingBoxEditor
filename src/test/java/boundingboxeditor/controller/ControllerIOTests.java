@@ -241,6 +241,97 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
+    void onExportAnnotation_JSON_WhenPreviouslyImportedAnnotation_ShouldProduceEquivalentOutput(FxRobot robot,
+                                                                                                @TempDir Path tempDirectory)
+            throws IOException {
+        final String referenceAnnotationFilePath = "/testannotations/json/reference/annotations.json";
+        final String expectedAnnotationFileName = "annotations.json";
+
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                   Matchers.startsWith("Successfully loaded 4 image-files from folder "));
+
+        final File referenceAnnotationFile =
+                new File(getClass().getResource(referenceAnnotationFilePath).getFile());
+
+        // Load bounding-boxes defined in the reference annotation-file.
+        Platform.runLater(() -> controller
+                .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.JSON));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Create temporary folder to save annotations to.
+        Path actualDir = Files.createDirectory(tempDirectory.resolve("actual"));
+
+        Assertions.assertTrue(Files.isDirectory(actualDir), "Actual files directory does not exist.");
+
+        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> Objects.equals(counts.get("Boat"), 2) &&
+                                                                              Objects.equals(counts.get("Sail"), 6) &&
+                                                                              Objects.equals(counts.get("Flag"), 1)),
+                                      "Correct bounding box per-category-counts were not read within " +
+                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3));
+        verifyThat(model.getObjectCategories(), Matchers.hasSize(3));
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> mainView.getImageFileListView()
+                                                                                    .getSelectionModel()
+                                                                                    .getSelectedItem()
+                                                                                    .isHasAssignedBoundingShapes()
+                                                                              && mainView.getCurrentBoundingShapes()
+                                                                                         .stream()
+                                                                                         .filter(viewable -> viewable instanceof BoundingBoxView)
+                                                                                         .count() == 8
+                                                                              && mainView.getCurrentBoundingShapes()
+                                                                                         .stream()
+                                                                                         .filter(viewable -> viewable instanceof BoundingPolygonView)
+                                                                                         .count() == 1),
+                                      "Bounding shape counts did not match within " + TIMEOUT_DURATION_IN_SEC +
+                                              " sec.");
+
+        // Zoom a bit to change the image-view size.
+        robot.moveTo(mainView.getEditorImageView())
+             .press(KeyCode.CONTROL)
+             .scroll(-30)
+             .release(KeyCode.CONTROL);
+
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                   Matchers.startsWith("Successfully imported annotations from 1 file in"));
+
+        // Save the annotations to the temporary folder.
+        Platform.runLater(
+                () -> controller.new AnnotationSaverService(actualDir.resolve(expectedAnnotationFileName).toFile(),
+                                                            ImageAnnotationSaveStrategy.Type.JSON)
+                        .startAndShowProgressDialog());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Path actualFilePath = actualDir.resolve(expectedAnnotationFileName);
+
+        // Wait until the output-file actually exists. If the file was not created in
+        // the specified time-frame, a TimeoutException is thrown and the test fails.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> Files.exists(actualFilePath)),
+                                      "Output-files were not created within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        // The output file should be exactly the same as the reference file.
+        final byte[] referenceArray = Files.readAllBytes(referenceAnnotationFile.toPath());
+
+        // Wait until the annotations were written to the output file and the file is equivalent to the reference file
+        // or throw a TimeoutException if this did not happen within the specified time-frame.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> Arrays.equals(referenceArray,
+                                                                                          Files.readAllBytes(
+                                                                                                  actualFilePath))),
+                                      "Expected annotation output-file content was not created within " +
+                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+    }
+
+    @Test
     void onLoadAnnotation_YOLO_WhenObjectDataFileMissing_ShouldNotLoadAnnotations(FxRobot robot) {
         final String inputPath = "/testannotations/yolo/missing-classes-file";
 

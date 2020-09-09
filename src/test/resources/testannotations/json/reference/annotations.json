@@ -1,0 +1,179 @@
+[
+  {
+    "image": {
+      "fileName": "austin-neill-685084-unsplash.jpg",
+      "details": {
+        "folderName": "1",
+        "width": 3854.0,
+        "height": 2033.0,
+        "depth": 3
+      }
+    },
+    "objects": [
+      {
+        "polygon": [
+          0.45055,
+          0.402755,
+          0.449634,
+          0.46699,
+          0.45055,
+          0.598928,
+          0.460623,
+          0.699616,
+          0.4739,
+          0.76819,
+          0.494964,
+          0.782946,
+          0.512364,
+          0.776872,
+          0.524268,
+          0.756906,
+          0.537545,
+          0.637118,
+          0.541209,
+          0.485219,
+          0.54075,
+          0.374983,
+          0.5261,
+          0.28818,
+          0.496796,
+          0.253458,
+          0.474359,
+          0.269085,
+          0.45467,
+          0.328977
+        ],
+        "category": {
+          "name": "Boat",
+          "color": "#1B26D4"
+        },
+        "tags": [],
+        "parts": [
+          {
+            "bndbox": {
+              "minX": 0.471064,
+              "minY": 0.773281,
+              "maxX": 0.521103,
+              "maxY": 0.816291
+            },
+            "category": {
+              "name": "Boat",
+              "color": "#1B26D4"
+            },
+            "tags": [
+              "pose: right"
+            ],
+            "parts": []
+          },
+          {
+            "bndbox": {
+              "minX": 0.456943,
+              "minY": 0.041333,
+              "maxX": 0.494154,
+              "maxY": 0.286852
+            },
+            "category": {
+              "name": "Sail",
+              "color": "#29B999"
+            },
+            "tags": [],
+            "parts": []
+          },
+          {
+            "bndbox": {
+              "minX": 0.466476,
+              "minY": 0.116075,
+              "maxX": 0.493371,
+              "maxY": 0.272248
+            },
+            "category": {
+              "name": "Sail",
+              "color": "#29B999"
+            },
+            "tags": [
+              "truncated"
+            ],
+            "parts": []
+          },
+          {
+            "bndbox": {
+              "minX": 0.405376,
+              "minY": 0.22275,
+              "maxX": 0.548334,
+              "maxY": 0.51455
+            },
+            "category": {
+              "name": "Sail",
+              "color": "#29B999"
+            },
+            "tags": [
+              "pose: left"
+            ],
+            "parts": []
+          },
+          {
+            "bndbox": {
+              "minX": 0.423391,
+              "minY": 0.21755,
+              "maxX": 0.562826,
+              "maxY": 0.488313
+            },
+            "category": {
+              "name": "Sail",
+              "color": "#29B999"
+            },
+            "tags": [
+              "pose: left",
+              "truncated"
+            ],
+            "parts": []
+          },
+          {
+            "bndbox": {
+              "minX": 0.459035,
+              "minY": 0.398967,
+              "maxX": 0.496894,
+              "maxY": 0.657605
+            },
+            "category": {
+              "name": "Sail",
+              "color": "#29B999"
+            },
+            "tags": [],
+            "parts": []
+          },
+          {
+            "bndbox": {
+              "minX": 0.446108,
+              "minY": 0.722946,
+              "maxX": 0.485145,
+              "maxY": 0.841249
+            },
+            "category": {
+              "name": "Sail",
+              "color": "#29B999"
+            },
+            "tags": [],
+            "parts": []
+          },
+          {
+            "bndbox": {
+              "minX": 0.406035,
+              "minY": 0.859774,
+              "maxX": 0.438446,
+              "maxY": 0.878515
+            },
+            "category": {
+              "name": "Flag",
+              "color": "#68F6A9"
+            },
+            "tags": [
+              "difficult"
+            ],
+            "parts": []
+          }
+        ]
+      }
+    ]
+  }
+]
