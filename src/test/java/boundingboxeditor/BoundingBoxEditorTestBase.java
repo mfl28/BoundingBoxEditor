@@ -39,6 +39,8 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.testfx.api.FxAssert.verifyThat;
+
 @ExtendWith(ApplicationExtension.class)
 public class BoundingBoxEditorTestBase {
     protected static final double RATIO_EQUAL_THRESHOLD = 1e-2;
@@ -317,6 +319,30 @@ public class BoundingBoxEditorTestBase {
                                               content + "\" did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         return getTopModalStage(robot, title);
+    }
+
+    protected Stage timeoutGetTopModalStage(FxRobot robot, String stageTitle) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> getTopModalStage(robot, stageTitle) !=
+                                                                              null),
+                                      "Expected top modal stage with title " + stageTitle + " did not open within "
+                                              + TIMEOUT_DURATION_IN_SEC +
+                                              " sec.");
+
+        Stage stage = getTopModalStage(robot, stageTitle);
+        verifyThat(stage, Matchers.notNullValue());
+
+        return stage;
+    }
+
+
+    protected void timeoutAssertTopModalStageClosed(FxRobot robot, String stageTitle) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> getTopModalStage(robot, stageTitle) ==
+                                                                              null),
+                                      "Expected top modal stage with title " + stageTitle + " did not close within "
+                                              + TIMEOUT_DURATION_IN_SEC +
+                                              " sec.");
     }
 
     private Scene createSceneFromParent(final Parent parent) {

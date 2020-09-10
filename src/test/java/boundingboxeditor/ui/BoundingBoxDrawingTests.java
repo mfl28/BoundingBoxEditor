@@ -159,27 +159,28 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                    Matchers.closeTo(preResizeMaxY, MathUtils.DOUBLE_EQUAL_THRESHOLD));
 
         // Try to exit application:
+        final Stage exitDialogStage = tryExitAndGetDialog(robot);
+
+        timeOutLookUpInStageAndClickOn(robot, exitDialogStage, "Cancel");
+
+        timeoutAssertTopModalStageClosed(robot, "Exit Application");
+
+        // Try exit and check save dialog
+        final Stage exitDialogStage2 = tryExitAndGetDialog(robot);
+
+        timeOutLookUpInStageAndClickOn(robot, exitDialogStage2, "Yes");
+
+        final Stage saveAnnotationsStage = timeoutGetTopModalStage(robot, "Save annotations");
+
+        timeOutLookUpInStageAndClickOn(robot, saveAnnotationsStage, "Cancel");
+    }
+
+    private Stage tryExitAndGetDialog(FxRobot robot) {
         timeOutClickOn(robot, "File");
         WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Exit");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Exit Application") !=
-                                                                              null),
-                                      "Expected info dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
-
-        Stage exitDialogStage = getTopModalStage(robot, "Exit Application");
-        verifyThat(exitDialogStage, Matchers.notNullValue());
-
-        timeOutLookUpInStageAndClickOn(robot, exitDialogStage, "Cancel");
-
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Exit Application") ==
-                                                                              null),
-                                      "Expected info dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
-
+        return timeoutGetTopModalStage(robot, "Exit Application");
     }
 }

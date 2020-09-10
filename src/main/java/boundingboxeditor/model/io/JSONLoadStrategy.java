@@ -40,11 +40,13 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final String IMAGE_ATTRIBUTION_MESSAGE_PART = " element in annotation for image ";
     private static final String MISSING_CATEGORY_ERROR_MESSAGE = "Missing category element in ";
     private static final String INVALID_COORDINATES_ERROR_MESSAGE = "Invalid coordinate value(s) in ";
+    private static final String INVALID_COORDINATE_ERROR_MESSAGE = "Invalid coordinate value for ";
     private static final String INVALID_COORDINATE_NUMBER_ERROR_MESSAGE = "Invalid number of coordinates in ";
     private static final String INVALID_TAGS_ERROR_MESSAGE = "Invalid tags value(s) in ";
     private static final String INVALID_PARTS_ERROR_MESSAGE = "Invalid parts value(s) in ";
     private static final String MISSING_IMAGE_FILE_NAME_ERROR_MESSAGE = "Missing image fileName element.";
     private static final String MISSING_IMAGES_FIELD_ERROR_MESSAGE = "Missing images element.";
+    private static final String ELEMENT_LOCATION_ERROR_MESSAGE_PART = " element in ";
     private static final String MISSING_OBJECTS_FIELD_ERROR_MESSAGE =
             "Missing objects" + IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String MISSING_CATEGORY_NAME_ERROR_MESSAGE =
@@ -330,7 +332,8 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
             if(!jsonObject.has(name)) {
                 unParsedFileErrorMessages
                         .add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                         "Missing " + name + " element in bndbox" +
+                                                         "Missing " + name + ELEMENT_LOCATION_ERROR_MESSAGE_PART +
+                                                                 BOUNDING_BOX_SERIALIZED_NAME +
                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                  currentFilename.get() + "."));
                 return null;
@@ -342,8 +345,9 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                 value = jsonObject.get(name).getAsDouble();
             } catch(ClassCastException | NumberFormatException e) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          "Invalid coordinate value for " + name +
-                                                                                  " element in bndbox" +
+                                                                          INVALID_COORDINATE_ERROR_MESSAGE + name +
+                                                                                  ELEMENT_LOCATION_ERROR_MESSAGE_PART +
+                                                                                  BOUNDING_BOX_SERIALIZED_NAME +
                                                                                   IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                                   currentFilename.get() + "."));
                 return null;
@@ -351,8 +355,9 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
             if(!isValidRelativeCoordinate(value)) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          "Invalid coordinate value for " + name +
-                                                                                  " element in bndbox" +
+                                                                          INVALID_COORDINATE_ERROR_MESSAGE + name +
+                                                                                  ELEMENT_LOCATION_ERROR_MESSAGE_PART +
+                                                                                  BOUNDING_BOX_SERIALIZED_NAME +
                                                                                   IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                                   currentFilename.get() + "."));
                 return null;

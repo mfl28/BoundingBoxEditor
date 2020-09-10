@@ -92,14 +92,7 @@ public class MainView extends BorderPane implements View {
                                  content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
                                  new ButtonType("No", ButtonBar.ButtonData.NO),
                                  new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
-        dialog.setTitle(title);
-        dialog.setHeaderText(null);
-        dialog.setContentText(content);
-        dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-        dialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        dialog.showAndWait();
-
+        setupAndShowDialog(dialog, title, content);
         return dialog.getResult().getButtonData();
     }
 
@@ -114,14 +107,7 @@ public class MainView extends BorderPane implements View {
         Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
                                  content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
                                  new ButtonType("No", ButtonBar.ButtonData.NO));
-        dialog.setTitle(title);
-        dialog.setHeaderText(null);
-        dialog.setContentText(content);
-        dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-        dialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        dialog.showAndWait();
-
+        setupAndShowDialog(dialog, title, content);
         return dialog.getResult().getButtonData();
     }
 
@@ -414,11 +400,11 @@ public class MainView extends BorderPane implements View {
         return workspaceSplitPane.getImageFileExplorer();
     }
 
-    /* Delegating Getters */
-
     public EditorView getEditor() {
         return workspaceSplitPane.getEditor();
     }
+
+    /* Delegating Getters */
 
     public ObjectTreeView getObjectTree() {
         return workspaceSplitPane.getEditorsSplitPane().getObjectTree();
@@ -490,6 +476,16 @@ public class MainView extends BorderPane implements View {
 
     public EditorsSplitPaneView getEditorsSplitPane() {
         return workspaceSplitPane.getEditorsSplitPane();
+    }
+
+    private static void setupAndShowDialog(Alert dialog, String title, String content) {
+        dialog.setTitle(title);
+        dialog.setHeaderText(null);
+        dialog.setContentText(content);
+        dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        dialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+        dialog.showAndWait();
     }
 
     private void setUpInternalListeners() {
