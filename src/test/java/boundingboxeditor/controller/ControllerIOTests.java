@@ -1,6 +1,7 @@
 package boundingboxeditor.controller;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
+import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.model.io.IOResult;
 import boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
@@ -357,7 +358,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         final Stage errorReportStage = getTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
 
-        final String errorReportDialogContentReferenceText = "The folder does not contain any valid annotation files.";
+        final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText));
 
@@ -379,6 +380,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                                                                                              "Does not exist in annotation folder \"missing-classes-file\".");
 
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1));
+
+        WaitForAsyncUtils.waitForFxEvents();
 
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
@@ -426,7 +429,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(errorReportStage, Matchers.notNullValue());
 
         final String errorReportDialogContentReferenceText =
-                "Some bounding boxes could not be loaded from 4 image-annotation files.";
+                "Some bounding boxes could not be loaded from 4 image-annotations.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText));
 
@@ -467,6 +470,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(errorInfoEntries, Matchers.containsInAnyOrder(referenceErrorInfoEntry1, referenceErrorInfoEntry2,
                                                                  referenceErrorInfoEntry3, referenceErrorInfoEntry4,
                                                                  referenceErrorInfoEntry5));
+
+        WaitForAsyncUtils.waitForFxEvents();
 
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
@@ -515,7 +520,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(errorReportStage, Matchers.notNullValue());
 
         final String errorReportDialogContentReferenceText =
-                "Some bounding boxes could not be loaded from 1 image-annotation file.";
+                "Some bounding boxes could not be loaded from 1 image-annotation.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText));
 
@@ -540,6 +545,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 new IOResult.ErrorInfoEntry("annotation_with_missing_elements.xml",
                                             "Missing element: ymin");
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1, referenceErrorInfoEntry2));
+
+        WaitForAsyncUtils.waitForFxEvents();
 
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
@@ -588,7 +595,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         final Stage errorReportStage = getTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
 
-        final String errorReportDialogContentReferenceText = "The folder does not contain any valid annotation files.";
+        final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText));
 
@@ -614,6 +621,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                                             "Missing element: filename");
 
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry));
+
+        WaitForAsyncUtils.waitForFxEvents();
 
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
@@ -680,6 +689,105 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         // (3) User chooses No (Do not keep existing bounding boxes):
         userChoosesNoOnAnnotationImportDialogSubtest(robot, annotationFile);
+    }
+
+    @Test
+    void onLoadAnnotation_JSON_WhenFileHasMissingCriticalElements_ShouldNotLoadInvalidBoundingBoxes(FxRobot robot) {
+        final String missingFileNameAnnotationFilePath = "/testannotations/json/missing_critical_elements.json";
+
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                   Matchers.startsWith("Successfully loaded 4 image-files from folder "));
+
+        final File inputFile = new File(getClass().getResource(missingFileNameAnnotationFilePath).getFile());
+
+        // Load bounding-boxes defined in annotation-file.
+        Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.JSON));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> getTopModalStage(robot,
+                                                                                             "Annotation import error report") !=
+                                                                              null),
+                                      "Expected error report dialog did not open within " + TIMEOUT_DURATION_IN_SEC +
+                                              " sec.");
+
+        final Stage errorReportStage = getTopModalStage(robot, "Annotation import error report");
+        verifyThat(errorReportStage, Matchers.notNullValue());
+
+        final String errorReportDialogContentReferenceText = "Some bounding boxes could not be loaded from 1 " +
+                "image-annotation.";
+        final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
+        verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText));
+
+        verifyThat(errorReportDialog.getExpandableContent(), Matchers.instanceOf(GridPane.class));
+        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().get(0),
+                   Matchers.instanceOf(TableView.class));
+        final GridPane errorReportDialogContentPane = (GridPane) errorReportDialog.getExpandableContent();
+
+        verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class));
+
+        @SuppressWarnings("unchecked") final TableView<IOResult.ErrorInfoEntry> errorInfoTable =
+                (TableView<IOResult.ErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+
+        final List<IOResult.ErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
+
+        verifyThat(errorInfoEntries, Matchers.hasSize(7));
+
+        final IOResult.ErrorInfoEntry error1 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                           "Missing image " +
+                                                                                   "fileName " +
+                                                                                   "element.");
+        IOResult.ErrorInfoEntry error2 = new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Invalid " +
+                "coordinate value " +
+                "for maxX element in bndbox element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
+        IOResult.ErrorInfoEntry error3 =
+                new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Invalid color element in " +
+                        "annotation for image nico-bhlr-1067059-unsplash.jpg.");
+        IOResult.ErrorInfoEntry error4 =
+                new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Missing category name " +
+                        "element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
+        IOResult.ErrorInfoEntry error5 =
+                new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Missing maxX element in " +
+                        "bndbox element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
+        IOResult.ErrorInfoEntry error6 =
+                new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Invalid coordinate value" +
+                        "(s) in polygon element in annotation for image austin-neill-685084-unsplash.jpg.");
+        IOResult.ErrorInfoEntry error7 =
+                new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Invalid number of " +
+                        "coordinates in polygon element in annotation for image caleb-george-316073-unsplash.jpg.");
+
+        verifyThat(errorInfoEntries,
+                   Matchers.containsInAnyOrder(error1, error2, error3, error4, error5, error6, error7));
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Close error report dialog.
+        timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Check if closed
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> getTopModalStage(robot,
+                                                                                             "Annotation import error report") ==
+                                                                              null),
+                                      "Expected error report dialog did not close within " + TIMEOUT_DURATION_IN_SEC +
+                                              " sec.");
+
+        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
+        verifyThat(counts.size(), Matchers.equalTo(1));
+        verifyThat(counts, Matchers.hasEntry("Surfboard", 2));
+
+        final List<ObjectCategory> objectCategories = model.getObjectCategories();
+        verifyThat(objectCategories, Matchers.hasSize(1));
+        verifyThat(objectCategories.get(0).getName(), Matchers.equalTo("Surfboard"));
+
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty());
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                   Matchers.startsWith("Successfully imported annotations from 1 file "));
     }
 
     @Test

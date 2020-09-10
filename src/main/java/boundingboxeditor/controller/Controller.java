@@ -77,7 +77,7 @@ public class Controller {
     private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
     private static final String ANNOTATION_IMPORT_ERROR_TITLE = "Annotation Import Error";
     private static final String ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT =
-            "The folder does not contain any valid annotation files.";
+            "The source does not contain any valid annotations.";
     private static final String LOADING_ANNOTATIONS_DIALOG_TITLE = "Loading";
     private static final String LOADING_ANNOTATIONS_DIALOG_HEADER = "Loading annotations...";
     private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE = "Open image folder";
@@ -636,8 +636,8 @@ public class Controller {
                                                                   currentAnnotationSavingDirectory,
                                                                   DEFAULT_JSON_EXPORT_FILENAME,
                                                                   new FileChooser.ExtensionFilter("JSON files",
-                                                                                                      "*.json",
-                                                                                                      "*.JSON"),
+                                                                                                  "*.json",
+                                                                                                  "*.JSON"),
                                                                   MainView.FileChooserType.SAVE);
         } else {
             destination =
@@ -656,7 +656,7 @@ public class Controller {
                                                              currentAnnotationLoadingDirectory,
                                                              DEFAULT_JSON_EXPORT_FILENAME,
                                                              new FileChooser.ExtensionFilter("JSON files", "*.json",
-                                                                                                 "*.JSON"),
+                                                                                             "*.JSON"),
                                                              MainView.FileChooserType.OPEN);
         } else {
             source = MainView.displayDirectoryChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,

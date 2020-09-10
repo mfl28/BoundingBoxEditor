@@ -37,32 +37,21 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final String BOUNDING_POLYGON_SERIALIZED_NAME = "polygon";
     private static final String TAGS_SERIALIZED_NAME = "tags";
     private static final String PARTS_SERIALIZED_NAME = "parts";
-    private static final String IMAGE_ATTRIBUTION_MESSAGE_PART = "element for image ";
-    private static final String POLYGON_MISSING_CATEGORY_ERROR_MESSAGE =
-            "Missing category field in bounding polygon " + IMAGE_ATTRIBUTION_MESSAGE_PART;
-    private static final String POLYGON_INVALID_COORDINATES_ERROR_MESSAGE = "Invalid coordinate value(s) in polygon " +
-            IMAGE_ATTRIBUTION_MESSAGE_PART;
-    private static final String POLYGON_INVALID_COORDINATE_NUMBER_ERROR_MESSAGE =
-            "Invalid number of coordinates in polygon " + IMAGE_ATTRIBUTION_MESSAGE_PART;
-    private static final String POLYGON_INVALID_TAGS_ERROR_MESSAGE = "Invalid tags value(s) in polygon " +
-            IMAGE_ATTRIBUTION_MESSAGE_PART;
-    private static final String POLYGON_INVALID_PARTS_ERROR_MESSAGE = "Invalid parts value(s) in polygon " +
-            IMAGE_ATTRIBUTION_MESSAGE_PART;
-    private static final String BOX_MISSING_CATEGORY_ERROR_MESSAGE = "Missing category field in bounding box " +
-            IMAGE_ATTRIBUTION_MESSAGE_PART;
-    private static final String BOX_INVALID_TAGS_ERROR_MESSAGE = "Invalid tags value(s) in bounding box " +
-            IMAGE_ATTRIBUTION_MESSAGE_PART;
-    private static final String BOX_INVALID_PARTS_ERROR_MESSAGE = "Invalid parts value(s) in bounding box " +
-            IMAGE_ATTRIBUTION_MESSAGE_PART;
-    private static final String MISSING_IMAGE_FILE_NAME_ERROR_MESSAGE =
-            "Missing image fileName " + IMAGE_ATTRIBUTION_MESSAGE_PART;
-    private static final String MISSING_IMAGES_FIELD_ERROR_MESSAGE = "Missing images element in annotation.";
+    private static final String IMAGE_ATTRIBUTION_MESSAGE_PART = " element in annotation for image ";
+    private static final String MISSING_CATEGORY_ERROR_MESSAGE = "Missing category element in ";
+    private static final String INVALID_COORDINATES_ERROR_MESSAGE = "Invalid coordinate value(s) in ";
+    private static final String INVALID_COORDINATE_NUMBER_ERROR_MESSAGE = "Invalid number of coordinates in ";
+    private static final String INVALID_TAGS_ERROR_MESSAGE = "Invalid tags value(s) in ";
+    private static final String INVALID_PARTS_ERROR_MESSAGE = "Invalid parts value(s) in ";
+    private static final String MISSING_IMAGE_FILE_NAME_ERROR_MESSAGE = "Missing image fileName element.";
+    private static final String MISSING_IMAGES_FIELD_ERROR_MESSAGE = "Missing images element.";
     private static final String MISSING_OBJECTS_FIELD_ERROR_MESSAGE =
-            "Missing objects " + IMAGE_ATTRIBUTION_MESSAGE_PART;
+            "Missing objects" + IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String MISSING_CATEGORY_NAME_ERROR_MESSAGE =
-            "Missing category name " + IMAGE_ATTRIBUTION_MESSAGE_PART;
+            "Missing category name" + IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String MISSING_BOUNDING_SHAPE_ERROR_MESSAGE =
-            "Missing bndbox or polygon " + IMAGE_ATTRIBUTION_MESSAGE_PART;
+            "Missing bndbox or polygon" + IMAGE_ATTRIBUTION_MESSAGE_PART;
+    private static final String INVALID_COLOR_ERROR_MESSAGE = "Invalid color";
 
     @Override
     public IOResult load(Model model, Path path, DoubleProperty progress) throws IOException {
@@ -77,8 +66,12 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
         final AtomicReference<String> currentFilename = new AtomicReference<>();
         final String annotationFileName = path.getFileName().toString();
 
-        Gson gson = new GsonBuilder()
+        final java.lang.reflect.Type imageAnnotationListType =
+                new TypeToken<List<ImageAnnotation>>() {}.getType();
+
+        final Gson gson = new GsonBuilder()
                 .serializeNulls()
+                .registerTypeAdapter(imageAnnotationListType, new ImageAnnotationDataListDeserializer(progress))
                 .registerTypeAdapter(ImageAnnotation.class,
                                      new ImageAnnotationDeserializer(errorInfoEntries, annotationFileName))
                 .registerTypeAdapter(ImageMetaData.class,
@@ -91,23 +84,23 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                                                                                                 annotationFileName))
                 .registerTypeAdapter(BoundingBoxData.class, new BoundingBoxDataDeserializer(errorInfoEntries,
                                                                                             currentFilename,
-                                                                                            annotationFileName))
+                                                                                            annotationFileName,
+                                                                                            nameToObjectCategoryMap,
+                                                                                            boundingShapeCountPerCategory))
                 .registerTypeAdapter(BoundingPolygonData.class, new BoundingPolygonDataDeserializer(errorInfoEntries,
                                                                                                     currentFilename,
-                                                                                                    annotationFileName))
+                                                                                                    annotationFileName,
+                                                                                                    nameToObjectCategoryMap,
+                                                                                                    boundingShapeCountPerCategory))
                 .registerTypeAdapter(ObjectCategory.class,
                                      new ObjectCategoryDeserializer(errorInfoEntries, currentFilename,
-                                                                    nameToObjectCategoryMap,
-                                                                    boundingShapeCountPerCategory, annotationFileName))
+                                                                    annotationFileName))
                 .registerTypeHierarchyAdapter(Bounds.class, new BoundsDeserializer(errorInfoEntries, currentFilename,
                                                                                    annotationFileName))
                 .create();
 
-        try(BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
-            final java.lang.reflect.Type imageAnnotationsType =
-                    new TypeToken<ArrayList<ImageAnnotation>>() {}.getType();
-            final List<ImageAnnotation> imageAnnotations = gson.fromJson(reader, imageAnnotationsType);
-            imageAnnotations.removeIf(Objects::isNull);
+        try(final BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            final List<ImageAnnotation> imageAnnotations = gson.fromJson(reader, imageAnnotationListType);
 
             if(!imageAnnotations.isEmpty()) {
                 model.getObjectCategories().setAll(nameToObjectCategoryMap.values());
@@ -123,9 +116,25 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
         }
     }
 
-    private static List<String> parseBoundingShapeTags(JsonElement json, JsonDeserializationContext context) {
+    private static List<String> parseBoundingShapeTags(JsonDeserializationContext context, JsonObject jsonObject,
+                                                       List<IOResult.ErrorInfoEntry> unparsedFileErrorMessages,
+                                                       String elementName,
+                                                       String annotationFileName,
+                                                       String currentFileName) {
         final java.lang.reflect.Type tagsType = new TypeToken<List<String>>() {}.getType();
-        List<String> tags = context.deserialize(json.getAsJsonObject().get(TAGS_SERIALIZED_NAME), tagsType);
+
+        List<String> tags;
+
+        try {
+            tags = context.deserialize(jsonObject.get(TAGS_SERIALIZED_NAME), tagsType);
+        } catch(JsonParseException e) {
+            unparsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
+                                                                      INVALID_TAGS_ERROR_MESSAGE +
+                                                                              elementName +
+                                                                              IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                                                              currentFileName + "."));
+            return null;
+        }
 
         if(tags == null) {
             tags = new ArrayList<>();
@@ -136,11 +145,25 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
         return tags;
     }
 
-    private static List<BoundingShapeData> parseBoundingShapeDataParts(JsonElement json,
-                                                                       JsonDeserializationContext context) {
+    private static List<BoundingShapeData> parseBoundingShapeDataParts(JsonDeserializationContext context,
+                                                                       JsonObject jsonObject,
+                                                                       List<IOResult.ErrorInfoEntry> unparsedFileErrorMessages,
+                                                                       String elementName, String annotationFileName,
+                                                                       String currentFileName) {
         final java.lang.reflect.Type partsType = new TypeToken<List<BoundingShapeData>>() {}.getType();
-        List<BoundingShapeData> parts =
-                context.deserialize(json.getAsJsonObject().get(PARTS_SERIALIZED_NAME), partsType);
+
+        List<BoundingShapeData> parts;
+
+        try {
+            parts = context.deserialize(jsonObject.get(PARTS_SERIALIZED_NAME), partsType);
+        } catch(JsonParseException e) {
+            unparsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
+                                                                      INVALID_PARTS_ERROR_MESSAGE +
+                                                                              elementName +
+                                                                              IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                                                              currentFileName + "."));
+            return null;
+        }
 
         if(parts == null) {
             parts = Collections.emptyList();
@@ -157,6 +180,25 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
     private static boolean isValidRelativeCoordinate(double value) {
         return 0 <= value && value <= 1;
+    }
+
+    private static ObjectCategory parseObjectCategory(JsonDeserializationContext context,
+                                                      JsonObject jsonObject,
+                                                      List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages,
+                                                      String elementName,
+                                                      String annotationFileName,
+                                                      String currentFileName) {
+        if(!jsonObject.has(OBJECT_CATEGORY_SERIALIZED_NAME)) {
+            unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
+                                                                      MISSING_CATEGORY_ERROR_MESSAGE +
+                                                                              elementName +
+                                                                              IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                                                              currentFileName + "."));
+            return null;
+        }
+
+        return context.deserialize(jsonObject.get(OBJECT_CATEGORY_SERIALIZED_NAME),
+                                   ObjectCategory.class);
     }
 
     private static class BoundingShapeDataDeserializer implements JsonDeserializer<BoundingShapeData> {
@@ -197,19 +239,13 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
     private static class ObjectCategoryDeserializer implements JsonDeserializer<ObjectCategory> {
         private final List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages;
         private final AtomicReference<String> currentFilename;
-        private final Map<String, ObjectCategory> nameToObjectCategoryMap;
-        private final Map<String, Integer> boundingShapeCountPerCategory;
         private final String annotationFileName;
 
         public ObjectCategoryDeserializer(List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages,
                                           AtomicReference<String> currentFilename,
-                                          Map<String, ObjectCategory> nameToObjectCategoryMap,
-                                          Map<String, Integer> boundingShapeCountPerCategory,
                                           String annotationFileName) {
             this.unParsedFileErrorMessages = unParsedFileErrorMessages;
             this.currentFilename = currentFilename;
-            this.nameToObjectCategoryMap = nameToObjectCategoryMap;
-            this.boundingShapeCountPerCategory = boundingShapeCountPerCategory;
             this.annotationFileName = annotationFileName;
         }
 
@@ -231,18 +267,19 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
             Color categoryColor;
 
             if(jsonObject.has(OBJECT_COLOR_SERIALIZED_NAME)) {
-                categoryColor = Color.web(jsonObject.get(OBJECT_COLOR_SERIALIZED_NAME).getAsString());
+                try {
+                    categoryColor = Color.web(jsonObject.get(OBJECT_COLOR_SERIALIZED_NAME).getAsString());
+                } catch(IllegalArgumentException | ClassCastException e) {
+                    unParsedFileErrorMessages
+                            .add(new IOResult.ErrorInfoEntry(annotationFileName, INVALID_COLOR_ERROR_MESSAGE +
+                                    IMAGE_ATTRIBUTION_MESSAGE_PART + currentFilename.get() + "."));
+                    return null;
+                }
             } else {
                 categoryColor = ColorUtils.createRandomColor();
             }
 
-            final ObjectCategory category = nameToObjectCategoryMap.computeIfAbsent(categoryName,
-                                                                                    key -> new ObjectCategory(key,
-                                                                                                              categoryColor));
-
-            boundingShapeCountPerCategory.merge(category.getName(), 1, Integer::sum);
-
-            return category;
+            return new ObjectCategory(categoryName, categoryColor);
         }
     }
 
@@ -293,7 +330,8 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
             if(!jsonObject.has(name)) {
                 unParsedFileErrorMessages
                         .add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                         "Missing " + name + " " + IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                                         "Missing " + name + " element in bndbox" +
+                                                                 IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                  currentFilename.get() + "."));
                 return null;
             }
@@ -305,7 +343,8 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
             } catch(ClassCastException | NumberFormatException e) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
                                                                           "Invalid coordinate value for " + name +
-                                                                                  " " + IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                                                                  " element in bndbox" +
+                                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                                   currentFilename.get() + "."));
                 return null;
             }
@@ -313,7 +352,8 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
             if(!isValidRelativeCoordinate(value)) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
                                                                           "Invalid coordinate value for " + name +
-                                                                                  " " + IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                                                                  " element in bndbox" +
+                                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                                   currentFilename.get() + "."));
                 return null;
             }
@@ -347,8 +387,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
             if(!jsonObject.has(IMAGE_FILE_NAME_SERIALIZED_NAME)) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          MISSING_IMAGE_FILE_NAME_ERROR_MESSAGE +
-                                                                                  currentFileName.get() + "."));
+                                                                          MISSING_IMAGE_FILE_NAME_ERROR_MESSAGE));
                 return null;
             }
 
@@ -423,12 +462,18 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
         private final List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages;
         private final AtomicReference<String> currentFileName;
         private final String annotationFileName;
+        private final Map<String, ObjectCategory> nameToObjectCategoryMap;
+        private final Map<String, Integer> boundingShapeCountPerCategory;
 
         public BoundingBoxDataDeserializer(List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages,
-                                           AtomicReference<String> currentFileName, String annotationFileName) {
+                                           AtomicReference<String> currentFileName, String annotationFileName,
+                                           Map<String, ObjectCategory> nameToObjectCategoryMap,
+                                           Map<String, Integer> boundingShapeCountPerCategory) {
             this.unParsedFileErrorMessages = unParsedFileErrorMessages;
             this.currentFileName = currentFileName;
             this.annotationFileName = annotationFileName;
+            this.nameToObjectCategoryMap = nameToObjectCategoryMap;
+            this.boundingShapeCountPerCategory = boundingShapeCountPerCategory;
         }
 
         @Override
@@ -436,18 +481,12 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                                            JsonDeserializationContext context) {
             final JsonObject jsonObject = json.getAsJsonObject();
 
-            if(!jsonObject.has(OBJECT_CATEGORY_SERIALIZED_NAME)) {
-                unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          BOX_MISSING_CATEGORY_ERROR_MESSAGE +
-                                                                                  currentFileName.get() + "."));
-                return null;
-            }
+            final ObjectCategory parsedObjectCategory =
+                    parseObjectCategory(context, jsonObject, unParsedFileErrorMessages,
+                                        BOUNDING_BOX_SERIALIZED_NAME, annotationFileName,
+                                        currentFileName.get());
 
-            final ObjectCategory objectCategory =
-                    context.deserialize(json.getAsJsonObject().get(OBJECT_CATEGORY_SERIALIZED_NAME),
-                                        ObjectCategory.class);
-
-            if(objectCategory == null) {
+            if(parsedObjectCategory == null) {
                 return null;
             }
 
@@ -458,46 +497,55 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                 return null;
             }
 
-            List<String> tags;
+            final List<String> tags = parseBoundingShapeTags(context, jsonObject, unParsedFileErrorMessages,
+                                                             BOUNDING_BOX_SERIALIZED_NAME, annotationFileName,
+                                                             currentFileName.get());
 
-            try {
-                tags = parseBoundingShapeTags(json, context);
-            } catch(JsonParseException e) {
-                unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          BOX_INVALID_TAGS_ERROR_MESSAGE +
-                                                                                  currentFileName.get() + "."));
+            if(tags == null) {
                 return null;
             }
 
-            List<BoundingShapeData> parts;
+            final List<BoundingShapeData> parts = parseBoundingShapeDataParts(context, jsonObject,
+                                                                              unParsedFileErrorMessages,
+                                                                              BOUNDING_BOX_SERIALIZED_NAME,
+                                                                              annotationFileName,
+                                                                              currentFileName.get());
 
-            try {
-                parts = parseBoundingShapeDataParts(json, context);
-            } catch(JsonParseException e) {
-                unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          BOX_INVALID_PARTS_ERROR_MESSAGE +
-                                                                                  currentFileName.get() + "."));
+            if(parts == null) {
                 return null;
             }
+
+            final ObjectCategory objectCategory =
+                    nameToObjectCategoryMap.computeIfAbsent(parsedObjectCategory.getName(),
+                                                            key -> parsedObjectCategory);
+
+            boundingShapeCountPerCategory.merge(objectCategory.getName(), 1, Integer::sum);
 
             final BoundingBoxData boundingBoxData = new BoundingBoxData(objectCategory, bounds, tags);
             boundingBoxData.setParts(parts);
 
             return boundingBoxData;
         }
+
     }
 
     private static class BoundingPolygonDataDeserializer implements JsonDeserializer<BoundingPolygonData> {
         private final List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages;
         private final AtomicReference<String> currentFilename;
         private final String annotationFileName;
+        private final Map<String, ObjectCategory> nameToObjectCategoryMap;
+        private final Map<String, Integer> boundingShapeCountPerCategory;
 
         public BoundingPolygonDataDeserializer(List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages,
                                                AtomicReference<String> currentFilename,
-                                               String annotationFileName) {
+                                               String annotationFileName,
+                                               Map<String, ObjectCategory> nameToObjectCategoryMap,
+                                               Map<String, Integer> boundingShapeCountPerCategory) {
             this.unParsedFileErrorMessages = unParsedFileErrorMessages;
             this.currentFilename = currentFilename;
             this.annotationFileName = annotationFileName;
+            this.nameToObjectCategoryMap = nameToObjectCategoryMap;
+            this.boundingShapeCountPerCategory = boundingShapeCountPerCategory;
         }
 
         @Override
@@ -505,18 +553,14 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                                                JsonDeserializationContext context) {
             final JsonObject jsonObject = json.getAsJsonObject();
 
-            if(!jsonObject.has(OBJECT_CATEGORY_SERIALIZED_NAME)) {
-                unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          POLYGON_MISSING_CATEGORY_ERROR_MESSAGE +
-                                                                                  currentFilename.get() + "."));
-                return null;
-            }
+            final ObjectCategory parsedObjectCategory = parseObjectCategory(context, jsonObject,
+                                                                            unParsedFileErrorMessages,
+                                                                            BOUNDING_POLYGON_SERIALIZED_NAME,
+                                                                            annotationFileName, currentFilename.get());
+            context.deserialize(json.getAsJsonObject().get(OBJECT_CATEGORY_SERIALIZED_NAME),
+                                ObjectCategory.class);
 
-            final ObjectCategory objectCategory =
-                    context.deserialize(json.getAsJsonObject().get(OBJECT_CATEGORY_SERIALIZED_NAME),
-                                        ObjectCategory.class);
-
-            if(objectCategory == null) {
+            if(parsedObjectCategory == null) {
                 return null;
             }
 
@@ -528,50 +572,92 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                 points = context.deserialize(json.getAsJsonObject().get(BOUNDING_POLYGON_SERIALIZED_NAME), pointsType);
             } catch(JsonParseException | NumberFormatException e) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          POLYGON_INVALID_COORDINATES_ERROR_MESSAGE +
+                                                                          INVALID_COORDINATES_ERROR_MESSAGE +
+                                                                                  BOUNDING_POLYGON_SERIALIZED_NAME +
+                                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                                   currentFilename.get() + "."));
                 return null;
             }
 
             if(points == null || points.isEmpty() || points.size() % 2 != 0) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          POLYGON_INVALID_COORDINATE_NUMBER_ERROR_MESSAGE +
+                                                                          INVALID_COORDINATE_NUMBER_ERROR_MESSAGE +
+                                                                                  BOUNDING_POLYGON_SERIALIZED_NAME +
+                                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                                   currentFilename.get() + "."));
                 return null;
             }
 
             if(!points.stream().allMatch(JSONLoadStrategy::isValidRelativeCoordinate)) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          POLYGON_INVALID_COORDINATES_ERROR_MESSAGE +
+                                                                          INVALID_COORDINATES_ERROR_MESSAGE +
+                                                                                  BOUNDING_POLYGON_SERIALIZED_NAME +
+                                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                                   currentFilename.get() + "."));
                 return null;
             }
 
-            final List<String> tags;
-            try {
-                tags = parseBoundingShapeTags(json, context);
-            } catch(JsonParseException e) {
-                unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          POLYGON_INVALID_TAGS_ERROR_MESSAGE +
-                                                                                  currentFilename.get() + "."));
+            final List<String> tags = parseBoundingShapeTags(context, jsonObject, unParsedFileErrorMessages,
+                                                             BOUNDING_POLYGON_SERIALIZED_NAME, annotationFileName,
+                                                             currentFilename.get());
+
+            if(tags == null) {
                 return null;
             }
 
-            List<BoundingShapeData> parts;
+            final List<BoundingShapeData> parts = parseBoundingShapeDataParts(context, jsonObject,
+                                                                              unParsedFileErrorMessages,
+                                                                              BOUNDING_POLYGON_SERIALIZED_NAME,
+                                                                              annotationFileName,
+                                                                              currentFilename.get());
 
-            try {
-                parts = parseBoundingShapeDataParts(json, context);
-            } catch(JsonParseException e) {
-                unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                                          POLYGON_INVALID_PARTS_ERROR_MESSAGE +
-                                                                                  currentFilename.get() + "."));
+            if(parts == null) {
                 return null;
             }
+
+            final ObjectCategory objectCategory =
+                    nameToObjectCategoryMap.computeIfAbsent(parsedObjectCategory.getName(),
+                                                            key -> parsedObjectCategory);
+
+            boundingShapeCountPerCategory.merge(objectCategory.getName(), 1, Integer::sum);
 
             final BoundingPolygonData boundingPolygonData = new BoundingPolygonData(objectCategory, points, tags);
             boundingPolygonData.setParts(parts);
 
             return boundingPolygonData;
+        }
+    }
+
+    private static class ImageAnnotationDataListDeserializer implements JsonDeserializer<List<ImageAnnotation>> {
+        final DoubleProperty progress;
+
+        public ImageAnnotationDataListDeserializer(DoubleProperty progress) {
+            this.progress = progress;
+        }
+
+        @Override
+        public List<ImageAnnotation> deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
+                                                 JsonDeserializationContext context) {
+            final JsonArray jsonArray = json.getAsJsonArray();
+
+            int totalNrAnnotations = jsonArray.size();
+            int nrProcessedAnnotations = 0;
+            progress.set(nrProcessedAnnotations);
+
+            final List<ImageAnnotation> imageAnnotationList = new ArrayList<>();
+
+            for(final JsonElement annotationElement : jsonArray) {
+                final ImageAnnotation annotation = context.deserialize(annotationElement,
+                                                                       ImageAnnotation.class);
+
+                if(annotation != null) {
+                    imageAnnotationList.add(annotation);
+                }
+
+                progress.set(1.0 * ++nrProcessedAnnotations / totalNrAnnotations);
+            }
+
+            return imageAnnotationList;
         }
     }
 }

@@ -56,14 +56,14 @@ public class BoundingBoxEditorTestBase {
 
         // Underscores in menu-item text are treated as mnemonics, as a convenience they are removed before checking for equality.
         Menu menu = menuBar.getMenus().stream()
-                .filter(item -> item.getText() != null && item.getText().replace("_", "").equals(menuText))
-                .findFirst()
-                .orElseThrow();
+                           .filter(item -> item.getText() != null && item.getText().replace("_", "").equals(menuText))
+                           .findFirst()
+                           .orElseThrow();
 
         return menu.getItems().stream()
-                .filter(item -> item.getText() != null && item.getText().replace("_", "").equals(subMenuText))
-                .findFirst()
-                .orElseThrow();
+                   .filter(item -> item.getText() != null && item.getText().replace("_", "").equals(subMenuText))
+                   .findFirst()
+                   .orElseThrow();
     }
 
     // Source: https://stackoverflow.com/a/48654878
@@ -71,25 +71,27 @@ public class BoundingBoxEditorTestBase {
         // Get a list of windows but ordered from top[0] to bottom[n] ones.
         // It is needed to get the first found modal window.
         return (Stage) robot.listWindows()
-                .stream()
-                .filter(window -> window instanceof Stage)
-                .filter(window -> ((Stage) window).getModality() == Modality.APPLICATION_MODAL)
-                .filter(stage -> ((Stage) stage).getTitle().equals(title))
-                .findFirst()
-                .orElse(null);
+                            .stream()
+                            .filter(window -> window instanceof Stage)
+                            .filter(window -> ((Stage) window).getModality() == Modality.APPLICATION_MODAL)
+                            .filter(stage -> ((Stage) stage).getTitle().equals(title))
+                            .findFirst()
+                            .orElse(null);
     }
 
     protected static Matcher<Double[]> doubleListCloseTo(Double[] list) {
         List<Matcher<? super Double>> matchers = new ArrayList<>();
-        for(double d : list)
+        for(double d : list) {
             matchers.add(Matchers.closeTo(d, MathUtils.DOUBLE_EQUAL_THRESHOLD));
+        }
         return Matchers.arrayContaining(matchers);
     }
 
     protected static Matcher<Double[]> ratioListCloseTo(Double[] list) {
         List<Matcher<? super Double>> matchers = new ArrayList<>();
-        for(double d : list)
+        for(double d : list) {
             matchers.add(Matchers.closeTo(d, RATIO_EQUAL_THRESHOLD));
+        }
         return Matchers.arrayContaining(matchers);
     }
 
@@ -98,9 +100,9 @@ public class BoundingBoxEditorTestBase {
         Point2D endPoint = getScreenPointFromImageViewRatios(endPointRatios);
 
         robot.moveTo(startPoint)
-                .press(MouseButton.PRIMARY)
-                .moveTo(endPoint)
-                .release(MouseButton.PRIMARY);
+             .press(MouseButton.PRIMARY)
+             .moveTo(endPoint)
+             .release(MouseButton.PRIMARY);
     }
 
     protected void moveAndClickRelativeToImageView(FxRobot robot, MouseButton mousebutton, Point2D... points) {
@@ -126,15 +128,17 @@ public class BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> mainView.isWorkspaceVisible()),
-                "WorkspaceSplitPane not visible within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      () -> mainView.isWorkspaceVisible()),
+                                      "WorkspaceSplitPane not visible within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, () -> mainView.getCurrentImage() != null),
-                "Image not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils
+                                              .waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, () -> mainView.getCurrentImage() != null),
+                                      "Image not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                mainView.getCurrentImage().progressProperty().isEqualTo(1)),
-                "Image not fully loaded within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      mainView.getCurrentImage().progressProperty()
+                                                                              .isEqualTo(1)),
+                                      "Image not fully loaded within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         WaitForAsyncUtils.waitForFxEvents();
     }
@@ -187,15 +191,18 @@ public class BoundingBoxEditorTestBase {
 
     protected void timeOutLookUpInStage(FxRobot robot, Stage stage, String id) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> robot.targetWindow(stage).lookup(id).tryQuery().isPresent()),
-                "Element with id = " + id + " was not found in scene " +
-                        stage.getTitle() + " within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      () -> robot.targetWindow(stage).lookup(id)
+                                                                                 .tryQuery().isPresent()),
+                                      "Element with id = " + id + " was not found in scene " +
+                                              stage.getTitle() + " within " + TIMEOUT_DURATION_IN_SEC + " sec.");
     }
 
     protected void timeOutLookUpFrom(FxRobot robot, Node node, String id) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> robot.from(node).lookup(id).tryQuery().isPresent()),
-                "Element with id = " + id + " was not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      () -> robot.from(node).lookup(id).tryQuery()
+                                                                                 .isPresent()),
+                                      "Element with id = " + id + " was not found within " + TIMEOUT_DURATION_IN_SEC +
+                                              " sec.");
     }
 
     protected void timeOutClickOnFrom(FxRobot robot, Node node, String id) {
@@ -210,14 +217,17 @@ public class BoundingBoxEditorTestBase {
 
     protected void timeOutLookUp(FxRobot robot, String id) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> robot.lookup(id).tryQuery().isPresent()),
-                "Element with id = " + id + " was not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      () -> robot.lookup(id).tryQuery().isPresent()),
+                                      "Element with id = " + id + " was not found within " + TIMEOUT_DURATION_IN_SEC +
+                                              " sec.");
     }
 
     protected void timeOutLookUpNth(FxRobot robot, String id, int n) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> robot.lookup(id).nth(n).tryQuery().isPresent()),
-                "Element with id = " + id + " and index " + n + " was not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      () -> robot.lookup(id).nth(n).tryQuery()
+                                                                                 .isPresent()),
+                                      "Element with id = " + id + " and index " + n + " was not found within " +
+                                              TIMEOUT_DURATION_IN_SEC + " sec.");
     }
 
     protected void timeOutClickOn(FxRobot robot, String id) {
@@ -237,8 +247,10 @@ public class BoundingBoxEditorTestBase {
 
     protected <T extends Node> void timeOutLookupAs(FxRobot robot, String id, Class<T> clazz) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> robot.lookup(id).tryQueryAs(clazz).isPresent()),
-                "Element with id = " + id + " and class " + clazz + " was not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      () -> robot.lookup(id).tryQueryAs(clazz)
+                                                                                 .isPresent()),
+                                      "Element with id = " + id + " and class " + clazz + " was not found within " +
+                                              TIMEOUT_DURATION_IN_SEC + " sec.");
     }
 
     protected <T extends Node> T timeOutQueryAs(FxRobot robot, String id, Class<T> clazz) {
@@ -247,12 +259,13 @@ public class BoundingBoxEditorTestBase {
     }
 
     protected void loadImageFolderAndClickDialogOption(FxRobot robot, String imageFolderPath, String optionText) {
-        Platform.runLater(() -> controller.initiateImageFolderLoading(new File(getClass().getResource(imageFolderPath).getFile())));
+        Platform.runLater(() -> controller
+                .initiateImageFolderLoading(new File(getClass().getResource(imageFolderPath).getFile())));
         WaitForAsyncUtils.waitForFxEvents();
 
         Stage saveAnnotationsDialogStage = timeOutAssertDialogOpenedAndGetStage(robot, "Open image folder",
-                "Opening a new image folder will remove any existing annotation data. " +
-                        "Do you want to save the currently existing annotation data?");
+                                                                                "Opening a new image folder will remove any existing annotation data. " +
+                                                                                        "Do you want to save the currently existing annotation data?");
 
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialogStage, optionText);
         WaitForAsyncUtils.waitForFxEvents();
@@ -261,20 +274,23 @@ public class BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
-    protected void loadImageFolderAndClickKeepCategoriesAndSaveAnnotationOptions(FxRobot robot, String imageFolderPath, String keepCategoriesOption,
+    protected void loadImageFolderAndClickKeepCategoriesAndSaveAnnotationOptions(FxRobot robot, String imageFolderPath,
+                                                                                 String keepCategoriesOption,
                                                                                  String saveAnnotationsOption) {
-        Platform.runLater(() -> controller.initiateImageFolderLoading(new File(getClass().getResource(imageFolderPath).getFile())));
+        Platform.runLater(() -> controller
+                .initiateImageFolderLoading(new File(getClass().getResource(imageFolderPath).getFile())));
         WaitForAsyncUtils.waitForFxEvents();
 
         Stage keepExistingCategoriesDialogStage = timeOutAssertDialogOpenedAndGetStage(robot,
-                "Open image folder", "Keep existing categories?");
+                                                                                       "Open image folder",
+                                                                                       "Keep existing categories?");
 
         timeOutLookUpInStageAndClickOn(robot, keepExistingCategoriesDialogStage, keepCategoriesOption);
         WaitForAsyncUtils.waitForFxEvents();
 
         Stage saveAnnotationsDialogStage = timeOutAssertDialogOpenedAndGetStage(robot, "Open image folder",
-                "Opening a new image folder will remove any existing annotation data. " +
-                        "Do you want to save the currently existing annotation data?");
+                                                                                "Opening a new image folder will remove any existing annotation data. " +
+                                                                                        "Do you want to save the currently existing annotation data?");
 
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialogStage, saveAnnotationsOption);
         WaitForAsyncUtils.waitForFxEvents();
@@ -285,13 +301,20 @@ public class BoundingBoxEditorTestBase {
 
     protected Stage timeOutAssertDialogOpenedAndGetStage(FxRobot robot, String title, String content) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                () -> {
-                    Stage topModalStage = getTopModalStage(robot, title);
-                    return topModalStage != null && topModalStage.getScene().getRoot() instanceof DialogPane &&
-                            Objects.equals(((DialogPane) topModalStage.getScene().getRoot()).getContentText(), content);
-                }),
-                "Expected info dialog with title \"" + title + "\" and content \"" +
-                        content + "\" did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                                                      () -> {
+                                                                          Stage topModalStage =
+                                                                                  getTopModalStage(robot, title);
+                                                                          return topModalStage != null &&
+                                                                                  topModalStage.getScene()
+                                                                                               .getRoot() instanceof DialogPane &&
+                                                                                  Objects.equals(
+                                                                                          ((DialogPane) topModalStage
+                                                                                                  .getScene().getRoot())
+                                                                                                  .getContentText(),
+                                                                                          content);
+                                                                      }),
+                                      "Expected info dialog with title \"" + title + "\" and content \"" +
+                                              content + "\" did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         return getTopModalStage(robot, title);
     }
@@ -299,6 +322,6 @@ public class BoundingBoxEditorTestBase {
     private Scene createSceneFromParent(final Parent parent) {
         final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         return new Scene(parent, INITIAL_WINDOW_SCALE * screenBounds.getWidth(),
-                INITIAL_WINDOW_SCALE * screenBounds.getHeight());
+                         INITIAL_WINDOW_SCALE * screenBounds.getHeight());
     }
 }

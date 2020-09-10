@@ -220,12 +220,12 @@ public class MainView extends BorderPane implements View {
             if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
                 MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
                                           "There were errors while loading annotations.",
-                                          "The folder does not contain any valid annotation files.", errorTable);
+                                          "The source does not contain any valid annotations.", errorTable);
             } else {
                 MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
                                           "There were errors while loading annotations.",
                                           "Some bounding boxes could not be loaded from " + numErrorEntries +
-                                                  " image-annotation file"
+                                                  " image-annotation"
                                                   + (numErrorEntries > 1 ? "s" : "") + ".", errorTable);
             }
 
