@@ -37,28 +37,32 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final String BOUNDING_POLYGON_SERIALIZED_NAME = "polygon";
     private static final String TAGS_SERIALIZED_NAME = "tags";
     private static final String PARTS_SERIALIZED_NAME = "parts";
+    private static final String IMAGE_ATTRIBUTION_MESSAGE_PART = "element for image ";
     private static final String POLYGON_MISSING_CATEGORY_ERROR_MESSAGE =
-            "Missing category field in bounding polygon element for image ";
+            "Missing category field in bounding polygon " + IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String POLYGON_INVALID_COORDINATES_ERROR_MESSAGE = "Invalid coordinate value(s) in polygon " +
-            "field for image ";
+            IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String POLYGON_INVALID_COORDINATE_NUMBER_ERROR_MESSAGE =
-            "Invalid number of coordinates in polygon " +
-                    "field for image ";
-    private static final String POLYGON_INVALID_TAGS_ERROR_MESSAGE = "Invalid tags value(s) in polygon element " +
-            "for image ";
-    private static final String POLYGON_INVALID_PARTS_ERROR_MESSAGE = "Invalid parts value(s) in polygon element " +
-            "for image ";
+            "Invalid number of coordinates in polygon " + IMAGE_ATTRIBUTION_MESSAGE_PART;
+    private static final String POLYGON_INVALID_TAGS_ERROR_MESSAGE = "Invalid tags value(s) in polygon " +
+            IMAGE_ATTRIBUTION_MESSAGE_PART;
+    private static final String POLYGON_INVALID_PARTS_ERROR_MESSAGE = "Invalid parts value(s) in polygon " +
+            IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String BOX_MISSING_CATEGORY_ERROR_MESSAGE = "Missing category field in bounding box " +
-            "element for image ";
+            IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String BOX_INVALID_TAGS_ERROR_MESSAGE = "Invalid tags value(s) in bounding box " +
-            "element for image ";
+            IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String BOX_INVALID_PARTS_ERROR_MESSAGE = "Invalid parts value(s) in bounding box " +
-            "element for image ";
-    private static final String MISSING_IMAGE_FILE_NAME_ERROR_MESSAGE = "Missing image fileName field for image ";
-    private static final String MISSING_IMAGES_FIELD_ERROR_MESSAGE = "Missing images field in annotation.";
-    private static final String MISSING_OBJECTS_FIELD_ERROR_MESSAGE = "Missing objects field for annotation of image ";
-    private static final String MISSING_CATEGORY_NAME_ERROR_MESSAGE = "Missing category name for image ";
-    private static final String MISSING_BOUNDING_SHAPE_ERROR_MESSAGE = "Missing bndbox or polygon field for image ";
+            IMAGE_ATTRIBUTION_MESSAGE_PART;
+    private static final String MISSING_IMAGE_FILE_NAME_ERROR_MESSAGE =
+            "Missing image fileName " + IMAGE_ATTRIBUTION_MESSAGE_PART;
+    private static final String MISSING_IMAGES_FIELD_ERROR_MESSAGE = "Missing images element in annotation.";
+    private static final String MISSING_OBJECTS_FIELD_ERROR_MESSAGE =
+            "Missing objects " + IMAGE_ATTRIBUTION_MESSAGE_PART;
+    private static final String MISSING_CATEGORY_NAME_ERROR_MESSAGE =
+            "Missing category name " + IMAGE_ATTRIBUTION_MESSAGE_PART;
+    private static final String MISSING_BOUNDING_SHAPE_ERROR_MESSAGE =
+            "Missing bndbox or polygon " + IMAGE_ATTRIBUTION_MESSAGE_PART;
 
     @Override
     public IOResult load(Model model, Path path, DoubleProperty progress) throws IOException {
@@ -170,7 +174,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
         @Override
         public BoundingShapeData deserialize(JsonElement json, java.lang.reflect.Type type,
-                                             JsonDeserializationContext context) throws JsonParseException {
+                                             JsonDeserializationContext context) {
             final JsonObject jsonObject = json.getAsJsonObject();
 
             BoundingShapeData boundingShapeData = null;
@@ -211,7 +215,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
         @Override
         public ObjectCategory deserialize(JsonElement json, java.lang.reflect.Type type,
-                                          JsonDeserializationContext context) throws JsonParseException {
+                                          JsonDeserializationContext context) {
             final JsonObject jsonObject = json.getAsJsonObject();
 
             if(!jsonObject.has(OBJECT_CATEGORY_NAME_SERIALIZED_NAME)) {
@@ -255,8 +259,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
         }
 
         @Override
-        public Bounds deserialize(JsonElement json, java.lang.reflect.Type type, JsonDeserializationContext context)
-                throws JsonParseException {
+        public Bounds deserialize(JsonElement json, java.lang.reflect.Type type, JsonDeserializationContext context) {
             final JsonObject jsonObject = json.getAsJsonObject();
 
             final Double minX = parseCoordinateField(jsonObject, BOUNDS_MIN_X_SERIALIZED_NAME);
@@ -290,7 +293,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
             if(!jsonObject.has(name)) {
                 unParsedFileErrorMessages
                         .add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                         "Missing " + name + " field for image " +
+                                                         "Missing " + name + " " + IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                  currentFilename.get() + "."));
                 return null;
             }
@@ -302,7 +305,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
             } catch(ClassCastException | NumberFormatException e) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
                                                                           "Invalid coordinate value for " + name +
-                                                                                  " field for image " +
+                                                                                  " " + IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                                   currentFilename.get() + "."));
                 return null;
             }
@@ -310,7 +313,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
             if(!isValidRelativeCoordinate(value)) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
                                                                           "Invalid coordinate value for " + name +
-                                                                                  " field for image " +
+                                                                                  " " + IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                                   currentFilename.get() + "."));
                 return null;
             }
@@ -339,7 +342,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
         @Override
         public ImageMetaData deserialize(JsonElement json, java.lang.reflect.Type type,
-                                         JsonDeserializationContext context) throws JsonParseException {
+                                         JsonDeserializationContext context) {
             final JsonObject jsonObject = json.getAsJsonObject();
 
             if(!jsonObject.has(IMAGE_FILE_NAME_SERIALIZED_NAME)) {
@@ -377,7 +380,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
         @Override
         public ImageAnnotation deserialize(JsonElement json, java.lang.reflect.Type type,
-                                           JsonDeserializationContext context) throws JsonParseException {
+                                           JsonDeserializationContext context) {
 
             if(!json.getAsJsonObject().has(IMAGE_META_DATA_SERIALIZED_NAME)) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
@@ -430,10 +433,10 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
         @Override
         public BoundingBoxData deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
-                                           JsonDeserializationContext context) throws JsonParseException {
+                                           JsonDeserializationContext context) {
             final JsonObject jsonObject = json.getAsJsonObject();
 
-            if(!jsonObject.has("category")) {
+            if(!jsonObject.has(OBJECT_CATEGORY_SERIALIZED_NAME)) {
                 unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(annotationFileName,
                                                                           BOX_MISSING_CATEGORY_ERROR_MESSAGE +
                                                                                   currentFileName.get() + "."));
@@ -499,7 +502,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
         @Override
         public BoundingPolygonData deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
-                                               JsonDeserializationContext context) throws JsonParseException {
+                                               JsonDeserializationContext context) {
             final JsonObject jsonObject = json.getAsJsonObject();
 
             if(!jsonObject.has(OBJECT_CATEGORY_SERIALIZED_NAME)) {
