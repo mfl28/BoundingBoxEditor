@@ -8,6 +8,7 @@ import javafx.geometry.Bounds;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -72,7 +73,7 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
 
         final List<IOResult.ErrorInfoEntry> errorEntries = new ArrayList<>();
 
-        try(BufferedWriter writer = Files.newBufferedWriter(destination)) {
+        try(BufferedWriter writer = Files.newBufferedWriter(destination, StandardCharsets.UTF_8)) {
             gson.toJson(annotations, writer);
         } catch(IOException e) {
             errorEntries.add(new IOResult.ErrorInfoEntry(destination.getFileName().toString(), e.getMessage()));

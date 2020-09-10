@@ -13,6 +13,7 @@ import javafx.scene.paint.Color;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -98,7 +99,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                                                                                    annotationFileName))
                 .create();
 
-        try(BufferedReader reader = Files.newBufferedReader(path)) {
+        try(BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             final java.lang.reflect.Type imageAnnotationsType =
                     new TypeToken<ArrayList<ImageAnnotation>>() {}.getType();
             final List<ImageAnnotation> imageAnnotations = gson.fromJson(reader, imageAnnotationsType);

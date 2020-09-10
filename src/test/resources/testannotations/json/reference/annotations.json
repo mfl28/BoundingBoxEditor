@@ -45,7 +45,7 @@
         ],
         "category": {
           "name": "Boat",
-          "color": "#1B26D4"
+          "color": "#C31D8F"
         },
         "tags": [],
         "parts": [
@@ -58,7 +58,7 @@
             },
             "category": {
               "name": "Boat",
-              "color": "#1B26D4"
+              "color": "#C31D8F"
             },
             "tags": [
               "pose: right"
@@ -74,7 +74,7 @@
             },
             "category": {
               "name": "Sail",
-              "color": "#29B999"
+              "color": "#E41C1C"
             },
             "tags": [],
             "parts": []
@@ -88,7 +88,7 @@
             },
             "category": {
               "name": "Sail",
-              "color": "#29B999"
+              "color": "#E41C1C"
             },
             "tags": [
               "truncated"
@@ -104,7 +104,7 @@
             },
             "category": {
               "name": "Sail",
-              "color": "#29B999"
+              "color": "#E41C1C"
             },
             "tags": [
               "pose: left"
@@ -120,7 +120,7 @@
             },
             "category": {
               "name": "Sail",
-              "color": "#29B999"
+              "color": "#E41C1C"
             },
             "tags": [
               "pose: left",
@@ -137,7 +137,7 @@
             },
             "category": {
               "name": "Sail",
-              "color": "#29B999"
+              "color": "#E41C1C"
             },
             "tags": [],
             "parts": []
@@ -151,7 +151,7 @@
             },
             "category": {
               "name": "Sail",
-              "color": "#29B999"
+              "color": "#E41C1C"
             },
             "tags": [],
             "parts": []
@@ -165,7 +165,7 @@
             },
             "category": {
               "name": "Flag",
-              "color": "#68F6A9"
+              "color": "#9CFB9A"
             },
             "tags": [
               "difficult"

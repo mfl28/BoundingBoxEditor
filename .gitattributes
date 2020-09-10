@@ -1,0 +1,2 @@
+# Force json test annotation files to always have LF line endings.
+/src/test/resources/testannotations/json/**/*.json text eol=lf
