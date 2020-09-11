@@ -335,12 +335,18 @@ public class BoundingBoxEditorTestBase {
                                               " sec.");
     }
 
-    protected void assertNoTopModalStage(FxRobot robot) {
-        verifyThat(robot.listWindows()
-                        .stream()
-                        .filter(window -> window instanceof Stage)
-                        .map(window -> (Stage) window)
-                        .anyMatch(stage -> stage.getModality() == Modality.APPLICATION_MODAL), Matchers.is(false));
+    protected void timeOutAssertNoTopModelStage(FxRobot robot) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> !isTopModalStagePresent(robot)),
+                                      "Could find top modal stage within " + TIMEOUT_DURATION_IN_SEC + "  sec.");
+    }
+
+    private boolean isTopModalStagePresent(FxRobot robot) {
+        return robot.listWindows()
+                    .stream()
+                    .filter(window -> window instanceof Stage)
+                    .map(window -> (Stage) window)
+                    .anyMatch(stage -> stage.getModality() == Modality.APPLICATION_MODAL);
     }
 
     private Scene createSceneFromParent(final Parent parent) {

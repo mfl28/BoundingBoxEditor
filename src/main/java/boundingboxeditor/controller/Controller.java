@@ -118,12 +118,10 @@ public class Controller {
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
     private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
     private final BooleanProperty navigateNextKeyPressed = new SimpleBooleanProperty(false);
+    private final IoMetaData ioMetaData = new IoMetaData();
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
     Thread directoryWatcher;
-    private File currentImageLoadingDirectory;
-    private File currentAnnotationSavingDirectory;
-    private File currentAnnotationLoadingDirectory;
 
     /**
      * Creates a new controller object that is responsible for handling the application logic and
@@ -146,12 +144,17 @@ public class Controller {
         setUpModelListeners();
     }
 
+    IoMetaData getIoMetaData() {
+        return ioMetaData;
+    }
+
     /**
      * Handles the event of the user requesting to open a new image folder.
      */
     public void onRegisterOpenImageFolderAction() {
         final File imageFolder = MainView.displayDirectoryChooserAndGetChoice(IMAGE_FOLDER_CHOOSER_TITLE, stage,
-                                                                              currentImageLoadingDirectory);
+                                                                              ioMetaData
+                                                                                      .getDefaultImageLoadingDirectory());
 
         if(imageFolder != null) {
             initiateImageFolderLoading(imageFolder);
@@ -166,12 +169,12 @@ public class Controller {
     public void initiateImageFolderLoading(File imageFolder) {
         updateModelFromView();
         loadImageFiles(imageFolder);
-        currentImageLoadingDirectory = imageFolder;
+        ioMetaData.setDefaultImageLoadingDirectory(imageFolder);
     }
 
     public void initiateCurrentFolderReloading() {
         updateModelFromView();
-        forceLoadImageFiles(currentImageLoadingDirectory);
+        forceLoadImageFiles(ioMetaData.getDefaultImageLoadingDirectory());
     }
 
     /**
@@ -216,7 +219,6 @@ public class Controller {
 
         if(destination != null) {
             new AnnotationSaverService(destination, saveFormat).startAndShowProgressDialog();
-            setCurrentAnnotationSavingDirectory(destination);
         }
     }
 
@@ -228,7 +230,6 @@ public class Controller {
 
         if(source != null) {
             initiateAnnotationImport(source, loadFormat);
-            setCurrentAnnotationLoadingDirectory(source);
         }
     }
 
@@ -601,10 +602,7 @@ public class Controller {
             if(destination != null) {
                 // Save annotations.
                 AnnotationSaverService annotationSaverService = new AnnotationSaverService(destination, choice);
-                annotationSaverService.runOnSuccess(() -> {
-                    setCurrentAnnotationSavingDirectory(destination);
-                    runnable.run();
-                });
+                annotationSaverService.runOnSuccess(runnable);
                 annotationSaverService.startAndShowProgressDialog();
             }
         });
@@ -612,17 +610,17 @@ public class Controller {
 
     private void setCurrentAnnotationSavingDirectory(File destination) {
         if(destination.isDirectory()) {
-            currentAnnotationSavingDirectory = destination;
+            ioMetaData.setDefaultAnnotationSavingDirectory(destination);
         } else if(destination.isFile() && destination.getParentFile().isDirectory()) {
-            currentAnnotationSavingDirectory = destination.getParentFile();
+            ioMetaData.setDefaultAnnotationSavingDirectory(destination.getParentFile());
         }
     }
 
     private void setCurrentAnnotationLoadingDirectory(File source) {
         if(source.isDirectory()) {
-            currentAnnotationLoadingDirectory = source;
+            ioMetaData.setDefaultAnnotationLoadingDirectory(source);
         } else if(source.isFile() && source.getParentFile().isDirectory()) {
-            currentAnnotationLoadingDirectory = source.getParentFile();
+            ioMetaData.setDefaultAnnotationLoadingDirectory(source.getParentFile());
         }
     }
 
@@ -642,10 +640,7 @@ public class Controller {
             if(destination != null) {
                 // Save annotations.
                 AnnotationSaverService annotationSaverService = new AnnotationSaverService(destination, choice);
-                annotationSaverService.runOnSuccess(() -> {
-                    setCurrentAnnotationSavingDirectory(destination);
-                    runnable.run();
-                });
+                annotationSaverService.runOnSuccess(runnable);
                 annotationSaverService.startAndShowProgressDialog();
             } else {
                 runnable.run();
@@ -658,7 +653,7 @@ public class Controller {
 
         if(saveFormat.equals(ImageAnnotationSaveStrategy.Type.JSON)) {
             destination = MainView.displayFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
-                                                                  currentAnnotationSavingDirectory,
+                                                                  ioMetaData.getDefaultAnnotationSavingDirectory(),
                                                                   DEFAULT_JSON_EXPORT_FILENAME,
                                                                   new FileChooser.ExtensionFilter("JSON files",
                                                                                                   "*.json",
@@ -667,7 +662,7 @@ public class Controller {
         } else {
             destination =
                     MainView.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
-                                                                 currentAnnotationSavingDirectory);
+                                                                 ioMetaData.getDefaultAnnotationSavingDirectory());
         }
 
         return destination;
@@ -678,14 +673,14 @@ public class Controller {
 
         if(loadFormat.equals(ImageAnnotationLoadStrategy.Type.JSON)) {
             source = MainView.displayFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
-                                                             currentAnnotationLoadingDirectory,
+                                                             ioMetaData.getDefaultAnnotationLoadingDirectory(),
                                                              DEFAULT_JSON_EXPORT_FILENAME,
                                                              new FileChooser.ExtensionFilter("JSON files", "*.json",
                                                                                              "*.JSON"),
                                                              MainView.FileChooserType.OPEN);
         } else {
             source = MainView.displayDirectoryChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
-                                                                  currentAnnotationLoadingDirectory);
+                                                                  ioMetaData.getDefaultAnnotationLoadingDirectory());
         }
 
         return source;
@@ -956,7 +951,7 @@ public class Controller {
             File imageLoadingDirectoryPreference = new File(imageLoadingDirectoryPathPreference);
 
             if(imageLoadingDirectoryPreference.exists() && imageLoadingDirectoryPreference.isDirectory()) {
-                currentImageLoadingDirectory = imageLoadingDirectoryPreference;
+                ioMetaData.setDefaultImageLoadingDirectory(imageLoadingDirectoryPreference);
             }
         }
 
@@ -967,7 +962,7 @@ public class Controller {
             File annotationLoadingDirectoryPreference = new File(annotationLoadingDirectoryPathPreference);
 
             if(annotationLoadingDirectoryPreference.exists() && annotationLoadingDirectoryPreference.isDirectory()) {
-                currentAnnotationLoadingDirectory = annotationLoadingDirectoryPreference;
+                ioMetaData.setDefaultAnnotationLoadingDirectory(annotationLoadingDirectoryPreference);
             }
         }
 
@@ -978,7 +973,7 @@ public class Controller {
             File annotationSavingDirectoryPreference = new File(annotationSavingDirectoryPathPreference);
 
             if(annotationSavingDirectoryPreference.exists() && annotationSavingDirectoryPreference.isDirectory()) {
-                currentAnnotationSavingDirectory = annotationSavingDirectoryPreference;
+                ioMetaData.setDefaultAnnotationSavingDirectory(annotationSavingDirectoryPreference);
             }
         }
     }
@@ -988,18 +983,19 @@ public class Controller {
 
         preferences.putBoolean(IS_WINDOW_MAXIMIZED_PREFERENCE_NAME, stage.isMaximized());
 
-        if(currentImageLoadingDirectory != null) {
-            preferences.put(CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME, currentImageLoadingDirectory.toString());
+        if(ioMetaData.getDefaultImageLoadingDirectory() != null) {
+            preferences.put(CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME,
+                            ioMetaData.getDefaultImageLoadingDirectory().toString());
         }
 
-        if(currentAnnotationLoadingDirectory != null) {
+        if(ioMetaData.getDefaultAnnotationLoadingDirectory() != null) {
             preferences.put(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME,
-                            currentAnnotationLoadingDirectory.toString());
+                            ioMetaData.getDefaultAnnotationLoadingDirectory().toString());
         }
 
-        if(currentAnnotationSavingDirectory != null) {
+        if(ioMetaData.getDefaultAnnotationSavingDirectory() != null) {
             preferences.put(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME,
-                            currentAnnotationSavingDirectory.toString());
+                            ioMetaData.getDefaultAnnotationSavingDirectory().toString());
         }
     }
 
@@ -1140,6 +1136,8 @@ public class Controller {
             } else {
                 model.setSaved(true);
             }
+
+            setCurrentAnnotationSavingDirectory(destination);
         }
 
         private void defaultOnFailedHandler() {
@@ -1214,7 +1212,10 @@ public class Controller {
             } else if(loadResult.getNrSuccessfullyProcessedItems() == 0) {
                 MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE,
                                            ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
+                return;
             }
+
+            setCurrentAnnotationLoadingDirectory(source);
         }
 
         private void defaultOnFailedHandler() {

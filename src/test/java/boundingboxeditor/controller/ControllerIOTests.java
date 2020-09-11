@@ -8,6 +8,7 @@ import boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
 import boundingboxeditor.ui.BoundingBoxView;
 import boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
+import javafx.concurrent.Worker;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.DialogPane;
@@ -68,6 +69,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(model.isSaved(), Matchers.is(true));
+
         // Create temporary folder to save annotations to.
         Path actualDir = Files.createDirectory(tempDirectory.resolve("actual"));
 
@@ -100,6 +102,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                                       "Bounding shape counts did not match within " + TIMEOUT_DURATION_IN_SEC +
                                               " sec.");
 
+        verifyThat(controller.getIoMetaData().getDefaultAnnotationLoadingDirectory(),
+                   Matchers.equalTo(referenceAnnotationFile.getParentFile()));
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
              .press(KeyCode.CONTROL)
@@ -112,10 +116,22 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.isSaved(), Matchers.is(true));
         // Save the annotations to the temporary folder.
-        Platform.runLater(() -> controller.new AnnotationSaverService(actualDir.toFile(),
-                                                                      ImageAnnotationSaveStrategy.Type.PASCAL_VOC)
-                .startAndShowProgressDialog());
+        Controller.AnnotationSaverService annotationSaverService =
+                controller.new AnnotationSaverService(actualDir.toFile(),
+                                                      ImageAnnotationSaveStrategy.Type.PASCAL_VOC);
+
+        Platform.runLater(annotationSaverService::startAndShowProgressDialog);
         WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> WaitForAsyncUtils.asyncFx(
+                                                                              () -> annotationSaverService.getState()
+                                                                                                          .equals(
+                                                                                                                  Worker.State.SUCCEEDED))
+                                                                                             .get()),
+                                      "Annotation " +
+                                              "saving " +
+                                              "service did not succeed within " + TIMEOUT_DURATION_IN_SEC + " sec.");
 
         verifyThat(model.isSaved(), Matchers.is(true));
         Path actualFilePath = actualDir.resolve(expectedFileName);
@@ -125,6 +141,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> Files.exists(actualFilePath)),
                                       "Output-file was not created within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
 
         // The output file should be exactly the same as the reference file.
         final File referenceFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
@@ -137,6 +154,14 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                                                                                           Files.readAllBytes(
                                                                                                   actualFilePath))),
                                       "Expected annotation output-file content was not created within " +
+                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> controller.getIoMetaData()
+                                                                                      .getDefaultAnnotationSavingDirectory()
+                                                                                      .equals(actualDir.toFile())),
+                                      "Expected default annotation saving directory was no set within " +
                                               TIMEOUT_DURATION_IN_SEC + " sec.");
     }
 
@@ -852,12 +877,14 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
-        assertNoTopModalStage(robot);
+        timeOutAssertNoTopModelStage(robot);
 
         verifyThat(model.getCurrentFileIndex(), Matchers.equalTo(0));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));
         verifyThat(model.getImageFileNameToAnnotationMap().size(), Matchers.equalTo(0));
         verifyThat(controller.lastLoadedImageUrl, Matchers.nullValue());
+        verifyThat(controller.getIoMetaData().getDefaultImageLoadingDirectory(),
+                   Matchers.equalTo(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile())));
 
         // Reload bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
@@ -891,7 +918,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialog, "No");
         timeOutAssertTopModalStageClosed(robot, "Save annotations");
-        assertNoTopModalStage(robot);
+        timeOutAssertNoTopModelStage(robot);
 
         // All previously existing bounding boxes should have been removed, only
         // the newly imported ones should exist.
