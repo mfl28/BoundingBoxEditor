@@ -4,11 +4,13 @@ import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingBoxView;
 import boundingboxeditor.ui.BoundingShapeViewable;
+import boundingboxeditor.utils.MathUtils;
 import com.google.gson.annotations.SerializedName;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents the data-component of a bounding-box. Objects of this class are used to
@@ -119,6 +121,34 @@ public class BoundingBoxData extends BoundingShapeData {
     @Override
     public <T> T accept(BoundingShapeDataVisitor<T> visitor) {
         return visitor.visit(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) {
+            return true;
+        }
+        if(!(o instanceof BoundingBoxData)) {
+            return false;
+        }
+        if(!super.equals(o)) {
+            return false;
+        }
+        BoundingBoxData that = (BoundingBoxData) o;
+
+        if(relativeBoundsInImage == that.relativeBoundsInImage) {
+            return true;
+        }
+
+        return MathUtils.doubleAlmostEqual(relativeBoundsInImage.getMinX(), that.relativeBoundsInImage.getMinX()) &&
+                MathUtils.doubleAlmostEqual(relativeBoundsInImage.getMinY(), that.relativeBoundsInImage.getMinY()) &&
+                MathUtils.doubleAlmostEqual(relativeBoundsInImage.getMaxX(), that.relativeBoundsInImage.getMaxX()) &&
+                MathUtils.doubleAlmostEqual(relativeBoundsInImage.getMaxY(), that.relativeBoundsInImage.getMaxY());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), relativeBoundsInImage);
     }
 }
 

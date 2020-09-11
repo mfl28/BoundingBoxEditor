@@ -6,6 +6,7 @@ import boundingboxeditor.ui.BoundingShapeViewable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Base class of data-components of a bounding-shape view objects.
@@ -68,4 +69,26 @@ public abstract class BoundingShapeData {
     }
 
     public abstract <T> T accept(BoundingShapeDataVisitor<T> visitor);
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(category, tags, parts);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) {
+            return true;
+        }
+
+        if(!(o instanceof BoundingShapeData)) {
+            return false;
+        }
+
+        BoundingShapeData that = (BoundingShapeData) o;
+
+        return Objects.equals(category, that.category) &&
+                Objects.equals(tags, that.tags) &&
+                Objects.equals(parts, that.parts);
+    }
 }

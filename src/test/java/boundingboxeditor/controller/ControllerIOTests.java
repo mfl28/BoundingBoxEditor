@@ -58,6 +58,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully loaded 4 image-files from folder "));
+        verifyThat(model.isSaved(), Matchers.is(true));
 
         final File referenceAnnotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
 
@@ -66,6 +67,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
+        verifyThat(model.isSaved(), Matchers.is(true));
         // Create temporary folder to save annotations to.
         Path actualDir = Files.createDirectory(tempDirectory.resolve("actual"));
 
@@ -108,12 +110,14 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully imported annotations from 1 file in"));
 
+        verifyThat(model.isSaved(), Matchers.is(true));
         // Save the annotations to the temporary folder.
         Platform.runLater(() -> controller.new AnnotationSaverService(actualDir.toFile(),
                                                                       ImageAnnotationSaveStrategy.Type.PASCAL_VOC)
                 .startAndShowProgressDialog());
         WaitForAsyncUtils.waitForFxEvents();
 
+        verifyThat(model.isSaved(), Matchers.is(true));
         Path actualFilePath = actualDir.resolve(expectedFileName);
 
         // Wait until the output-file actually exists. If the file was not created in
@@ -653,7 +657,12 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
 
+        verifyThat(model.isSaved(), Matchers.is(true));
+        verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(true));
         timeOutClickOn(robot, "#next-button");
+
+        verifyThat(model.isSaved(), Matchers.is(true));
+        verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(true));
 
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
@@ -677,6 +686,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class));
 
+        verifyThat(model.isSaved(), Matchers.is(true));
+        verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(true));
         final BoundingBoxView drawnBoundingBox = (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
 
         final File annotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
@@ -797,9 +808,11 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(controller.getStage().getTitle(), Matchers.startsWith("Bounding Box Editor - "));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully loaded 4 image-files from folder "));
+        verifyThat(model.isSaved(), Matchers.is(true));
 
         final File referenceAnnotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
 
@@ -816,6 +829,8 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                                       "Correct bounding box per-category-counts were not read within " +
                                               TIMEOUT_DURATION_IN_SEC + " sec.");
 
+        verifyThat(model.isSaved(), Matchers.is(true));
+
         timeOutClickOn(robot, "#next-button");
 
         waitUntilCurrentImageIsLoaded();
@@ -823,8 +838,21 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));
         verifyThat(mainView.getObjectTree().getRoot().getChildren(), Matchers.hasSize(0));
+        verifyThat(model.isSaved(), Matchers.is(true));
 
-        loadImageFolderAndClickKeepCategoriesAndSaveAnnotationOptions(robot, TEST_IMAGE_FOLDER_PATH_1, "No", "No");
+        loadImageFolder(TEST_IMAGE_FOLDER_PATH_1);
+
+        Stage keepExistingCategoriesDialogStage = timeOutAssertDialogOpenedAndGetStage(robot,
+                                                                                       "Open image folder",
+                                                                                       "Keep existing categories?");
+
+        timeOutLookUpInStageAndClickOn(robot, keepExistingCategoriesDialogStage, "No");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertNoTopModalStage(robot);
 
         verifyThat(model.getCurrentFileIndex(), Matchers.equalTo(0));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));
@@ -859,6 +887,12 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     private void userChoosesNoOnAnnotationImportDialogSubtest(FxRobot robot, File annotationFile) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "No");
 
+        Stage saveAnnotationsDialog = timeoutGetTopModalStage(robot, "Save annotations");
+
+        timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialog, "No");
+        timeOutAssertTopModalStageClosed(robot, "Save annotations");
+        assertNoTopModalStage(robot);
+
         // All previously existing bounding boxes should have been removed, only
         // the newly imported ones should exist.
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
@@ -880,6 +914,11 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingShapes(),
                    Matchers.is(true));
+
+        // Loading new annotations from existing annotation files
+        // should lead to a positive "saved" status:
+        verifyThat(model.isSaved(), Matchers.is(true));
+        verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(true));
     }
 
     private void userChoosesYesOnAnnotationImportDialogSubTest(FxRobot robot, BoundingBoxView drawnBoundingBox,
@@ -934,6 +973,10 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
+        // Combining the old and new annotations leads to new annotations, meaning
+        // there should be unsaved annotations:
+        verifyThat(model.isSaved(), Matchers.is(false));
+        verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(false));
     }
 
     private void userChoosesCancelOnAnnotationImportDialogSubtest(FxRobot robot,
@@ -945,6 +988,10 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox));
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                            .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
+        // Trying to import annotations updates annotation data and "saved" check
+        // (there are unsaved annotations):
+        verifyThat(model.isSaved(), Matchers.is(false));
+        verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(false));
     }
 
     private void importAnnotationAndClickDialogOption(FxRobot robot, File annotationFile, String userChoice) {

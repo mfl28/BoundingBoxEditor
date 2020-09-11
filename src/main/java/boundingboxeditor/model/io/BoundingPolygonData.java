@@ -4,10 +4,12 @@ import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingPolygonView;
 import boundingboxeditor.ui.BoundingShapeViewable;
+import boundingboxeditor.utils.MathUtils;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents the data-component of a bounding-polygon. Objects of this class are used to
@@ -66,5 +68,43 @@ public class BoundingPolygonData extends BoundingShapeData {
     @Override
     public <T> T accept(BoundingShapeDataVisitor<T> visitor) {
         return visitor.visit(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), relativePointsInImage);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) {
+            return true;
+        }
+
+        if(!(o instanceof BoundingPolygonData)) {
+            return false;
+        }
+
+        if(!super.equals(o)) {
+            return false;
+        }
+
+        BoundingPolygonData that = (BoundingPolygonData) o;
+
+        if(relativePointsInImage == that.relativePointsInImage) {
+            return true;
+        }
+
+        if(relativePointsInImage.size() != that.relativePointsInImage.size()) {
+            return false;
+        }
+
+        for(int i = 0; i != relativePointsInImage.size(); ++i) {
+            if(!MathUtils.doubleAlmostEqual(relativePointsInImage.get(i), that.relativePointsInImage.get(i))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

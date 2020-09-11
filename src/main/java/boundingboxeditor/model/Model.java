@@ -60,6 +60,7 @@ public class Model {
     private final IntegerProperty nrImageFiles = new SimpleIntegerProperty(0);
     private final BooleanProperty nextImageFileExists = new SimpleBooleanProperty(false);
     private final BooleanProperty previousImageFileExists = new SimpleBooleanProperty(false);
+    private final BooleanProperty saved = new SimpleBooleanProperty(true);
     /**
      * Maps the filenames of the currently loaded image-files onto the corresponding {@link File} objects. A
      * {@link ListOrderedMap} data-structure is used to preserve an order (in this case the input order) to
@@ -73,6 +74,18 @@ public class Model {
     public Model() {
         numberFormat.applyPattern(BOUNDING_SHAPE_COORDINATES_PATTERN);
         setUpInternalListeners();
+    }
+
+    public boolean isSaved() {
+        return saved.get();
+    }
+
+    public void setSaved(boolean saved) {
+        this.saved.set(saved);
+    }
+
+    public BooleanProperty savedProperty() {
+        return saved;
     }
 
     /**
@@ -122,10 +135,16 @@ public class Model {
                                                                                                  .get(fileName)));
 
         if(!boundingShapeData.isEmpty()) {
+            if(!imageAnnotation.getBoundingShapeData().equals(boundingShapeData)) {
+                saved.set(false);
+            }
+
             imageAnnotation.setBoundingShapeData(boundingShapeData);
             imageFileNameToAnnotation.put(fileName, imageAnnotation);
         } else {
-            imageFileNameToAnnotation.remove(fileName);
+            if(imageFileNameToAnnotation.remove(fileName) != null && !imageFileNameToAnnotation.isEmpty()) {
+                saved.set(false);
+            }
         }
     }
 
@@ -140,6 +159,8 @@ public class Model {
      * @param imageAnnotations the new image-annotations
      */
     public void updateImageAnnotations(List<ImageAnnotation> imageAnnotations) {
+        boolean noCurrentAnnotations = imageFileNameToAnnotation.isEmpty();
+
         imageAnnotations.forEach(annotation -> {
             ImageAnnotation imageAnnotation = imageFileNameToAnnotation.get(annotation.getImageFileName());
             if(imageAnnotation == null) {
@@ -148,6 +169,10 @@ public class Model {
                 imageAnnotation.getBoundingShapeData().addAll(annotation.getBoundingShapeData());
             }
         });
+
+        if(!imageAnnotations.isEmpty()) {
+            saved.set(noCurrentAnnotations);
+        }
     }
 
     public ImageMetaData createOrGetCurrentImageMetaData() {
@@ -394,6 +419,8 @@ public class Model {
         }
 
         categoryToAssignedBoundingShapesCount.clear();
+
+        saved.set(true);
     }
 
     private void setUpInternalListeners() {

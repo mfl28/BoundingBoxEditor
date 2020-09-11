@@ -504,29 +504,37 @@
 /* line 526, src/main/resources/stylesheets/scss/styles.scss */
 #status-panel {
   -fx-background-color: #2e3440;
-  -fx-padding: 5px; }
+  -fx-padding: 5px;
+  -fx-spacing: 5px; }
 
-/* line 531, src/main/resources/stylesheets/scss/styles.scss */
+/* line 532, src/main/resources/stylesheets/scss/styles.scss */
+#save-status-indicator {
+  -fx-fill: #bf616a; }
+  /* line 535, src/main/resources/stylesheets/scss/styles.scss */
+  #save-status-indicator:saved {
+    -fx-fill: #a3be8c; }
+
+/* line 540, src/main/resources/stylesheets/scss/styles.scss */
 .split-pane {
   -fx-background-color: #3b4252;
   -fx-background-insets: 0;
   -fx-padding: 0; }
-  /* line 536, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 545, src/main/resources/stylesheets/scss/styles.scss */
   .split-pane:horizontal > .split-pane-divider {
     -fx-background-color: derive(#2e3440, -15%);
     -fx-background-insets: 0;
     -fx-padding: 1px; }
-  /* line 542, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 551, src/main/resources/stylesheets/scss/styles.scss */
   .split-pane:vertical > .split-pane-divider {
     -fx-background-color: derive(#2e3440, -15%);
     -fx-background-insets: 0;
     -fx-padding: 1px; }
 
-/* line 549, src/main/resources/stylesheets/scss/styles.scss */
+/* line 558, src/main/resources/stylesheets/scss/styles.scss */
 #editors-split-pane {
   -fx-background-color: #2e3440; }
 
-/* line 553, src/main/resources/stylesheets/scss/styles.scss */
+/* line 562, src/main/resources/stylesheets/scss/styles.scss */
 #image-file-explorer {
   -fx-pref-width: 230px;
   -fx-min-width: 230px;
@@ -536,49 +544,49 @@
   -fx-border-color: derive(#2e3440, -15%);
   -fx-border-width: 0 0 2px 0;
   -fx-spacing: 5px; }
-  /* line 562, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 571, src/main/resources/stylesheets/scss/styles.scss */
   #image-file-explorer > .label {
     -fx-padding: 0 5px 0 5px;
     -fx-font-weight: bold; }
 
-/* line 568, src/main/resources/stylesheets/scss/styles.scss */
+/* line 577, src/main/resources/stylesheets/scss/styles.scss */
 #image-file-info-cell:has-assigned-bounding-boxes {
   -fx-text-fill: #d8dee9;
   -fx-font-weight: normal; }
-  /* line 572, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 581, src/main/resources/stylesheets/scss/styles.scss */
   #image-file-info-cell:has-assigned-bounding-boxes:has-assigned-bounding-boxes {
     -fx-text-fill: #88c0d0;
     -fx-font-weight: bold;
     -fx-border-width: 0px 0px 0px 5px;
     -fx-border-color: #88c0d0;
     -fx-padding: 5px 5px 5px 0px; }
-  /* line 580, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 589, src/main/resources/stylesheets/scss/styles.scss */
   #image-file-info-cell:has-assigned-bounding-boxes:selected {
     -fx-text-fill: #2e3440;
     -fx-font-weight: bold; }
 
-/* line 587, src/main/resources/stylesheets/scss/styles.scss */
+/* line 596, src/main/resources/stylesheets/scss/styles.scss */
 .separator .line {
   -fx-border-width: 1px;
   -fx-border-color: derive(#2e3440, -15%); }
 
-/* line 592, src/main/resources/stylesheets/scss/styles.scss */
+/* line 601, src/main/resources/stylesheets/scss/styles.scss */
 .mnemonic-underline {
   -fx-stroke: #d8dee9; }
 
-/* line 597, src/main/resources/stylesheets/scss/styles.scss */
+/* line 606, src/main/resources/stylesheets/scss/styles.scss */
 .slider .track {
   -fx-control-inner-background: #d8dee9; }
 
-/* line 601, src/main/resources/stylesheets/scss/styles.scss */
+/* line 610, src/main/resources/stylesheets/scss/styles.scss */
 .slider .thumb {
   -fx-background-color: derive(#4c566a, 20%);
   -fx-effect: none; }
-  /* line 605, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 614, src/main/resources/stylesheets/scss/styles.scss */
   .slider .thumb:hover, .slider .thumb:pressed {
     -fx-background-color: #5e81ac; }
 
-/* line 612, src/main/resources/stylesheets/scss/styles.scss */
+/* line 621, src/main/resources/stylesheets/scss/styles.scss */
 .text-field {
   -fx-background-color: #4c566a;
   -fx-text-fill: #d8dee9;
@@ -587,225 +595,225 @@
   -fx-padding: 4px;
   -fx-accent: #5e81ac; }
 
-/* line 622, src/main/resources/stylesheets/scss/styles.scss */
+/* line 631, src/main/resources/stylesheets/scss/styles.scss */
 .text-field-table-cell .text-field {
   -fx-padding: 0; }
 
-/* line 627, src/main/resources/stylesheets/scss/styles.scss */
+/* line 636, src/main/resources/stylesheets/scss/styles.scss */
 #category-input-field {
   -fx-min-width: 50px;
   -fx-pref-width: 120px; }
 
-/* line 632, src/main/resources/stylesheets/scss/styles.scss */
+/* line 641, src/main/resources/stylesheets/scss/styles.scss */
 #bounding-box-editor-toolbox {
   -fx-spacing: 10px;
   -fx-alignment: center;
   -fx-padding: 0 5px;
   -fx-background-color: #3b4252; }
 
-/* line 639, src/main/resources/stylesheets/scss/styles.scss */
+/* line 648, src/main/resources/stylesheets/scss/styles.scss */
 #bounding-box-explorer-top-panel {
   -fx-spacing: 10px; }
 
-/* line 643, src/main/resources/stylesheets/scss/styles.scss */
+/* line 652, src/main/resources/stylesheets/scss/styles.scss */
 #category-selector-top-panel {
   -fx-alignment: center;
   -fx-padding: 0;
   -fx-spacing: 0; }
 
-/* line 649, src/main/resources/stylesheets/scss/styles.scss */
+/* line 658, src/main/resources/stylesheets/scss/styles.scss */
 #add-category-box {
   -fx-padding: 0 0 5px 0;
   -fx-alignment: center; }
 
-/* line 654, src/main/resources/stylesheets/scss/styles.scss */
+/* line 663, src/main/resources/stylesheets/scss/styles.scss */
 .category-color-picker {
   -fx-max-width: 50px;
   -fx-max-height: 25px; }
 
-/* line 659, src/main/resources/stylesheets/scss/styles.scss */
+/* line 668, src/main/resources/stylesheets/scss/styles.scss */
 .progress-indicator {
   -fx-background-color: transparent;
   -fx-accent: #d8dee9; }
 
-/* line 664, src/main/resources/stylesheets/scss/styles.scss */
+/* line 673, src/main/resources/stylesheets/scss/styles.scss */
 #tag-editor-scroll-pane {
   -fx-background-color: transparent;
   -fx-min-height: 50px;
   -fx-pref-height: 70px;
   -fx-max-height: 180px; }
-  /* line 670, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 679, src/main/resources/stylesheets/scss/styles.scss */
   #tag-editor-scroll-pane > .viewport {
     -fx-background-color: transparent; }
 
-/* line 675, src/main/resources/stylesheets/scss/styles.scss */
+/* line 684, src/main/resources/stylesheets/scss/styles.scss */
 #image-file-search-box {
   -fx-padding: 0 5px;
   -fx-spacing: 0;
   -fx-alignment: center; }
 
-/* line 682, src/main/resources/stylesheets/scss/styles.scss */
+/* line 691, src/main/resources/stylesheets/scss/styles.scss */
 .scroll-pane {
   -fx-background-insets: 0;
   -fx-padding: 0; }
-  /* line 686, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 695, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-pane > .viewport {
     -fx-background-color: transparent; }
 
-/* line 692, src/main/resources/stylesheets/scss/styles.scss */
+/* line 701, src/main/resources/stylesheets/scss/styles.scss */
 #bounding-box-explorer-top-panel {
   -fx-alignment: center; }
-  /* line 695, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 704, src/main/resources/stylesheets/scss/styles.scss */
   #bounding-box-explorer-top-panel > .label {
     -fx-font-weight: bold; }
 
-/* line 700, src/main/resources/stylesheets/scss/styles.scss */
+/* line 709, src/main/resources/stylesheets/scss/styles.scss */
 .table-view {
   -fx-background-color: transparent;
   -fx-color: #2e3440; }
-  /* line 704, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 713, src/main/resources/stylesheets/scss/styles.scss */
   .table-view:focused, .table-view .corner {
     -fx-background-color: transparent; }
-  /* line 708, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 717, src/main/resources/stylesheets/scss/styles.scss */
   .table-view .table-cell {
     -fx-text-fill: #d8dee9; }
 
-/* line 713, src/main/resources/stylesheets/scss/styles.scss */
+/* line 722, src/main/resources/stylesheets/scss/styles.scss */
 .table-row-cell {
   -fx-background-color: #2e3440, #3b4252;
   -fx-table-cell-border-color: transparent;
   -fx-border-width: 0; }
-  /* line 718, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 727, src/main/resources/stylesheets/scss/styles.scss */
   .table-row-cell:selected .table-cell {
     -fx-background-color: #4c566a;
     -fx-text-fill: #d8dee9; }
-    /* line 722, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 731, src/main/resources/stylesheets/scss/styles.scss */
     .table-row-cell:selected .table-cell:selected {
       -fx-background-insets: 0;
       -fx-border-insets: 0;
       -fx-padding: 0; }
-  /* line 729, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 738, src/main/resources/stylesheets/scss/styles.scss */
   .table-row-cell:hover {
     -fx-background-color: #434c5e; }
-  /* line 733, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 742, src/main/resources/stylesheets/scss/styles.scss */
   .table-row-cell > .tree-disclosure-node > .arrow {
     -fx-rotate: 0;
     -fx-background-color: #d8dee9; }
-  /* line 738, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 747, src/main/resources/stylesheets/scss/styles.scss */
   .table-row-cell:expanded > .tree-disclosure-node > .arrow {
     -fx-rotate: 90; }
 
-/* line 744, src/main/resources/stylesheets/scss/styles.scss */
+/* line 753, src/main/resources/stylesheets/scss/styles.scss */
 .no-header-table-view .column-header-background {
   -fx-max-height: 0;
   -fx-pref-height: 0;
   -fx-min-height: 0; }
 
-/* line 752, src/main/resources/stylesheets/scss/styles.scss */
+/* line 761, src/main/resources/stylesheets/scss/styles.scss */
 .tree-view {
   -fx-background-insets: 0;
   -fx-background-color: #3b4252;
   -fx-text-fill: #d8dee9;
   -fx-min-height: 50px; }
-  /* line 758, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 767, src/main/resources/stylesheets/scss/styles.scss */
   .tree-view .corner {
     -fx-background-color: transparent; }
-  /* line 762, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 771, src/main/resources/stylesheets/scss/styles.scss */
   .tree-view .tree-cell {
     -fx-padding: 0.1em 0;
     -fx-background-color: transparent; }
-    /* line 766, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 775, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:hover {
       -fx-background-color: #434c5e; }
-    /* line 770, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 779, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:selected {
       -fx-background-color: #4c566a; }
-    /* line 774, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 783, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:empty {
       -fx-background-color: transparent; }
-    /* line 778, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 787, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:dragged-over {
       -fx-background-color: #bf616a; }
-    /* line 782, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 791, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell > .tree-disclosure-node > .arrow {
       -fx-rotate: 0;
       -fx-background-color: #d8dee9; }
-    /* line 787, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 796, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:expanded > .tree-disclosure-node > .arrow {
       -fx-rotate: 90; }
 
-/* line 793, src/main/resources/stylesheets/scss/styles.scss */
+/* line 802, src/main/resources/stylesheets/scss/styles.scss */
 #info-text {
   -fx-fill: #d08770; }
 
-/* line 797, src/main/resources/stylesheets/scss/styles.scss */
+/* line 806, src/main/resources/stylesheets/scss/styles.scss */
 #category-name-text {
   -fx-font-weight: bold; }
 
-/* line 801, src/main/resources/stylesheets/scss/styles.scss */
+/* line 810, src/main/resources/stylesheets/scss/styles.scss */
 #tree-cell-content {
   -fx-spacing: 4px; }
 
-/* line 806, src/main/resources/stylesheets/scss/styles.scss */
+/* line 815, src/main/resources/stylesheets/scss/styles.scss */
 .scroll-bar, .scroll-bar .track, .scroll-bar .track-background {
   -fx-background-color: #3b4252;
   -fx-effect: none;
   -fx-border-style: hidden; }
-  /* line 815, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 824, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar .thumb {
     -fx-background-color: #d8dee9; }
-    /* line 818, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 827, src/main/resources/stylesheets/scss/styles.scss */
     .scroll-bar .thumb:hover {
       -fx-background-color: #bf616a; }
-  /* line 823, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 832, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:vertical .decrement-button, .scroll-bar .track:vertical .decrement-button, .scroll-bar .track-background:vertical .decrement-button,
   .scroll-bar:vertical .increment-button, .scroll-bar .track:vertical .increment-button, .scroll-bar .track-background:vertical .increment-button {
     -fx-padding: 0 4px;
     -fx-opacity: 0; }
-  /* line 829, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 838, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:horizontal .decrement-button, .scroll-bar .track:horizontal .decrement-button, .scroll-bar .track-background:horizontal .decrement-button,
   .scroll-bar:horizontal .increment-button, .scroll-bar .track:horizontal .increment-button, .scroll-bar .track-background:horizontal .increment-button {
     -fx-padding: 4px 0;
     -fx-opacity: 0; }
-  /* line 835, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 844, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:horizontal .increment-arrow, .scroll-bar .track:horizontal .increment-arrow, .scroll-bar .track-background:horizontal .increment-arrow,
   .scroll-bar:horizontal .decrement-arrow, .scroll-bar .track:horizontal .decrement-arrow, .scroll-bar .track-background:horizontal .decrement-arrow {
     -fx-shape: " ";
     -fx-padding: 0.10em 0; }
-  /* line 842, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 851, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:vertical .increment-arrow, .scroll-bar .track:vertical .increment-arrow, .scroll-bar .track-background:vertical .increment-arrow,
   .scroll-bar:vertical .decrement-arrow, .scroll-bar .track:vertical .decrement-arrow, .scroll-bar .track-background:vertical .decrement-arrow {
     -fx-shape: " ";
     -fx-padding: 0 0.10em; }
 
-/* line 850, src/main/resources/stylesheets/scss/styles.scss */
+/* line 859, src/main/resources/stylesheets/scss/styles.scss */
 .list-view {
   -fx-background-color: transparent;
   -fx-color: #2e3440;
   -fx-padding: 0 5px 0 0; }
-  /* line 855, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 864, src/main/resources/stylesheets/scss/styles.scss */
   .list-view .corner {
     -fx-background-color: transparent; }
-  /* line 859, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 868, src/main/resources/stylesheets/scss/styles.scss */
   .list-view:focused {
     -fx-background-color: transparent; }
-    /* line 862, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 871, src/main/resources/stylesheets/scss/styles.scss */
     .list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:focused {
       -fx-background-insets: 0;
       -fx-border-width: 0;
       -fx-padding: 5px; }
-  /* line 869, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 878, src/main/resources/stylesheets/scss/styles.scss */
   .list-view .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: #d8dee9;
     -fx-padding: 5px;
     -fx-background-insets: 0;
     -fx-border-width: 0; }
-    /* line 876, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 885, src/main/resources/stylesheets/scss/styles.scss */
     .list-view .list-cell:empty {
       -fx-opacity: 0;
       -fx-padding: 5px; }
-    /* line 881, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 890, src/main/resources/stylesheets/scss/styles.scss */
     .list-view .list-cell:selected {
       -fx-background-color: #88c0d0;
       -fx-text-fill: #2e3440;
@@ -813,112 +821,112 @@
       -fx-border-width: 0;
       -fx-padding: 5px; }
 
-/* line 892, src/main/resources/stylesheets/scss/styles.scss */
+/* line 901, src/main/resources/stylesheets/scss/styles.scss */
 #tag {
   -fx-background-color: #4c566a;
   -fx-border-radius: 10;
   -fx-background-radius: 10;
   -fx-padding: 3px 5px; }
 
-/* line 899, src/main/resources/stylesheets/scss/styles.scss */
+/* line 908, src/main/resources/stylesheets/scss/styles.scss */
 #tag-input-field {
   -fx-background-color: transparent;
   -fx-padding: 0;
   -fx-pref-width: 65px;
   -fx-max-width: 100px; }
 
-/* line 906, src/main/resources/stylesheets/scss/styles.scss */
+/* line 915, src/main/resources/stylesheets/scss/styles.scss */
 #tag-label {
   -fx-font-size: 12 pt; }
 
-/* line 910, src/main/resources/stylesheets/scss/styles.scss */
+/* line 919, src/main/resources/stylesheets/scss/styles.scss */
 #tag-box {
   -fx-border-style: hidden hidden solid hidden;
   -fx-border-color: derive(#2e3440, -15%);
   -fx-border-width: 2px; }
 
-/* line 918, src/main/resources/stylesheets/scss/styles.scss */
+/* line 927, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane {
   -fx-background-color: #2e3440; }
 
-/* line 922, src/main/resources/stylesheets/scss/styles.scss */
+/* line 931, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .label {
   -fx-text-fill: #d8dee9; }
 
-/* line 926, src/main/resources/stylesheets/scss/styles.scss */
+/* line 935, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane:header .header-panel {
   -fx-background-color: #2e3440, linear-gradient(derive(#3b4252, 10%) 5%, #2e3440); }
 
-/* line 930, src/main/resources/stylesheets/scss/styles.scss */
+/* line 939, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .button {
   -fx-background-color: #3b4252;
   -fx-text-fill: #d8dee9;
   -fx-background-insets: 0; }
-  /* line 935, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 944, src/main/resources/stylesheets/scss/styles.scss */
   .dialog-pane .button:selected, .dialog-pane .button:focused, .dialog-pane .button:armed {
     -fx-background-color: #4c566a;
     -fx-text-fill: #eceff4;
     -fx-background-insets: 0; }
-  /* line 943, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 952, src/main/resources/stylesheets/scss/styles.scss */
   .dialog-pane .button:hover {
     -fx-background-color: #4c566a;
     -fx-text-fill: #eceff4;
     -fx-background-insets: 0; }
-  /* line 949, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 958, src/main/resources/stylesheets/scss/styles.scss */
   .dialog-pane .button:pressed {
     -fx-background-color: derive(#4c566a, 25%);
     -fx-text-fill: #eceff4;
     -fx-background-insets: 0; }
 
-/* line 956, src/main/resources/stylesheets/scss/styles.scss */
+/* line 965, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane > .button-bar > .container > .details-button {
   -fx-text-fill: #88c0d0; }
 
-/* line 960, src/main/resources/stylesheets/scss/styles.scss */
+/* line 969, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .progress-bar > .bar {
   -fx-background-color: #8fbcbb;
   -fx-background-insets: 0;
   -fx-background-radius: 0; }
 
-/* line 966, src/main/resources/stylesheets/scss/styles.scss */
+/* line 975, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .progress-bar:indeterminate > .bar {
   -fx-background-color: linear-gradient(to left, transparent, #8fbcbb); }
 
-/* line 970, src/main/resources/stylesheets/scss/styles.scss */
+/* line 979, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .progress-bar > .track {
   -fx-background-color: #3b4252;
   -fx-background-insets: 0;
   -fx-background-radius: 0; }
 
-/* line 976, src/main/resources/stylesheets/scss/styles.scss */
+/* line 985, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box {
   -fx-background-color: #3b4252;
   -fx-font-weight: bold;
   -fx-padding: 0; }
 
-/* line 982, src/main/resources/stylesheets/scss/styles.scss */
+/* line 991, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box > .list-cell {
   -fx-text-fill: #d8dee9;
   -fx-padding: 5px;
   -fx-background-insets: 0; }
 
-/* line 988, src/main/resources/stylesheets/scss/styles.scss */
+/* line 997, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box-popup > .list-view {
   -fx-background-color: #3b4252;
   -fx-effect: none; }
 
-/* line 993, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1002, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
   -fx-padding: 4 0 4 5;
   -fx-background-insets: 0;
   -fx-background: #3b4252; }
 
-/* line 999, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1008, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover {
   -fx-background-color: #434c5e;
   -fx-text-fill: #eceff4; }
 
-/* line 1005, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1014, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
   -fx-background-color: #4c566a;
   -fx-text-fill: #d8dee9; }

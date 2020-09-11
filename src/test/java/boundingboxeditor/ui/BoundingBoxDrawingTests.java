@@ -34,6 +34,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                            .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
+        verifyThat(model.isSaved(), Matchers.is(true));
 
         timeOutClickOn(robot, "#next-button");
 
@@ -62,6 +63,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class));
         final BoundingBoxView drawnBoundingBox = (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
+        verifyThat(model.isSaved(), Matchers.is(true));
 
         timeOutClickOn(robot, "#previous-button");
         waitUntilCurrentImageIsLoaded();
@@ -75,6 +77,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getImageFileListView().getItems().get(drawnBoundingBoxFileIndex)
                            .isHasAssignedBoundingShapes(), Matchers.is(true));
+        verifyThat(model.isSaved(), Matchers.is(false));
 
         timeOutClickOn(robot, "#next-button");
 
@@ -84,6 +87,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
+        verifyThat(model.isSaved(), Matchers.is(false));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                            .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
@@ -163,7 +167,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         timeOutLookUpInStageAndClickOn(robot, exitDialogStage, "Cancel");
 
-        timeoutAssertTopModalStageClosed(robot, "Exit Application");
+        timeOutAssertTopModalStageClosed(robot, "Exit Application");
 
         // Try exit and check save dialog
         final Stage exitDialogStage2 = tryExitAndGetDialog(robot);
@@ -173,6 +177,8 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         final Stage saveAnnotationsStage = timeoutGetTopModalStage(robot, "Save annotations");
 
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsStage, "Cancel");
+
+        verifyThat(model.isSaved(), Matchers.is(false));
     }
 
     private Stage tryExitAndGetDialog(FxRobot robot) {

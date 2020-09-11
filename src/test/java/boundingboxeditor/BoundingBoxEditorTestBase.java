@@ -260,19 +260,9 @@ public class BoundingBoxEditorTestBase {
         return robot.lookup(id).queryAs(clazz);
     }
 
-    protected void loadImageFolderAndClickDialogOption(FxRobot robot, String imageFolderPath, String optionText) {
+    protected void loadImageFolder(String imageFolderPath) {
         Platform.runLater(() -> controller
                 .initiateImageFolderLoading(new File(getClass().getResource(imageFolderPath).getFile())));
-        WaitForAsyncUtils.waitForFxEvents();
-
-        Stage saveAnnotationsDialogStage = timeOutAssertDialogOpenedAndGetStage(robot, "Open image folder",
-                                                                                "Opening a new image folder will remove any existing annotation data. " +
-                                                                                        "Do you want to save the currently existing annotation data?");
-
-        timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialogStage, optionText);
-        WaitForAsyncUtils.waitForFxEvents();
-
-        waitUntilCurrentImageIsLoaded();
         WaitForAsyncUtils.waitForFxEvents();
     }
 
@@ -336,13 +326,21 @@ public class BoundingBoxEditorTestBase {
     }
 
 
-    protected void timeoutAssertTopModalStageClosed(FxRobot robot, String stageTitle) {
+    protected void timeOutAssertTopModalStageClosed(FxRobot robot, String stageTitle) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> getTopModalStage(robot, stageTitle) ==
                                                                               null),
                                       "Expected top modal stage with title " + stageTitle + " did not close within "
                                               + TIMEOUT_DURATION_IN_SEC +
                                               " sec.");
+    }
+
+    protected void assertNoTopModalStage(FxRobot robot) {
+        verifyThat(robot.listWindows()
+                        .stream()
+                        .filter(window -> window instanceof Stage)
+                        .map(window -> (Stage) window)
+                        .anyMatch(stage -> stage.getModality() == Modality.APPLICATION_MODAL), Matchers.is(false));
     }
 
     private Scene createSceneFromParent(final Parent parent) {

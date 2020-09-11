@@ -105,6 +105,8 @@ public class Controller {
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT = "Annotation format: ";
     private static final String KEEP_EXISTING_CATEGORIES_DIALOG_TEXT = "Keep existing categories?";
     private static final String DEFAULT_JSON_EXPORT_FILENAME = "annotations.json";
+    private static final String ANNOTATION_IMPORT_SAVE_EXISTING_DIALOG_CONTENT = "All current annotations are about " +
+            "to be removed. Do you want to save them first?";
 
     private final Stage stage;
     private final MainView view = new MainView();
@@ -239,18 +241,29 @@ public class Controller {
         updateModelFromView();
 
         if(model.containsCategories()) {
-            ButtonBar.ButtonData answer =
+            ButtonBar.ButtonData keepExistingDataAnswer =
                     MainView.displayYesNoCancelDialogAndGetResult(IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE,
                                                                   IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT);
 
-            if(answer == ButtonBar.ButtonData.NO) {
-                model.clearAnnotationData(false);
-                view.reset();
-                view.getEditorImagePane().removeAllCurrentBoundingShapes();
-                // Reset all 'assigned bounding shape states' in image file explorer.
-                view.getImageFileListView().getItems().forEach(item -> item.setHasAssignedBoundingShapes(false));
+            if(keepExistingDataAnswer == ButtonBar.ButtonData.NO) {
+                if(!model.isSaved()) {
+                    ButtonBar.ButtonData saveAnswer =
+                            MainView.displayYesNoCancelDialogAndGetResult(ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
+                                                                          ANNOTATION_IMPORT_SAVE_EXISTING_DIALOG_CONTENT);
+                    if(saveAnswer == ButtonBar.ButtonData.YES) {
+                        initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(() -> {
+                            clearModelAndViewAnnotationData();
+                            new AnnotationLoaderService(source, loadFormat).startAndShowProgressDialog();
+                        });
 
-            } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
+                        return;
+                    } else if(saveAnswer == ButtonBar.ButtonData.CANCEL_CLOSE) {
+                        return;
+                    }
+                }
+
+                clearModelAndViewAnnotationData();
+            } else if(keepExistingDataAnswer == ButtonBar.ButtonData.CANCEL_CLOSE) {
                 return;
             }
         }
@@ -299,7 +312,7 @@ public class Controller {
     public void onRegisterExitAction() {
         updateModelFromView();
 
-        if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
+        if(!model.isSaved()) {
             ButtonBar.ButtonData answer =
                     MainView.displayYesNoCancelDialogAndGetResult(EXIT_APPLICATION_OPTION_DIALOG_TITLE,
                                                                   EXIT_APPLICATION_OPTION_DIALOG_CONTENT);
@@ -512,6 +525,18 @@ public class Controller {
      */
     public Model getModel() {
         return model;
+    }
+
+    Stage getStage() {
+        return stage;
+    }
+
+    private void clearModelAndViewAnnotationData() {
+        model.clearAnnotationData(false);
+        view.reset();
+        view.getEditorImagePane().removeAllCurrentBoundingShapes();
+        // Reset all 'assigned bounding shape states' in image file explorer.
+        view.getImageFileListView().getItems().forEach(item -> item.setHasAssignedBoundingShapes(false));
     }
 
     private void updateModelFromView() {
@@ -738,6 +763,8 @@ public class Controller {
 
             return cell;
         });
+
+        view.getStatusBar().savedStatusProperty().bind(model.savedProperty());
     }
 
     private List<File> getImageFilesFromDirectory(File directory) throws IOException {
@@ -1110,6 +1137,8 @@ public class Controller {
 
             if(!saveResult.getErrorTableEntries().isEmpty()) {
                 MainView.displayIOResultErrorInfoAlert(saveResult);
+            } else {
+                model.setSaved(true);
             }
         }
 
@@ -1309,7 +1338,7 @@ public class Controller {
                     }
                 }
 
-                if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
+                if(!model.isSaved()) {
                     // First ask if user wants to save the existing annotations.
                     ButtonBar.ButtonData answer = reloadFolder ?
                             MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
@@ -1321,13 +1350,12 @@ public class Controller {
                         boolean finalKeepExistingCategories = keepExistingCategories;
 
                         if(reloadFolder) {
-                            initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(() ->
-                                                                                            onValidFilesPresentHandler(
-                                                                                                    finalKeepExistingCategories));
+                            initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(() -> onValidFilesPresentHandler(
+                                    finalKeepExistingCategories));
                         } else {
-                            initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(() ->
-                                                                                                onValidFilesPresentHandler(
-                                                                                                        finalKeepExistingCategories));
+                            initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(
+                                    () -> onValidFilesPresentHandler(
+                                            finalKeepExistingCategories));
                         }
                     } else if(answer == ButtonBar.ButtonData.NO || reloadFolder) {
                         onValidFilesPresentHandler(keepExistingCategories);

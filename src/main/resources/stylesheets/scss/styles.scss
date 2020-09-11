@@ -526,6 +526,15 @@ $base-separator-line-color: derive($base-background-color, -15%);
 #status-panel {
     @include panel;
     -fx-padding: 5px;
+    -fx-spacing: 5px;
+}
+
+#save-status-indicator {
+    -fx-fill: $base-colorful-component-color;
+
+    &:saved {
+        -fx-fill: $base-alt-colorful-component-color-3;
+    }
 }
 
 .split-pane {
