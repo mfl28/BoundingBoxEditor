@@ -19,7 +19,7 @@ class UtilsTests {
             Assertions.fail("Expected an InvocationTargetException to be thrown");
         } catch(InvocationTargetException e) {
             MatcherAssert.assertThat(e.getCause(), Matchers.instanceOf(IllegalStateException.class));
-            Assertions.assertEquals(e.getCause().getMessage(), "MathUtils class");
+            Assertions.assertEquals("MathUtils class", e.getCause().getMessage());
         }
     }
 
@@ -33,7 +33,7 @@ class UtilsTests {
             Assertions.fail("Expected an InvocationTargetException to be thrown");
         } catch(InvocationTargetException e) {
             MatcherAssert.assertThat(e.getCause(), Matchers.instanceOf(IllegalStateException.class));
-            Assertions.assertEquals(e.getCause().getMessage(), "ColorUtils class");
+            Assertions.assertEquals("ColorUtils class", e.getCause().getMessage());
         }
     }
 
@@ -47,7 +47,7 @@ class UtilsTests {
             Assertions.fail("Expected an InvocationTargetException to be thrown");
         } catch(InvocationTargetException e) {
             MatcherAssert.assertThat(e.getCause(), Matchers.instanceOf(IllegalStateException.class));
-            Assertions.assertEquals(e.getCause().getMessage(), "UiUtils class");
+            Assertions.assertEquals("UiUtils class", e.getCause().getMessage());
         }
     }
 

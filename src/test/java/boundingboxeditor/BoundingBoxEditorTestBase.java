@@ -34,6 +34,7 @@ import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -168,6 +169,11 @@ public class BoundingBoxEditorTestBase {
     protected void tearDown() throws TimeoutException {
         FxToolkit.cleanupStages();
         FxToolkit.hideStage();
+        // Make sure FileChangeWatcher is interrupted.
+        Thread[] list = new Thread[Thread.activeCount()];
+        Thread.currentThread().getThreadGroup().enumerate(list);
+        Arrays.stream(list).filter(thread -> thread.getName().equals("ImageFileChangeWatcher"))
+              .forEach(Thread::interrupt);
     }
 
     protected Point2D getScreenPointFromImageViewRatios(Point2D ratios) {
@@ -266,12 +272,16 @@ public class BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    protected void loadImageFolder(File imageFolderFile) {
+        Platform.runLater(() -> controller
+                .initiateImageFolderLoading(imageFolderFile));
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
     protected void loadImageFolderAndClickKeepCategoriesAndSaveAnnotationOptions(FxRobot robot, String imageFolderPath,
                                                                                  String keepCategoriesOption,
                                                                                  String saveAnnotationsOption) {
-        Platform.runLater(() -> controller
-                .initiateImageFolderLoading(new File(getClass().getResource(imageFolderPath).getFile())));
-        WaitForAsyncUtils.waitForFxEvents();
+        loadImageFolder(imageFolderPath);
 
         Stage keepExistingCategoriesDialogStage = timeOutAssertDialogOpenedAndGetStage(robot,
                                                                                        "Open image folder",
@@ -339,6 +349,19 @@ public class BoundingBoxEditorTestBase {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> !isTopModalStagePresent(robot)),
                                       "Could find top modal stage within " + TIMEOUT_DURATION_IN_SEC + "  sec.");
+    }
+
+    protected void timeOutAssertThreadCount(FxRobot robot, String threadName, int count) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> threadCount(threadName) == count),
+                                      "Expected count for thread " + threadName + " was not reached within " +
+                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+    }
+
+    protected long threadCount(String threadName) {
+        final Thread[] currentThreads = new Thread[Thread.activeCount()];
+        Thread.currentThread().getThreadGroup().enumerate(currentThreads);
+        return Arrays.stream(currentThreads).filter(thread -> thread.getName().equals(threadName)).count();
     }
 
     private boolean isTopModalStagePresent(FxRobot robot) {

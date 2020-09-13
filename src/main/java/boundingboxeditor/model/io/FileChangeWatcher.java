@@ -29,9 +29,7 @@ public class FileChangeWatcher implements Runnable {
 
     @Override
     public void run() {
-        try {
-            WatchService watchService = FileSystems.getDefault().newWatchService();
-
+        try(final WatchService watchService = FileSystems.getDefault().newWatchService()) {
             directoryToWatch.register(watchService, StandardWatchEventKinds.ENTRY_DELETE,
                                       StandardWatchEventKinds.ENTRY_MODIFY);
 

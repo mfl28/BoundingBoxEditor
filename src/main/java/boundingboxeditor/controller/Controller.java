@@ -571,7 +571,7 @@ public class Controller {
     }
 
     private void askToSaveExistingAnnotationDataAndClearModelAndView() {
-        if(model.containsAnnotations() || view.containsBoundingShapeViews()) {
+        if(!model.isSaved()) {
             // First ask if user wants to save the existing annotations.
             ButtonBar.ButtonData answer =
                     MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
@@ -1246,6 +1246,7 @@ public class Controller {
         private static final String IMAGE_FILES_CHANGED_ERROR_TITLE = "Image files changed";
         private static final String IMAGE_FILES_CHANGED_ERROR_CONTENT =
                 "Image files were changed externally, will reload folder.";
+        private static final String IMAGE_FILE_CHANGE_WATCHER_THREAD_NAME = "ImageFileChangeWatcher";
         private final List<File> imageFiles;
         private final File imageSource;
         private final Map<String, ImageMetaData> fileNameToMetaDataMap = new HashMap<>();
@@ -1402,7 +1403,7 @@ public class Controller {
                                                                 model.getImageFileNameSet(), () -> {
                 MainView.displayErrorAlert(IMAGE_FILES_CHANGED_ERROR_TITLE, IMAGE_FILES_CHANGED_ERROR_CONTENT);
                 Controller.this.initiateCurrentFolderReloading();
-            }));
+            }), IMAGE_FILE_CHANGE_WATCHER_THREAD_NAME);
             directoryWatcher.start();
         }
     }

@@ -7,7 +7,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
@@ -15,6 +17,7 @@ import org.testfx.matcher.control.TableViewMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
+import java.nio.file.Files;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,6 +38,79 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         verifyCategorySelectorState();
         verifyCategorySelectorEnterNewCategoryFunctionality(robot);
         verifyImageSidePanelSearchFunctionality(robot);
+        verifyCategorySearchFunctionality(robot);
+    }
+
+    @Test
+    void onImageFolderOpened_WhenImageFileChanges_ShouldForceReloadFolder(FxRobot robot, @TempDir File tempDir) {
+        waitUntilCurrentImageIsLoaded();
+
+        final File sourceImage = model.getCurrentImageFile();
+
+        Assertions.assertDoesNotThrow(() -> Files.copy(sourceImage.toPath(), tempDir.toPath().resolve("foo.jpg")),
+                                      "Could not " +
+                                              "copy image file to temporary " +
+                                              "directory.");
+
+        verifyThat(Files.isRegularFile(tempDir.toPath().resolve("foo.jpg")), Matchers.is(true));
+
+        loadImageFolder(tempDir);
+
+        waitUntilCurrentImageIsLoaded();
+
+        verifyThat(model.getCurrentImageFile(), Matchers.equalTo(tempDir.toPath().resolve("foo.jpg").toFile()));
+
+        // Verify that exactly one Image file change watcher thread is running:
+        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 1);
+
+        // Rename the loaded image file:
+        Assertions.assertDoesNotThrow(() -> Files.move(tempDir.toPath().resolve("foo.jpg"),
+                                                       tempDir.toPath().resolve("bar.jpg")),
+                                      "Could not rename image file in temporary directory.");
+
+        final Stage alert = timeOutGetTopModalStage(robot, "Image files changed");
+        timeOutLookUpInStageAndClickOn(robot, alert, "OK");
+        timeOutAssertTopModalStageClosed(robot, "Image files changed");
+
+        WaitForAsyncUtils.waitForFxEvents();
+        waitUntilCurrentImageIsLoaded();
+
+        verifyThat(model.getCurrentImageFile(), Matchers.equalTo(tempDir.toPath().resolve("bar.jpg").toFile()));
+        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 1);
+
+        // Delete the loaded image file:
+        Assertions.assertDoesNotThrow(() -> Files.delete(tempDir.toPath().resolve("bar.jpg")),
+                                      "Could not delete image in temporary directory.");
+
+        final Stage alert2 = timeOutGetTopModalStage(robot, "Image files changed");
+        timeOutLookUpInStageAndClickOn(robot, alert2, "OK");
+
+        timeOutAssertTopModalStageClosed(robot, "Image files changed");
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Stage errorAlert = timeOutGetTopModalStage(robot, "Error loading image folder");
+        timeOutLookUpInStageAndClickOn(robot, errorAlert, "OK");
+
+        timeOutAssertTopModalStageClosed(robot, "Error loading image folder");
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 0);
+
+        verifyThat(model.containsImageFiles(), Matchers.is(false));
+        verifyThat(mainView.isWorkspaceVisible(), Matchers.is(false));
+
+        loadImageFolder(tempDir);
+
+        final Stage errorAlert1 = timeOutGetTopModalStage(robot, "Error loading image folder");
+        timeOutLookUpInStageAndClickOn(robot, errorAlert1, "OK");
+
+        timeOutAssertTopModalStageClosed(robot, "Error loading image folder");
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 0);
     }
 
     private void verifyNodeVisibilities() {
@@ -244,6 +320,30 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
         verifyThat(model.getCurrentImageFileName(), Matchers.equalTo("nico-bhlr-1067059-unsplash.jpg"));
+        verifyThat(mainView.getCurrentImage().getUrl(), Matchers.endsWith("nico-bhlr-1067059-unsplash.jpg"));
+    }
+
+    private void verifyCategorySearchFunctionality(FxRobot robot) {
+        enterNewCategory(robot, "AAA");
+        enterNewCategory(robot, "ABB");
+        enterNewCategory(robot, "ABC");
+
+        final TextField categorySearchField = mainView.getCategorySearchField();
+        verifyThat(categorySearchField.getPromptText(), Matchers.equalTo("Search Category"));
+
+        robot.clickOn(categorySearchField).write("A");
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("AAA"));
+
+        robot.write("B");
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("ABB"));
+
+        robot.write("C");
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("ABC"));
     }
 }
