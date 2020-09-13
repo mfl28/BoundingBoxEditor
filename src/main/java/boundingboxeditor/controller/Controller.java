@@ -608,22 +608,6 @@ public class Controller {
         });
     }
 
-    private void setCurrentAnnotationSavingDirectory(File destination) {
-        if(destination.isDirectory()) {
-            ioMetaData.setDefaultAnnotationSavingDirectory(destination);
-        } else if(destination.isFile() && destination.getParentFile().isDirectory()) {
-            ioMetaData.setDefaultAnnotationSavingDirectory(destination.getParentFile());
-        }
-    }
-
-    private void setCurrentAnnotationLoadingDirectory(File source) {
-        if(source.isDirectory()) {
-            ioMetaData.setDefaultAnnotationLoadingDirectory(source);
-        } else if(source.isFile() && source.getParentFile().isDirectory()) {
-            ioMetaData.setDefaultAnnotationLoadingDirectory(source.getParentFile());
-        }
-    }
-
     private void initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(Runnable runnable) {
         // Ask for annotation save format.
         Optional<ImageAnnotationSaveStrategy.Type> formatChoice =
@@ -1145,6 +1129,14 @@ public class Controller {
                 MainView.displayExceptionDialog(getException());
             }
         }
+
+        private void setCurrentAnnotationSavingDirectory(File destination) {
+            if(destination.isDirectory()) {
+                ioMetaData.setDefaultAnnotationSavingDirectory(destination);
+            } else if(destination.isFile() && destination.getParentFile().isDirectory()) {
+                ioMetaData.setDefaultAnnotationSavingDirectory(destination.getParentFile());
+            }
+        }
     }
 
     class AnnotationLoaderService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
@@ -1233,6 +1225,14 @@ public class Controller {
                 if(annotation != null && !annotation.getBoundingShapeData().isEmpty()) {
                     fileInfo.setHasAssignedBoundingShapes(true);
                 }
+            }
+        }
+
+        private void setCurrentAnnotationLoadingDirectory(File source) {
+            if(source.isDirectory()) {
+                ioMetaData.setDefaultAnnotationLoadingDirectory(source);
+            } else if(source.isFile() && source.getParentFile().isDirectory()) {
+                ioMetaData.setDefaultAnnotationLoadingDirectory(source.getParentFile());
             }
         }
     }

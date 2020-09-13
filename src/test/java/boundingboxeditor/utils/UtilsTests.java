@@ -1,26 +1,26 @@
 package boundingboxeditor.utils;
 
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-public class UtilsTests {
+class UtilsTests {
     @Test
     void onCreateMathUtils_ShouldThrowException() throws Exception {
         Constructor<MathUtils> mathUtilsConstructor = MathUtils.class.getDeclaredConstructor();
         mathUtilsConstructor.setAccessible(true);
 
-        Throwable throwable = Assertions.assertThrows(IllegalStateException.class, () -> {
-            try {
-                mathUtilsConstructor.newInstance();
-            } catch(InvocationTargetException e) {
-                throw e.getCause();
-            }
-        });
-
-        Assertions.assertEquals(throwable.getMessage(), "MathUtils class");
+        try {
+            mathUtilsConstructor.newInstance();
+            Assertions.fail("Expected an InvocationTargetException to be thrown");
+        } catch(InvocationTargetException e) {
+            MatcherAssert.assertThat(e.getCause(), Matchers.instanceOf(IllegalStateException.class));
+            Assertions.assertEquals(e.getCause().getMessage(), "MathUtils class");
+        }
     }
 
     @Test
@@ -28,15 +28,13 @@ public class UtilsTests {
         Constructor<ColorUtils> colorUtilsConstructor = ColorUtils.class.getDeclaredConstructor();
         colorUtilsConstructor.setAccessible(true);
 
-        Throwable throwable = Assertions.assertThrows(IllegalStateException.class, () -> {
-            try {
-                colorUtilsConstructor.newInstance();
-            } catch(InvocationTargetException e) {
-                throw e.getCause();
-            }
-        });
-
-        Assertions.assertEquals(throwable.getMessage(), "ColorUtils class");
+        try {
+            colorUtilsConstructor.newInstance();
+            Assertions.fail("Expected an InvocationTargetException to be thrown");
+        } catch(InvocationTargetException e) {
+            MatcherAssert.assertThat(e.getCause(), Matchers.instanceOf(IllegalStateException.class));
+            Assertions.assertEquals(e.getCause().getMessage(), "ColorUtils class");
+        }
     }
 
     @Test
@@ -44,15 +42,13 @@ public class UtilsTests {
         Constructor<UiUtils> uiUtilsConstructor = UiUtils.class.getDeclaredConstructor();
         uiUtilsConstructor.setAccessible(true);
 
-        Throwable throwable = Assertions.assertThrows(IllegalStateException.class, () -> {
-            try {
-                uiUtilsConstructor.newInstance();
-            } catch(InvocationTargetException e) {
-                throw e.getCause();
-            }
-        });
-
-        Assertions.assertEquals(throwable.getMessage(), "UiUtils class");
+        try {
+            uiUtilsConstructor.newInstance();
+            Assertions.fail("Expected an InvocationTargetException to be thrown");
+        } catch(InvocationTargetException e) {
+            MatcherAssert.assertThat(e.getCause(), Matchers.instanceOf(IllegalStateException.class));
+            Assertions.assertEquals(e.getCause().getMessage(), "UiUtils class");
+        }
     }
 
     @Test

@@ -40,26 +40,32 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final String BOUNDING_POLYGON_SERIALIZED_NAME = "polygon";
     private static final String TAGS_SERIALIZED_NAME = "tags";
     private static final String PARTS_SERIALIZED_NAME = "parts";
-    private static final String IMAGE_ATTRIBUTION_MESSAGE_PART = " element in annotation for image ";
+    private static final String ELEMENT_LOCATION_ERROR_MESSAGE_PART = " element in ";
+    private static final String IMAGE_ATTRIBUTION_MESSAGE_PART =
+            ELEMENT_LOCATION_ERROR_MESSAGE_PART + "annotation for image ";
+    private static final String MISSING_MESSAGE_PART = "Missing ";
     private static final String MISSING_CATEGORY_ERROR_MESSAGE =
-            "Missing " + OBJECT_CATEGORY_SERIALIZED_NAME + " element in ";
+            MISSING_MESSAGE_PART + OBJECT_CATEGORY_SERIALIZED_NAME + ELEMENT_LOCATION_ERROR_MESSAGE_PART;
     private static final String INVALID_COORDINATES_ERROR_MESSAGE = "Invalid coordinate value(s) in ";
     private static final String INVALID_COORDINATE_ERROR_MESSAGE = "Invalid coordinate value for ";
     private static final String INVALID_COORDINATE_NUMBER_ERROR_MESSAGE = "Invalid number of coordinates in ";
-    private static final String INVALID_TAGS_ERROR_MESSAGE = "Invalid " + TAGS_SERIALIZED_NAME + " value(s) in ";
-    private static final String INVALID_PARTS_ERROR_MESSAGE = "Invalid " + PARTS_SERIALIZED_NAME + " value(s) in ";
+    private static final String INVALID_MESSAGE_PART = "Invalid ";
+    private static final String INVALID_TAGS_ERROR_MESSAGE =
+            INVALID_MESSAGE_PART + TAGS_SERIALIZED_NAME + " value(s) in ";
+    private static final String INVALID_PARTS_ERROR_MESSAGE =
+            INVALID_MESSAGE_PART + PARTS_SERIALIZED_NAME + " value(s) in ";
     private static final String MISSING_IMAGE_FILE_NAME_ERROR_MESSAGE =
-            "Missing image " + IMAGE_FILE_NAME_SERIALIZED_NAME + " element.";
+            MISSING_MESSAGE_PART + IMAGE_META_DATA_SERIALIZED_NAME + " " + IMAGE_FILE_NAME_SERIALIZED_NAME +
+                    " element.";
     private static final String MISSING_IMAGES_FIELD_ERROR_MESSAGE = "Missing images element.";
-    private static final String ELEMENT_LOCATION_ERROR_MESSAGE_PART = " element in ";
     private static final String MISSING_OBJECTS_FIELD_ERROR_MESSAGE =
-            "Missing " + BOUNDING_SHAPE_DATA_SERIALIZED_NAME + IMAGE_ATTRIBUTION_MESSAGE_PART;
+            MISSING_MESSAGE_PART + BOUNDING_SHAPE_DATA_SERIALIZED_NAME + IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String MISSING_CATEGORY_NAME_ERROR_MESSAGE =
-            "Missing " + OBJECT_CATEGORY_SERIALIZED_NAME + " name" + IMAGE_ATTRIBUTION_MESSAGE_PART;
+            MISSING_MESSAGE_PART + OBJECT_CATEGORY_SERIALIZED_NAME + " name" + IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String MISSING_BOUNDING_SHAPE_ERROR_MESSAGE =
-            "Missing " + BOUNDING_BOX_SERIALIZED_NAME + " or " + BOUNDING_POLYGON_SERIALIZED_NAME +
+            MISSING_MESSAGE_PART + BOUNDING_BOX_SERIALIZED_NAME + " or " + BOUNDING_POLYGON_SERIALIZED_NAME +
                     IMAGE_ATTRIBUTION_MESSAGE_PART;
-    private static final String INVALID_COLOR_ERROR_MESSAGE = "Invalid color";
+    private static final String INVALID_COLOR_ERROR_MESSAGE = INVALID_MESSAGE_PART + OBJECT_COLOR_SERIALIZED_NAME;
 
     @Override
     public IOResult load(Model model, Path path, DoubleProperty progress) throws IOException {
@@ -335,7 +341,8 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
             if(!jsonObject.has(name)) {
                 unParsedFileErrorMessages
                         .add(new IOResult.ErrorInfoEntry(annotationFileName,
-                                                         "Missing " + name + ELEMENT_LOCATION_ERROR_MESSAGE_PART +
+                                                         MISSING_MESSAGE_PART + name +
+                                                                 ELEMENT_LOCATION_ERROR_MESSAGE_PART +
                                                                  BOUNDING_BOX_SERIALIZED_NAME +
                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
                                                                  currentFilename.get() + "."));
