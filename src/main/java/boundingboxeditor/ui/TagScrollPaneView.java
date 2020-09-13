@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * @see View
  */
 class TagScrollPaneView extends ScrollPane implements View {
-    private static final String TEXT_FIELD_PROMPT_TEXT = "New tag";
+    private static final String TEXT_FIELD_PROMPT_TEXT = "New Tag";
     private static final String TAG_INPUT_FIELD_ID = "tag-input-field";
     private static final String TAG_EDITOR_SCROLL_PANE_ID = "tag-editor-scroll-pane";
     private static final int FLOW_PANE_GAP_SIZE = 8;

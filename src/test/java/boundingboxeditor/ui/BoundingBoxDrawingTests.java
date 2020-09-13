@@ -3,6 +3,8 @@ package boundingboxeditor.ui;
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import boundingboxeditor.utils.MathUtils;
 import javafx.geometry.Point2D;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -27,6 +29,8 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
     @Test
     void onOpeningNewImageFolder_WhenBoundingBoxesExist_ShouldResetCorrectly(FxRobot robot) {
         waitUntilCurrentImageIsLoaded();
+
+        verifyDragAnchorFunctionality();
 
         String testCategoryName = "Test";
         enterNewCategory(robot, testCategoryName);
@@ -174,11 +178,25 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         timeOutLookUpInStageAndClickOn(robot, exitDialogStage2, "Yes");
 
-        final Stage saveAnnotationsStage = timeoutGetTopModalStage(robot, "Save annotations");
+        final Stage saveAnnotationsStage = timeOutGetTopModalStage(robot, "Save annotations");
 
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsStage, "Cancel");
 
         verifyThat(model.isSaved(), Matchers.is(false));
+    }
+
+    private void verifyDragAnchorFunctionality() {
+        DragAnchor dragAnchor = new DragAnchor();
+
+        dragAnchor.setCoordinates(1.0, 2.0);
+        verifyThat(dragAnchor.getX(), Matchers.closeTo(1.0, RATIO_EQUAL_THRESHOLD));
+        verifyThat(dragAnchor.getY(), Matchers.closeTo(2.0, RATIO_EQUAL_THRESHOLD));
+
+        dragAnchor.setFromMouseEvent(new MouseEvent(MouseEvent.MOUSE_CLICKED, 32.0, 60.0, 100.0, 200.0,
+                                                    MouseButton.PRIMARY, 1, false, false, false, false, false, false,
+                                                    false, false, false, false, null));
+        verifyThat(dragAnchor.getX(), Matchers.closeTo(32.0, RATIO_EQUAL_THRESHOLD));
+        verifyThat(dragAnchor.getY(), Matchers.closeTo(60.0, RATIO_EQUAL_THRESHOLD));
     }
 
     private Stage tryExitAndGetDialog(FxRobot robot) {
@@ -187,6 +205,6 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         timeOutClickOn(robot, "Exit");
         WaitForAsyncUtils.waitForFxEvents();
 
-        return timeoutGetTopModalStage(robot, "Exit Application");
+        return timeOutGetTopModalStage(robot, "Exit Application");
     }
 }

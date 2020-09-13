@@ -57,4 +57,16 @@ public class MathUtils {
     public static boolean doubleAlmostEqual(double a, double b) {
         return Math.abs(a - b) < DOUBLE_EQUAL_THRESHOLD;
     }
+
+    /**
+     * Checks whether a double value is an element of a given closed interval.
+     *
+     * @param x the value to check
+     * @param a the lower bound of the interval
+     * @param b the upper bound of the interval
+     * @return true if x is within [a, b], false otherwise
+     */
+    public static boolean isWithin(double x, double a, double b) {
+        return Double.compare(x, a) >= 0 && Double.compare(x, b) <= 0.0;
+    }
 }

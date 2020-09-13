@@ -140,13 +140,6 @@ public class BoundingBoxView extends Rectangle implements
                 MathUtils.doubleAlmostEqual(getHeight(), other.getHeight());
     }
 
-    @Override
-    public String toString() {
-        return "BoundingBoxView[x=" + getX() + ", y=" + getY() + ", width=" + getWidth() + ", height=" + getHeight()
-                + ", fill=" + getFill() + ", category=" + boundingShapeViewData.getObjectCategory()
-                + ", image-metadata=" + boundingShapeViewData.getImageMetaData() + "]";
-    }
-
     /**
      * Returns the associated {@link ObjectCategory} object.
      *

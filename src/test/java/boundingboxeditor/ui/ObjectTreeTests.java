@@ -16,6 +16,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
 import org.testfx.matcher.control.ComboBoxMatchers;
+import org.testfx.matcher.control.LabeledMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
@@ -41,10 +42,14 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, "Test");
         WaitForAsyncUtils.waitForFxEvents();
 
+        verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(true));
+
         /* ----Drawing---- */
         // Draw first bounding-box.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
         WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(false));
 
         final List<TreeItem<Object>> topLevelTreeItems = mainView.getObjectTree().getRoot().getChildren();
 
@@ -95,10 +100,10 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.equalTo(false));
         verifyThat((BoundingBoxView) firstTestChildTreeItem.getValue(), NodeMatchers.isInvisible());
 
-        // Hide second bounding-box by right-clicking.
-        robot.rightClickOn("Test 2");
+        // Hide second bounding-box by clicking on its hide toggle.
+        verifyThat(secondTestChildTreeItem.toggleIcon, Matchers.instanceOf(ToggleSquare.class));
+        robot.clickOn((ToggleSquare) secondTestChildTreeItem.toggleIcon);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Hide");
 
         verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.equalTo(false));
         verifyThat((BoundingBoxView) secondTestChildTreeItem.getValue(), NodeMatchers.isInvisible());
@@ -237,6 +242,8 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                            .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false));
+        // The tag input field should be disabled if not bounding shape element is currently selected.
+        verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(true));
 
         /* ---- Object category change ---- */
         moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
@@ -316,5 +323,34 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
                    Matchers.equalTo(testCategory));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("Test"), Matchers.equalTo(1));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("Dummy"), Matchers.equalTo(0));
+
+        final String testTagName = "TestTag";
+
+        verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(false));
+        verifyThat(mainView.getTagInputField().getPromptText(), Matchers.equalTo("New Tag"));
+
+        robot.clickOn("New Tag").write(testTagName).press(KeyCode.ENTER);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final BoundingShapeViewData currentBoundingShape = mainView.getCurrentBoundingShapes().get(0).getViewData();
+
+        verifyThat(currentBoundingShape.getTags(), Matchers.contains(testTagName));
+
+        verifyThat(robot.lookup("#tag").queryAll(), Matchers.hasSize(1));
+
+        verifyThat("#tag", NodeMatchers.isVisible());
+        verifyThat("#tag", NodeMatchers.hasChild("#delete-button"));
+        verifyThat("#tag", NodeMatchers.hasChild("#tag-label"));
+
+        verifyThat("#tag-label", NodeMatchers.isVisible());
+
+        verifyThat("#tag-label", LabeledMatchers.hasText(testTagName));
+
+        robot.clickOn("#tag #delete-button");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(robot.lookup("#tag").queryAll(), Matchers.empty());
+        verifyThat(currentBoundingShape.getTags(), Matchers.empty());
+        verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(false));
     }
 }

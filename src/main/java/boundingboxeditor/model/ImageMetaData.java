@@ -110,13 +110,6 @@ public class ImageMetaData {
         return false;
     }
 
-    @Override
-    public String toString() {
-        return "ImageMetaData[fileName=" + getFileName() + ", folderName=" + getFolderName()
-                + ", image-width=" + getImageWidth() + ", image-height=" + getImageHeight() + ", image-depth=" +
-                getImageDepth();
-    }
-
     public String getDimensionsString() {
         if(details == null) {
             return "[]";

@@ -102,8 +102,14 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                                       "Bounding shape counts did not match within " + TIMEOUT_DURATION_IN_SEC +
                                               " sec.");
 
-        verifyThat(controller.getIoMetaData().getDefaultAnnotationLoadingDirectory(),
-                   Matchers.equalTo(referenceAnnotationFile.getParentFile()));
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> controller.getIoMetaData()
+                                                                                      .getDefaultAnnotationLoadingDirectory()
+                                                                                      .equals(referenceAnnotationFile
+                                                                                                      .getParentFile())),
+                                      "Expected default annotation loading directory was not set within " +
+                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
              .press(KeyCode.CONTROL)
@@ -914,7 +920,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     private void userChoosesNoOnAnnotationImportDialogSubtest(FxRobot robot, File annotationFile) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "No");
 
-        Stage saveAnnotationsDialog = timeoutGetTopModalStage(robot, "Save annotations");
+        Stage saveAnnotationsDialog = timeOutGetTopModalStage(robot, "Save annotations");
 
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialog, "No");
         timeOutAssertTopModalStageClosed(robot, "Save annotations");

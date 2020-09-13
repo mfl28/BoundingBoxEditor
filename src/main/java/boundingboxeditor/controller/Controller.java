@@ -144,10 +144,6 @@ public class Controller {
         setUpModelListeners();
     }
 
-    IoMetaData getIoMetaData() {
-        return ioMetaData;
-    }
-
     /**
      * Handles the event of the user requesting to open a new image folder.
      */
@@ -526,6 +522,10 @@ public class Controller {
      */
     public Model getModel() {
         return model;
+    }
+
+    IoMetaData getIoMetaData() {
+        return ioMetaData;
     }
 
     Stage getStage() {

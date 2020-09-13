@@ -311,7 +311,7 @@ public class BoundingBoxEditorTestBase {
         return getTopModalStage(robot, title);
     }
 
-    protected Stage timeoutGetTopModalStage(FxRobot robot, String stageTitle) {
+    protected Stage timeOutGetTopModalStage(FxRobot robot, String stageTitle) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> getTopModalStage(robot, stageTitle) !=
                                                                               null),

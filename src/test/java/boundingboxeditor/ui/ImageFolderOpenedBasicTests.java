@@ -7,7 +7,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
@@ -16,7 +15,6 @@ import org.testfx.matcher.control.TableViewMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,6 +34,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         verifyMenuBarFunctionality(robot);
         verifyCategorySelectorState();
         verifyCategorySelectorEnterNewCategoryFunctionality(robot);
+        verifyImageSidePanelSearchFunctionality(robot);
     }
 
     private void verifyNodeVisibilities() {
@@ -69,23 +68,13 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         timeOutClickOn(robot, "Pascal-VOC format...");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot, "Save Error") !=
-                                                                              null),
-                                      "Expected save error dialog did not open within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
-
-        Stage errorDialogStage = getTopModalStage(robot, "Save Error");
+        Stage errorDialogStage = timeOutGetTopModalStage(robot, "Save Error");
         verifyThat(errorDialogStage, Matchers.notNullValue());
 
         timeOutLookUpInStageAndClickOn(robot, errorDialogStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot, "Save Error") ==
-                                                                              null),
-                                      "Expected save error dialog did not close within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Save Error");
 
         timeOutClickOn(robot, "File");
         WaitForAsyncUtils.waitForFxEvents();
@@ -96,23 +85,29 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         timeOutClickOn(robot, "YOLO format...");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot, "Save Error") !=
-                                                                              null),
-                                      "Expected save error dialog did not open within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
-
-        Stage errorDialogStage2 = getTopModalStage(robot, "Save Error");
+        Stage errorDialogStage2 = timeOutGetTopModalStage(robot, "Save Error");
         verifyThat(errorDialogStage2, Matchers.notNullValue());
 
         timeOutLookUpInStageAndClickOn(robot, errorDialogStage2, "OK");
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertTopModalStageClosed(robot, "Save Error");
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot, "Save Error") ==
-                                                                              null),
-                                      "Expected save error dialog did not close within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
+        timeOutClickOn(robot, "File");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Export Annotations");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutMoveTo(robot, "Pascal-VOC format...");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "JSON format...");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Stage errorDialogStage3 = timeOutGetTopModalStage(robot, "Save Error");
+        verifyThat(errorDialogStage3, Matchers.notNullValue());
+
+        timeOutLookUpInStageAndClickOn(robot, errorDialogStage3, "OK");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertTopModalStageClosed(robot, "Save Error");
 
         MenuItem exitItem = getSubMenuItem(robot, "File", "Exit");
         assertTrue(exitItem.isVisible());
@@ -142,25 +137,12 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, null);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Category Creation Error") !=
-                                                                              null),
-                                      "Expected category creation error dialog did not open within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
-
-        Stage categoryCreationErrorStage = getTopModalStage(robot, "Category Creation Error");
+        Stage categoryCreationErrorStage = timeOutGetTopModalStage(robot, "Category Creation Error");
         verifyThat(categoryCreationErrorStage, Matchers.notNullValue());
 
         timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
-
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Category Creation Error") ==
-                                                                              null),
-                                      "Expected category creation error dialog did not close within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Category Creation Error");
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
 
@@ -175,25 +157,12 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, "Test");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Category Creation Error") !=
-                                                                              null),
-                                      "Expected category creation error dialog did not open within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
-
-        Stage categoryCreationErrorStage2 = getTopModalStage(robot, "Category Creation Error");
+        Stage categoryCreationErrorStage2 = timeOutGetTopModalStage(robot, "Category Creation Error");
         verifyThat(categoryCreationErrorStage2, Matchers.notNullValue());
 
         timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage2, "OK");
         WaitForAsyncUtils.waitForFxEvents();
-
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Category Creation Error") ==
-                                                                              null),
-                                      "Expected category creation error dialog did not close within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Category Creation Error");
 
         // Flush text-field manually
         TextField textField = robot.lookup("#category-input-field").query();
@@ -222,24 +191,12 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         robot.write("Dummy").push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Category Creation Error") !=
-                                                                              null),
-                                      "Expected category creation error dialog did not open within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
-
-        Stage categoryCreationErrorStage3 = getTopModalStage(robot, "Category Creation Error");
+        Stage categoryCreationErrorStage3 = timeOutGetTopModalStage(robot, "Category Creation Error");
         verifyThat(categoryCreationErrorStage3, Matchers.notNullValue());
 
         timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage3, "OK");
         WaitForAsyncUtils.waitForFxEvents();
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Category Creation Error") ==
-                                                                              null),
-                                      "Expected category creation error dialog did not close within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Category Creation Error");
 
         verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Test"));
 
@@ -253,24 +210,12 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         robot.write("    ").push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Category Creation Error") !=
-                                                                              null),
-                                      "Expected category creation error dialog did not open within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
-
-        Stage categoryCreationErrorStage4 = getTopModalStage(robot, "Category Creation Error");
+        Stage categoryCreationErrorStage4 = timeOutGetTopModalStage(robot, "Category Creation Error");
         verifyThat(categoryCreationErrorStage4, Matchers.notNullValue());
 
         timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage4, "OK");
         WaitForAsyncUtils.waitForFxEvents();
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Category Creation Error") ==
-                                                                              null),
-                                      "Expected category creation error dialog did not close within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Category Creation Error");
 
         // Deleting remaining categories
         timeOutClickOnNth(robot, "#delete-button", 1);
@@ -284,5 +229,21 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getObjectCategoryTable(), TableViewMatchers.hasNumRows(0));
+    }
+
+    private void verifyImageSidePanelSearchFunctionality(FxRobot robot) {
+        final TextField fileSearchField = mainView.getImageFileSearchField();
+
+        verifyThat(fileSearchField.getPromptText(), Matchers.equalTo("Search File"));
+        verifyThat(fileSearchField, NodeMatchers.isNotFocused());
+
+        robot.clickOn(fileSearchField);
+        verifyThat(fileSearchField, NodeMatchers.isFocused());
+
+        robot.write("nico");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        waitUntilCurrentImageIsLoaded();
+        verifyThat(model.getCurrentImageFileName(), Matchers.equalTo("nico-bhlr-1067059-unsplash.jpg"));
     }
 }

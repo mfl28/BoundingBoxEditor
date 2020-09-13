@@ -54,4 +54,16 @@ public class UtilsTests {
 
         Assertions.assertEquals(throwable.getMessage(), "UiUtils class");
     }
+
+    @Test
+    void isWithin0And1_onOutOfIntervalArgument_ShouldReturnFalse() {
+        Assertions.assertFalse(MathUtils.isWithin(-0.00001, 0.0, 1.0));
+        Assertions.assertFalse(MathUtils.isWithin(1.00001, 0.0, 1.0));
+    }
+
+    @Test
+    void isWithin0And1_onWithinIntervalArgument_ShouldReturnTrue() {
+        Assertions.assertTrue(MathUtils.isWithin(0.00001, 0.0, 1.0));
+        Assertions.assertTrue(MathUtils.isWithin(0.99999, 0.0, 1.0));
+    }
 }

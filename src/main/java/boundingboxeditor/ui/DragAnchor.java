@@ -15,11 +15,6 @@ public class DragAnchor {
     DragAnchor() {
     }
 
-    @Override
-    public String toString() {
-        return "DragAnchor " + "[x = " + getX() + ", y = " + getY() + "]";
-    }
-
     /**
      * Convenience method to set both coordinates from
      * a {@link MouseEvent} object's position relative to the event's source.
@@ -41,30 +36,12 @@ public class DragAnchor {
     }
 
     /**
-     * Sets the x-coordinate.
-     *
-     * @param x the value to set
-     */
-    void setX(double x) {
-        this.x = x;
-    }
-
-    /**
      * Returns the y-coordinate.
      *
      * @return the y-coordinate
      */
     double getY() {
         return y;
-    }
-
-    /**
-     * Sets the y-coordinate.
-     *
-     * @param y the value to set
-     */
-    void setY(double y) {
-        this.y = y;
     }
 
     /**

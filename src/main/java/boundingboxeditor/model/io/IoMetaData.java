@@ -12,6 +12,7 @@ public class IoMetaData {
 
     /**
      * Get the currently set default directory for image loading.
+     *
      * @return the directory
      */
     public File getDefaultImageLoadingDirectory() {
@@ -20,6 +21,7 @@ public class IoMetaData {
 
     /**
      * Set the current default directory for image loading.
+     *
      * @param defaultImageLoadingDirectory the directory
      */
     public void setDefaultImageLoadingDirectory(File defaultImageLoadingDirectory) {
@@ -28,6 +30,7 @@ public class IoMetaData {
 
     /**
      * Get the currently set default directory for annotation saving.
+     *
      * @return the directory
      */
     public File getDefaultAnnotationSavingDirectory() {
@@ -36,6 +39,7 @@ public class IoMetaData {
 
     /**
      * Set the current default directory for annotation saving.
+     *
      * @param defaultAnnotationSavingDirectory the directory
      */
     public void setDefaultAnnotationSavingDirectory(File defaultAnnotationSavingDirectory) {
@@ -44,6 +48,7 @@ public class IoMetaData {
 
     /**
      * Get the currently set default directory for annotation loading.
+     *
      * @return the directory
      */
     public File getDefaultAnnotationLoadingDirectory() {
@@ -52,6 +57,7 @@ public class IoMetaData {
 
     /**
      * Set the current default directory for annotation loading.
+     *
      * @param defaultAnnotationLoadingDirectory the directory
      */
     public void setDefaultAnnotationLoadingDirectory(File defaultAnnotationLoadingDirectory) {

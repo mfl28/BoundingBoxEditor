@@ -124,6 +124,11 @@ public class BoundingBoxData extends BoundingShapeData {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), relativeBoundsInImage);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if(this == o) {
             return true;
@@ -144,11 +149,6 @@ public class BoundingBoxData extends BoundingShapeData {
                 MathUtils.doubleAlmostEqual(relativeBoundsInImage.getMinY(), that.relativeBoundsInImage.getMinY()) &&
                 MathUtils.doubleAlmostEqual(relativeBoundsInImage.getMaxX(), that.relativeBoundsInImage.getMaxX()) &&
                 MathUtils.doubleAlmostEqual(relativeBoundsInImage.getMaxY(), that.relativeBoundsInImage.getMaxY());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), relativeBoundsInImage);
     }
 }
 
