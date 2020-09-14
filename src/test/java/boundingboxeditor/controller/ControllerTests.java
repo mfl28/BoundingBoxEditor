@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
-class ControllerIOTests extends BoundingBoxEditorTestBase {
+class ControllerTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
@@ -62,6 +62,14 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         verifyThat(model.isSaved(), Matchers.is(true));
 
         final File referenceAnnotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
+
+        timeOutClickOn(robot, "File");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Import Annotations");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Pascal-VOC format...");
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.push(KeyCode.ESCAPE);
 
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
@@ -187,6 +195,16 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFolder =
                 new File(getClass().getResource(referenceAnnotationDirectoryPath).getFile());
 
+        timeOutClickOn(robot, "File");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Import Annotations");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutMoveTo(robot, "Pascal-VOC format...");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "YOLO format...");
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.push(KeyCode.ESCAPE);
+
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
                 .initiateAnnotationImport(referenceAnnotationFolder, ImageAnnotationLoadStrategy.Type.YOLO));
@@ -291,6 +309,16 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
 
         final File referenceAnnotationFile =
                 new File(getClass().getResource(referenceAnnotationFilePath).getFile());
+
+        timeOutClickOn(robot, "File");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Import Annotations");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutMoveTo(robot, "Pascal-VOC format...");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "JSON format...");
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.push(KeyCode.ESCAPE);
 
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
@@ -453,14 +481,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.YOLO));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Annotation import error report") !=
-                                                                              null),
-                                      "Expected error report dialog did not open within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
-
-        final Stage errorReportStage = getTopModalStage(robot, "Annotation import error report");
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
 
         final String errorReportDialogContentReferenceText =
@@ -620,14 +641,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Annotation import error report") !=
-                                                                              null),
-                                      "Expected error report dialog did not open within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
-
-        final Stage errorReportStage = getTopModalStage(robot, "Annotation import error report");
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
 
         final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
@@ -663,12 +677,7 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Annotation import error report") ==
-                                                                              null),
-                                      "Expected error report dialog did not close within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Annotation import error report");
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().isEmpty(), Matchers.is(true));
         verifyThat(model.getObjectCategories(), Matchers.empty());
@@ -918,10 +927,38 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
     }
 
     private void userChoosesNoOnAnnotationImportDialogSubtest(FxRobot robot, File annotationFile) {
+        userChoosesToSaveExistingAnnotationsOnAnnotationImport(robot, annotationFile);
+        userChoosesNotToSaveExistingAnnotationsOnAnnotationImport(robot, annotationFile);
+    }
+
+    private void userChoosesToSaveExistingAnnotationsOnAnnotationImport(FxRobot robot, File annotationFile) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "No");
 
         Stage saveAnnotationsDialog = timeOutGetTopModalStage(robot, "Save annotations");
 
+        // User chooses to save existing annotations:
+        timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialog, "Yes");
+
+        Stage saveFormatDialog = timeOutGetTopModalStage(robot, "Save annotations");
+        timeOutLookUpInStageAndClickOn(robot, saveFormatDialog, "Cancel");
+        timeOutAssertTopModalStageClosed(robot, "Save annotations");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getImageFileListView().getSelectionModel()
+                           .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
+        // Trying to import annotations updates annotation data and "saved" check
+        // (there are unsaved annotations):
+        verifyThat(model.isSaved(), Matchers.is(false));
+        verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(false));
+    }
+
+    private void userChoosesNotToSaveExistingAnnotationsOnAnnotationImport(FxRobot robot, File annotationFile) {
+        importAnnotationAndClickDialogOption(robot, annotationFile, "No");
+
+        Stage saveAnnotationsDialog = timeOutGetTopModalStage(robot, "Save annotations");
+
+        // User chooses not to save existing annotations:
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialog, "No");
         timeOutAssertTopModalStageClosed(robot, "Save annotations");
         timeOutAssertNoTopModelStage(robot);
@@ -1032,21 +1069,11 @@ class ControllerIOTests extends BoundingBoxEditorTestBase {
                 () -> controller.initiateAnnotationImport(annotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Import annotation data") !=
-                                                                              null),
-                                      "Expected info dialog did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
-
-        Stage topModalStage = getTopModalStage(robot, "Import annotation data");
+        Stage topModalStage = timeOutGetTopModalStage(robot, "Import annotation data");
         timeOutLookUpInStageAndClickOn(robot, topModalStage, userChoice);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Import annotation data") ==
-                                                                              null),
-                                      "Expected info dialog did not close within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Import annotation data");
 
         WaitForAsyncUtils.waitForFxEvents();
     }

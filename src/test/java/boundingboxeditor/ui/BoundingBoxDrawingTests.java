@@ -32,6 +32,14 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyDragAnchorFunctionality();
 
+        verifyThat(model.getImageFileNameToMetaDataMap().size(), Matchers.equalTo(4));
+        verifyThat(model.getImageFileNameToMetaDataMap()
+                        .entrySet()
+                        .stream()
+                        .filter(entry -> !entry.getKey()
+                                               .equals(model.getCurrentImageFileName()))
+                        .allMatch(entry -> entry.getValue().hasDetails()), Matchers.is(true));
+
         String testCategoryName = "Test";
         enterNewCategory(robot, testCategoryName);
         WaitForAsyncUtils.waitForFxEvents();
