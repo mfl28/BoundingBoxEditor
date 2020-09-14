@@ -259,14 +259,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         timeOutClickOn(robot, "Change Category");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Change Category") !=
-                                                                              null),
-                                      "Expected change category dialog did not open within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
-
-        final Stage changeCategoryStage = getTopModalStage(robot, "Change Category");
+        final Stage changeCategoryStage = timeOutGetTopModalStage(robot, "Change Category");
         verifyThat(changeCategoryStage, Matchers.notNullValue());
 
         final DialogPane changeCategoryDialog = (DialogPane) changeCategoryStage.getScene().getRoot();
@@ -309,13 +302,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         timeOutLookUpInStageAndClickOn(robot, changeCategoryStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
-
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Change Category") ==
-                                                                              null),
-                                      "Expected change category dialog did not close within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Change Category");
 
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));

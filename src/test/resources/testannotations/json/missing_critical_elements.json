@@ -1,6 +1,7 @@
 [
   {
     "image": {
+      "fileName": "tyler-nix-582593-unsplash.jpg",
       "details": {
         "folderName": "1",
         "width": 3551.0,
@@ -11,28 +12,56 @@
     "objects": [
       {
         "bndbox": {
-          "minX": 0.262824,
-          "minY": 0.194483,
-          "maxX": 0.740875,
-          "maxY": 0.582069
+          "minX": 0.261357,
+          "minY": 0.190726,
+          "maxX": 0.739905,
+          "maxY": 0.578631
         },
         "category": {
           "name": "Car",
-          "color": "#C054E5"
+          "color": "#8A4A97"
         },
         "tags": [],
-        "parts": []
+        "parts": [
+          {
+            "bndbox": {
+              "minX": xyz,
+              "minY": 0.446527,
+              "maxX": 0.395112,
+              "maxY": 0.48637
+            },
+            "category": {
+              "name": "Headlight",
+              "color": "#F82F8D"
+            },
+            "tags": [],
+            "parts": []
+          },
+          {
+            "bndbox": {
+              "minX": 0.610885,
+              "minY": -0.01,
+              "maxX": 0.672787,
+              "maxY": 0.486606
+            },
+            "category": {
+              "name": "Headlight",
+              "color": "#F82F8D"
+            },
+            "tags": [],
+            "parts": []
+          }
+        ]
       },
       {
         "bndbox": {
-          "minX": 0.056911,
-          "minY": 0.415172,
-          "maxX": 0.165559,
-          "maxY": 0.490345
+          "minX": 0.058079,
+          "minY": 0.41613,
+          "maxX": 0.160928,
+          "maxY": 0.488711
         },
         "category": {
-          "name": "Cycler",
-          "color": "#739517"
+          "color": "#103724"
         },
         "tags": [],
         "parts": []
@@ -52,81 +81,81 @@
     "objects": [
       {
         "bndbox": {
-          "minX": 0.358565,
-          "minY": 0.230345,
-          "maxX": -17.0,
-          "maxY": 0.946897
-        },
-        "category": {
-          "name": "Surfboard"
-        },
-        "tags": [],
-        "parts": []
-      },
-      {
-        "bndbox": {
-          "minX": 0.762639,
-          "minY": 0.273103,
-          "maxX": 0.843546,
-          "maxY": 0.944828
-        },
-        "category": {
-          "name": "Surfboard",
-          "color": "ZZZZZZ"
-        },
-        "tags": [],
-        "parts": []
-      },
-      {
-        "bndbox": {
-          "minX": 0.664724,
+          "minX": 0.168709,
           "minY": 0.266207,
-          "maxX": 0.77781,
-          "maxY": 0.903448
+          "maxX": 1.1,
+          "maxY": 0.935862
         },
         "category": {
           "name": "Surfboard",
-          "color": "#6AFAE4"
-        }
-      },
-      {
-        "bndbox": {
-          "minX": 0.50245,
-          "minY": 0.251034,
-          "maxX": 0.622891,
-          "maxY": 0.912414
-        },
-        "category": {
-          "name": "Surfboard",
-          "color": "#6AFAE4"
+          "color": "#C6A99A"
         },
         "tags": [],
         "parts": []
       },
       {
         "bndbox": {
-          "minX": 0.215139,
-          "minY": 0.23931,
-          "maxX": 0.323628,
-          "maxY": 0.927586
+          "minX": 0.216058,
+          "minY": 0.246897,
+          "maxX": 0.323168
         },
         "category": {
-          "color": "#6AFAE4"
+          "name": "Surfboard",
+          "color": "#C6A99A"
         },
         "tags": [],
         "parts": []
       },
       {
         "bndbox": {
-          "minX": 0.171008,
-          "minY": 0.269655,
-          "maxY": 0.933103
+          "minX": 0.354887,
+          "minY": 0.227586,
+          "maxX": 0.465215,
+          "maxY": 0.942069
         },
         "category": {
           "name": "Surfboard",
-          "color": "#6AFAE4"
+          "color": "ZZZ"
         },
         "tags": [],
+        "parts": []
+      },
+      {
+        "bndbox": {
+          "minX": 0.501991,
+          "minY": 0.250345,
+          "maxX": 0.62473,
+          "maxY": 0.915172
+        },
+        "category": {
+          "name": "Surfboard",
+          "color": "#C6A99A"
+        },
+        "tags": [],
+        "parts": []
+      },
+      {
+        "bndbox": {
+          "minX": 0.666103,
+          "minY": 0.266897,
+          "maxX": 0.778269,
+          "maxY": 0.904828
+        },
+        "tags": [],
+        "parts": []
+      },
+      {
+        "bndbox": {
+          "minX": 0.757123,
+          "minY": 0.275172,
+          "maxX": 0.842167,
+          "maxY": 0.946207
+        },
+        "category": {
+          "name": "Surfboard",
+          "color": "#C6A99A"
+        },
+        "tags": [ [],[] ],
         "parts": []
       }
     ]
@@ -170,35 +199,19 @@
           0.28818,
           0.496796,
           0.253458,
-          5000.0,
+          0.474359,
           0.269085,
           0.45467,
           0.328977
         ],
         "category": {
           "name": "Boat",
-          "color": "#C31D8F"
+          "color": "#360435"
         },
         "tags": [],
         "parts": [
           {
-            "bndbox": {
-              "minX": 0.471064,
-              "minY": 0.773281,
-              "maxX": 0.521103,
-              "maxY": 0.816291
-            },
-            "category": {
-              "name": "Boat",
-              "color": "#C31D8F"
-            },
-            "tags": [
-              "pose: right"
-            ],
-            "parts": []
-          },
-          {
-            "bndbox": {
+            "bbox": {
               "minX": 0.456943,
               "minY": 0.041333,
               "maxX": 0.494154,
@@ -206,7 +219,7 @@
             },
             "category": {
               "name": "Sail",
-              "color": "#E41C1C"
+              "color": "#981E33"
             },
             "tags": [],
             "parts": []
@@ -220,10 +233,11 @@
             },
             "category": {
               "name": "Sail",
-              "color": "#E41C1C"
+              "color": "#981E33"
             },
             "tags": [
-              "truncated"
+              "truncated",
+              "    "
             ],
             "parts": []
           },
@@ -231,12 +245,11 @@
             "bndbox": {
               "minX": 0.405376,
               "minY": 0.22275,
-              "maxX": 0.548334,
-              "maxY": 0.51455
+              "maxX": 0.548334
             },
             "category": {
               "name": "Sail",
-              "color": "#E41C1C"
+              "color": "#981E33"
             },
             "tags": [
               "pose: left"
@@ -252,13 +265,13 @@
             },
             "category": {
               "name": "Sail",
-              "color": "#E41C1C"
+              "color": "#981E33"
             },
             "tags": [
               "pose: left",
               "truncated"
             ],
-            "parts": []
+            "parts": [[[x]]]
           },
           {
             "bndbox": {
@@ -268,22 +281,18 @@
               "maxY": 0.657605
             },
             "category": {
-              "name": "Sail",
-              "color": "#E41C1C"
-            },
-            "tags": [],
-            "parts": []
+              "name": "Sail"
+            }
           },
           {
             "bndbox": {
               "minX": 0.446108,
-              "minY": 0.722946,
               "maxX": 0.485145,
               "maxY": 0.841249
             },
             "category": {
               "name": "Sail",
-              "color": "#E41C1C"
+              "color": "#981E33"
             },
             "tags": [],
             "parts": []
@@ -292,12 +301,11 @@
             "bndbox": {
               "minX": 0.406035,
               "minY": 0.859774,
-              "maxX": 0.438446,
-              "maxY": 0.878515
+              "maxX": 0.438446
             },
             "category": {
               "name": "Flag",
-              "color": "#9CFB9A"
+              "color": "#E739FA"
             },
             "tags": [
               "difficult"
@@ -305,6 +313,22 @@
             "parts": []
           }
         ]
+      },
+      {
+        "bndbox": {
+          "minX": 0.471064,
+          "minY": 0.773281,
+          "maxX": 0.521103,
+          "maxY": 0.816291
+        },
+        "category": {
+          "name": "Boat",
+          "color": "#360435"
+        },
+        "tags": [
+          "pose: right"
+        ],
+        "parts": []
       }
     ]
   },
@@ -321,29 +345,136 @@
     "objects": [
       {
         "polygon": [
-          0.403448,
-          0.608966,
-          0.421552,
-          0.668276,
-          0.488793,
-          0.657241,
-          0.574655,
-          0.603448,
-          0.644483,
-          0.495862,
-          0.548793,
-          0.49931,
-          0.471207
+          0.402651,
+          0.609065,
+          0.418492,
+          0.665517,
+          0.503746,
+          0.651308,
+          0.595624,
+          0.577191,
+          0.646603,
+          0.496161,
+          0.549253,
+          0.503842,
+          0.475808,
+          0.537252,
+          0.436061
         ],
         "category": {
           "name": "Boat",
-          "color": "#C31D8F"
+          "color": "#360435"
         },
-        "tags": [
-          "pose: topdown"
+        "tags": [],
+        "parts": []
+      },
+      {
+        "polygon": [
+          0.326241,
+          0.695606,
+          0.339901,
+          0.691856,
+          0.4528,
+          0.621143,
+          1000.0,
+          0.533824,
+          0.451193,
+          0.611233,
+          0.418247,
+          0.632661,
+          0.379878,
+          0.650875,
+          0.354767,
+          0.670964
         ],
+        "category": {
+          "name": "Sail",
+          "color": "#981E33"
+        },
+        "tags": [],
         "parts": []
       }
     ]
-  }
+  },
+  {
+    "image": {
+      "details": {
+        "folderName": "1",
+        "width": 3968.0,
+        "height": 2976.0,
+        "depth": 3
+      }
+    },
+    "objects": [
+      {
+        "polygon": [
+          0.402651,
+          0.609065,
+          0.23434,
+          0.34346
+        ],
+        "category": {
+          "name": "Boat",
+          "color": "#360435"
+        },
+        "tags": [],
+        "parts": []
+      },
+      {
+        "polygon": [
+          0.326241,
+          0.695606,
+          0.339901,
+          0.691856
+        ],
+        "category": {
+          "name": "Sail",
+          "color": "#981E33"
+        },
+        "tags": [],
+        "parts": []
+      }
+    ]
+  },
+  {
+    "image": {
+      "fileName": "nothere.jpg",
+      "details": {
+        "folderName": "1",
+        "width": 3968.0,
+        "height": 2976.0,
+        "depth": 3
+      }
+    },
+    "objects": [
+      {
+        "polygon": [
+          0.402651,
+          0.609065,
+          0.23434,
+          0.34346
+        ],
+        "category": {
+          "name": "Boat",
+          "color": "#360435"
+        },
+        "tags": [],
+        "parts": []
+      },
+      {
+        "polygon": [
+          0.326241,
+          0.695606,
+          0.339901,
+          0.691856
+        ],
+        "category": {
+          "name": "Sail",
+          "color": "#981E33"
+        },
+        "tags": [],
+        "parts": []
+      }
+    ]
+  }  
 ]

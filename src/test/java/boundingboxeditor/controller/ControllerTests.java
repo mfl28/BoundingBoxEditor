@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
@@ -126,7 +127,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations from 1 file in"));
+                   Matchers.startsWith("Successfully imported annotations for 1 image in"));
 
         verifyThat(model.isSaved(), Matchers.is(true));
         // Save the annotations to the temporary folder.
@@ -249,7 +250,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations from 1 file in"));
+                   Matchers.startsWith("Successfully imported annotations for 1 image in"));
 
         // Save the annotations to the temporary folder.
         Platform.runLater(
@@ -365,7 +366,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations from 1 file in"));
+                   Matchers.startsWith("Successfully imported annotations for 1 image in"));
 
         // Save the annotations to the temporary folder.
         Platform.runLater(
@@ -411,14 +412,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.YOLO));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Annotation import error report") !=
-                                                                              null),
-                                      "Expected error report dialog did not open within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
-
-        final Stage errorReportStage = getTopModalStage(robot, "Annotation import error report");
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
 
         final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
@@ -451,12 +445,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         // Check if closed
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Annotation import error report") ==
-                                                                              null),
-                                      "Expected error report dialog did not close within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Annotation import error report");
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         verifyThat(counts.size(), Matchers.equalTo(0));
@@ -533,12 +522,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Annotation import error report") ==
-                                                                              null),
-                                      "Expected error report dialog did not close within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Annotation import error report");
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         verifyThat(counts.size(), Matchers.equalTo(1));
@@ -547,7 +531,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.hasSize(1));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations from 1 file in"));
+                   Matchers.startsWith("Successfully imported annotations for 1 image in"));
     }
 
     @Test
@@ -565,14 +549,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Annotation import error report") !=
-                                                                              null),
-                                      "Expected error report dialog did not open within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
-
-        final Stage errorReportStage = getTopModalStage(robot, "Annotation import error report");
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
 
         final String errorReportDialogContentReferenceText =
@@ -607,13 +584,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
-
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Annotation import error report") ==
-                                                                              null),
-                                      "Expected error report dialog did not close within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Annotation import error report");
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
@@ -624,7 +595,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                               TIMEOUT_DURATION_IN_SEC + " sec.");
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations from 1 file in"));
+                   Matchers.startsWith("Successfully imported annotations for 1 image in"));
     }
 
     @Test
@@ -758,14 +729,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Annotation import error report") !=
-                                                                              null),
-                                      "Expected error report dialog did not open within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
-
-        final Stage errorReportStage = getTopModalStage(robot, "Annotation import error report");
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
 
         final String errorReportDialogContentReferenceText = "Some bounding boxes could not be loaded from 1 " +
@@ -785,33 +749,76 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         final List<IOResult.ErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
-        verifyThat(errorInfoEntries, Matchers.hasSize(7));
+        verifyThat(errorInfoEntries, Matchers.hasSize(17));
 
         final IOResult.ErrorInfoEntry error1 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                           "Missing image " +
-                                                                                   "fileName " +
-                                                                                   "element.");
-        IOResult.ErrorInfoEntry error2 = new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Invalid " +
-                "coordinate value " +
-                "for maxX element in bndbox element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
-        IOResult.ErrorInfoEntry error3 =
-                new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Invalid color element in " +
-                        "annotation for image nico-bhlr-1067059-unsplash.jpg.");
-        IOResult.ErrorInfoEntry error4 =
-                new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Missing category name " +
-                        "element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
-        IOResult.ErrorInfoEntry error5 =
-                new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Missing maxX element in " +
-                        "bndbox element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
-        IOResult.ErrorInfoEntry error6 =
-                new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Invalid coordinate value" +
-                        "(s) in polygon element in annotation for image austin-neill-685084-unsplash.jpg.");
-        IOResult.ErrorInfoEntry error7 =
-                new IOResult.ErrorInfoEntry("missing_critical_elements.json", "Invalid number of " +
-                        "coordinates in polygon element in annotation for image caleb-george-316073-unsplash.jpg.");
+                                                                           "Invalid coordinate value for minX element" +
+                                                                                   " in bndbox element in annotation " +
+                                                                                   "for image " +
+                                                                                   "tyler-nix-582593-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error2 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                           "Invalid coordinate value for minY element" +
+                                                                                   " in bndbox element in annotation " +
+                                                                                   "for image " +
+                                                                                   "tyler-nix-582593-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error3 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                           "Missing category name element in " +
+                                                                                   "annotation for image " +
+                                                                                   "tyler-nix-582593-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error4 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                           "Invalid coordinate value for maxX element" +
+                                                                                   " in bndbox element in annotation " +
+                                                                                   "for image " +
+                                                                                   "nico-bhlr-1067059-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error5 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                           "Missing maxY element in bndbox element in" +
+                                                                                   " annotation for image " +
+                                                                                   "nico-bhlr-1067059-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error6 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                           "Invalid color element " +
+                                                                                   "in annotation for image " +
+                                                                                   "nico-bhlr-1067059-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error7 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                           "Missing category element in bndbox " +
+                                                                                   "element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error8 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                           "Invalid tags value(s) in bndbox element " +
+                                                                                   "in annotation for image nico-bhlr-1067059-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error9 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                           "Missing bndbox or polygon element in " +
+                                                                                   "annotation for image austin-neill-685084-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error10 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                            "Missing maxY element in bndbox element in" +
+                                                                                    " annotation for image austin-neill-685084-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error11 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                            "Invalid parts value(s) in bndbox element " +
+                                                                                    "in annotation for image austin-neill-685084-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error12 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                            "Missing minY element" +
+                                                                                    " in bndbox element in annotation " +
+                                                                                    "for image " +
+                                                                                    "austin-neill-685084-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error13 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                            "Missing maxY element" +
+                                                                                    " in bndbox element in annotation " +
+                                                                                    "for image " +
+                                                                                    "austin-neill-685084-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error14 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                            "Invalid number of coordinates in polygon " +
+                                                                                    "element in annotation for image caleb-george-316073-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error15 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                            "Invalid coordinate value(s) in polygon " +
+                                                                                    "element in annotation for image caleb-george-316073-unsplash.jpg.");
+        final IOResult.ErrorInfoEntry error16 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                            "Missing image fileName element.");
+        final IOResult.ErrorInfoEntry error17 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
+                                                                            "Image nothere.jpg does not belong to " +
+                                                                                    "currently loaded image files.");
 
         verifyThat(errorInfoEntries,
-                   Matchers.containsInAnyOrder(error1, error2, error3, error4, error5, error6, error7));
+                   Matchers.containsInAnyOrder(error1, error2, error3, error4, error5, error6, error7,
+                                               error8, error9, error10, error11, error12, error13, error14,
+                                               error15, error16, error17));
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -819,26 +826,24 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
         WaitForAsyncUtils.waitForFxEvents();
 
-        // Check if closed
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot,
-                                                                                             "Annotation import error report") ==
-                                                                              null),
-                                      "Expected error report dialog did not close within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
+        timeOutAssertTopModalStageClosed(robot, "Annotation import error report");
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
-        verifyThat(counts.size(), Matchers.equalTo(1));
-        verifyThat(counts, Matchers.hasEntry("Surfboard", 2));
+        verifyThat(counts.size(), Matchers.equalTo(4));
+        verifyThat(counts, Matchers.hasEntry("Car", 1));
+        verifyThat(counts, Matchers.hasEntry("Sail", 2));
+        verifyThat(counts, Matchers.hasEntry("Surfboard", 1));
+        verifyThat(counts, Matchers.hasEntry("Boat", 2));
 
         final List<ObjectCategory> objectCategories = model.getObjectCategories();
-        verifyThat(objectCategories, Matchers.hasSize(1));
-        verifyThat(objectCategories.get(0).getName(), Matchers.equalTo("Surfboard"));
+        verifyThat(objectCategories, Matchers.hasSize(4));
+        verifyThat(objectCategories.stream().map(ObjectCategory::getName).collect(Collectors.toList()),
+                   Matchers.containsInAnyOrder("Car", "Sail", "Surfboard", "Boat"));
 
-        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty());
+        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(4));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations from 1 file "));
+                   Matchers.startsWith("Successfully imported annotations for 3 images in "));
     }
 
     @Test

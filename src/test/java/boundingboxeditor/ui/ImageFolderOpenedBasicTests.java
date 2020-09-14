@@ -78,6 +78,8 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCurrentImageFile(), Matchers.equalTo(tempDir.toPath().resolve("bar.jpg").toFile()));
         timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 1);
 
+        timeOutAssertNoTopModelStage(robot);
+
         // Delete the loaded image file:
         Assertions.assertDoesNotThrow(() -> Files.delete(tempDir.toPath().resolve("bar.jpg")),
                                       "Could not delete image in temporary directory.");

@@ -12,8 +12,8 @@ public class ImageAnnotationsImportingSuccessfulEvent extends StatusEvent {
      * @param ioResult an {@link IOResult} object containing information about the import-operation
      */
     public ImageAnnotationsImportingSuccessfulEvent(IOResult ioResult) {
-        super("Successfully imported annotations from "
-                      + ioResult.getNrSuccessfullyProcessedItems() + " file" +
+        super("Successfully imported annotations for "
+                      + ioResult.getNrSuccessfullyProcessedItems() + " image" +
                       (ioResult.getNrSuccessfullyProcessedItems() != 1 ? "s" : "")
                       + " in "
                       + secondsFormat.format(ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.");

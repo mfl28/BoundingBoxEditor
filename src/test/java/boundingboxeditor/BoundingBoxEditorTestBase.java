@@ -172,7 +172,7 @@ public class BoundingBoxEditorTestBase {
         // Make sure FileChangeWatcher is interrupted.
         Thread[] list = new Thread[Thread.activeCount()];
         Thread.currentThread().getThreadGroup().enumerate(list);
-        Arrays.stream(list).filter(thread -> thread.getName().equals("ImageFileChangeWatcher"))
+        Arrays.stream(list).filter(thread -> thread != null && thread.getName().equals("ImageFileChangeWatcher"))
               .forEach(Thread::interrupt);
     }
 
