@@ -9,6 +9,14 @@ trigger:
   tags:
     include: 
     - '*'
+  paths:
+    exclude:
+    - .dockerignore
+    - .gitignore
+    - Dockerfile
+    - LICENSE
+    - README.md
+    - demo-media/*
 
 pr:
 - master
