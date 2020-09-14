@@ -8,9 +8,11 @@
 ![Azure DevOps tests (master)](https://img.shields.io/azure-devops/tests/mfl28/BoundingBoxEditor/1/master)
 ![Azure DevOps coverage (master)](https://img.shields.io/azure-devops/coverage/mfl28/BoundingBoxEditor/1/master)
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mfl28_BoundingBoxEditor&metric=alert_status)](https://sonarcloud.io/dashboard?id=mfl28_BoundingBoxEditor)
+
 
 This is an image annotation desktop-application written in Java using the JavaFX application platform. It allows you to create bounding box annotations using rectangular and polygonal shapes. 
-Annotations can be imported and saved from/to [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format xml-files or [YOLO](https://pjreddie.com/darknet/yolo/) format txt-files.
+Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format XML-files or [YOLO](https://pjreddie.com/darknet/yolo/) format TXT-files.
 
 <p align="center">
   <img src="demo-media/demo_v2_0_0.png" align="center">
@@ -20,7 +22,7 @@ Annotations can be imported and saved from/to [Pascal VOC](http://host.robots.ox
 
 ## Main Features
 * Create rectangular and polygonal bounding box annotations for objects in images
-* Export and import (e.g. from [Pascal VOC 2012 dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)) rectangular and polygonal bounding box annotations using the [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format
+* Export and import  rectangular and polygonal bounding box annotations to and from JSON and XML files (using [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format)
 * Export and import rectangular bounding box annotations using the [YOLO](https://pjreddie.com/darknet/yolo/) format
 * Format validation and error reporting when importing annotations
 * Nest bounding box labels (which is then reflected in the output xml-file if using Pascal VOC format)
@@ -100,13 +102,14 @@ docker container cp bbeditor:/image .
 * [OpenJFX](https://openjfx.io/) (open-source implementation of the JavaFX platform)
 * [ControlsFX](https://github.com/controlsfx/controlsfx) (used for progress dialogs)
 * [Caffeine](https://github.com/ben-manes/caffeine) (used for caching of images)
+* [Gson](https://github.com/google/gson) (used for JSON serialization & deserialization)
 * [Apache Commons](https://commons.apache.org/) (used for ListOrderedMap data structure and String/Iterator utilities)
 * [TestFX](https://github.com/TestFX/TestFX) (used for the tests)
 * [JUnit 5](https://junit.org/junit5/) (used for the tests)
 * [Jacoco](https://www.jacoco.org/jacoco/) (used for creating code coverage results)
 * [LibSass Gradle Plugin](https://github.com/fgiannesini/LibSassGradlePlugin) (used to compile .scss style-files into [JavaFX supported] .css files)
 * [Badass JLink Plugin](https://github.com/beryx/badass-jlink-plugin) (used to create modular runtime images of the application)
-* [Gradle Modules Plugin](https://github.com/java9-modularity/gradle-modules-plugin) (used to run the tests on the classpath)
+* [Gradle Modules Plugin](https://github.com/java9-moduqlarity/gradle-modules-plugin) (used to run the tests on the classpath)
 * [Feather Icons](https://feathericons.com/)
 * [Nord Color-Palette](https://github.com/arcticicestudio/nord)
 * [Unsplash](https://unsplash.com/) (used as source for test- & demo-images)
