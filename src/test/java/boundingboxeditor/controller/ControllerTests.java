@@ -847,6 +847,71 @@ class ControllerTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
+    void onLoadAnnotation_JSON_WhenAnnotationFileIsEmpty_ShouldDisplayErrorDialog(FxRobot robot) {
+        final String emptyAnnotationFilePath = "/testannotations/json/empty.json";
+
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                   Matchers.startsWith("Successfully loaded 4 image-files from folder "));
+
+        final File inputFile = new File(getClass().getResource(emptyAnnotationFilePath).getFile());
+
+        Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.JSON));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Stage alert = timeOutGetTopModalStage(robot, "Annotation Import Error");
+        verifyThat(alert, Matchers.notNullValue());
+
+        timeOutLookUpInStageAndClickOn(robot, alert, "OK");
+        timeOutAssertTopModalStageClosed(robot, "Annotation Import Error");
+    }
+
+    @Test
+    void onLoadAnnotation_JSON_WhenAnnotationFileIsCorrupt_ShouldDisplayErrorReport(FxRobot robot) {
+        final String corruptAnnotationFilePath = "/testannotations/json/corrupt.json";
+
+        waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                   Matchers.startsWith("Successfully loaded 4 image-files from folder "));
+
+        final File inputFile = new File(getClass().getResource(corruptAnnotationFilePath).getFile());
+
+        Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.JSON));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
+        verifyThat(errorReportStage, Matchers.notNullValue());
+
+        final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
+        final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
+        verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText));
+
+        verifyThat(errorReportDialog.getExpandableContent(), Matchers.instanceOf(GridPane.class));
+        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().get(0),
+                   Matchers.instanceOf(TableView.class));
+        final GridPane errorReportDialogContentPane = (GridPane) errorReportDialog.getExpandableContent();
+
+        verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class));
+
+        @SuppressWarnings("unchecked") final TableView<IOResult.ErrorInfoEntry> errorInfoTable =
+                (TableView<IOResult.ErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+
+        final List<IOResult.ErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
+
+        verifyThat(errorInfoEntries, Matchers.hasSize(1));
+
+        verifyThat(errorInfoEntries.get(0).getFileName(), Matchers.equalTo("corrupt.json"));
+        verifyThat(errorInfoEntries.get(0).getErrorDescription(), Matchers.startsWith("Unterminated array at line 2 " +
+                                                                                              "column 13"));
+
+        timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK");
+    }
+
+    @Test
     void onReloadAnnotations_afterImageFilesReopened_shouldCorrectlyDisplayBoundingShapes(FxRobot robot) {
         final String referenceAnnotationFilePath =
                 "/testannotations/pvoc/reference/austin-neill-685084-unsplash_jpg_A.xml";

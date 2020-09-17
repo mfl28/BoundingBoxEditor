@@ -33,10 +33,7 @@ import org.testfx.util.PointQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -190,32 +187,12 @@ public class BoundingBoxEditorTestBase {
         return PointQueryUtils.atPositionFactors(imageViewParentBounds, ratios);
     }
 
-    protected Point2D getLocalPointFromImageViewRatios(Point2D ratios) {
-        final ImageView imageView = mainView.getEditorImageView();
-        final Bounds imageViewParentBounds = imageView.getBoundsInLocal();
-
-        return PointQueryUtils.atPositionFactors(imageViewParentBounds, ratios);
-    }
-
     protected void timeOutLookUpInStage(FxRobot robot, Stage stage, String id) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> robot.targetWindow(stage).lookup(id)
-                                                                                 .tryQuery().isPresent()),
+                                                                      () -> nodePresentAndVisibleInStage(robot, stage
+                                                                              , id)),
                                       "Element with id = " + id + " was not found in scene " +
                                               stage.getTitle() + " within " + TIMEOUT_DURATION_IN_SEC + " sec.");
-    }
-
-    protected void timeOutLookUpFrom(FxRobot robot, Node node, String id) {
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> robot.from(node).lookup(id).tryQuery()
-                                                                                 .isPresent()),
-                                      "Element with id = " + id + " was not found within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
-    }
-
-    protected void timeOutClickOnFrom(FxRobot robot, Node node, String id) {
-        timeOutLookUpFrom(robot, node, id);
-        robot.clickOn((Node) robot.from(node).lookup(id).query());
     }
 
     protected void timeOutLookUpInStageAndClickOn(FxRobot robot, Stage stage, String id) {
@@ -225,15 +202,14 @@ public class BoundingBoxEditorTestBase {
 
     protected void timeOutLookUp(FxRobot robot, String id) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> robot.lookup(id).tryQuery().isPresent()),
+                                                                      () -> nodePresentAndVisible(robot, id)),
                                       "Element with id = " + id + " was not found within " + TIMEOUT_DURATION_IN_SEC +
                                               " sec.");
     }
 
     protected void timeOutLookUpNth(FxRobot robot, String id, int n) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> robot.lookup(id).nth(n).tryQuery()
-                                                                                 .isPresent()),
+                                                                      () -> nodePresentAndVisibleNth(robot, id, n)),
                                       "Element with id = " + id + " and index " + n + " was not found within " +
                                               TIMEOUT_DURATION_IN_SEC + " sec.");
     }
@@ -255,8 +231,7 @@ public class BoundingBoxEditorTestBase {
 
     protected <T extends Node> void timeOutLookupAs(FxRobot robot, String id, Class<T> clazz) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> robot.lookup(id).tryQueryAs(clazz)
-                                                                                 .isPresent()),
+                                                                      () -> nodePresentAndVisibleAs(robot, id, clazz)),
                                       "Element with id = " + id + " and class " + clazz + " was not found within " +
                                               TIMEOUT_DURATION_IN_SEC + " sec.");
     }
@@ -335,7 +310,6 @@ public class BoundingBoxEditorTestBase {
         return stage;
     }
 
-
     protected void timeOutAssertTopModalStageClosed(FxRobot robot, String stageTitle) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> getTopModalStage(robot, stageTitle) ==
@@ -362,6 +336,30 @@ public class BoundingBoxEditorTestBase {
         final Thread[] currentThreads = new Thread[Thread.activeCount()];
         Thread.currentThread().getThreadGroup().enumerate(currentThreads);
         return Arrays.stream(currentThreads).filter(thread -> thread.getName().equals(threadName)).count();
+    }
+
+    private boolean nodePresentAndVisibleInStage(FxRobot robot, Stage stage, String id) {
+        Optional<Node> queryResult = robot.targetWindow(stage).lookup(id).tryQuery();
+
+        return queryResult.isPresent() && queryResult.get().isVisible();
+    }
+
+    private boolean nodePresentAndVisible(FxRobot robot, String id) {
+        Optional<Node> queryResult = robot.lookup(id).tryQuery();
+
+        return queryResult.isPresent() && queryResult.get().isVisible();
+    }
+
+    private boolean nodePresentAndVisibleNth(FxRobot robot, String id, int n) {
+        Optional<Node> queryResult = robot.lookup(id).nth(n).tryQuery();
+
+        return queryResult.isPresent() && queryResult.get().isVisible();
+    }
+
+    private <T extends Node> boolean nodePresentAndVisibleAs(FxRobot robot, String id, Class<T> clazz) {
+        Optional<T> queryResult = robot.lookup(id).tryQueryAs(clazz);
+
+        return queryResult.isPresent() && queryResult.get().isVisible();
     }
 
     private boolean isTopModalStagePresent(FxRobot robot) {

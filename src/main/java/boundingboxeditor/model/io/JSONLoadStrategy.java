@@ -113,9 +113,23 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                 .create();
 
         try(final BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
-            final List<ImageAnnotation> imageAnnotations = gson.fromJson(reader, imageAnnotationListType);
+            final List<ImageAnnotation> imageAnnotations;
 
-            if(!imageAnnotations.isEmpty()) {
+            try {
+                imageAnnotations = gson.fromJson(reader, imageAnnotationListType);
+            } catch(JsonIOException | JsonSyntaxException e) {
+                final String message = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+
+                errorInfoEntries.add(new IOResult.ErrorInfoEntry(annotationFileName, message));
+
+                return new IOResult(
+                        IOResult.OperationType.ANNOTATION_IMPORT,
+                        0,
+                        errorInfoEntries
+                );
+            }
+
+            if(imageAnnotations != null && !imageAnnotations.isEmpty()) {
                 model.getObjectCategories().setAll(nameToObjectCategoryMap.values());
                 model.getCategoryToAssignedBoundingShapesCountMap().putAll(boundingShapeCountPerCategory);
                 model.updateImageAnnotations(imageAnnotations);
@@ -123,7 +137,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
             return new IOResult(
                     IOResult.OperationType.ANNOTATION_IMPORT,
-                    imageAnnotations.size(),
+                    imageAnnotations != null ? imageAnnotations.size() : 0,
                     errorInfoEntries
             );
         }
