@@ -1,11 +1,13 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.Model;
+import boundingboxeditor.model.ObjectCategory;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Responsible for loading image-annotation files from a directory into the model-component of
@@ -30,13 +32,15 @@ public class ImageAnnotationLoader {
      * Loads image-annotation files as specified by the wrapped {@link ImageAnnotationLoadStrategy}
      * into the model-component of the program.
      *
-     * @param model                 the model-component of the program
      * @param annotationsFolderPath the path of the folder containing the image-annotation files
      * @return an {@link IOResult} containing information about the finished loading
      * @throws IOException if the directory denoted by the path could not be opened
      */
-    public IOResult load(final Model model, final Path annotationsFolderPath) throws Exception {
-        return IOOperationTimer.time(() -> loadStrategy.load(model, annotationsFolderPath, progress));
+    public ImageAnnotationImportResult load(final Path annotationsFolderPath, final Set<String> filesToLoad,
+                                            final Map<String, ObjectCategory> existingCategoryNameToCategoryMap)
+            throws Exception {
+        return IOOperationTimer.time(() -> loadStrategy
+                .load(annotationsFolderPath, filesToLoad, existingCategoryNameToCategoryMap, progress));
     }
 
     /**

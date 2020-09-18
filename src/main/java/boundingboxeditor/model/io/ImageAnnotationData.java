@@ -1,6 +1,9 @@
 package boundingboxeditor.model.io;
 
+import boundingboxeditor.model.ObjectCategory;
+
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -8,18 +11,26 @@ import java.util.Map;
  */
 public class ImageAnnotationData {
     private final Collection<ImageAnnotation> imageAnnotations;
-    private final Map<String, Integer> categoryToShapeCountMap;
+    private final Map<String, Integer> categoryNameToBoundingShapeCountMap;
+    private final Map<String, ObjectCategory> categoryNameToCategoryMap;
 
     /**
      * Creates a new image annotation data object.
      *
-     * @param imageAnnotations        the collection of {@link ImageAnnotation}s
-     * @param categoryToShapeCountMap a map that maps category names to the number of assigned shapes
+     * @param imageAnnotations                    the collection of {@link ImageAnnotation}s
+     * @param categoryNameToBoundingShapeCountMap a map that maps category names to the number of assigned shapes
+     * @param categoryNameToCategoryMap           a map that maps category names to {@link ObjectCategory} objects
      */
     public ImageAnnotationData(Collection<ImageAnnotation> imageAnnotations,
-                               Map<String, Integer> categoryToShapeCountMap) {
+                               Map<String, Integer> categoryNameToBoundingShapeCountMap,
+                               Map<String, ObjectCategory> categoryNameToCategoryMap) {
         this.imageAnnotations = imageAnnotations;
-        this.categoryToShapeCountMap = categoryToShapeCountMap;
+        this.categoryNameToBoundingShapeCountMap = categoryNameToBoundingShapeCountMap;
+        this.categoryNameToCategoryMap = categoryNameToCategoryMap;
+    }
+
+    public static ImageAnnotationData empty() {
+        return new ImageAnnotationData(Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap());
     }
 
     /**
@@ -36,7 +47,16 @@ public class ImageAnnotationData {
      *
      * @return the map
      */
-    public Map<String, Integer> getCategoryToShapeCountMap() {
-        return categoryToShapeCountMap;
+    public Map<String, Integer> getCategoryNameToBoundingShapeCountMap() {
+        return categoryNameToBoundingShapeCountMap;
+    }
+
+    /**
+     * Returns the category-name to category object map.
+     *
+     * @return the map
+     */
+    public Map<String, ObjectCategory> getCategoryNameToCategoryMap() {
+        return categoryNameToCategoryMap;
     }
 }

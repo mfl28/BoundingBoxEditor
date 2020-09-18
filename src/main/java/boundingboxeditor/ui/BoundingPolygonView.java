@@ -1,6 +1,5 @@
 package boundingboxeditor.ui;
 
-import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.model.io.BoundingPolygonData;
 import boundingboxeditor.model.io.BoundingShapeData;
@@ -55,12 +54,9 @@ public class BoundingPolygonView extends Polygon implements
      * and movable by the user.
      *
      * @param objectCategory the category this bounding-shape will be assigned to
-     * @param imageMetaData  the image-meta data of the image, this bounding-shape will be displayed on (this
-     *                       contains the original size of the image which is needed when transforming the visual bounding-shape component
-     *                       into the data component represented by the {@link BoundingShapeData} class)
      */
-    public BoundingPolygonView(ObjectCategory objectCategory, ImageMetaData imageMetaData) {
-        this.boundingShapeViewData = new BoundingShapeViewData(this, objectCategory, imageMetaData);
+    public BoundingPolygonView(ObjectCategory objectCategory) {
+        this.boundingShapeViewData = new BoundingShapeViewData(this, objectCategory);
 
         setManaged(false);
         setFill(Color.TRANSPARENT);
@@ -78,12 +74,12 @@ public class BoundingPolygonView extends Polygon implements
      * component which is displayed to the user.
      *
      * @param boundingPolygonData the stored {@link BoundingPolygonData} object used to construct the new {@link BoundingPolygonView} object
-     * @param metaData            the {@link ImageMetaData} object that should be assigned to the new {@link BoundingPolygonView} object
      * @return the new {@link BoundingPolygonView} object
      */
-    public static BoundingPolygonView fromData(BoundingPolygonData boundingPolygonData, ImageMetaData metaData) {
-        BoundingPolygonView boundingPolygon = new BoundingPolygonView(boundingPolygonData.getCategory(), metaData);
-        boundingPolygon.pointsInImage = boundingPolygonData.getAbsolutePointsInImage(metaData);
+    public static BoundingPolygonView fromData(BoundingPolygonData boundingPolygonData, double imageWidth,
+                                               double imageHeight) {
+        BoundingPolygonView boundingPolygon = new BoundingPolygonView(boundingPolygonData.getCategory());
+        boundingPolygon.pointsInImage = boundingPolygonData.getAbsolutePointsInImage(imageWidth, imageHeight);
         boundingPolygon.getTags().setAll(boundingPolygonData.getTags());
         return boundingPolygon;
     }
@@ -193,15 +189,6 @@ public class BoundingPolygonView extends Polygon implements
                                        getRelativePointsInImageView(), boundingShapeViewData.getTags());
     }
 
-    /**
-     * Returns the associated {@link ImageMetaData} object.
-     *
-     * @return the {@link ImageMetaData} object
-     */
-    public ImageMetaData getImageMetaData() {
-        return boundingShapeViewData.getImageMetaData();
-    }
-
     @Override
     public BoundingShapeViewData getViewData() {
         return boundingShapeViewData;
@@ -215,9 +202,10 @@ public class BoundingPolygonView extends Polygon implements
      * @param autoScaleBounds the bounds-property to scale with
      */
     @Override
-    public void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
+    public void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds, double imageWidth,
+                                                 double imageHeight) {
         boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
-        initializeFromBoundsInImage();
+        initializeFromBoundsInImage(imageWidth, imageHeight);
         addAutoScaleListener();
     }
 
@@ -413,10 +401,8 @@ public class BoundingPolygonView extends Polygon implements
         height.set(Math.abs(yMax - yMin));
     }
 
-    private void initializeFromBoundsInImage() {
+    private void initializeFromBoundsInImage(double imageWidth, double imageHeight) {
         Bounds confinementBoundsValue = boundingShapeViewData.autoScaleBounds().getValue();
-        double imageWidth = boundingShapeViewData.getImageMetaData().getImageWidth();
-        double imageHeight = boundingShapeViewData.getImageMetaData().getImageHeight();
 
         vertexHandles.clear();
 

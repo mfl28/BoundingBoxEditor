@@ -1,11 +1,13 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.Model;
+import boundingboxeditor.model.ObjectCategory;
 import javafx.beans.property.DoubleProperty;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.InvalidParameterException;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The interface of an image annotation loading-strategy.
@@ -33,13 +35,15 @@ public interface ImageAnnotationLoadStrategy {
      * Loads image-annotation files from the provided directory path into the
      * the program.
      *
-     * @param model    the model-component of the program to load the annotation into
-     * @param path     the path of the directory containing the image-annotation files
-     * @param progress the progress-property that will be updated during the loading-operation
+     * @param path        the path of the directory containing the image-annotation files
+     * @param filesToLoad the set of files whose annotations can be imported
+     * @param progress    the progress-property that will be updated during the loading-operation
      * @return an {@link IOResult} containing information about the finished loading
      * @throws IOException if the directory denoted by the path could not be opened
      */
-    IOResult load(Model model, Path path, DoubleProperty progress) throws IOException;
+    ImageAnnotationImportResult load(Path path, Set<String> filesToLoad,
+                                     Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
+                                     DoubleProperty progress) throws IOException;
 
     enum Type {PASCAL_VOC, YOLO, JSON}
 

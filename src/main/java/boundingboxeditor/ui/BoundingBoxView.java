@@ -1,6 +1,5 @@
 package boundingboxeditor.ui;
 
-import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.model.io.BoundingBoxData;
 import boundingboxeditor.model.io.BoundingShapeData;
@@ -52,12 +51,10 @@ public class BoundingBoxView extends Rectangle implements
      * and movable by the user.
      *
      * @param objectCategory the category this bounding-box will be assigned to
-     * @param imageMetaData  the image-meta data of the image, this bounding-box will be displayed on (this
-     *                       contains the original size of the image which is needed when transforming the visual bounding-box component
      *                       into the data component represented by the {@link BoundingBoxData} class)
      */
-    public BoundingBoxView(ObjectCategory objectCategory, ImageMetaData imageMetaData) {
-        this.boundingShapeViewData = new BoundingShapeViewData(this, objectCategory, imageMetaData);
+    public BoundingBoxView(ObjectCategory objectCategory) {
+        this.boundingShapeViewData = new BoundingShapeViewData(this, objectCategory);
 
         setManaged(false);
         setFill(Color.TRANSPARENT);
@@ -76,12 +73,11 @@ public class BoundingBoxView extends Rectangle implements
      * component which is displayed to the user.
      *
      * @param boundingBoxData the stored {@link BoundingBoxData} object used to construct the new {@link BoundingBoxView} object
-     * @param metaData        the {@link ImageMetaData} object that should be assigned to the new {@link BoundingBoxView} object
      * @return the new {@link BoundingBoxView} object
      */
-    public static BoundingBoxView fromData(BoundingBoxData boundingBoxData, ImageMetaData metaData) {
-        BoundingBoxView boundingBox = new BoundingBoxView(boundingBoxData.getCategory(), metaData);
-        boundingBox.setBoundsInImage(boundingBoxData.getAbsoluteBoundsInImage(metaData));
+    public static BoundingBoxView fromData(BoundingBoxData boundingBoxData, double imageWidth, double imageHeight) {
+        BoundingBoxView boundingBox = new BoundingBoxView(boundingBoxData.getCategory());
+        boundingBox.setBoundsInImage(boundingBoxData.getAbsoluteBoundsInImage(imageWidth, imageHeight));
         boundingBox.getTags().setAll(boundingBoxData.getTags());
         return boundingBox;
     }
@@ -174,9 +170,10 @@ public class BoundingBoxView extends Rectangle implements
      * @param autoScaleBounds the bounds-property to scale with
      */
     @Override
-    public void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
+    public void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds, double imageWidth,
+                                                 double imageHeight) {
         this.boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
-        initializeFromBoundsInImage();
+        initializeFromBoundsInImage(imageWidth, imageHeight);
         addAutoScaleListener();
     }
 
@@ -322,10 +319,8 @@ public class BoundingBoxView extends Rectangle implements
         this.boundsInImage = boundsInImage;
     }
 
-    private void initializeFromBoundsInImage() {
+    private void initializeFromBoundsInImage(double imageWidth, double imageHeight) {
         Bounds confinementBoundsValue = boundingShapeViewData.autoScaleBounds().getValue();
-        double imageWidth = boundingShapeViewData.getImageMetaData().getImageWidth();
-        double imageHeight = boundingShapeViewData.getImageMetaData().getImageHeight();
 
         setX(boundsInImage.getMinX() * confinementBoundsValue.getWidth() / imageWidth +
                      confinementBoundsValue.getMinX());

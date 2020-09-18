@@ -1,7 +1,6 @@
 package boundingboxeditor.model.io;
 
 import boundingboxeditor.model.ImageMetaData;
-import boundingboxeditor.model.Model;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.utils.ColorUtils;
 import javafx.beans.property.DoubleProperty;
@@ -14,7 +13,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,34 +26,32 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final String OBJECT_DATA_FILE_NAME = "object.data";
     private static final String YOLO_IMAGE_EXTENSION = ".jpg";
     private final List<String> categories = new ArrayList<>();
-    private final List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages =
+    private final List<IOErrorInfoEntry> unParsedFileErrorMessages =
             Collections.synchronizedList(new ArrayList<>());
     private Set<String> fileNamesToLoad;
-    private Map<String, ObjectCategory> nameToObjectCategoryMap;
+    private Map<String, ObjectCategory> categoryNameToCategoryMap;
     private Map<String, Integer> boundingShapeCountPerCategory;
-    private Map<String, ImageMetaData> imageMetaDataMap;
 
     @Override
-    public IOResult load(Model model, Path path, DoubleProperty progress) throws IOException {
-        this.fileNamesToLoad = model.getImageFileNameSet();
-        this.boundingShapeCountPerCategory =
-                new ConcurrentHashMap<>(model.getCategoryToAssignedBoundingShapesCountMap());
-        this.nameToObjectCategoryMap = new ConcurrentHashMap<>(model.getObjectCategories().stream()
-                                                                    .collect(Collectors.toMap(ObjectCategory::getName,
-                                                                                              Function.identity())));
-        this.imageMetaDataMap = model.getImageFileNameToMetaDataMap();
+    public ImageAnnotationImportResult load(Path path, Set<String> filesToLoad,
+                                            Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
+                                            DoubleProperty progress)
+            throws IOException {
+        this.fileNamesToLoad = filesToLoad;
+        this.boundingShapeCountPerCategory = new ConcurrentHashMap<>();
+        this.categoryNameToCategoryMap = new ConcurrentHashMap<>(existingCategoryNameToCategoryMap);
 
         try {
             loadObjectCategories(path);
         } catch(Exception e) {
-            unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(OBJECT_DATA_FILE_NAME, e.getMessage()));
-            return new IOResult(IOResult.OperationType.ANNOTATION_IMPORT, 0, unParsedFileErrorMessages);
+            unParsedFileErrorMessages.add(new IOErrorInfoEntry(OBJECT_DATA_FILE_NAME, e.getMessage()));
+            return new ImageAnnotationImportResult(0, unParsedFileErrorMessages, ImageAnnotationData.empty());
         }
 
         if(categories.isEmpty()) {
             unParsedFileErrorMessages
-                    .add(new IOResult.ErrorInfoEntry(OBJECT_DATA_FILE_NAME, "Does not contain any category names."));
-            return new IOResult(IOResult.OperationType.ANNOTATION_IMPORT, 0, unParsedFileErrorMessages);
+                    .add(new IOErrorInfoEntry(OBJECT_DATA_FILE_NAME, "Does not contain any category names."));
+            return new ImageAnnotationImportResult(0, unParsedFileErrorMessages, ImageAnnotationData.empty());
         }
 
         try(Stream<Path> fileStream = Files.walk(path, INCLUDE_SUBDIRECTORIES ? Integer.MAX_VALUE : 1)) {
@@ -74,9 +70,11 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
 
                                                                         try {
                                                                             return loadAnnotationFromFile(file);
-                                                                        } catch(InvalidAnnotationFormatException | AnnotationToNonExistentImageException | IOException e) {
+                                                                        } catch(InvalidAnnotationFormatException |
+                                                                                AnnotationToNonExistentImageException |
+                                                                                IOException e) {
                                                                             unParsedFileErrorMessages
-                                                                                    .add(new IOResult.ErrorInfoEntry(
+                                                                                    .add(new IOErrorInfoEntry(
                                                                                             file.getName(),
                                                                                             e.getMessage()));
                                                                             return null;
@@ -85,16 +83,10 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                                                                     .filter(Objects::nonNull)
                                                                     .collect(Collectors.toList());
 
-            if(!imageAnnotations.isEmpty()) {
-                model.getObjectCategories().setAll(nameToObjectCategoryMap.values());
-                model.getCategoryToAssignedBoundingShapesCountMap().putAll(boundingShapeCountPerCategory);
-                model.updateImageAnnotations(imageAnnotations);
-            }
-
-            return new IOResult(
-                    IOResult.OperationType.ANNOTATION_IMPORT,
+            return new ImageAnnotationImportResult(
                     imageAnnotations.size(),
-                    unParsedFileErrorMessages
+                    unParsedFileErrorMessages,
+                    new ImageAnnotationData(imageAnnotations, boundingShapeCountPerCategory, categoryNameToCategoryMap)
             );
         }
     }
@@ -141,7 +133,7 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                     try {
                         boundingShapeDataList.add(parseBoundingBoxData(line, counter));
                     } catch(InvalidAnnotationFormatException e) {
-                        unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(file.getName(), e.getMessage()));
+                        unParsedFileErrorMessages.add(new IOErrorInfoEntry(file.getName(), e.getMessage()));
                     }
                 }
 
@@ -152,11 +144,8 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                 return null;
             }
 
-            ImageMetaData imageMetaData = imageMetaDataMap.getOrDefault(annotatedImageFileName,
-                                                                        new ImageMetaData(annotatedImageFileName));
-
             // ImageMetaData will be loaded when the corresponding image is displayed for the first time.
-            return new ImageAnnotation(imageMetaData, boundingShapeDataList);
+            return new ImageAnnotation(new ImageMetaData(annotatedImageFileName), boundingShapeDataList);
         }
     }
 
@@ -185,10 +174,10 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
 
         String categoryName = categories.get(categoryId);
 
-        ObjectCategory objectCategory = nameToObjectCategoryMap.computeIfAbsent(categoryName,
-                                                                                key -> new ObjectCategory(key,
-                                                                                                          ColorUtils
-                                                                                                                  .createRandomColor()));
+        ObjectCategory objectCategory = categoryNameToCategoryMap.computeIfAbsent(categoryName,
+                                                                                  key -> new ObjectCategory(key,
+                                                                                                            ColorUtils
+                                                                                                                    .createRandomColor()));
 
         // Note that there are no tags or parts in YOLO-format.
         BoundingBoxData boundingBoxData = new BoundingBoxData(objectCategory,

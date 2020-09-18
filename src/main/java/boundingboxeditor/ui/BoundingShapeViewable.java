@@ -9,7 +9,8 @@ import javafx.geometry.Bounds;
 public interface BoundingShapeViewable {
     BoundingShapeViewData getViewData();
 
-    void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds);
+    void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds, double imageWith,
+                                          double imageHeight);
 
     BoundingShapeTreeItem toTreeItem();
 }

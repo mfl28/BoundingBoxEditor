@@ -138,7 +138,9 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     List<BoundingShapeViewable> extractBoundingShapesAndBuildTreeFromAnnotation(ImageAnnotation annotation) {
         ImageMetaData metaData = annotation.getImageMetaData();
         annotation.getBoundingShapeData().forEach(boundingShapeData ->
-                                                          generateNewTreeItem(getRoot(), boundingShapeData, metaData));
+                                                          generateNewTreeItem(getRoot(), boundingShapeData,
+                                                                              metaData.getImageWidth(),
+                                                                              metaData.getImageHeight()));
 
         return IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot())).stream()
                             .filter(treeItem -> treeItem.getValue() instanceof BoundingShapeViewable)
@@ -201,14 +203,14 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     }
 
     private void generateNewTreeItem(TreeItem<Object> root, BoundingShapeData boundingShapeData,
-                                     ImageMetaData metaData) {
+                                     double imageWidth, double imageHeight) {
         ObjectCategoryTreeItem objectCategoryTreeItem = findObjectCategoryTreeItem(root, boundingShapeData);
-        BoundingShapeViewable newBoundingShape = boundingShapeData.toBoundingShapeView(metaData);
+        BoundingShapeViewable newBoundingShape = boundingShapeData.toBoundingShapeView(imageWidth, imageHeight);
         BoundingShapeTreeItem newTreeItem = newBoundingShape.toTreeItem();
         newBoundingShape.getViewData().setTreeItem(newTreeItem);
 
         objectCategoryTreeItem.attachBoundingShapeTreeItemChild(newTreeItem);
-        boundingShapeData.getParts().forEach(part -> generateNewTreeItem(newTreeItem, part, metaData));
+        boundingShapeData.getParts().forEach(part -> generateNewTreeItem(newTreeItem, part, imageWidth, imageHeight));
     }
 
     private ObjectCategoryTreeItem findObjectCategoryTreeItem(TreeItem<Object> root,

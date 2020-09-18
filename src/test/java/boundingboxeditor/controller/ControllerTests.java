@@ -2,7 +2,7 @@ package boundingboxeditor.controller;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
 import boundingboxeditor.model.ObjectCategory;
-import boundingboxeditor.model.io.IOResult;
+import boundingboxeditor.model.io.IOErrorInfoEntry;
 import boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
 import boundingboxeditor.ui.BoundingBoxView;
@@ -426,15 +426,15 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class));
 
-        @SuppressWarnings("unchecked") final TableView<IOResult.ErrorInfoEntry> errorInfoTable =
-                (TableView<IOResult.ErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+        @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
 
-        final List<IOResult.ErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
+        final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
         verifyThat(errorInfoEntries, Matchers.hasSize(1));
 
-        final IOResult.ErrorInfoEntry referenceErrorInfoEntry1 = new IOResult.ErrorInfoEntry("object.data",
-                                                                                             "Does not exist in annotation folder \"missing-classes-file\".");
+        final IOErrorInfoEntry referenceErrorInfoEntry1 = new IOErrorInfoEntry("object.data",
+                                                                               "Does not exist in annotation folder \"missing-classes-file\".");
 
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1));
 
@@ -485,32 +485,32 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class));
 
-        @SuppressWarnings("unchecked") final TableView<IOResult.ErrorInfoEntry> errorInfoTable =
-                (TableView<IOResult.ErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+        @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
 
-        final List<IOResult.ErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
+        final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
         verifyThat(errorInfoEntries, Matchers.hasSize(5));
 
-        final IOResult.ErrorInfoEntry referenceErrorInfoEntry1 =
-                new IOResult.ErrorInfoEntry("austin-neill-685084-unsplash.txt",
-                                            "Invalid category index 4 (of 4 categories) on line 1.");
+        final IOErrorInfoEntry referenceErrorInfoEntry1 =
+                new IOErrorInfoEntry("austin-neill-685084-unsplash.txt",
+                                     "Invalid category index 4 (of 4 categories) on line 1.");
 
-        final IOResult.ErrorInfoEntry referenceErrorInfoEntry2 =
-                new IOResult.ErrorInfoEntry("caleb-george-316073-unsplash.txt",
-                                            "Missing or invalid category index on line 1.");
+        final IOErrorInfoEntry referenceErrorInfoEntry2 =
+                new IOErrorInfoEntry("caleb-george-316073-unsplash.txt",
+                                     "Missing or invalid category index on line 1.");
 
-        final IOResult.ErrorInfoEntry referenceErrorInfoEntry3 =
-                new IOResult.ErrorInfoEntry("nico-bhlr-1067059-unsplash.txt",
-                                            "Missing or invalid bounding-box bounds on line 1.");
+        final IOErrorInfoEntry referenceErrorInfoEntry3 =
+                new IOErrorInfoEntry("nico-bhlr-1067059-unsplash.txt",
+                                     "Missing or invalid bounding-box bounds on line 1.");
 
-        final IOResult.ErrorInfoEntry referenceErrorInfoEntry4 =
-                new IOResult.ErrorInfoEntry("tyler-nix-582593-unsplash.txt",
-                                            "Bounds ratio not within [0, 1] on line 1.");
+        final IOErrorInfoEntry referenceErrorInfoEntry4 =
+                new IOErrorInfoEntry("tyler-nix-582593-unsplash.txt",
+                                     "Bounds ratio not within [0, 1] on line 1.");
 
-        final IOResult.ErrorInfoEntry referenceErrorInfoEntry5 =
-                new IOResult.ErrorInfoEntry("tyler-nix-582593-unsplash.txt",
-                                            "Invalid bounding-box coordinates on line 2.");
+        final IOErrorInfoEntry referenceErrorInfoEntry5 =
+                new IOErrorInfoEntry("tyler-nix-582593-unsplash.txt",
+                                     "Invalid bounding-box coordinates on line 2.");
 
         verifyThat(errorInfoEntries, Matchers.containsInAnyOrder(referenceErrorInfoEntry1, referenceErrorInfoEntry2,
                                                                  referenceErrorInfoEntry3, referenceErrorInfoEntry4,
@@ -528,7 +528,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(counts.size(), Matchers.equalTo(1));
         verifyThat(counts.get("Ship"), Matchers.equalTo(1));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0));
-        verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.hasSize(1));
+        verifyThat(model.createImageAnnotationData().getImageAnnotations(), Matchers.hasSize(1));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully imported annotations for 1 image in"));
@@ -564,19 +564,19 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class));
 
-        @SuppressWarnings("unchecked") final TableView<IOResult.ErrorInfoEntry> errorInfoTable =
-                (TableView<IOResult.ErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+        @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
 
-        final List<IOResult.ErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
+        final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
         verifyThat(errorInfoEntries, Matchers.hasSize(2));
 
-        final IOResult.ErrorInfoEntry referenceErrorInfoEntry1 =
-                new IOResult.ErrorInfoEntry("annotation_with_missing_elements.xml",
-                                            "Missing element: name");
-        final IOResult.ErrorInfoEntry referenceErrorInfoEntry2 =
-                new IOResult.ErrorInfoEntry("annotation_with_missing_elements.xml",
-                                            "Missing element: ymin");
+        final IOErrorInfoEntry referenceErrorInfoEntry1 =
+                new IOErrorInfoEntry("annotation_with_missing_elements.xml",
+                                     "Missing element: name");
+        final IOErrorInfoEntry referenceErrorInfoEntry2 =
+                new IOErrorInfoEntry("annotation_with_missing_elements.xml",
+                                     "Missing element: ymin");
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1, referenceErrorInfoEntry2));
 
         WaitForAsyncUtils.waitForFxEvents();
@@ -626,19 +626,19 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class));
 
-        @SuppressWarnings("unchecked") final TableView<IOResult.ErrorInfoEntry> errorInfoTable =
-                (TableView<IOResult.ErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+        @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
 
-        final List<IOResult.ErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
+        final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> errorInfoTable.getItems().size() == 1),
                                       "Expected number of error info entries not found in " + TIMEOUT_DURATION_IN_SEC +
                                               " sec.");
 
-        final IOResult.ErrorInfoEntry referenceErrorInfoEntry =
-                new IOResult.ErrorInfoEntry("annotation_with_missing_filename.xml",
-                                            "Missing element: filename");
+        final IOErrorInfoEntry referenceErrorInfoEntry =
+                new IOErrorInfoEntry("annotation_with_missing_filename.xml",
+                                     "Missing element: filename");
 
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry));
 
@@ -652,7 +652,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().isEmpty(), Matchers.is(true));
         verifyThat(model.getObjectCategories(), Matchers.empty());
-        verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.empty());
+        verifyThat(model.createImageAnnotationData().getImageAnnotations(), Matchers.empty());
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty());
 
         // Should not have changed the status message.
@@ -682,6 +682,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         enterNewCategory(robot, testCategoryName);
         WaitForAsyncUtils.waitForFxEvents();
 
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap(), Matchers.hasEntry("Test", 0));
+
         // Draw a bounding box.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
         WaitForAsyncUtils.waitForFxEvents();
@@ -691,6 +693,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                                                                     .size() == 1),
                                       "Expected number of bounding boxes not found in " + TIMEOUT_DURATION_IN_SEC +
                                               " sec.");
+
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap(), Matchers.hasEntry("Test", 1));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                            .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
@@ -744,76 +748,76 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class));
 
-        @SuppressWarnings("unchecked") final TableView<IOResult.ErrorInfoEntry> errorInfoTable =
-                (TableView<IOResult.ErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+        @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
 
-        final List<IOResult.ErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
+        final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
         verifyThat(errorInfoEntries, Matchers.hasSize(17));
 
-        final IOResult.ErrorInfoEntry error1 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                           "Invalid coordinate value for minX element" +
-                                                                                   " in bndbox element in annotation " +
-                                                                                   "for image " +
-                                                                                   "tyler-nix-582593-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error2 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                           "Invalid coordinate value for minY element" +
-                                                                                   " in bndbox element in annotation " +
-                                                                                   "for image " +
-                                                                                   "tyler-nix-582593-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error3 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                           "Missing category name element in " +
-                                                                                   "annotation for image " +
-                                                                                   "tyler-nix-582593-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error4 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                           "Invalid coordinate value for maxX element" +
-                                                                                   " in bndbox element in annotation " +
-                                                                                   "for image " +
-                                                                                   "nico-bhlr-1067059-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error5 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                           "Missing maxY element in bndbox element in" +
-                                                                                   " annotation for image " +
-                                                                                   "nico-bhlr-1067059-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error6 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                           "Invalid color element " +
-                                                                                   "in annotation for image " +
-                                                                                   "nico-bhlr-1067059-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error7 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                           "Missing category element in bndbox " +
-                                                                                   "element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error8 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                           "Invalid tags value(s) in bndbox element " +
-                                                                                   "in annotation for image nico-bhlr-1067059-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error9 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                           "Missing bndbox or polygon element in " +
-                                                                                   "annotation for image austin-neill-685084-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error10 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                            "Missing maxY element in bndbox element in" +
-                                                                                    " annotation for image austin-neill-685084-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error11 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                            "Invalid parts value(s) in bndbox element " +
-                                                                                    "in annotation for image austin-neill-685084-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error12 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                            "Missing minY element" +
-                                                                                    " in bndbox element in annotation " +
-                                                                                    "for image " +
-                                                                                    "austin-neill-685084-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error13 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                            "Missing maxY element" +
-                                                                                    " in bndbox element in annotation " +
-                                                                                    "for image " +
-                                                                                    "austin-neill-685084-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error14 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                            "Invalid number of coordinates in polygon " +
-                                                                                    "element in annotation for image caleb-george-316073-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error15 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                            "Invalid coordinate value(s) in polygon " +
-                                                                                    "element in annotation for image caleb-george-316073-unsplash.jpg.");
-        final IOResult.ErrorInfoEntry error16 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                            "Missing image fileName element.");
-        final IOResult.ErrorInfoEntry error17 = new IOResult.ErrorInfoEntry("missing_critical_elements.json",
-                                                                            "Image nothere.jpg does not belong to " +
-                                                                                    "currently loaded image files.");
+        final IOErrorInfoEntry error1 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                             "Invalid coordinate value for minX element" +
+                                                                     " in bndbox element in annotation " +
+                                                                     "for image " +
+                                                                     "tyler-nix-582593-unsplash.jpg.");
+        final IOErrorInfoEntry error2 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                             "Invalid coordinate value for minY element" +
+                                                                     " in bndbox element in annotation " +
+                                                                     "for image " +
+                                                                     "tyler-nix-582593-unsplash.jpg.");
+        final IOErrorInfoEntry error3 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                             "Missing category name element in " +
+                                                                     "annotation for image " +
+                                                                     "tyler-nix-582593-unsplash.jpg.");
+        final IOErrorInfoEntry error4 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                             "Invalid coordinate value for maxX element" +
+                                                                     " in bndbox element in annotation " +
+                                                                     "for image " +
+                                                                     "nico-bhlr-1067059-unsplash.jpg.");
+        final IOErrorInfoEntry error5 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                             "Missing maxY element in bndbox element in" +
+                                                                     " annotation for image " +
+                                                                     "nico-bhlr-1067059-unsplash.jpg.");
+        final IOErrorInfoEntry error6 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                             "Invalid color element " +
+                                                                     "in annotation for image " +
+                                                                     "nico-bhlr-1067059-unsplash.jpg.");
+        final IOErrorInfoEntry error7 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                             "Missing category element in bndbox " +
+                                                                     "element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
+        final IOErrorInfoEntry error8 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                             "Invalid tags value(s) in bndbox element " +
+                                                                     "in annotation for image nico-bhlr-1067059-unsplash.jpg.");
+        final IOErrorInfoEntry error9 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                             "Missing bndbox or polygon element in " +
+                                                                     "annotation for image austin-neill-685084-unsplash.jpg.");
+        final IOErrorInfoEntry error10 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                              "Missing maxY element in bndbox element in" +
+                                                                      " annotation for image austin-neill-685084-unsplash.jpg.");
+        final IOErrorInfoEntry error11 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                              "Invalid parts value(s) in bndbox element " +
+                                                                      "in annotation for image austin-neill-685084-unsplash.jpg.");
+        final IOErrorInfoEntry error12 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                              "Missing minY element" +
+                                                                      " in bndbox element in annotation " +
+                                                                      "for image " +
+                                                                      "austin-neill-685084-unsplash.jpg.");
+        final IOErrorInfoEntry error13 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                              "Missing maxY element" +
+                                                                      " in bndbox element in annotation " +
+                                                                      "for image " +
+                                                                      "austin-neill-685084-unsplash.jpg.");
+        final IOErrorInfoEntry error14 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                              "Invalid number of coordinates in polygon " +
+                                                                      "element in annotation for image caleb-george-316073-unsplash.jpg.");
+        final IOErrorInfoEntry error15 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                              "Invalid coordinate value(s) in polygon " +
+                                                                      "element in annotation for image caleb-george-316073-unsplash.jpg.");
+        final IOErrorInfoEntry error16 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                              "Missing image fileName element.");
+        final IOErrorInfoEntry error17 = new IOErrorInfoEntry("missing_critical_elements.json",
+                                                              "Image nothere.jpg does not belong to " +
+                                                                      "currently loaded image files.");
 
         verifyThat(errorInfoEntries,
                    Matchers.containsInAnyOrder(error1, error2, error3, error4, error5, error6, error7,
@@ -897,10 +901,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class));
 
-        @SuppressWarnings("unchecked") final TableView<IOResult.ErrorInfoEntry> errorInfoTable =
-                (TableView<IOResult.ErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+        @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
 
-        final List<IOResult.ErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
+        final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
         verifyThat(errorInfoEntries, Matchers.hasSize(1));
 
@@ -1045,7 +1049,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(3));
-        verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.hasSize(1));
+        verifyThat(model.createImageAnnotationData().getImageAnnotations(), Matchers.hasSize(1));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty());
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0));
 
@@ -1085,8 +1089,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(4));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(4));
-        verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.hasSize(2));
-        verifyThat(model.getImageAnnotationData().getImageAnnotations(), Matchers.hasSize(2));
+        verifyThat(model.createImageAnnotationData().getImageAnnotations(), Matchers.hasSize(2));
 
         verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingShapes(),
                    Matchers.is(true));
@@ -1125,6 +1128,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         importAnnotationAndClickDialogOption(robot, annotationFile, "Cancel");
 
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(1));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap(), Matchers.hasEntry("Test", 1));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox));
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                            .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));

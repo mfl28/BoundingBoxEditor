@@ -20,7 +20,8 @@ public class EditorView extends BorderPane implements View {
     private final EditorImagePaneView editorImagePaneView = new EditorImagePaneView();
 
     /**
-     * Creates a new ditor view UI-element containing the {@link EditorImagePaneView} object on which the user can draw/edit
+     * Creates a new editor view UI-element containing the {@link EditorImagePaneView} object on which the user can
+     * draw/edit
      * bounding shape objects. Furthermore this element contains controls to navigate and edit
      * images.
      */

@@ -55,7 +55,7 @@ public abstract class BoundingShapeTreeItem extends TreeItem<Object> {
      */
     void setIconToggledOn(boolean toggledOn) {
         if(toggledOn != isIconToggledOn()) {
-            // If the toggle-state changes, update the parent-category-items's
+            // If the toggle-state changes, update the parent-category-item's
             // toggled children count.
             if(toggledOn) {
                 ((ObjectCategoryTreeItem) getParent()).incrementNrToggledOnChildren();

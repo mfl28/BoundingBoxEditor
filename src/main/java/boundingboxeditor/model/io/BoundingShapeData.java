@@ -1,6 +1,5 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingShapeViewable;
 
@@ -21,7 +20,7 @@ public abstract class BoundingShapeData {
         this.tags = tags;
     }
 
-    public abstract BoundingShapeViewable toBoundingShapeView(ImageMetaData metaData);
+    public abstract BoundingShapeViewable toBoundingShapeView(double imageWidth, double imageHeight);
 
     /**
      * Returns the name of the category of the bounding-box.

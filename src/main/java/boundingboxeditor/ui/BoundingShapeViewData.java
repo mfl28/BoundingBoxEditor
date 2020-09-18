@@ -1,6 +1,5 @@
 package boundingboxeditor.ui;
 
-import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -26,12 +25,10 @@ public class BoundingShapeViewData {
     private final Shape baseShape;
     private final ObjectProperty<ObjectCategory> objectCategory = new SimpleObjectProperty<>();
     private String previousObjectCategoryName;
-    private ImageMetaData imageMetaData;
     private BoundingShapeTreeItem treeItem;
 
-    public BoundingShapeViewData(Shape shape, ObjectCategory objectCategory, ImageMetaData imageMetaData) {
+    public BoundingShapeViewData(Shape shape, ObjectCategory objectCategory) {
         this.baseShape = shape;
-        this.imageMetaData = imageMetaData;
         nodeGroup.getChildren().add(shape);
 
         setUpInternalListeners();
@@ -53,14 +50,6 @@ public class BoundingShapeViewData {
 
     public BooleanProperty highlightedProperty() {
         return highlighted;
-    }
-
-    public ImageMetaData getImageMetaData() {
-        return imageMetaData;
-    }
-
-    public void setImageMetaData(ImageMetaData imageMetaData) {
-        this.imageMetaData = imageMetaData;
     }
 
     public Shape getBaseShape() {
@@ -106,7 +95,7 @@ public class BoundingShapeViewData {
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectCategory, imageMetaData, tags);
+        return Objects.hash(objectCategory, tags);
     }
 
     @Override
@@ -121,7 +110,7 @@ public class BoundingShapeViewData {
 
         BoundingShapeViewData other = (BoundingShapeViewData) obj;
 
-        return Objects.equals(imageMetaData, other.imageMetaData) && Objects.equals(tags, other.tags)
+        return Objects.equals(tags, other.tags)
                 && Objects.equals(objectCategory.get(), other.objectCategory.get());
     }
 

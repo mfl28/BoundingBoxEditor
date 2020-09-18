@@ -2,6 +2,7 @@ package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
 import boundingboxeditor.model.io.BoundingShapeData;
+import boundingboxeditor.model.io.IOErrorInfoEntry;
 import boundingboxeditor.model.io.IOResult;
 import boundingboxeditor.model.io.ImageAnnotation;
 import javafx.collections.FXCollections;
@@ -177,9 +178,9 @@ public class MainView extends BorderPane implements View {
      * @param ioResult the {@link IOResult} object containing the information tom display
      */
     public static void displayIOResultErrorInfoAlert(IOResult ioResult) {
-        TableView<IOResult.ErrorInfoEntry> errorTable = new TableView<>();
-        TableColumn<IOResult.ErrorInfoEntry, String> fileNameColumn = new TableColumn<>("File");
-        TableColumn<IOResult.ErrorInfoEntry, String> errorDescriptionColumn = new TableColumn<>("Error");
+        TableView<IOErrorInfoEntry> errorTable = new TableView<>();
+        TableColumn<IOErrorInfoEntry, String> fileNameColumn = new TableColumn<>("File");
+        TableColumn<IOErrorInfoEntry, String> errorDescriptionColumn = new TableColumn<>("Error");
 
         errorTable.getColumns().add(fileNameColumn);
         errorTable.getColumns().add(errorDescriptionColumn);
@@ -198,7 +199,7 @@ public class MainView extends BorderPane implements View {
         errorTable.sort();
 
         long numErrorEntries = ioResult.getErrorTableEntries().stream()
-                                       .map(IOResult.ErrorInfoEntry::getFileName)
+                                       .map(IOErrorInfoEntry::getFileName)
                                        .distinct()
                                        .count();
 
@@ -239,7 +240,7 @@ public class MainView extends BorderPane implements View {
      * @param title   the title of the dialog-window
      * @param header  the header-text of the dialog-window
      */
-    public static void displayServiceProgressDialog(Service<IOResult> service, String title, String header) {
+    public static void displayServiceProgressDialog(Service<? extends IOResult> service, String title, String header) {
         final ProgressDialog progressDialog = new ProgressDialog(service);
         progressDialog.setTitle(title);
         progressDialog.setHeaderText(header);
@@ -339,7 +340,9 @@ public class MainView extends BorderPane implements View {
         ToggleGroup boundingShapeSelectionGroup = getEditorImagePane().getBoundingShapeSelectionGroup();
 
         boundingShapes.forEach(viewable -> {
-            viewable.autoScaleWithBoundsAndInitialize(getEditorImageView().boundsInParentProperty());
+            viewable.autoScaleWithBoundsAndInitialize(getEditorImageView().boundsInParentProperty(),
+                                                      annotation.getImageMetaData().getImageWidth(),
+                                                      annotation.getImageMetaData().getImageHeight());
             viewable.getViewData().setToggleGroup(boundingShapeSelectionGroup);
         });
 

@@ -1,7 +1,6 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
-import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.utils.MathUtils;
 import javafx.beans.Observable;
@@ -106,11 +105,9 @@ public class EditorImagePaneView extends ScrollPane implements View {
     /**
      * Constructs a new {@link BoundingBoxView} object which is initialized from the current coordinates and size of the
      * initializerRectangle member.
-     *
-     * @param imageMetaData the image-meta data to be registered with the new {@link BoundingBoxView} object
      */
-    public void constructAndAddNewBoundingBox(ImageMetaData imageMetaData) {
-        final BoundingBoxView newBoundingBox = new BoundingBoxView(selectedCategory.get(), imageMetaData);
+    public void constructAndAddNewBoundingBox() {
+        final BoundingBoxView newBoundingBox = new BoundingBoxView(selectedCategory.get());
 
         newBoundingBox.setCoordinatesAndSizeFromInitializer(initializerRectangle);
         newBoundingBox.autoScaleWithBounds(imageView.boundsInParentProperty());
@@ -209,14 +206,14 @@ public class EditorImagePaneView extends ScrollPane implements View {
         boundingBoxDrawingInProgress = true;
     }
 
-    public void initializeBoundingPolygon(MouseEvent event, ImageMetaData currentImageMetaData) {
+    public void initializeBoundingPolygon(MouseEvent event) {
         Toggle selectedBoundingShape = boundingShapeSelectionGroup.getSelectedToggle();
 
         BoundingPolygonView selectedBoundingPolygon;
 
         if(!(selectedBoundingShape instanceof BoundingPolygonView &&
                 ((BoundingPolygonView) selectedBoundingShape).isConstructing())) {
-            selectedBoundingPolygon = new BoundingPolygonView(selectedCategory.get(), currentImageMetaData);
+            selectedBoundingPolygon = new BoundingPolygonView(selectedCategory.get());
             selectedBoundingPolygon.setToggleGroup(boundingShapeSelectionGroup);
             selectedBoundingPolygon.setConstructing(true);
 

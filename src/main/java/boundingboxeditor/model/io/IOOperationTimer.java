@@ -21,9 +21,9 @@ public class IOOperationTimer {
      * @return an {@link IOResult} object with the set time
      * @throws Exception any that might be thrown by the callable's call() method
      */
-    public static IOResult time(Callable<IOResult> callable) throws Exception {
+    public static <T extends IOResult> T time(Callable<T> callable) throws Exception {
         long startTime = System.nanoTime();
-        IOResult result = callable.call();
+        T result = callable.call();
         long duration = System.nanoTime() - startTime;
 
         result.setTimeTakenInMilliseconds(TimeUnit.MILLISECONDS.convert(Duration.ofNanos(duration)));

@@ -1,6 +1,5 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingBoxView;
 import boundingboxeditor.ui.BoundingShapeViewable;
@@ -104,18 +103,18 @@ public class BoundingBoxData extends BoundingShapeData {
         return relativeBoundsInImage;
     }
 
-    public Bounds getAbsoluteBoundsInImage(ImageMetaData metaData) {
-        double xMin = getXMinRelative() * metaData.getImageWidth();
-        double yMin = getYMinRelative() * metaData.getImageHeight();
-        double xMax = getXMaxRelative() * metaData.getImageWidth();
-        double yMax = getYMaxRelative() * metaData.getImageHeight();
+    public Bounds getAbsoluteBoundsInImage(double imageWidth, double imageHeight) {
+        double xMin = getXMinRelative() * imageWidth;
+        double yMin = getYMinRelative() * imageHeight;
+        double xMax = getXMaxRelative() * imageWidth;
+        double yMax = getYMaxRelative() * imageHeight;
 
         return new BoundingBox(xMin, yMin, xMax - xMin, yMax - yMin);
     }
 
     @Override
-    public BoundingShapeViewable toBoundingShapeView(ImageMetaData metaData) {
-        return BoundingBoxView.fromData(this, metaData);
+    public BoundingShapeViewable toBoundingShapeView(double imageWidth, double imageHeight) {
+        return BoundingBoxView.fromData(this, imageWidth, imageHeight);
     }
 
     @Override

@@ -71,16 +71,15 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
                         -> new JsonPrimitive(Double.parseDouble(DECIMAL_FORMAT.format(src))))
                 .create();
 
-        final List<IOResult.ErrorInfoEntry> errorEntries = new ArrayList<>();
+        final List<IOErrorInfoEntry> errorEntries = new ArrayList<>();
 
         try(BufferedWriter writer = Files.newBufferedWriter(destination, StandardCharsets.UTF_8)) {
             gson.toJson(annotations, writer);
         } catch(IOException e) {
-            errorEntries.add(new IOResult.ErrorInfoEntry(destination.getFileName().toString(), e.getMessage()));
+            errorEntries.add(new IOErrorInfoEntry(destination.getFileName().toString(), e.getMessage()));
         }
 
-        return new IOResult(
-                IOResult.OperationType.ANNOTATION_SAVING,
+        return new ImageAnnotationExportResult(
                 errorEntries.isEmpty() ? totalNrAnnotations : 0,
                 errorEntries
         );

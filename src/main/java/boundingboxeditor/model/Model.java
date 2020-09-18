@@ -18,6 +18,9 @@ import java.io.UncheckedIOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The model-component of the program (MVC architecture pattern is used). Holds internal representations
@@ -158,12 +161,19 @@ public class Model {
      *
      * @param imageAnnotations the new image-annotations
      */
-    public void updateImageAnnotations(List<ImageAnnotation> imageAnnotations) {
+    public void updateImageAnnotations(Collection<ImageAnnotation> imageAnnotations) {
         boolean noCurrentAnnotations = imageFileNameToAnnotation.isEmpty();
 
         imageAnnotations.forEach(annotation -> {
             ImageAnnotation imageAnnotation = imageFileNameToAnnotation.get(annotation.getImageFileName());
             if(imageAnnotation == null) {
+                try {
+                    annotation.setImageMetaData(
+                            ImageMetaData.fromFile(imageFileNameToFile.get(annotation.getImageFileName())));
+                } catch(IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+
                 imageFileNameToAnnotation.put(annotation.getImageFileName(), annotation);
             } else {
                 imageAnnotation.getBoundingShapeData().addAll(annotation.getBoundingShapeData());
@@ -251,8 +261,23 @@ public class Model {
      *
      * @return the image-annotation data
      */
-    public ImageAnnotationData getImageAnnotationData() {
-        return new ImageAnnotationData(imageFileNameToAnnotation.values(), categoryToAssignedBoundingShapesCount);
+    public ImageAnnotationData createImageAnnotationData() {
+        return new ImageAnnotationData(imageFileNameToAnnotation.values(), categoryToAssignedBoundingShapesCount,
+                                       getCategoryNameToCategoryMap());
+    }
+
+    /**
+     * Updates the model data from an {@link ImageAnnotationData} object.
+     *
+     * @param imageAnnotationData the image-annotation data
+     */
+    public void updateFromImageAnnotationData(ImageAnnotationData imageAnnotationData) {
+        final Map<String, Integer> updatedCategoryNameToBoundingShapeCountMap =
+                createMergedCategoryToBoundingShapeCountMap(
+                        imageAnnotationData.getCategoryNameToBoundingShapeCountMap());
+        updateObjectCategoriesFromData(imageAnnotationData.getCategoryNameToCategoryMap());
+        categoryToAssignedBoundingShapesCount.putAll(updatedCategoryNameToBoundingShapeCountMap);
+        updateImageAnnotations(imageAnnotationData.getImageAnnotations());
     }
 
     /**
@@ -421,6 +446,28 @@ public class Model {
         categoryToAssignedBoundingShapesCount.clear();
 
         saved.set(true);
+    }
+
+    public Map<String, ObjectCategory> getCategoryNameToCategoryMap() {
+        return objectCategories.stream()
+                               .collect(Collectors.toMap(ObjectCategory::getName, Function.identity()));
+    }
+
+    private Map<String, Integer> createMergedCategoryToBoundingShapeCountMap(Map<String, Integer> toMerge) {
+        return Stream.of(categoryToAssignedBoundingShapesCount, toMerge)
+                     .map(Map::entrySet)
+                     .flatMap(Collection::stream)
+                     .collect(
+                             Collectors.toMap(
+                                     Map.Entry::getKey,
+                                     Map.Entry::getValue,
+                                     Integer::sum
+                             )
+                     );
+    }
+
+    private void updateObjectCategoriesFromData(Map<String, ObjectCategory> categoryNameToCategoryMap) {
+        objectCategories.setAll(categoryNameToCategoryMap.values());
     }
 
     private void setUpInternalListeners() {

@@ -143,8 +143,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                    doubleListCloseTo(drawnPointCoordinates.toArray(Double[]::new)));
         verifyThat(reloadedBoundingPolygon.getObjectCategory(),
                    Matchers.equalTo(drawnBoundingPolygon.getObjectCategory()));
-        verifyThat(reloadedBoundingPolygon.getImageMetaData(),
-                   Matchers.equalTo(drawnBoundingPolygon.getImageMetaData()));
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1));
 

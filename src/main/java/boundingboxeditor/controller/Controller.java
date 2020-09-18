@@ -290,7 +290,6 @@ public class Controller {
 
         final Color categoryColor = view.getObjectCategoryColorPicker().getValue();
         model.getObjectCategories().add(new ObjectCategory(categoryName, categoryColor));
-        model.getCategoryToAssignedBoundingShapesCountMap().put(categoryName, 0);
 
         view.getObjectCategoryTable().getSelectionModel().selectLast();
         view.getObjectCategoryTable().scrollTo(view
@@ -471,10 +470,7 @@ public class Controller {
                 view.getEditorImageView().setCursor(Cursor.OPEN_HAND);
             } else if(view.getObjectCategoryTable().isCategorySelected() &&
                     imagePane.isBoundingBoxDrawingInProgress()) {
-                final ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap()
-                                                         .get(model.getCurrentImageFileName());
-
-                imagePane.constructAndAddNewBoundingBox(imageMetaData);
+                imagePane.constructAndAddNewBoundingBox();
                 imagePane.setBoundingBoxDrawingInProgress(false);
             }
         }
@@ -495,9 +491,7 @@ public class Controller {
                 if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.BOX) {
                     imagePaneView.initializeBoundingRectangle(event);
                 } else if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
-                    ImageMetaData imageMetaData = model.getImageFileNameToMetaDataMap()
-                                                       .get(model.getCurrentImageFileName());
-                    imagePaneView.initializeBoundingPolygon(event, imageMetaData);
+                    imagePaneView.initializeBoundingPolygon(event);
                 }
             } else if(event.getButton().equals(MouseButton.SECONDARY)
                     && imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
@@ -1103,7 +1097,7 @@ public class Controller {
                     saver.progressProperty()
                          .addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
 
-                    return saver.save(model.getImageAnnotationData(), Paths.get(destination.getPath()));
+                    return saver.save(model.createImageAnnotationData(), Paths.get(destination.getPath()));
                 }
             };
         }
@@ -1139,7 +1133,8 @@ public class Controller {
         }
     }
 
-    class AnnotationLoaderService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
+    class AnnotationLoaderService extends Service<ImageAnnotationImportResult>
+            implements OnSuccessRunner<Runnable>, ProgressShower {
         private final File source;
         private final ImageAnnotationLoadStrategy.Type loadFormat;
 
@@ -1167,22 +1162,24 @@ public class Controller {
         }
 
         @Override
-        protected Task<IOResult> createTask() {
+        protected Task<ImageAnnotationImportResult> createTask() {
             return new Task<>() {
                 @Override
-                protected IOResult call() throws Exception {
+                protected ImageAnnotationImportResult call() throws Exception {
                     ImageAnnotationLoader loader = new ImageAnnotationLoader(loadFormat);
                     loader.progressProperty()
                           .addListener((observable, oldValue, newValue) -> updateProgress(newValue.doubleValue(), 1.0));
-                    return loader.load(model, Paths.get(source.getPath()));
+                    return loader.load(Paths.get(source.getPath()), model.getImageFileNameSet(),
+                                       model.getCategoryNameToCategoryMap());
                 }
             };
         }
 
         private void defaultOnSuccessHandler() {
-            IOResult loadResult = getValue();
+            ImageAnnotationImportResult loadResult = getValue();
 
             if(loadResult.getNrSuccessfullyProcessedItems() != 0) {
+                model.updateFromImageAnnotationData(loadResult.getImageAnnotationData());
                 view.getStatusBar().setStatusEvent(new ImageAnnotationsImportingSuccessfulEvent(loadResult));
             }
 
@@ -1237,7 +1234,8 @@ public class Controller {
         }
     }
 
-    class ImageFilesLoaderService extends Service<IOResult> implements OnSuccessRunner<Runnable>, ProgressShower {
+    class ImageFilesLoaderService extends Service<ImageMetaDataLoadingResult>
+            implements OnSuccessRunner<Runnable>, ProgressShower {
         private static final String IMAGE_IMPORT_ERROR_ALERT_TITLE = "Image Import Error";
         private static final String IMAGE_IMPORT_ERROR_ALERT_CONTENT =
                 "The folder does not contain any valid image files.";
@@ -1285,14 +1283,14 @@ public class Controller {
         }
 
         @Override
-        protected Task<IOResult> createTask() {
+        protected Task<ImageMetaDataLoadingResult> createTask() {
             return new Task<>() {
                 @Override
-                protected IOResult call() throws Exception {
+                protected ImageMetaDataLoadingResult call() throws Exception {
                     return IOOperationTimer.time(() -> {
                         fileNameToMetaDataMap.clear();
 
-                        List<IOResult.ErrorInfoEntry> errorInfoEntries =
+                        List<IOErrorInfoEntry> errorInfoEntries =
                                 Collections.synchronizedList(new ArrayList<>());
 
                         int totalNrOfFiles = imageFiles.size();
@@ -1303,7 +1301,7 @@ public class Controller {
                             try {
                                 map.put(item.getName(), ImageMetaData.fromFile(item));
                             } catch(Exception e) {
-                                errorInfoEntries.add(new IOResult.ErrorInfoEntry(item.getName(), e.getMessage()));
+                                errorInfoEntries.add(new IOErrorInfoEntry(item.getName(), e.getMessage()));
                             }
                         }, Map::putAll));
 
@@ -1311,8 +1309,7 @@ public class Controller {
                                 imageFiles.stream().filter(item -> fileNameToMetaDataMap.containsKey(item.getName()))
                                           .collect(Collectors.toList());
 
-                        return new IOResult(IOResult.OperationType.IMAGE_METADATA_LOADING, fileNameToMetaDataMap.size(),
-                                            errorInfoEntries);
+                        return new ImageMetaDataLoadingResult(fileNameToMetaDataMap.size(), errorInfoEntries);
                     });
                 }
             };

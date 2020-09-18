@@ -1,6 +1,5 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.ImageMetaData;
 import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingPolygonView;
 import boundingboxeditor.ui.BoundingShapeViewable;
@@ -54,15 +53,15 @@ public class BoundingPolygonData extends BoundingShapeData {
         return relativePointsInImage;
     }
 
-    public List<Double> getAbsolutePointsInImage(ImageMetaData imageMetaData) {
+    public List<Double> getAbsolutePointsInImage(double imageWidth, double imageHeight) {
         return BoundingPolygonData.relativeToAbsolutePoints(relativePointsInImage,
-                                                            imageMetaData.getImageWidth(),
-                                                            imageMetaData.getImageHeight());
+                                                            imageWidth,
+                                                            imageHeight);
     }
 
     @Override
-    public BoundingShapeViewable toBoundingShapeView(ImageMetaData metaData) {
-        return BoundingPolygonView.fromData(this, metaData);
+    public BoundingShapeViewable toBoundingShapeView(double imageWidth, double imageHeight) {
+        return BoundingPolygonView.fromData(this, imageWidth, imageHeight);
     }
 
     @Override

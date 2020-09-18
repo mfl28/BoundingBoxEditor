@@ -29,18 +29,18 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     @Override
     public IOResult save(ImageAnnotationData annotations, Path destination, DoubleProperty progress) {
         this.saveFolderPath = destination;
-        this.categories = annotations.getCategoryToShapeCountMap().entrySet().stream()
+        this.categories = annotations.getCategoryNameToBoundingShapeCountMap().entrySet().stream()
                                      .filter(stringIntegerEntry -> stringIntegerEntry.getValue() > 0)
                                      .map(Map.Entry::getKey)
                                      .sorted()
                                      .collect(Collectors.toList());
 
-        List<IOResult.ErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
+        List<IOErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
         try {
             createObjectDataFile();
         } catch(IOException e) {
-            unParsedFileErrorMessages.add(new IOResult.ErrorInfoEntry(OBJECT_DATA_FILE_NAME, e.getMessage()));
+            unParsedFileErrorMessages.add(new IOErrorInfoEntry(OBJECT_DATA_FILE_NAME, e.getMessage()));
         }
 
         int totalNrOfAnnotations = annotations.getImageAnnotations().size();
@@ -51,14 +51,13 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
                 createAnnotationFile(annotation);
             } catch(IOException e) {
                 unParsedFileErrorMessages
-                        .add(new IOResult.ErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
+                        .add(new IOErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
             }
 
             progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrOfAnnotations);
         });
 
-        return new IOResult(
-                IOResult.OperationType.ANNOTATION_SAVING,
+        return new ImageAnnotationExportResult(
                 totalNrOfAnnotations - unParsedFileErrorMessages.size(),
                 unParsedFileErrorMessages
         );
