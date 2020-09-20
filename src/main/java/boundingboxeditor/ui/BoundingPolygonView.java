@@ -1,8 +1,8 @@
 package boundingboxeditor.ui;
 
-import boundingboxeditor.model.ObjectCategory;
-import boundingboxeditor.model.io.BoundingPolygonData;
-import boundingboxeditor.model.io.BoundingShapeData;
+import boundingboxeditor.model.data.BoundingPolygonData;
+import boundingboxeditor.model.data.BoundingShapeData;
+import boundingboxeditor.model.data.ObjectCategory;
 import boundingboxeditor.utils.MathUtils;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;

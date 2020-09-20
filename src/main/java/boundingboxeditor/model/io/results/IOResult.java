@@ -1,4 +1,4 @@
-package boundingboxeditor.model.io;
+package boundingboxeditor.model.io.results;
 
 import java.util.List;
 

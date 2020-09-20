@@ -1,6 +1,6 @@
 package boundingboxeditor.ui.statusevents;
 
-import boundingboxeditor.model.io.IOResult;
+import boundingboxeditor.model.io.results.IOResult;
 
 import java.io.File;
 

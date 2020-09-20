@@ -1,6 +1,4 @@
-package boundingboxeditor.model.io;
-
-import boundingboxeditor.model.ObjectCategory;
+package boundingboxeditor.model.data;
 
 import java.util.Collection;
 import java.util.Collections;

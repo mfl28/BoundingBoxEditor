@@ -1,10 +1,6 @@
 package boundingboxeditor.ui;
 
-import boundingboxeditor.model.ImageMetaData;
-import boundingboxeditor.model.ObjectCategory;
-import boundingboxeditor.model.io.BoundingBoxData;
-import boundingboxeditor.model.io.BoundingShapeData;
-import boundingboxeditor.model.io.ImageAnnotation;
+import boundingboxeditor.model.data.*;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.skin.TreeViewSkin;

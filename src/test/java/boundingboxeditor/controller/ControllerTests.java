@@ -1,10 +1,10 @@
 package boundingboxeditor.controller;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
-import boundingboxeditor.model.ObjectCategory;
-import boundingboxeditor.model.io.IOErrorInfoEntry;
+import boundingboxeditor.model.data.ObjectCategory;
 import boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
+import boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import boundingboxeditor.ui.BoundingBoxView;
 import boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
@@ -119,6 +119,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                       "Expected default annotation loading directory was not set within " +
                                               TIMEOUT_DURATION_IN_SEC + " sec.");
 
+        verifyThat(model.getImageFileNameToAnnotationMap().values().stream()
+                        .allMatch(imageAnnotation -> imageAnnotation.getImageMetaData().hasDetails()),
+                   Matchers.equalTo(true));
+
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
              .press(KeyCode.CONTROL)
@@ -131,18 +135,17 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.isSaved(), Matchers.is(true));
         // Save the annotations to the temporary folder.
-        Controller.AnnotationSaverService annotationSaverService =
-                controller.new AnnotationSaverService(actualDir.toFile(),
-                                                      ImageAnnotationSaveStrategy.Type.PASCAL_VOC);
-
-        Platform.runLater(annotationSaverService::startAndShowProgressDialog);
+        Platform.runLater(() -> controller.initiateAnnotationExport(actualDir.toFile(),
+                                                                    ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> WaitForAsyncUtils.asyncFx(
-                                                                              () -> annotationSaverService.getState()
-                                                                                                          .equals(
-                                                                                                                  Worker.State.SUCCEEDED))
+                                                                              () -> controller
+                                                                                      .getAnnotationExportService()
+                                                                                      .getState()
+                                                                                      .equals(
+                                                                                              Worker.State.SUCCEEDED))
                                                                                              .get()),
                                       "Annotation " +
                                               "saving " +
@@ -254,8 +257,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         // Save the annotations to the temporary folder.
         Platform.runLater(
-                () -> controller.new AnnotationSaverService(actualDir.toFile(), ImageAnnotationSaveStrategy.Type.YOLO)
-                        .startAndShowProgressDialog());
+                () -> controller.initiateAnnotationExport(actualDir.toFile(), ImageAnnotationSaveStrategy.Type.YOLO));
         WaitForAsyncUtils.waitForFxEvents();
 
         Path actualFilePath = actualDir.resolve(expectedAnnotationFileName);
@@ -370,9 +372,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         // Save the annotations to the temporary folder.
         Platform.runLater(
-                () -> controller.new AnnotationSaverService(actualDir.resolve(expectedAnnotationFileName).toFile(),
-                                                            ImageAnnotationSaveStrategy.Type.JSON)
-                        .startAndShowProgressDialog());
+                () -> controller.initiateAnnotationExport(actualDir.resolve(expectedAnnotationFileName).toFile(),
+                                                          ImageAnnotationSaveStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
 
         Path actualFilePath = actualDir.resolve(expectedAnnotationFileName);

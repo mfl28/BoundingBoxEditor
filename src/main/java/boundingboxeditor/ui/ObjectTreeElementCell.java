@@ -1,7 +1,7 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
-import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.model.data.ObjectCategory;
 import boundingboxeditor.utils.UiUtils;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;

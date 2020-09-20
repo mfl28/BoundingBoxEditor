@@ -1,7 +1,8 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.ImageMetaData;
-import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.model.data.*;
+import boundingboxeditor.model.io.results.IOErrorInfoEntry;
+import boundingboxeditor.model.io.results.ImageAnnotationImportResult;
 import boundingboxeditor.utils.ColorUtils;
 import javafx.beans.property.DoubleProperty;
 import org.w3c.dom.Document;

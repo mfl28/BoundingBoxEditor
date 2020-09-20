@@ -1,6 +1,6 @@
 package boundingboxeditor.ui;
 
-import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.model.data.ObjectCategory;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 

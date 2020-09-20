@@ -1,6 +1,6 @@
 package boundingboxeditor.ui;
 
-import boundingboxeditor.model.io.BoundingShapeData;
+import boundingboxeditor.model.data.BoundingShapeData;
 
 /**
  * Interface for objects that can be converted to a {@link BoundingShapeData} object.

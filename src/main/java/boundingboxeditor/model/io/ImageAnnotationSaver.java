@@ -1,5 +1,8 @@
 package boundingboxeditor.model.io;
 
+import boundingboxeditor.model.data.ImageAnnotationData;
+import boundingboxeditor.model.io.results.IOResult;
+import boundingboxeditor.model.io.results.ImageAnnotationExportResult;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
@@ -31,7 +34,8 @@ public class ImageAnnotationSaver {
      * @param destination the path of the destination folder
      * @return an {@link IOResult} containing information about the finished saving
      */
-    public IOResult save(final ImageAnnotationData annotations, final Path destination) throws Exception {
+    public ImageAnnotationExportResult save(final ImageAnnotationData annotations, final Path destination)
+            throws Exception {
         return IOOperationTimer.time(() -> saveStrategy.save(annotations, destination, progress));
     }
 

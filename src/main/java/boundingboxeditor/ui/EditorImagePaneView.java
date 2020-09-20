@@ -1,7 +1,7 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
-import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.model.data.ObjectCategory;
 import boundingboxeditor.utils.MathUtils;
 import javafx.beans.Observable;
 import javafx.beans.property.ObjectProperty;

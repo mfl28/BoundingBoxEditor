@@ -11,7 +11,8 @@ import java.util.Locale;
  * in a {@link StatusBarView StatusBarView}.
  */
 public abstract class StatusEvent {
-    static DecimalFormat secondsFormat = new DecimalFormat("0.0##", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+    final static DecimalFormat secondsFormat = new DecimalFormat("0.0##",
+                                                                 DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     private final String eventMessage;
 
     /**

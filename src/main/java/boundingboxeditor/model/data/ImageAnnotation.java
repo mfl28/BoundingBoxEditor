@@ -1,6 +1,5 @@
-package boundingboxeditor.model.io;
+package boundingboxeditor.model.data;
 
-import boundingboxeditor.model.ImageMetaData;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
@@ -81,7 +80,7 @@ public class ImageAnnotation {
      *
      * @return the width of the image
      */
-    double getImageWidth() {
+    public double getImageWidth() {
         return imageMetaData.getImageWidth();
     }
 
@@ -90,7 +89,7 @@ public class ImageAnnotation {
      *
      * @return the height of the image
      */
-    double getImageHeight() {
+    public double getImageHeight() {
         return imageMetaData.getImageHeight();
     }
 
@@ -99,7 +98,7 @@ public class ImageAnnotation {
      *
      * @return the depth of the image
      */
-    int getImageDepth() {
+    public int getImageDepth() {
         return imageMetaData.getImageDepth();
     }
 
@@ -108,7 +107,7 @@ public class ImageAnnotation {
      *
      * @return the folder-name
      */
-    String getContainingFolderName() {
+    public String getContainingFolderName() {
         return imageMetaData.getFolderName();
     }
 }

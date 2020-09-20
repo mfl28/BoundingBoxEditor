@@ -1,4 +1,4 @@
-package boundingboxeditor.model;
+package boundingboxeditor.model.data;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -119,9 +119,9 @@ public class ImageMetaData {
     }
 
     private static ImageDimensions readImageDimensionsFromFile(File imageFile) throws IOException {
-        double width = 0;
-        double height = 0;
-        int numComponents = 0;
+        double width;
+        double height;
+        int numComponents;
         // Source: https://stackoverflow.com/a/1560052
         try(ImageInputStream imageStream = ImageIO.createImageInputStream(imageFile)) {
             Iterator<ImageReader> readers = ImageIO.getImageReaders(imageStream);

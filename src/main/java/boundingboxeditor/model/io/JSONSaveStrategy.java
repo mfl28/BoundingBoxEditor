@@ -1,6 +1,10 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.model.data.ImageAnnotation;
+import boundingboxeditor.model.data.ImageAnnotationData;
+import boundingboxeditor.model.data.ObjectCategory;
+import boundingboxeditor.model.io.results.IOErrorInfoEntry;
+import boundingboxeditor.model.io.results.ImageAnnotationExportResult;
 import boundingboxeditor.utils.ColorUtils;
 import com.google.gson.*;
 import javafx.beans.property.DoubleProperty;
@@ -29,7 +33,8 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String BOUNDS_MAX_Y_SERIALIZED_NAME = "maxY";
 
     @Override
-    public IOResult save(ImageAnnotationData annotations, Path destination, DoubleProperty progress) {
+    public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
+                                            DoubleProperty progress) {
         final int totalNrAnnotations = annotations.getImageAnnotations().size();
         final AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
 

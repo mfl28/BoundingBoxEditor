@@ -1,5 +1,7 @@
 package boundingboxeditor.model.io;
 
+import boundingboxeditor.model.io.results.IOResult;
+
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;

@@ -1,6 +1,8 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.model.data.ObjectCategory;
+import boundingboxeditor.model.io.results.IOResult;
+import boundingboxeditor.model.io.results.ImageAnnotationImportResult;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 

@@ -1,5 +1,8 @@
 package boundingboxeditor.model.io;
 
+import boundingboxeditor.model.data.ImageAnnotationData;
+import boundingboxeditor.model.io.results.IOResult;
+import boundingboxeditor.model.io.results.ImageAnnotationExportResult;
 import javafx.beans.property.DoubleProperty;
 
 import java.nio.file.Path;
@@ -35,7 +38,7 @@ public interface ImageAnnotationSaveStrategy {
      * @param progress    the progress-property that will be updated during the saving-operation
      * @return an {@link IOResult} containing information about the finished saving
      */
-    IOResult save(ImageAnnotationData annotations, Path destination, DoubleProperty progress);
+    ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination, DoubleProperty progress);
 
     enum Type {
         PASCAL_VOC {

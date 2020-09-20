@@ -1,4 +1,4 @@
-package boundingboxeditor.model.io;
+package boundingboxeditor.model.data;
 
 /**
  * Visitor interface for {@link BoundingShapeData}-objects.

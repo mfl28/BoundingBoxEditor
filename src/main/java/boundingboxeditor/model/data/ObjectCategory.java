@@ -1,4 +1,4 @@
-package boundingboxeditor.model;
+package boundingboxeditor.model.data;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

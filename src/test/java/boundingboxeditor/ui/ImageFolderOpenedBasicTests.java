@@ -1,6 +1,7 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.BoundingBoxEditorTestBase;
+import boundingboxeditor.model.data.ImageMetaData;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
@@ -33,6 +34,8 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     @Test
     void onImageFolderOpened_UIElementsShouldHaveCorrectState(FxRobot robot) {
         waitUntilCurrentImageIsLoaded();
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyImageMetaDataLoaded();
         verifyNodeVisibilities();
         verifyMenuBarFunctionality(robot);
         verifyCategorySelectorState();
@@ -119,6 +122,16 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         verifyThat("#main-menu-bar", NodeMatchers.isVisible());
         verifyThat("#work-space", NodeMatchers.isVisible());
         verifyThat("#status-panel", NodeMatchers.isVisible());
+    }
+
+    private void verifyImageMetaDataLoaded() {
+        verifyThat(model.getImageFileNameToMetaDataMap().size(), Matchers.equalTo(4));
+        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("austin-neill-685084-unsplash.jpg"));
+        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("caleb-george-316073-unsplash.jpg"));
+        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("nico-bhlr-1067059-unsplash.jpg"));
+        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("tyler-nix-582593-unsplash.jpg"));
+        verifyThat(model.getImageFileNameToMetaDataMap().values().stream().allMatch(ImageMetaData::hasDetails),
+                   Matchers.is(true));
     }
 
     private void verifyMenuBarFunctionality(FxRobot robot) {

@@ -1,6 +1,8 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.model.data.BoundingBoxData;
+import boundingboxeditor.model.data.BoundingPolygonData;
+import boundingboxeditor.model.data.ObjectCategory;
 import javafx.geometry.BoundingBox;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Assertions;

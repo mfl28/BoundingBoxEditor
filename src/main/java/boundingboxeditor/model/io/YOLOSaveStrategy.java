@@ -1,5 +1,11 @@
 package boundingboxeditor.model.io;
 
+import boundingboxeditor.model.data.BoundingBoxData;
+import boundingboxeditor.model.data.BoundingShapeData;
+import boundingboxeditor.model.data.ImageAnnotation;
+import boundingboxeditor.model.data.ImageAnnotationData;
+import boundingboxeditor.model.io.results.IOErrorInfoEntry;
+import boundingboxeditor.model.io.results.ImageAnnotationExportResult;
 import javafx.beans.property.DoubleProperty;
 import javafx.geometry.Bounds;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +33,8 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     private List<String> categories;
 
     @Override
-    public IOResult save(ImageAnnotationData annotations, Path destination, DoubleProperty progress) {
+    public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
+                                            DoubleProperty progress) {
         this.saveFolderPath = destination;
         this.categories = annotations.getCategoryNameToBoundingShapeCountMap().entrySet().stream()
                                      .filter(stringIntegerEntry -> stringIntegerEntry.getValue() > 0)

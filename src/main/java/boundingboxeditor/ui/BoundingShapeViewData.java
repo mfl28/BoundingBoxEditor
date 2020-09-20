@@ -1,6 +1,6 @@
 package boundingboxeditor.ui;
 
-import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.model.data.ObjectCategory;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

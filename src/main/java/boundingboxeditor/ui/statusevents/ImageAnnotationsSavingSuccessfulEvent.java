@@ -1,6 +1,6 @@
 package boundingboxeditor.ui.statusevents;
 
-import boundingboxeditor.model.io.IOResult;
+import boundingboxeditor.model.io.results.IOResult;
 
 /**
  * Represents the event of a successful image-annotation save.

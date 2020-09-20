@@ -1,10 +1,10 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
-import boundingboxeditor.model.io.BoundingShapeData;
-import boundingboxeditor.model.io.IOErrorInfoEntry;
-import boundingboxeditor.model.io.IOResult;
-import boundingboxeditor.model.io.ImageAnnotation;
+import boundingboxeditor.model.data.BoundingShapeData;
+import boundingboxeditor.model.data.ImageAnnotation;
+import boundingboxeditor.model.io.results.IOErrorInfoEntry;
+import boundingboxeditor.model.io.results.IOResult;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;

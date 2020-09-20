@@ -1,6 +1,5 @@
-package boundingboxeditor.model.io;
+package boundingboxeditor.model.data;
 
-import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingBoxView;
 import boundingboxeditor.ui.BoundingShapeViewable;
 import boundingboxeditor.utils.MathUtils;
@@ -47,8 +46,8 @@ public class BoundingBoxData extends BoundingShapeData {
      * @param yMaxRelative the y-coordinate of the lower right corner of the bounding-box
      * @param tags         the tags that are registered for the bounding-box
      */
-    BoundingBoxData(ObjectCategory category, double xMinRelative, double yMinRelative,
-                    double xMaxRelative, double yMaxRelative, List<String> tags) {
+    public BoundingBoxData(ObjectCategory category, double xMinRelative, double yMinRelative,
+                           double xMaxRelative, double yMaxRelative, List<String> tags) {
         super(category, tags);
         this.relativeBoundsInImage = new BoundingBox(xMinRelative, yMinRelative,
                                                      xMaxRelative - xMinRelative, yMaxRelative - yMinRelative);

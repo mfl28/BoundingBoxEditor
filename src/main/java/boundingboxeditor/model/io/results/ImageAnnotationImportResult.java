@@ -1,4 +1,6 @@
-package boundingboxeditor.model.io;
+package boundingboxeditor.model.io.results;
+
+import boundingboxeditor.model.data.ImageAnnotationData;
 
 import java.util.List;
 

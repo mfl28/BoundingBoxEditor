@@ -1,8 +1,6 @@
 package boundingboxeditor.model;
 
-import boundingboxeditor.model.io.BoundingShapeData;
-import boundingboxeditor.model.io.ImageAnnotation;
-import boundingboxeditor.model.io.ImageAnnotationData;
+import boundingboxeditor.model.data.*;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -167,13 +165,7 @@ public class Model {
         imageAnnotations.forEach(annotation -> {
             ImageAnnotation imageAnnotation = imageFileNameToAnnotation.get(annotation.getImageFileName());
             if(imageAnnotation == null) {
-                try {
-                    annotation.setImageMetaData(
-                            ImageMetaData.fromFile(imageFileNameToFile.get(annotation.getImageFileName())));
-                } catch(IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-
+                annotation.setImageMetaData(imageFileNameToMetaData.get(annotation.getImageFileName()));
                 imageFileNameToAnnotation.put(annotation.getImageFileName(), annotation);
             } else {
                 imageAnnotation.getBoundingShapeData().addAll(annotation.getBoundingShapeData());
@@ -185,7 +177,7 @@ public class Model {
         }
     }
 
-    public ImageMetaData createOrGetCurrentImageMetaData() {
+    public ImageMetaData getCurrentImageMetaData() {
         return imageFileNameToMetaData.computeIfAbsent(getCurrentImageFileName(),
                                                        key -> {
                                                            ImageMetaData newMetaData;

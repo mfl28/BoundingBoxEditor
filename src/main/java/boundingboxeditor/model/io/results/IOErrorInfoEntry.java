@@ -1,4 +1,4 @@
-package boundingboxeditor.model.io;
+package boundingboxeditor.model.io.results;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

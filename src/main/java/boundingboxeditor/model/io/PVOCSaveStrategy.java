@@ -1,6 +1,8 @@
 package boundingboxeditor.model.io;
 
-import boundingboxeditor.model.ImageMetaData;
+import boundingboxeditor.model.data.*;
+import boundingboxeditor.model.io.results.IOErrorInfoEntry;
+import boundingboxeditor.model.io.results.ImageAnnotationExportResult;
 import javafx.beans.property.DoubleProperty;
 import javafx.geometry.Bounds;
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +62,8 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private Path saveFolderPath;
 
     @Override
-    public IOResult save(ImageAnnotationData annotations, Path destination, DoubleProperty progress) {
+    public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
+                                            DoubleProperty progress) {
         this.saveFolderPath = destination;
 
         List<IOErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());

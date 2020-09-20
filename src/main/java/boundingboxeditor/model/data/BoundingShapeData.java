@@ -1,6 +1,5 @@
-package boundingboxeditor.model.io;
+package boundingboxeditor.model.data;
 
-import boundingboxeditor.model.ObjectCategory;
 import boundingboxeditor.ui.BoundingShapeViewable;
 
 import java.util.Collections;

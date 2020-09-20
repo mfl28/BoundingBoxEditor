@@ -1,6 +1,7 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
+import boundingboxeditor.model.data.ObjectCategory;
 import boundingboxeditor.utils.ColorUtils;
 import boundingboxeditor.utils.UiUtils;
 import javafx.geometry.Orientation;
@@ -84,7 +85,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
 
     /**
      * Returns the button which allows the user to add a
-     * {@link boundingboxeditor.model.ObjectCategory}.
+     * {@link ObjectCategory}.
      *
      * @return the button
      */

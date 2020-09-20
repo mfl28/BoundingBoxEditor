@@ -1,7 +1,7 @@
 package boundingboxeditor.ui;
 
 import boundingboxeditor.controller.Controller;
-import boundingboxeditor.model.ObjectCategory;
+import boundingboxeditor.model.data.ObjectCategory;
 import javafx.collections.ListChangeListener;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
