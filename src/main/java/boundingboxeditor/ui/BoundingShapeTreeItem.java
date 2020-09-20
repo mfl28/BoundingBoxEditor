@@ -7,7 +7,7 @@ import javafx.scene.shape.Shape;
  * Base class of all shape tree items.
  */
 public abstract class BoundingShapeTreeItem extends TreeItem<Object> {
-    final protected Toggleable toggleIcon;
+    protected final Toggleable toggleIcon;
     protected int id = 1;
 
     BoundingShapeTreeItem(Toggleable toggleIcon, BoundingShapeViewable shape) {

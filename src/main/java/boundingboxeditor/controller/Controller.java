@@ -607,50 +607,8 @@ public class Controller {
     private void onImageMetaDataLoadingSucceeded(WorkerStateEvent workerStateEvent) {
         ImageMetaDataLoadingResult ioResult = imageMetaDataLoadingService.getValue();
 
-        if(ioResult.getNrSuccessfullyProcessedItems() != 0) {
-            updateModelFromView();
-
-            boolean keepExistingCategories = false;
-
-            if(model.containsCategories()) {
-                ButtonBar.ButtonData answer = imageMetaDataLoadingService.isReload() ?
-                        MainView.displayYesNoDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                                                KEEP_EXISTING_CATEGORIES_DIALOG_TEXT) :
-                        MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                                                      KEEP_EXISTING_CATEGORIES_DIALOG_TEXT);
-
-                keepExistingCategories = (answer == ButtonBar.ButtonData.YES);
-
-                if(answer == ButtonBar.ButtonData.CANCEL_CLOSE && !imageMetaDataLoadingService.isReload()) {
-                    return;
-                }
-            }
-
-            if(!model.isSaved()) {
-                // First ask if user wants to save the existing annotations.
-                ButtonBar.ButtonData answer = imageMetaDataLoadingService.isReload() ?
-                        MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                                                RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT) :
-                        MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                                                      OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
-
-                if(answer == ButtonBar.ButtonData.YES) {
-                    boolean finalKeepExistingCategories = keepExistingCategories;
-
-                    if(imageMetaDataLoadingService.isReload()) {
-                        initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(() -> onValidFilesPresentHandler(
-                                finalKeepExistingCategories));
-                    } else {
-                        initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(
-                                () -> onValidFilesPresentHandler(
-                                        finalKeepExistingCategories));
-                    }
-                } else if(answer == ButtonBar.ButtonData.NO || imageMetaDataLoadingService.isReload()) {
-                    onValidFilesPresentHandler(keepExistingCategories);
-                }
-            } else {
-                onValidFilesPresentHandler(keepExistingCategories);
-            }
+        if(ioResult.getNrSuccessfullyProcessedItems() != 0 && !handleSuccessfullyProcessedItemsPresent()) {
+            return;
         }
 
         if(!ioResult.getErrorTableEntries().isEmpty()) {
@@ -662,6 +620,54 @@ public class Controller {
         if(imageMetaDataLoadingService.isReload() && ioResult.getNrSuccessfullyProcessedItems() == 0) {
             Controller.this.askToSaveExistingAnnotationDataAndClearModelAndView();
         }
+    }
+
+    private boolean handleSuccessfullyProcessedItemsPresent() {
+        updateModelFromView();
+
+        boolean keepExistingCategories = false;
+
+        if(model.containsCategories()) {
+            ButtonBar.ButtonData answer = imageMetaDataLoadingService.isReload() ?
+                    MainView.displayYesNoDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                                                            KEEP_EXISTING_CATEGORIES_DIALOG_TEXT) :
+                    MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                                                                  KEEP_EXISTING_CATEGORIES_DIALOG_TEXT);
+
+            keepExistingCategories = (answer == ButtonBar.ButtonData.YES);
+
+            if(answer == ButtonBar.ButtonData.CANCEL_CLOSE && !imageMetaDataLoadingService.isReload()) {
+                return false;
+            }
+        }
+
+        if(!model.isSaved()) {
+            // First ask if user wants to save the existing annotations.
+            ButtonBar.ButtonData answer = imageMetaDataLoadingService.isReload() ?
+                    MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                                                            RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT) :
+                    MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
+                                                                  OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
+
+            if(answer == ButtonBar.ButtonData.YES) {
+                boolean finalKeepExistingCategories = keepExistingCategories;
+
+                if(imageMetaDataLoadingService.isReload()) {
+                    initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(() -> onValidFilesPresentHandler(
+                            finalKeepExistingCategories));
+                } else {
+                    initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(
+                            () -> onValidFilesPresentHandler(
+                                    finalKeepExistingCategories));
+                }
+            } else if(answer == ButtonBar.ButtonData.NO || imageMetaDataLoadingService.isReload()) {
+                onValidFilesPresentHandler(keepExistingCategories);
+            }
+        } else {
+            onValidFilesPresentHandler(keepExistingCategories);
+        }
+
+        return true;
     }
 
     private void onValidFilesPresentHandler(boolean keepCategories) {
