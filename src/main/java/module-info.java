@@ -13,5 +13,6 @@ module boundingboxeditor {
     opens boundingboxeditor.model to javafx.base, com.google.gson;
     opens boundingboxeditor.model.data to javafx.base, com.google.gson;
     opens boundingboxeditor.model.io to javafx.base, com.google.gson;
+    opens boundingboxeditor.model.io.results to javafx.base, com.google.gson;
     exports boundingboxeditor to javafx.graphics;
 }
