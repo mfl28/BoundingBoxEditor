@@ -1,0 +1,40 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+    tags:
+      - v*
+    paths-ignore:
+      - .dockerignore
+      - .gitignore
+      - Dockerfile
+      - LICENSE
+      - README.md
+      - demo-media/*
+  pull_request:
+    branches:
+      - master
+      - dev
+
+jobs:
+  Build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+      fail-fast: false
+    name: ${{ matrix.os }}
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: '14.0.2'
+      - name: Verify Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Build
+        run: ./gradlew --info --stacktrace jlinkZip
