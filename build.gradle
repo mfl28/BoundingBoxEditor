@@ -118,7 +118,7 @@ jlink {
     jpackage {
         installerOptions += [
                 '--app-version', version,
-                '--copyright', 'Copyright 2020 Markus Fleischhacker',
+                '--copyright', 'Copyright 2020, Markus Fleischhacker',
                 '--license-file', 'LICENSE',
                 '--vendor', 'Markus Fleischhacker'
         ]

@@ -43,6 +43,21 @@ jobs:
       - name: Verify Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
       - name: Build
+        run: ./gradlew --info --stacktrace build -x test
+      - name: Set screen resolution
+        if: runner.os == 'Windows'
+        run: |
+          choco install -y change-screen-resolution
+          changescreenresolution 1920 1080
+      - name: Test
+        if: runner.os == 'Windows'
+        run: ./gradlew --info --stacktrace test
+      - name: Publish coverage report
+        if: runner.os == 'Windows'
+        uses: codecov/codecov-action@v1
+        with:
+          directory: build/reports/
+      - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Upload installer (Windows, exe)
         if: runner.os == 'Windows'
