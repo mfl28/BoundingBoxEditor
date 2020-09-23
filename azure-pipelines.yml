@@ -17,6 +17,7 @@ trigger:
     - LICENSE
     - README.md
     - demo-media/*
+    - .github/workflows/
 
 pr:
 - master

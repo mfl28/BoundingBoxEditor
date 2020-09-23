@@ -34,7 +34,37 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: '14.0.2'
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
       - name: Verify Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
       - name: Build
-        run: ./gradlew --info --stacktrace jlinkZip
+        run: ./gradlew --info --stacktrace jpackage
+      - name: Upload installer (Windows, exe)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v2
+        with:
+          name: BoundingBoxEditor-Windows-exe
+          path: build/jpackage/*.exe
+      - name: Upload installer (Linux, deb)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v2
+        with:
+          name: BoundingBoxEditor-Linux-deb
+          path: build/jpackage/*.deb
+      - name: Upload installer (Linux, rpm)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v2
+        with:
+          name: BoundingBoxEditor-Linux-rpm
+          path: build/jpackage/*.rpm
+      - name: Upload installer (macOS, dmg)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v2
+        with:
+          name: BoundingBoxEditor-macOS-dmg
+          path: build/jpackage/*.dmg
