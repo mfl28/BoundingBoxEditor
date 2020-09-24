@@ -2,9 +2,12 @@ package boundingboxeditor;
 
 import boundingboxeditor.controller.Controller;
 import boundingboxeditor.model.Model;
+import boundingboxeditor.model.io.results.IOResult;
 import boundingboxeditor.ui.MainView;
 import boundingboxeditor.utils.MathUtils;
 import javafx.application.Platform;
+import javafx.concurrent.Service;
+import javafx.concurrent.Worker;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
@@ -44,7 +47,7 @@ public class BoundingBoxEditorTestBase {
     protected static final double RATIO_EQUAL_THRESHOLD = 1e-2;
     private static final double INITIAL_WINDOW_SCALE = 0.75;
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
-    protected static int TIMEOUT_DURATION_IN_SEC = 60;
+    protected static int TIMEOUT_DURATION_IN_SEC = 15;
     protected static String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
     protected static String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
     protected Controller controller;
@@ -70,13 +73,14 @@ public class BoundingBoxEditorTestBase {
     protected static Stage getTopModalStage(FxRobot robot, String title) {
         // Get a list of windows but ordered from top[0] to bottom[n] ones.
         // It is needed to get the first found modal window.
-        return (Stage) robot.listWindows()
-                            .stream()
-                            .filter(window -> window instanceof Stage)
-                            .filter(window -> ((Stage) window).getModality() == Modality.APPLICATION_MODAL)
-                            .filter(stage -> ((Stage) stage).getTitle().equals(title))
-                            .findFirst()
-                            .orElse(null);
+        return robot.listWindows()
+                    .stream()
+                    .filter(window -> window instanceof Stage)
+                    .map(window -> (Stage) window)
+                    .filter(stage -> stage.getModality() == Modality.APPLICATION_MODAL)
+                    .filter(stage -> stage.getTitle().equals(title))
+                    .findFirst()
+                    .orElse(null);
     }
 
     protected static Matcher<Double[]> doubleListCloseTo(Double[] list) {
@@ -282,6 +286,7 @@ public class BoundingBoxEditorTestBase {
                                                                           Stage topModalStage =
                                                                                   getTopModalStage(robot, title);
                                                                           return topModalStage != null &&
+                                                                                  topModalStage.isShowing() &&
                                                                                   topModalStage.getScene()
                                                                                                .getRoot() instanceof DialogPane &&
                                                                                   Objects.equals(
@@ -298,14 +303,17 @@ public class BoundingBoxEditorTestBase {
 
     protected Stage timeOutGetTopModalStage(FxRobot robot, String stageTitle) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> getTopModalStage(robot, stageTitle) !=
-                                                                              null),
+                                                                      () -> {
+                                                                          final Stage stage =
+                                                                                  getTopModalStage(robot, stageTitle);
+                                                                          return stage != null && stage.isShowing();
+                                                                      }),
                                       "Expected top modal stage with title " + stageTitle + " did not open within "
                                               + TIMEOUT_DURATION_IN_SEC +
                                               " sec.");
-
         Stage stage = getTopModalStage(robot, stageTitle);
         verifyThat(stage, Matchers.notNullValue());
+        verifyThat(stage.isShowing(), Matchers.is(true));
 
         return stage;
     }
@@ -330,6 +338,16 @@ public class BoundingBoxEditorTestBase {
                                                                       () -> threadCount(threadName) == count),
                                       "Expected count for thread " + threadName + " was not reached within " +
                                               TIMEOUT_DURATION_IN_SEC + " sec.");
+    }
+
+    protected void timeOutAssertServiceSucceeded(Service<? extends IOResult> service) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> WaitForAsyncUtils.asyncFx(
+                                                                              () -> service.getState()
+                                                                                           .equals(
+                                                                                                   Worker.State.SUCCEEDED))
+                                                                                             .get()),
+                                      "Service did not succeed within " + TIMEOUT_DURATION_IN_SEC + " sec.");
     }
 
     protected long threadCount(String threadName) {

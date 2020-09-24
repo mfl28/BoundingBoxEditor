@@ -40,10 +40,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -548,6 +545,14 @@ public class Controller {
         return annotationExportService;
     }
 
+    ImageAnnotationImportService getAnnotationImportService() {
+        return annotationImportService;
+    }
+
+    ImageMetaDataLoadingService getImageMetaDataLoadingService() {
+        return imageMetaDataLoadingService;
+    }
+
     Stage getStage() {
         return stage;
     }
@@ -984,6 +989,7 @@ public class Controller {
             return imageFiles.filter(file -> Arrays.stream(imageExtensions).anyMatch(file.toString()::endsWith))
                              .map(file -> new File(file.toString()))
                              .filter(File::isFile)
+                             .sorted(Comparator.comparing(File::getName))
                              .collect(Collectors.toList());
         }
     }

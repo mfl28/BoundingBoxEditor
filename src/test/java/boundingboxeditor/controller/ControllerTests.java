@@ -8,7 +8,6 @@ import boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import boundingboxeditor.ui.BoundingBoxView;
 import boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
-import javafx.concurrent.Worker;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.DialogPane;
@@ -77,6 +76,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
+
         verifyThat(model.isSaved(), Matchers.is(true));
 
         // Create temporary folder to save annotations to.
@@ -139,17 +140,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                                                     ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> WaitForAsyncUtils.asyncFx(
-                                                                              () -> controller
-                                                                                      .getAnnotationExportService()
-                                                                                      .getState()
-                                                                                      .equals(
-                                                                                              Worker.State.SUCCEEDED))
-                                                                                             .get()),
-                                      "Annotation " +
-                                              "saving " +
-                                              "service did not succeed within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+        timeOutAssertServiceSucceeded(controller.getAnnotationExportService());
 
         verifyThat(model.isSaved(), Matchers.is(true));
         Path actualFilePath = actualDir.resolve(expectedFileName);
@@ -214,6 +205,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 .initiateAnnotationImport(referenceAnnotationFolder, ImageAnnotationLoadStrategy.Type.YOLO));
         WaitForAsyncUtils.waitForFxEvents();
 
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
+
         // Create temporary folder to save annotations to.
         Path actualDir = Files.createDirectory(tempDirectory.resolve("actual"));
 
@@ -259,6 +252,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         Platform.runLater(
                 () -> controller.initiateAnnotationExport(actualDir.toFile(), ImageAnnotationSaveStrategy.Type.YOLO));
         WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationExportService());
 
         Path actualFilePath = actualDir.resolve(expectedAnnotationFileName);
         Path actualObjectDataFilePath = actualDir.resolve("object.data");
@@ -328,6 +323,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
 
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
+
         // Create temporary folder to save annotations to.
         Path actualDir = Files.createDirectory(tempDirectory.resolve("actual"));
 
@@ -376,6 +373,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                                           ImageAnnotationSaveStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
 
+        timeOutAssertServiceSucceeded(controller.getAnnotationExportService());
+
         Path actualFilePath = actualDir.resolve(expectedAnnotationFileName);
 
         // Wait until the output-file actually exists. If the file was not created in
@@ -412,6 +411,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Load bounding-boxes defined in annotation-file.
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.YOLO));
         WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
 
         final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
@@ -470,6 +471,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Load bounding-boxes defined in annotation-file.
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.YOLO));
         WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
 
         final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
@@ -550,6 +553,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
+
         final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
 
@@ -612,6 +617,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         Platform.runLater(() -> controller
                 .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
 
         final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
@@ -733,6 +740,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Load bounding-boxes defined in annotation-file.
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
 
         final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
@@ -866,6 +875,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
 
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
+
         final Stage alert = timeOutGetTopModalStage(robot, "Annotation Import Error");
         verifyThat(alert, Matchers.notNullValue());
 
@@ -887,6 +898,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
 
         final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report");
         verifyThat(errorReportStage, Matchers.notNullValue());
@@ -936,6 +949,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
+
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> Objects.equals(counts.get("Boat"), 2) &&
@@ -980,6 +995,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         Platform.runLater(() -> controller
                 .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService());
 
         final Map<String, Integer> countsReloaded = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,

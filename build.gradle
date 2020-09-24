@@ -66,7 +66,7 @@ javafx {
 test {
     useJUnitPlatform()
 
-    jvmArgs = ['-Dtestfx.robot=awt', '-Xmx3072m']
+    jvmArgs = ['-Dtestfx.robot=awt', '-Xmx3072m', '-Dprism.forceGPU=true']
 
     moduleOptions {
         runOnClasspath = true

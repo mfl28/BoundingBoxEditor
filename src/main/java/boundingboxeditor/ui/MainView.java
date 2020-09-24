@@ -71,14 +71,7 @@ public class MainView extends BorderPane implements View {
      */
     public static void displayErrorAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-
-        alert.setContentText(content);
-        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-        alert.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-        ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        alert.showAndWait();
+        setupAndShowDialog(alert, title, content);
     }
 
     /**
@@ -268,7 +261,7 @@ public class MainView extends BorderPane implements View {
         choiceDialog.setContentText(content);
         choiceDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) choiceDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-
+        ((Stage) choiceDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
         return choiceDialog.showAndWait();
     }
 
@@ -282,6 +275,7 @@ public class MainView extends BorderPane implements View {
         exceptionDialog.getDialogPane().getStylesheets()
                        .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) exceptionDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+        ((Stage) exceptionDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
         exceptionDialog.showAndWait();
     }
 
@@ -488,6 +482,7 @@ public class MainView extends BorderPane implements View {
         dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         dialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+        ((Stage) dialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
         dialog.showAndWait();
     }
 
@@ -521,6 +516,7 @@ public class MainView extends BorderPane implements View {
         alert.getDialogPane().setMinWidth(INFO_DIALOGUE_MIN_WIDTH);
         alert.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+        ((Stage) alert.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
 
         GridPane.setVgrow(additionalInfoNode, Priority.ALWAYS);
         GridPane.setHgrow(additionalInfoNode, Priority.ALWAYS);
