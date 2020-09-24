@@ -19,21 +19,22 @@ on:
       - master
       - dev
 
+env:
+  JAVA_VERSION: '14.0.2'
+  TEST_SCREEN_WIDTH: '1920'
+  TEST_SCREEN_HEIGHT: '1080'
+
 jobs:
-  Build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-      fail-fast: false
-    name: ${{ matrix.os }}
+  Build-and-Test-Windows:
+    runs-on: windows-latest
+    name: Build and Test (Windows)
     steps:
       - name: Git checkout
         uses: actions/checkout@v2
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
-          java-version: '14.0.2'
+          java-version: ${{ env.JAVA_VERSION }}
       - name: Cache Gradle packages
         uses: actions/cache@v2
         with:
@@ -44,41 +45,87 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
       - name: Build
         run: ./gradlew --info --stacktrace build -x test
-      - name: Set screen resolution
-        if: runner.os == 'Windows'
+      - name: Test setup
         run: |
           choco install -y change-screen-resolution
-          changescreenresolution 1920 1080
+          changescreenresolution $TEST_SCREEN_WIDTH $TEST_SCREEN_HEIGHT
       - name: Test
-        if: runner.os == 'Windows'
         run: ./gradlew --info --stacktrace test
       - name: Publish coverage report
-        if: runner.os == 'Windows'
         uses: codecov/codecov-action@v1
         with:
           directory: build/reports/
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
-      - name: Upload installer (Windows, exe)
-        if: runner.os == 'Windows'
+      - name: Upload installer (exe)
         uses: actions/upload-artifact@v2
         with:
           name: BoundingBoxEditor-Windows-exe
           path: build/jpackage/*.exe
-      - name: Upload installer (Linux, deb)
-        if: runner.os == 'Linux'
+  Build-and-Test-Linux:
+    runs-on: ubuntu-latest
+    name: Build and Test (Linux)
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+      - name: Verify Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Build
+        run: ./gradlew --info --stacktrace build -x test
+      - name: Test setup
+        run: sudo apt-get install xvfb
+      - name: Test
+        run: xvfb-run --auto-servernum --server-args="-screen 0, ${TEST_SCREEN_WIDTH}x${TEST_SCREEN_HEIGHT}x24" ./gradlew --stacktrace --info test
+      - name: Jpackage
+        run: ./gradlew --info --stacktrace jpackage
+      - name: Upload installer (deb)
         uses: actions/upload-artifact@v2
         with:
           name: BoundingBoxEditor-Linux-deb
           path: build/jpackage/*.deb
-      - name: Upload installer (Linux, rpm)
-        if: runner.os == 'Linux'
+      - name: Upload installer (rpm)
         uses: actions/upload-artifact@v2
         with:
           name: BoundingBoxEditor-Linux-rpm
           path: build/jpackage/*.rpm
-      - name: Upload installer (macOS, dmg)
-        if: runner.os == 'macOS'
+  Build-and-Test-macOS:
+    runs-on: macOS-latest
+    name: Build and Test (macOS)
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+      - name: Verify Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Build
+        run: ./gradlew --info --stacktrace build -x test
+      - name: Test setup
+        run: |
+          "/Library/Application Support/VMware Tools/vmware-resolutionSet" $TEST_SCREEN_WIDTH $TEST_SCREEN_HEIGHT
+      - name: Test
+        run: ./gradlew --info --stacktrace test
+      - name: Jpackage
+        run: ./gradlew --info --stacktrace jpackage
+      - name: Upload installer (dmg)
         uses: actions/upload-artifact@v2
         with:
           name: BoundingBoxEditor-macOS-dmg
