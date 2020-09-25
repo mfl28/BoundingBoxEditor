@@ -12,6 +12,7 @@ plugins {
     id 'jacoco'
     id 'net.ltgt.errorprone' version '1.2.1'
     id 'org.sonarqube' version '3.0'
+    id 'org.ysb33r.cloudci' version '3.0.0'
 }
 
 apply plugin: 'com.github.fgiannesini.libsass.gradle.plugin'
@@ -66,13 +67,21 @@ javafx {
 test {
     useJUnitPlatform()
 
-    jvmArgs = ['-Dtestfx.robot=awt', '-Xmx3072m', '-Dprism.forceGPU=true']
+    jvmArgs = ['-Dtestfx.robot=awt']
 
     moduleOptions {
         runOnClasspath = true
     }
 
     finalizedBy jacocoTestReport
+}
+
+ci {
+    githubactions {
+        test {
+            jvmArgs = ['-Dtestfx.robot=awt', '-Xmx3072m', '-Dprism.order=sw', '-Dprism.verbose=true']
+        }
+    }
 }
 
 jacocoTestReport {
