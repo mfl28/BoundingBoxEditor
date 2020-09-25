@@ -27,18 +27,23 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.DebugUtils;
 import org.testfx.util.PointQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
@@ -47,6 +52,8 @@ public class BoundingBoxEditorTestBase {
     protected static final double RATIO_EQUAL_THRESHOLD = 1e-2;
     private static final double INITIAL_WINDOW_SCALE = 0.75;
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
+    private static final Path SCREENSHOT_PATH = Paths.get("").toAbsolutePath().resolve(
+            "build/test-screenshots/");
     protected static int TIMEOUT_DURATION_IN_SEC = 30;
     protected static String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
     protected static String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
@@ -115,8 +122,8 @@ public class BoundingBoxEditorTestBase {
         }
     }
 
-    protected void enterNewCategory(FxRobot robot, String categoryName) {
-        timeOutClickOn(robot, "#category-input-field");
+    protected void enterNewCategory(FxRobot robot, String categoryName, TestInfo testinfo) {
+        timeOutClickOn(robot, "#category-input-field", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         if(categoryName != null) {
@@ -124,25 +131,31 @@ public class BoundingBoxEditorTestBase {
             WaitForAsyncUtils.waitForFxEvents();
         }
 
-        timeOutClickOn(robot, "#add-button");
+        timeOutClickOn(robot, "#add-button", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
-    protected void waitUntilCurrentImageIsLoaded() {
+    protected void waitUntilCurrentImageIsLoaded(TestInfo testinfo) {
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> mainView.isWorkspaceVisible()),
-                                      "WorkspaceSplitPane not visible within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo, "WorkspaceSplitPane not visible within" +
+                                              " " + TIMEOUT_DURATION_IN_SEC + " sec" +
+                                              "."));
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils
                                               .waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, () -> mainView.getCurrentImage() != null),
-                                      "Image not found within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                     "Image not found within " +
+                                                                             TIMEOUT_DURATION_IN_SEC + " sec."));
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       mainView.getCurrentImage().progressProperty()
                                                                               .isEqualTo(1)),
-                                      "Image not fully loaded within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                     "Image not fully loaded within " +
+                                                                             TIMEOUT_DURATION_IN_SEC + " sec."));
 
         WaitForAsyncUtils.waitForFxEvents();
     }
@@ -164,6 +177,15 @@ public class BoundingBoxEditorTestBase {
         // To allow for correct testing of dialog windows (which should be in front of the main stage)
         // switch the top-positioning of the main stage off after it is shown.
         stage.setAlwaysOnTop(false);
+
+        // Set up image screenshot directory:
+        final File screenShotDirectory = SCREENSHOT_PATH.toFile();
+
+        if(!screenShotDirectory.isDirectory()) {
+            if(!screenShotDirectory.mkdir()) {
+                throw new RuntimeException("Could not create test-screenshot directory.");
+            }
+        }
     }
 
     @AfterEach
@@ -191,57 +213,62 @@ public class BoundingBoxEditorTestBase {
         return PointQueryUtils.atPositionFactors(imageViewParentBounds, ratios);
     }
 
-    protected void timeOutLookUpInStage(FxRobot robot, Stage stage, String id) {
+    protected void timeOutLookUpInStage(FxRobot robot, Stage stage, String id, TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> nodePresentAndVisibleInStage(robot, stage
                                                                               , id)),
-                                      "Element with id = " + id + " was not found in scene " +
-                                              stage.getTitle() + " within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo, "Element with id = " + id + " was not " +
+                                              "found " +
+                                              "in scene " +
+                                              stage.getTitle() + " within " + TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
-    protected void timeOutLookUpInStageAndClickOn(FxRobot robot, Stage stage, String id) {
-        timeOutLookUpInStage(robot, stage, id);
+    protected void timeOutLookUpInStageAndClickOn(FxRobot robot, Stage stage, String id, TestInfo testinfo) {
+        timeOutLookUpInStage(robot, stage, id, testinfo);
         robot.targetWindow(stage).clickOn(id);
     }
 
-    protected void timeOutLookUp(FxRobot robot, String id) {
+    protected void timeOutLookUp(FxRobot robot, String id, TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> nodePresentAndVisible(robot, id)),
-                                      "Element with id = " + id + " was not found within " + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo, "Element with id = " + id + " was not " +
+                                              "found within " + TIMEOUT_DURATION_IN_SEC +
+                                              " sec."));
     }
 
-    protected void timeOutLookUpNth(FxRobot robot, String id, int n) {
+    protected void timeOutLookUpNth(FxRobot robot, String id, int n, TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> nodePresentAndVisibleNth(robot, id, n)),
-                                      "Element with id = " + id + " and index " + n + " was not found within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo, "Element with id = " + id + " and " +
+                                              "index " + n + " was not found within " +
+                                              TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
-    protected void timeOutClickOn(FxRobot robot, String id) {
-        timeOutLookUp(robot, id);
+    protected void timeOutClickOn(FxRobot robot, String id, TestInfo testinfo) {
+        timeOutLookUp(robot, id, testinfo);
         robot.clickOn(id);
     }
 
-    protected void timeOutClickOnNth(FxRobot robot, String id, int n) {
-        timeOutLookUpNth(robot, id, n);
+    protected void timeOutClickOnNth(FxRobot robot, String id, int n, TestInfo testinfo) {
+        timeOutLookUpNth(robot, id, n, testinfo);
         robot.clickOn((Node) robot.lookup(id).nth(n).query());
     }
 
-    protected void timeOutMoveTo(FxRobot robot, String id) {
-        timeOutLookUp(robot, id);
+    protected void timeOutMoveTo(FxRobot robot, String id, TestInfo testinfo) {
+        timeOutLookUp(robot, id, testinfo);
         robot.moveTo(id);
     }
 
-    protected <T extends Node> void timeOutLookupAs(FxRobot robot, String id, Class<T> clazz) {
+    protected <T extends Node> void timeOutLookupAs(FxRobot robot, String id, Class<T> clazz, TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> nodePresentAndVisibleAs(robot, id, clazz)),
-                                      "Element with id = " + id + " and class " + clazz + " was not found within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo, "Element with id = " + id + " and " +
+                                              "class " + clazz + " was not found within " +
+                                              TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
-    protected <T extends Node> T timeOutQueryAs(FxRobot robot, String id, Class<T> clazz) {
-        timeOutLookupAs(robot, id, clazz);
+    protected <T extends Node> T timeOutQueryAs(FxRobot robot, String id, Class<T> clazz, TestInfo testinfo) {
+        timeOutLookupAs(robot, id, clazz, testinfo);
         return robot.lookup(id).queryAs(clazz);
     }
 
@@ -259,28 +286,33 @@ public class BoundingBoxEditorTestBase {
 
     protected void loadImageFolderAndClickKeepCategoriesAndSaveAnnotationOptions(FxRobot robot, String imageFolderPath,
                                                                                  String keepCategoriesOption,
-                                                                                 String saveAnnotationsOption) {
+                                                                                 String saveAnnotationsOption,
+                                                                                 TestInfo testinfo) {
         loadImageFolder(imageFolderPath);
 
         Stage keepExistingCategoriesDialogStage = timeOutAssertDialogOpenedAndGetStage(robot,
                                                                                        "Open image folder",
-                                                                                       "Keep existing categories?");
+                                                                                       "Keep existing categories?",
+                                                                                       testinfo);
 
-        timeOutLookUpInStageAndClickOn(robot, keepExistingCategoriesDialogStage, keepCategoriesOption);
+        timeOutLookUpInStageAndClickOn(robot, keepExistingCategoriesDialogStage, keepCategoriesOption, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         Stage saveAnnotationsDialogStage = timeOutAssertDialogOpenedAndGetStage(robot, "Open image folder",
                                                                                 "Opening a new image folder will remove any existing annotation data. " +
-                                                                                        "Do you want to save the currently existing annotation data?");
+                                                                                        "Do you want to save the " +
+                                                                                        "currently existing " +
+                                                                                        "annotation data?", testinfo);
 
-        timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialogStage, saveAnnotationsOption);
+        timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialogStage, saveAnnotationsOption, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        waitUntilCurrentImageIsLoaded();
+        waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
-    protected Stage timeOutAssertDialogOpenedAndGetStage(FxRobot robot, String title, String content) {
+    protected Stage timeOutAssertDialogOpenedAndGetStage(FxRobot robot, String title, String content,
+                                                         TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> {
                                                                           Stage topModalStage =
@@ -295,22 +327,27 @@ public class BoundingBoxEditorTestBase {
                                                                                                   .getContentText(),
                                                                                           content);
                                                                       }),
-                                      "Expected info dialog with title \"" + title + "\" and content \"" +
-                                              content + "\" did not open within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                     "Expected info dialog with title \"" + title +
+                                                                             "\" and content \"" +
+                                                                             content + "\" did not open within " +
+                                                                             TIMEOUT_DURATION_IN_SEC + " sec."));
 
         return getTopModalStage(robot, title);
     }
 
-    protected Stage timeOutGetTopModalStage(FxRobot robot, String stageTitle) {
+    protected Stage timeOutGetTopModalStage(FxRobot robot, String stageTitle, TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> {
                                                                           final Stage stage =
                                                                                   getTopModalStage(robot, stageTitle);
                                                                           return stage != null && stage.isShowing();
                                                                       }),
-                                      "Expected top modal stage with title " + stageTitle + " did not open within "
-                                              + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                     "Expected top modal stage with title " +
+                                                                             stageTitle + " did not open within "
+                                                                             + TIMEOUT_DURATION_IN_SEC +
+                                                                             " sec."));
         Stage stage = getTopModalStage(robot, stageTitle);
         verifyThat(stage, Matchers.notNullValue());
         verifyThat(stage.isShowing(), Matchers.is(true));
@@ -318,42 +355,62 @@ public class BoundingBoxEditorTestBase {
         return stage;
     }
 
-    protected void timeOutAssertTopModalStageClosed(FxRobot robot, String stageTitle) {
+    protected void timeOutAssertTopModalStageClosed(FxRobot robot, String stageTitle, TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> getTopModalStage(robot, stageTitle) ==
                                                                               null),
-                                      "Expected top modal stage with title " + stageTitle + " did not close within "
-                                              + TIMEOUT_DURATION_IN_SEC +
-                                              " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                     "Expected top modal stage with title " +
+                                                                             stageTitle + " did not close within "
+                                                                             + TIMEOUT_DURATION_IN_SEC +
+                                                                             " sec."));
     }
 
-    protected void timeOutAssertNoTopModelStage(FxRobot robot) {
+    protected void timeOutAssertNoTopModelStage(FxRobot robot, TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> !isTopModalStagePresent(robot)),
-                                      "Could find top modal stage within " + TIMEOUT_DURATION_IN_SEC + "  sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                     "Could find top modal stage within " +
+                                                                             TIMEOUT_DURATION_IN_SEC + "  sec."));
     }
 
-    protected void timeOutAssertThreadCount(FxRobot robot, String threadName, int count) {
+    protected void timeOutAssertThreadCount(FxRobot robot, String threadName, int count, TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> threadCount(threadName) == count),
-                                      "Expected count for thread " + threadName + " was not reached within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                     "Expected count for thread " + threadName +
+                                                                             " was not reached within " +
+                                                                             TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
-    protected void timeOutAssertServiceSucceeded(Service<? extends IOResult> service) {
+    protected void timeOutAssertServiceSucceeded(Service<? extends IOResult> service,
+                                                 TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> WaitForAsyncUtils.asyncFx(
                                                                               () -> service.getState()
                                                                                            .equals(
                                                                                                    Worker.State.SUCCEEDED))
                                                                                              .get()),
-                                      "Service did not succeed within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                     "Service did not succeed within " +
+                                                                             TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
     protected long threadCount(String threadName) {
         final Thread[] currentThreads = new Thread[Thread.activeCount()];
         Thread.currentThread().getThreadGroup().enumerate(currentThreads);
         return Arrays.stream(currentThreads).filter(thread -> thread.getName().equals(threadName)).count();
+    }
+
+    protected Function<StringBuilder, StringBuilder> saveScreenshot(TestInfo testInfo) {
+        return DebugUtils
+                .saveScreenshot(SCREENSHOT_PATH.resolve(testInfo.getTestMethod().orElseThrow().getName()).toString());
+    }
+
+    protected String saveScreenshotAndReturnMessage(TestInfo testinfo, String message) {
+        return DebugUtils.saveScreenshot(SCREENSHOT_PATH.resolve(testinfo.getTestMethod()
+                                                                         .orElseThrow()
+                                                                         .getName()).toString()).apply(new StringBuilder(message)).toString();
     }
 
     private boolean nodePresentAndVisibleInStage(FxRobot robot, Stage stage, String id) {

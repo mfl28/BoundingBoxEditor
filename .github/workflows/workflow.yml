@@ -51,6 +51,12 @@ jobs:
           changescreenresolution $TEST_SCREEN_WIDTH $TEST_SCREEN_HEIGHT
       - name: Test
         run: ./gradlew --info --stacktrace test
+      - name: Upload failed test screenshots
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: Failed-Test-Screenshots-Windows
+          path: build/test-screenshots
       - name: Publish coverage report
         uses: codecov/codecov-action@v1
         with:
@@ -86,6 +92,12 @@ jobs:
         run: sudo apt-get install xvfb
       - name: Test
         run: xvfb-run --auto-servernum --server-args="-screen 0, ${TEST_SCREEN_WIDTH}x${TEST_SCREEN_HEIGHT}x24" ./gradlew --stacktrace --info test
+      - name: Upload failed test screenshots
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: Failed-Test-Screenshots-Linux
+          path: build/test-screenshots
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Upload installer (deb)
@@ -123,6 +135,12 @@ jobs:
           "/Library/Application Support/VMware Tools/vmware-resolutionSet" $TEST_SCREEN_WIDTH $TEST_SCREEN_HEIGHT
       - name: Test
         run: ./gradlew --info --stacktrace test
+      - name: Upload failed test screenshots
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: Failed-Test-Screenshots-macOS
+          path: build/test-screenshots
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Upload installer (dmg)

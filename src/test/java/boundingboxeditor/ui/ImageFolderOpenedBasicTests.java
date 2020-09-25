@@ -10,6 +10,7 @@ import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
@@ -32,333 +33,359 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onImageFolderOpened_UIElementsShouldHaveCorrectState(FxRobot robot) {
-        waitUntilCurrentImageIsLoaded();
+    void onImageFolderOpened_UIElementsShouldHaveCorrectState(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        verifyImageMetaDataLoaded();
-        verifyNodeVisibilities();
-        verifyMenuBarFunctionality(robot);
-        verifyCategorySelectorState();
-        verifyCategorySelectorEnterNewCategoryFunctionality(robot);
-        verifyImageSidePanelSearchFunctionality(robot);
-        verifyCategorySearchFunctionality(robot);
+        verifyImageMetaDataLoaded(testinfo);
+        verifyNodeVisibilities(testinfo);
+        verifyMenuBarFunctionality(robot, testinfo);
+        verifyCategorySelectorState(testinfo);
+        verifyCategorySelectorEnterNewCategoryFunctionality(robot, testinfo);
+        verifyImageSidePanelSearchFunctionality(robot, testinfo);
+        verifyCategorySearchFunctionality(robot, testinfo);
     }
 
     @Test
-    void onImageFolderOpened_WhenImageFileChanges_ShouldForceReloadFolder(FxRobot robot, @TempDir File tempDir) {
-        waitUntilCurrentImageIsLoaded();
+    void onImageFolderOpened_WhenImageFileChanges_ShouldForceReloadFolder(FxRobot robot, @TempDir File tempDir,
+                                                                          TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
 
         final File sourceImage = model.getCurrentImageFile();
 
         Assertions.assertDoesNotThrow(() -> Files.copy(sourceImage.toPath(), tempDir.toPath().resolve("foo.jpg")),
-                                      "Could not " +
+                                      () -> saveScreenshotAndReturnMessage(testinfo, "Could not " +
                                               "copy image file to temporary " +
-                                              "directory.");
+                                              "directory."));
 
-        verifyThat(Files.isRegularFile(tempDir.toPath().resolve("foo.jpg")), Matchers.is(true));
+        verifyThat(Files.isRegularFile(tempDir.toPath().resolve("foo.jpg")), Matchers.is(true),
+                   saveScreenshot(testinfo));
 
         loadImageFolder(tempDir);
 
-        waitUntilCurrentImageIsLoaded();
+        waitUntilCurrentImageIsLoaded(testinfo);
 
-        verifyThat(model.getCurrentImageFile(), Matchers.equalTo(tempDir.toPath().resolve("foo.jpg").toFile()));
+        verifyThat(model.getCurrentImageFile(), Matchers.equalTo(tempDir.toPath().resolve("foo.jpg").toFile()),
+                   saveScreenshot(testinfo));
 
         // Verify that exactly one Image file change watcher thread is running:
-        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 1);
+        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 1, testinfo);
 
         // Rename the loaded image file:
         Assertions.assertDoesNotThrow(() -> Files.move(tempDir.toPath().resolve("foo.jpg"),
                                                        tempDir.toPath().resolve("bar.jpg")),
-                                      "Could not rename image file in temporary directory.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo, "Could not rename image file in " +
+                                              "temporary directory."));
 
-        final Stage alert = timeOutGetTopModalStage(robot, "Image files changed");
-        timeOutLookUpInStageAndClickOn(robot, alert, "OK");
-        timeOutAssertTopModalStageClosed(robot, "Image files changed");
+        final Stage alert = timeOutGetTopModalStage(robot, "Image files changed", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, alert, "OK", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Image files changed", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
-        waitUntilCurrentImageIsLoaded();
+        waitUntilCurrentImageIsLoaded(testinfo);
 
-        verifyThat(model.getCurrentImageFile(), Matchers.equalTo(tempDir.toPath().resolve("bar.jpg").toFile()));
-        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 1);
+        verifyThat(model.getCurrentImageFile(), Matchers.equalTo(tempDir.toPath().resolve("bar.jpg").toFile()),
+                   saveScreenshot(testinfo));
+        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 1, testinfo);
 
-        timeOutAssertNoTopModelStage(robot);
+        timeOutAssertNoTopModelStage(robot, testinfo);
 
         // Delete the loaded image file:
         Assertions.assertDoesNotThrow(() -> Files.delete(tempDir.toPath().resolve("bar.jpg")),
-                                      "Could not delete image in temporary directory.");
+                                      () -> saveScreenshotAndReturnMessage(testinfo, "Could not delete image in temporary " +
+                                              "directory."));
 
-        final Stage alert2 = timeOutGetTopModalStage(robot, "Image files changed");
-        timeOutLookUpInStageAndClickOn(robot, alert2, "OK");
+        final Stage alert2 = timeOutGetTopModalStage(robot, "Image files changed", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, alert2, "OK", testinfo);
 
-        timeOutAssertTopModalStageClosed(robot, "Image files changed");
-
-        WaitForAsyncUtils.waitForFxEvents();
-
-        final Stage errorAlert = timeOutGetTopModalStage(robot, "Error loading image folder");
-        timeOutLookUpInStageAndClickOn(robot, errorAlert, "OK");
-
-        timeOutAssertTopModalStageClosed(robot, "Error loading image folder");
+        timeOutAssertTopModalStageClosed(robot, "Image files changed", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 0);
+        final Stage errorAlert = timeOutGetTopModalStage(robot, "Error loading image folder", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, errorAlert, "OK", testinfo);
 
-        verifyThat(model.containsImageFiles(), Matchers.is(false));
-        verifyThat(mainView.isWorkspaceVisible(), Matchers.is(false));
+        timeOutAssertTopModalStageClosed(robot, "Error loading image folder", testinfo);
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 0, testinfo);
+
+        verifyThat(model.containsImageFiles(), Matchers.is(false), saveScreenshot(testinfo));
+        verifyThat(mainView.isWorkspaceVisible(), Matchers.is(false), saveScreenshot(testinfo));
 
         loadImageFolder(tempDir);
 
-        final Stage errorAlert1 = timeOutGetTopModalStage(robot, "Error loading image folder");
-        timeOutLookUpInStageAndClickOn(robot, errorAlert1, "OK");
+        final Stage errorAlert1 = timeOutGetTopModalStage(robot, "Error loading image folder", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, errorAlert1, "OK", testinfo);
 
-        timeOutAssertTopModalStageClosed(robot, "Error loading image folder");
+        timeOutAssertTopModalStageClosed(robot, "Error loading image folder", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 0);
+        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 0, testinfo);
     }
 
-    private void verifyNodeVisibilities() {
-        verifyThat("#main-menu-bar", NodeMatchers.isVisible());
-        verifyThat("#work-space", NodeMatchers.isVisible());
-        verifyThat("#status-panel", NodeMatchers.isVisible());
+    private void verifyNodeVisibilities(TestInfo testinfo) {
+        verifyThat("#main-menu-bar", NodeMatchers.isVisible(), saveScreenshot(testinfo));
+        verifyThat("#work-space", NodeMatchers.isVisible(), saveScreenshot(testinfo));
+        verifyThat("#status-panel", NodeMatchers.isVisible(), saveScreenshot(testinfo));
     }
 
-    private void verifyImageMetaDataLoaded() {
-        verifyThat(model.getImageFileNameToMetaDataMap().size(), Matchers.equalTo(4));
-        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("austin-neill-685084-unsplash.jpg"));
-        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("caleb-george-316073-unsplash.jpg"));
-        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("nico-bhlr-1067059-unsplash.jpg"));
-        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("tyler-nix-582593-unsplash.jpg"));
+    private void verifyImageMetaDataLoaded(TestInfo testinfo) {
+        verifyThat(model.getImageFileNameToMetaDataMap().size(), Matchers.equalTo(4), saveScreenshot(testinfo));
+        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("austin-neill-685084-unsplash.jpg"),
+                   saveScreenshot(testinfo));
+        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("caleb-george-316073-unsplash.jpg"),
+                   saveScreenshot(testinfo));
+        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("nico-bhlr-1067059-unsplash.jpg"),
+                   saveScreenshot(testinfo));
+        verifyThat(model.getImageFileNameToMetaDataMap(), Matchers.hasKey("tyler-nix-582593-unsplash.jpg"),
+                   saveScreenshot(testinfo));
         verifyThat(model.getImageFileNameToMetaDataMap().values().stream().allMatch(ImageMetaData::hasDetails),
                    Matchers.is(true));
     }
 
-    private void verifyMenuBarFunctionality(FxRobot robot) {
-        timeOutClickOn(robot, "File");
+    private void verifyMenuBarFunctionality(FxRobot robot, TestInfo testinfo) {
+        timeOutClickOn(robot, "File", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem openFolderItem = getSubMenuItem(robot, "File", "Open Folder...");
-        assertTrue(openFolderItem.isVisible());
-        assertFalse(openFolderItem.isDisable());
+        assertTrue(openFolderItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Open folder item not " +
+                "visible"));
+        assertFalse(openFolderItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Open folder item " +
+                "not enabled"));
 
-        timeOutClickOn(robot, "Open Folder...");
+        timeOutClickOn(robot, "Open Folder...", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         robot.push(KeyCode.ESCAPE);
 
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem exportItem = getSubMenuItem(robot, "File", "Export Annotations");
-        assertTrue(exportItem.isVisible());
-        assertFalse(exportItem.isDisable());
+        assertTrue(exportItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Export annotations item not " +
+                "visible"));
+        assertFalse(exportItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Export annotations item not " +
+                "enabled"));
 
-        timeOutClickOn(robot, "File");
+        timeOutClickOn(robot, "File", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Export Annotations");
+        timeOutClickOn(robot, "Export Annotations", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Pascal-VOC format...");
-        WaitForAsyncUtils.waitForFxEvents();
-
-        Stage errorDialogStage = timeOutGetTopModalStage(robot, "Save Error");
-        verifyThat(errorDialogStage, Matchers.notNullValue());
-
-        timeOutLookUpInStageAndClickOn(robot, errorDialogStage, "OK");
+        timeOutClickOn(robot, "Pascal-VOC format...", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertTopModalStageClosed(robot, "Save Error");
+        Stage errorDialogStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
+        verifyThat(errorDialogStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutClickOn(robot, "File");
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Export Annotations");
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutMoveTo(robot, "Pascal-VOC format...");
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "YOLO format...");
+        timeOutLookUpInStageAndClickOn(robot, errorDialogStage, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Stage errorDialogStage2 = timeOutGetTopModalStage(robot, "Save Error");
-        verifyThat(errorDialogStage2, Matchers.notNullValue());
+        timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
-        timeOutLookUpInStageAndClickOn(robot, errorDialogStage2, "OK");
+        timeOutClickOn(robot, "File", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutAssertTopModalStageClosed(robot, "Save Error");
-
-        timeOutClickOn(robot, "File");
+        timeOutClickOn(robot, "Export Annotations", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Export Annotations");
+        timeOutMoveTo(robot, "Pascal-VOC format...", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutMoveTo(robot, "Pascal-VOC format...");
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "JSON format...");
+        timeOutClickOn(robot, "YOLO format...", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Stage errorDialogStage3 = timeOutGetTopModalStage(robot, "Save Error");
-        verifyThat(errorDialogStage3, Matchers.notNullValue());
+        Stage errorDialogStage2 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
+        verifyThat(errorDialogStage2, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, errorDialogStage3, "OK");
+        timeOutLookUpInStageAndClickOn(robot, errorDialogStage2, "OK", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
+
+        timeOutClickOn(robot, "File", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Export Annotations", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutMoveTo(robot, "Pascal-VOC format...", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "JSON format...", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertTopModalStageClosed(robot, "Save Error");
+        Stage errorDialogStage3 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
+        verifyThat(errorDialogStage3, Matchers.notNullValue(), saveScreenshot(testinfo));
+
+        timeOutLookUpInStageAndClickOn(robot, errorDialogStage3, "OK", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
         MenuItem exitItem = getSubMenuItem(robot, "File", "Exit");
-        assertTrue(exitItem.isVisible());
-        assertFalse(exitItem.isDisable());
+        assertTrue(exitItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not visible"));
+        assertFalse(exitItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not enabled"));
 
-        timeOutClickOn(robot, "View");
+        timeOutClickOn(robot, "View", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 
         CheckMenuItem fitWindowItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Maximize Images");
-        assertTrue(fitWindowItem.isVisible());
-        assertFalse(fitWindowItem.isDisable());
-        assertTrue(fitWindowItem.isSelected());
+        assertTrue(fitWindowItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Fit window item not visible"));
+        assertFalse(fitWindowItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Fit window item not enabled"));
+        assertTrue(fitWindowItem.isSelected(), () -> saveScreenshotAndReturnMessage(testinfo, "Fit window item not " +
+                "selected"));
 
         CheckMenuItem imageExplorerItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Show Images Panel");
-        assertTrue(imageExplorerItem.isVisible());
-        assertFalse(imageExplorerItem.isDisable());
-        assertTrue(imageExplorerItem.isSelected());
+        assertTrue(imageExplorerItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
+                "visible"));
+        assertFalse(imageExplorerItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
+                "enabled"));
+        assertTrue(imageExplorerItem.isSelected(), () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
+                "selected"));
     }
 
-    private void verifyCategorySelectorState() {
-        verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
+    private void verifyCategorySelectorState(TestInfo testinfo) {
+        verifyThat("#category-selector", TableViewMatchers.hasNumRows(0), saveScreenshot(testinfo));
     }
 
-    private void verifyCategorySelectorEnterNewCategoryFunctionality(FxRobot robot) {
+    private void verifyCategorySelectorEnterNewCategoryFunctionality(FxRobot robot, TestInfo testinfo) {
         // Enter category without valid name
-        enterNewCategory(robot, null);
+        enterNewCategory(robot, null, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Stage categoryCreationErrorStage = timeOutGetTopModalStage(robot, "Category Creation Error");
-        verifyThat(categoryCreationErrorStage, Matchers.notNullValue());
+        Stage categoryCreationErrorStage = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
+        verifyThat(categoryCreationErrorStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage, "OK");
+        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutAssertTopModalStageClosed(robot, "Category Creation Error");
+        timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
-        verifyThat("#category-selector", TableViewMatchers.hasNumRows(0));
+        verifyThat("#category-selector", TableViewMatchers.hasNumRows(0), saveScreenshot(testinfo));
 
         // Enter valid category name
-        enterNewCategory(robot, "Test");
+        enterNewCategory(robot, "Test", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat("#category-selector", TableViewMatchers.hasNumRows(1));
-        verifyThat("#category-selector", TableViewMatchers.hasTableCell("Test"));
+        verifyThat("#category-selector", TableViewMatchers.hasNumRows(1), saveScreenshot(testinfo));
+        verifyThat("#category-selector", TableViewMatchers.hasTableCell("Test"), saveScreenshot(testinfo));
 
         // Enter duplicate category name
-        enterNewCategory(robot, "Test");
+        enterNewCategory(robot, "Test", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Stage categoryCreationErrorStage2 = timeOutGetTopModalStage(robot, "Category Creation Error");
-        verifyThat(categoryCreationErrorStage2, Matchers.notNullValue());
+        Stage categoryCreationErrorStage2 = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
+        verifyThat(categoryCreationErrorStage2, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage2, "OK");
+        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage2, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutAssertTopModalStageClosed(robot, "Category Creation Error");
+        timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
         // Flush text-field manually
         TextField textField = robot.lookup("#category-input-field").query();
         textField.setText("");
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat("#category-selector", TableViewMatchers.hasNumRows(1));
+        verifyThat("#category-selector", TableViewMatchers.hasNumRows(1), saveScreenshot(testinfo));
 
         // Renaming a category
-        timeOutClickOn(robot, "Test");
+        timeOutClickOn(robot, "Test", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         robot.write("Dummy").push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat("#category-selector", TableViewMatchers.hasTableCell("Dummy"));
+        verifyThat("#category-selector", TableViewMatchers.hasTableCell("Dummy"), saveScreenshot(testinfo));
 
         // Entering a category with a name that previously existed but is not currently in the category-selector
-        enterNewCategory(robot, "Test");
+        enterNewCategory(robot, "Test", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         // There should be no error message
-        verifyThat(getTopModalStage(robot, "Category Creation Error"), Matchers.nullValue());
+        verifyThat(getTopModalStage(robot, "Category Creation Error"), Matchers.nullValue(), saveScreenshot(testinfo));
 
         // Renaming a category to a name that already exists
-        timeOutClickOn(robot, "Test");
+        timeOutClickOn(robot, "Test", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         robot.write("Dummy").push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Stage categoryCreationErrorStage3 = timeOutGetTopModalStage(robot, "Category Creation Error");
-        verifyThat(categoryCreationErrorStage3, Matchers.notNullValue());
+        Stage categoryCreationErrorStage3 = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
+        verifyThat(categoryCreationErrorStage3, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage3, "OK");
+        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage3, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutAssertTopModalStageClosed(robot, "Category Creation Error");
+        timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
-        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Test"));
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Test"),
+                   saveScreenshot(testinfo));
 
         // Renaming a category to a blank string
-        timeOutClickOn(robot, "Dummy");
+        timeOutClickOn(robot, "Dummy", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Dummy"));
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Dummy"),
+                   saveScreenshot(testinfo));
 
-        timeOutClickOn(robot, "Dummy");
+        timeOutClickOn(robot, "Dummy", testinfo);
         robot.write("    ").push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Stage categoryCreationErrorStage4 = timeOutGetTopModalStage(robot, "Category Creation Error");
-        verifyThat(categoryCreationErrorStage4, Matchers.notNullValue());
+        Stage categoryCreationErrorStage4 = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
+        verifyThat(categoryCreationErrorStage4, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage4, "OK");
+        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage4, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutAssertTopModalStageClosed(robot, "Category Creation Error");
+        timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
         // Deleting remaining categories
-        timeOutClickOnNth(robot, "#delete-button", 1);
+        timeOutClickOnNth(robot, "#delete-button", 1, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.rightClickOn();
         WaitForAsyncUtils.waitForFxEvents();
-        verifyThat(mainView.getObjectCategoryTable().getRowContextMenu().isShowing(), Matchers.equalTo(false));
+        verifyThat(mainView.getObjectCategoryTable().getRowContextMenu().isShowing(), Matchers.equalTo(false),
+                   saveScreenshot(testinfo));
 
-        timeOutClickOn(robot, "#delete-button");
+        timeOutClickOn(robot, "#delete-button", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(mainView.getObjectCategoryTable(), TableViewMatchers.hasNumRows(0));
+        verifyThat(mainView.getObjectCategoryTable(), TableViewMatchers.hasNumRows(0), saveScreenshot(testinfo));
     }
 
-    private void verifyImageSidePanelSearchFunctionality(FxRobot robot) {
+    private void verifyImageSidePanelSearchFunctionality(FxRobot robot, TestInfo testinfo) {
         final TextField fileSearchField = mainView.getImageFileSearchField();
 
-        verifyThat(fileSearchField.getPromptText(), Matchers.equalTo("Search File"));
-        verifyThat(fileSearchField, NodeMatchers.isNotFocused());
+        verifyThat(fileSearchField.getPromptText(), Matchers.equalTo("Search File"), saveScreenshot(testinfo));
+        verifyThat(fileSearchField, NodeMatchers.isNotFocused(), saveScreenshot(testinfo));
 
         robot.clickOn(fileSearchField);
-        verifyThat(fileSearchField, NodeMatchers.isFocused());
+        verifyThat(fileSearchField, NodeMatchers.isFocused(), saveScreenshot(testinfo));
 
         robot.write("nico");
         WaitForAsyncUtils.waitForFxEvents();
 
-        waitUntilCurrentImageIsLoaded();
+        waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(model.getCurrentImageFileName(), Matchers.equalTo("nico-bhlr-1067059-unsplash.jpg"));
-        verifyThat(mainView.getCurrentImage().getUrl(), Matchers.endsWith("nico-bhlr-1067059-unsplash.jpg"));
+        verifyThat(model.getCurrentImageFileName(), Matchers.equalTo("nico-bhlr-1067059-unsplash.jpg"),
+                   saveScreenshot(testinfo));
+        verifyThat(mainView.getCurrentImage().getUrl(), Matchers.endsWith("nico-bhlr-1067059-unsplash.jpg"),
+                   saveScreenshot(testinfo));
     }
 
-    private void verifyCategorySearchFunctionality(FxRobot robot) {
-        enterNewCategory(robot, "AAA");
-        enterNewCategory(robot, "ABB");
-        enterNewCategory(robot, "ABC");
+    private void verifyCategorySearchFunctionality(FxRobot robot, TestInfo testinfo) {
+        enterNewCategory(robot, "AAA", testinfo);
+        enterNewCategory(robot, "ABB", testinfo);
+        enterNewCategory(robot, "ABC", testinfo);
 
         final TextField categorySearchField = mainView.getCategorySearchField();
-        verifyThat(categorySearchField.getPromptText(), Matchers.equalTo("Search Category"));
+        verifyThat(categorySearchField.getPromptText(), Matchers.equalTo("Search Category"), saveScreenshot(testinfo));
 
         robot.clickOn(categorySearchField).write("A");
         WaitForAsyncUtils.waitForFxEvents();
-        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("AAA"));
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("AAA"),
+                   saveScreenshot(testinfo));
 
         robot.write("B");
         WaitForAsyncUtils.waitForFxEvents();
-        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("ABB"));
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("ABB"),
+                   saveScreenshot(testinfo));
 
         robot.write("C");
         WaitForAsyncUtils.waitForFxEvents();
-        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("ABC"));
+        verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("ABC"),
+                   saveScreenshot(testinfo));
     }
 }

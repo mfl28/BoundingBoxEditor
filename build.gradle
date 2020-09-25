@@ -61,13 +61,14 @@ dependencies {
 
 javafx {
     version = '14'
-    modules = ['javafx.controls']
+    modules = ['javafx.controls', 'javafx.swing']
 }
 
 test {
     useJUnitPlatform()
 
-    jvmArgs = ['-Dtestfx.robot=awt']
+    jvmArgs = ['-Dtestfx.robot=awt', '-Dprism.verbose=true', '-Dprism.forceGPU=true']
+    maxHeapSize = '3072m'
 
     moduleOptions {
         runOnClasspath = true
@@ -79,7 +80,7 @@ test {
 ci {
     githubactions {
         test {
-            jvmArgs = ['-Dtestfx.robot=awt', '-Xmx3072m', '-Dprism.order=sw', '-Dprism.verbose=true']
+            jvmArgs.remove('-Dprim.forceGPU=true')
         }
     }
 }

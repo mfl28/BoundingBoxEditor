@@ -6,6 +6,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
@@ -22,81 +23,87 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onMenuItemsClicked_ShouldCorrectlyApplyVisibilityAndShowDialogueWindows(FxRobot robot) {
-        verifyNodeVisibilities();
-        verifyMenuBarFunctionality(robot);
+    void onMenuItemsClicked_ShouldCorrectlyApplyVisibilityAndShowDialogueWindows(FxRobot robot, TestInfo testinfo) {
+        verifyNodeVisibilities(testinfo);
+        verifyMenuBarFunctionality(robot, testinfo);
     }
 
-    private void verifyMenuBarFunctionality(FxRobot robot) {
-        timeOutClickOn(robot, "File");
+    private void verifyMenuBarFunctionality(FxRobot robot, TestInfo testinfo) {
+        timeOutClickOn(robot, "File", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem openFolderItem = getSubMenuItem(robot, "File", "Open Folder...");
-        assertTrue(openFolderItem.isVisible());
-        assertFalse(openFolderItem.isDisable());
+        assertTrue(openFolderItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Open folder item not " +
+                "visible"));
+        assertFalse(openFolderItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Open folder item not " +
+                "enabled"));
 
-        timeOutClickOn(robot, "Open Folder...");
+        timeOutClickOn(robot, "Open Folder...", testinfo);
         robot.push(KeyCode.ESCAPE);
 
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem saveItem = getSubMenuItem(robot, "File", "Export Annotations");
-        assertTrue(saveItem.isVisible());
-        assertFalse(saveItem.isDisable());
+        assertTrue(saveItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Save item not visible"));
+        assertFalse(saveItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Save item not enabled"));
 
-        timeOutClickOn(robot, "File");
+        timeOutClickOn(robot, "File", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Export Annotations");
+        timeOutClickOn(robot, "Export Annotations", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Pascal-VOC format...");
-        WaitForAsyncUtils.waitForFxEvents();
-
-        Stage categoryCreationErrorStage = timeOutGetTopModalStage(robot, "Save Error");
-        verifyThat(categoryCreationErrorStage, Matchers.notNullValue());
-
-        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage, "OK");
+        timeOutClickOn(robot, "Pascal-VOC format...", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertTopModalStageClosed(robot, "Save Error");
+        Stage categoryCreationErrorStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
+        verifyThat(categoryCreationErrorStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutClickOn(robot, "File");
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Export Annotations");
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutMoveTo(robot, "Pascal-VOC format...");
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "YOLO format...");
+        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Stage categoryCreationErrorStage2 = timeOutGetTopModalStage(robot, "Save Error");
-        verifyThat(categoryCreationErrorStage2, Matchers.notNullValue());
+        timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
-        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage2, "OK");
+        timeOutClickOn(robot, "File", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutAssertTopModalStageClosed(robot, "Save Error");
+        timeOutClickOn(robot, "Export Annotations", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutMoveTo(robot, "Pascal-VOC format...", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "YOLO format...", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Stage categoryCreationErrorStage2 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
+        verifyThat(categoryCreationErrorStage2, Matchers.notNullValue(), saveScreenshot(testinfo));
+
+        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage2, "OK", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
         MenuItem exitItem = getSubMenuItem(robot, "File", "Exit");
-        assertTrue(exitItem.isVisible());
-        assertFalse(exitItem.isDisable());
+        assertTrue(exitItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not visible"));
+        assertFalse(exitItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not enabled"));
 
-        timeOutClickOn(robot, "View");
+        timeOutClickOn(robot, "View", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem fitWindowItem = getSubMenuItem(robot, "View", "Maximize Images");
-        assertTrue(fitWindowItem.isVisible());
-        assertTrue(fitWindowItem.isDisable());
+        assertTrue(fitWindowItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Maximize images item not " +
+                "visible"));
+        assertTrue(fitWindowItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Maximize images item not " +
+                "disabled"));
 
         MenuItem imageExplorerItem = getSubMenuItem(robot, "View", "Show Images Panel");
-        assertTrue(imageExplorerItem.isVisible());
-        assertTrue(imageExplorerItem.isDisable());
+        assertTrue(imageExplorerItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
+                "visible"));
+        assertTrue(imageExplorerItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
+                "disabled"));
     }
 
-    private void verifyNodeVisibilities() {
-        verifyThat("#main-menu-bar", NodeMatchers.isVisible());
-        verifyThat("#work-space", NodeMatchers.isInvisible());
-        verifyThat("#status-panel", NodeMatchers.isInvisible());
+    private void verifyNodeVisibilities(TestInfo testinfo) {
+        verifyThat("#main-menu-bar", NodeMatchers.isVisible(), saveScreenshot(testinfo));
+        verifyThat("#work-space", NodeMatchers.isInvisible(), saveScreenshot(testinfo));
+        verifyThat("#status-panel", NodeMatchers.isInvisible(), saveScreenshot(testinfo));
     }
 
 }
