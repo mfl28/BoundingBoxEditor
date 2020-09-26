@@ -89,9 +89,12 @@ jobs:
       - name: Build
         run: ./gradlew --info --stacktrace build -x test
       - name: Test setup
-        run: sudo apt-get install xvfb
+        run: |
+          sudo apt-get install xvfb fluxbox
+          Xvfb :10 -screen 0 ${TEST_SCREEN_WIDTH}x${TEST_SCREEN_HEIGHT}x24 &
+          fluxbox -display :10 &
       - name: Test
-        run: xvfb-run --auto-servernum --server-args="-screen 0, ${TEST_SCREEN_WIDTH}x${TEST_SCREEN_HEIGHT}x24" ./gradlew --stacktrace --info test
+        run: DISPLAY=:10 ./gradlew --stacktrace --info test
       - name: Upload failed test screenshots
         uses: actions/upload-artifact@v2
         if: failure()

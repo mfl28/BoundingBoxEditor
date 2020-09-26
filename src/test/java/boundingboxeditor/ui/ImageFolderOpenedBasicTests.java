@@ -219,7 +219,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertTrue(exitItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not visible"));
         assertFalse(exitItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not enabled"));
 
-        timeOutClickOn(robot, "View", testinfo);
+        //timeOutClickOn(robot, "View", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 

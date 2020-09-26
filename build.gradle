@@ -81,7 +81,7 @@ test {
 ci {
     githubactions {
         test {
-            systemProperty "fullScreenTests", true
+            systemProperty "fullScreenTests", false
         }
     }
 }
