@@ -61,6 +61,7 @@ dependencies {
 
 javafx {
     version = '14'
+    // javafx.swing necessary for screenshot capturing in tests
     modules = ['javafx.controls', 'javafx.swing']
 }
 
@@ -80,7 +81,7 @@ test {
 ci {
     githubactions {
         test {
-            jvmArgs.remove('-Dprim.forceGPU=true')
+            systemProperty "fullScreenTests", true
         }
     }
 }

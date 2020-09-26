@@ -54,6 +54,7 @@ public class BoundingBoxEditorTestBase {
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
     private static final Path SCREENSHOT_PATH = Paths.get("").toAbsolutePath().resolve(
             "build/test-screenshots/");
+    private static final String FULL_SCREEN_TESTS_SYSTEM_PROPERTY_NAME = "fullScreenTests";
     protected static int TIMEOUT_DURATION_IN_SEC = 30;
     protected static String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
     protected static String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
@@ -168,6 +169,10 @@ public class BoundingBoxEditorTestBase {
         model = controller.getModel();
         // To make sure that the window is on top of all other windows at the start.
         stage.setAlwaysOnTop(true);
+
+        if(Boolean.getBoolean(FULL_SCREEN_TESTS_SYSTEM_PROPERTY_NAME)) {
+            stage.setMaximized(true);
+        }
 
         final Scene scene = createSceneFromParent(mainView);
         scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
