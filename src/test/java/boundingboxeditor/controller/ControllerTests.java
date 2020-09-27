@@ -59,6 +59,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
@@ -200,6 +201,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
@@ -331,6 +333,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
@@ -443,6 +446,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
@@ -507,6 +511,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
@@ -594,6 +599,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         final File referenceAnnotationFile = new File(getClass().getResource(inputFilePath).getFile());
 
@@ -665,6 +671,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         final File referenceAnnotationFile = new File(getClass().getResource(inputFilePath).getFile());
 
@@ -738,6 +745,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(true), saveScreenshot(testinfo));
@@ -802,6 +810,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
@@ -940,6 +949,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
@@ -964,6 +974,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                    Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
@@ -1015,6 +1026,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
+
         verifyThat(controller.getStage().getTitle(), Matchers.startsWith("Bounding Box Editor - "),
                    saveScreenshot(testinfo));
 

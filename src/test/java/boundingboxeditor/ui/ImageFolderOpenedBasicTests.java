@@ -91,8 +91,9 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         // Delete the loaded image file:
         Assertions.assertDoesNotThrow(() -> Files.delete(tempDir.toPath().resolve("bar.jpg")),
-                                      () -> saveScreenshotAndReturnMessage(testinfo, "Could not delete image in temporary " +
-                                              "directory."));
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                           "Could not delete image in temporary " +
+                                                                                   "directory."));
 
         final Stage alert2 = timeOutGetTopModalStage(robot, "Image files changed", testinfo);
         timeOutLookUpInStageAndClickOn(robot, alert2, "OK", testinfo);
@@ -146,10 +147,45 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     }
 
     private void verifyMenuBarFunctionality(FxRobot robot, TestInfo testinfo) {
+        timeOutClickOn(robot, "View", testinfo);
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        CheckMenuItem fitWindowItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Maximize Images");
+        assertTrue(fitWindowItem.getParentMenu().isShowing(), () -> saveScreenshotAndReturnMessage(testinfo, "View " +
+                "menu not showing"));
+        assertTrue(fitWindowItem.isVisible(),
+                   () -> saveScreenshotAndReturnMessage(testinfo, "Fit window item not visible"));
+        assertFalse(fitWindowItem.isDisable(),
+                    () -> saveScreenshotAndReturnMessage(testinfo, "Fit window item not enabled"));
+        assertTrue(fitWindowItem.isSelected(), () -> saveScreenshotAndReturnMessage(testinfo, "Fit window item not " +
+                "selected"));
+
+        CheckMenuItem imageExplorerItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Show Images Panel");
+        assertTrue(imageExplorerItem.isVisible(),
+                   () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
+                           "visible"));
+        assertFalse(imageExplorerItem.isDisable(),
+                    () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
+                            "enabled"));
+        assertTrue(imageExplorerItem.isSelected(),
+                   () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
+                           "selected"));
+
+        robot.rightClickOn();
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertFalse(fitWindowItem.getParentMenu().isShowing(), () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                                                    "View menu is " +
+                                                                                                            "showing"));
+
         timeOutClickOn(robot, "File", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem openFolderItem = getSubMenuItem(robot, "File", "Open Folder...");
+        assertTrue(openFolderItem.getParentMenu().isShowing(), () -> saveScreenshotAndReturnMessage(testinfo, "File " +
+                "menu is not showing"));
         assertTrue(openFolderItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Open folder item not " +
                 "visible"));
         assertFalse(openFolderItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Open folder item " +
@@ -162,10 +198,12 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem exportItem = getSubMenuItem(robot, "File", "Export Annotations");
-        assertTrue(exportItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Export annotations item not " +
-                "visible"));
-        assertFalse(exportItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Export annotations item not " +
-                "enabled"));
+        assertTrue(exportItem.isVisible(),
+                   () -> saveScreenshotAndReturnMessage(testinfo, "Export annotations item not " +
+                           "visible"));
+        assertFalse(exportItem.isDisable(),
+                    () -> saveScreenshotAndReturnMessage(testinfo, "Export annotations item not " +
+                            "enabled"));
 
         timeOutClickOn(robot, "File", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
@@ -218,24 +256,6 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         MenuItem exitItem = getSubMenuItem(robot, "File", "Exit");
         assertTrue(exitItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not visible"));
         assertFalse(exitItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not enabled"));
-
-        //timeOutClickOn(robot, "View", testinfo);
-
-        WaitForAsyncUtils.waitForFxEvents();
-
-        CheckMenuItem fitWindowItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Maximize Images");
-        assertTrue(fitWindowItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Fit window item not visible"));
-        assertFalse(fitWindowItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Fit window item not enabled"));
-        assertTrue(fitWindowItem.isSelected(), () -> saveScreenshotAndReturnMessage(testinfo, "Fit window item not " +
-                "selected"));
-
-        CheckMenuItem imageExplorerItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Show Images Panel");
-        assertTrue(imageExplorerItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
-                "visible"));
-        assertFalse(imageExplorerItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
-                "enabled"));
-        assertTrue(imageExplorerItem.isSelected(), () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
-                "selected"));
     }
 
     private void verifyCategorySelectorState(TestInfo testinfo) {
