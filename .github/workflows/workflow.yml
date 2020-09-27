@@ -134,13 +134,15 @@ jobs:
       - name: Build
         run: ./gradlew --info --stacktrace build -x test
       - name: Test setup
+        if: false
         run: |
           "/Library/Application Support/VMware Tools/vmware-resolutionSet" $TEST_SCREEN_WIDTH $TEST_SCREEN_HEIGHT
       - name: Test
+        if: false
         run: ./gradlew --info --stacktrace test
       - name: Upload failed test screenshots
         uses: actions/upload-artifact@v2
-        if: failure()
+        if: false
         with:
           name: Failed-Test-Screenshots-macOS
           path: build/test-screenshots
