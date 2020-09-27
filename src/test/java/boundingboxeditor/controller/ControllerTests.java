@@ -66,11 +66,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         final File referenceAnnotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
 
-        timeOutClickOn(robot, "File", testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Import Annotations", testinfo);
+        timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Pascal-VOC format...", testinfo);
+        timeOutClickOn(robot, "#pvoc-import-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         robot.push(KeyCode.ESCAPE);
 
@@ -209,13 +209,13 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFolder =
                 new File(getClass().getResource(referenceAnnotationDirectoryPath).getFile());
 
-        timeOutClickOn(robot, "File", testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Import Annotations", testinfo);
+        timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutMoveTo(robot, "Pascal-VOC format...", testinfo);
+        timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "YOLO format...", testinfo);
+        timeOutClickOn(robot, "#yolo-import-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         robot.push(KeyCode.ESCAPE);
 
@@ -341,13 +341,13 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFile =
                 new File(getClass().getResource(referenceAnnotationFilePath).getFile());
 
-        timeOutClickOn(robot, "File", testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Import Annotations", testinfo);
+        timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutMoveTo(robot, "Pascal-VOC format...", testinfo);
+        timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "JSON format...", testinfo);
+        timeOutClickOn(robot, "#json-import-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         robot.push(KeyCode.ESCAPE);
 

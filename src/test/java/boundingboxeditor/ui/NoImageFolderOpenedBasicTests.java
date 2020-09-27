@@ -29,7 +29,7 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     }
 
     private void verifyMenuBarFunctionality(FxRobot robot, TestInfo testinfo) {
-        timeOutClickOn(robot, "File", testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -39,7 +39,7 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertFalse(openFolderItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Open folder item not " +
                 "enabled"));
 
-        timeOutClickOn(robot, "Open Folder...", testinfo);
+        timeOutClickOn(robot, "#file-open-folder-menu-item", testinfo);
         robot.push(KeyCode.ESCAPE);
 
         WaitForAsyncUtils.waitForFxEvents();
@@ -48,11 +48,11 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertTrue(saveItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Save item not visible"));
         assertFalse(saveItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Save item not enabled"));
 
-        timeOutClickOn(robot, "File", testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Export Annotations", testinfo);
+        timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Pascal-VOC format...", testinfo);
+        timeOutClickOn(robot, "#pvoc-export-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         Stage categoryCreationErrorStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
@@ -63,13 +63,13 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
-        timeOutClickOn(robot, "File", testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Export Annotations", testinfo);
+        timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutMoveTo(robot, "Pascal-VOC format...", testinfo);
+        timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "YOLO format...", testinfo);
+        timeOutClickOn(robot, "#yolo-export-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         Stage categoryCreationErrorStage2 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
@@ -83,7 +83,7 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertTrue(exitItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not visible"));
         assertFalse(exitItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not enabled"));
 
-        timeOutClickOn(robot, "View", testinfo);
+        timeOutClickOn(robot, "#view-menu", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -105,5 +105,4 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         verifyThat("#work-space", NodeMatchers.isInvisible(), saveScreenshot(testinfo));
         verifyThat("#status-panel", NodeMatchers.isInvisible(), saveScreenshot(testinfo));
     }
-
 }

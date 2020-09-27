@@ -180,7 +180,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
                                                                                                     "View menu is " +
                                                                                                             "showing"));
 
-        timeOutClickOn(robot, "File", testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem openFolderItem = getSubMenuItem(robot, "File", "Open Folder...");
@@ -191,7 +191,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertFalse(openFolderItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Open folder item " +
                 "not enabled"));
 
-        timeOutClickOn(robot, "Open Folder...", testinfo);
+        timeOutClickOn(robot, "#file-open-folder-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         robot.push(KeyCode.ESCAPE);
 
@@ -205,11 +205,11 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
                     () -> saveScreenshotAndReturnMessage(testinfo, "Export annotations item not " +
                             "enabled"));
 
-        timeOutClickOn(robot, "File", testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Export Annotations", testinfo);
+        timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Pascal-VOC format...", testinfo);
+        timeOutClickOn(robot, "#pvoc-export-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         Stage errorDialogStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
@@ -220,13 +220,13 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
-        timeOutClickOn(robot, "File", testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Export Annotations", testinfo);
+        timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutMoveTo(robot, "Pascal-VOC format...", testinfo);
+        timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "YOLO format...", testinfo);
+        timeOutClickOn(robot, "#yolo-export-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         Stage errorDialogStage2 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
@@ -236,13 +236,13 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
-        timeOutClickOn(robot, "File", testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "Export Annotations", testinfo);
+        timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutMoveTo(robot, "Pascal-VOC format...", testinfo);
+        timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "JSON format...", testinfo);
+        timeOutClickOn(robot, "#json-export-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         Stage errorDialogStage3 = timeOutGetTopModalStage(robot, "Save Error", testinfo);

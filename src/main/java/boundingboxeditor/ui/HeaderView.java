@@ -36,7 +36,7 @@ class HeaderView extends VBox implements View {
      * @return the menu-item
      */
     MenuItem getFileImportAnnotationsItem() {
-        return menuBar.getFileImportAnnotationsItem();
+        return menuBar.getFileImportAnnotationsMenu();
     }
 
     /**

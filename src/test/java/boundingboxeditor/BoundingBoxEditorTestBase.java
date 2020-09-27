@@ -34,6 +34,7 @@ import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.DebugUtils;
+import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.PointQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
@@ -421,25 +422,25 @@ public class BoundingBoxEditorTestBase {
     private boolean nodePresentAndVisibleInStage(FxRobot robot, Stage stage, String id) {
         Optional<Node> queryResult = robot.targetWindow(stage).lookup(id).tryQuery();
 
-        return queryResult.isPresent() && queryResult.get().isVisible();
+        return queryResult.isPresent() && NodeQueryUtils.isVisible().test(queryResult.get());
     }
 
     private boolean nodePresentAndVisible(FxRobot robot, String id) {
         Optional<Node> queryResult = robot.lookup(id).tryQuery();
 
-        return queryResult.isPresent() && queryResult.get().isVisible();
+        return queryResult.isPresent() && NodeQueryUtils.isVisible().test(queryResult.get());
     }
 
     private boolean nodePresentAndVisibleNth(FxRobot robot, String id, int n) {
         Optional<Node> queryResult = robot.lookup(id).nth(n).tryQuery();
 
-        return queryResult.isPresent() && queryResult.get().isVisible();
+        return queryResult.isPresent() && NodeQueryUtils.isVisible().test(queryResult.get());
     }
 
     private <T extends Node> boolean nodePresentAndVisibleAs(FxRobot robot, String id, Class<T> clazz) {
         Optional<T> queryResult = robot.lookup(id).tryQueryAs(clazz);
 
-        return queryResult.isPresent() && queryResult.get().isVisible();
+        return queryResult.isPresent() && NodeQueryUtils.isVisible().test(queryResult.get());
     }
 
     private boolean isTopModalStagePresent(FxRobot robot) {

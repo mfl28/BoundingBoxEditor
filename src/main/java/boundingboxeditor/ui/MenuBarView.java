@@ -32,18 +32,32 @@ class MenuBarView extends MenuBar implements View {
     private static final String YOLO_FORMAT_EXPORT_TEXT = "YOLO format...";
     private static final String JSON_FORMAT_EXPORT_TEXT = "JSON format...";
     private static final String JSON_FORMAT_IMPORT_TEXT = "JSON format...";
+    private static final String FILE_MENU_ID = "file-menu";
+    private static final String FILE_OPEN_FOLDER_MENU_ITEM_ID = "file-open-folder-menu-item";
+    private static final String FILE_EXPORT_ANNOTATIONS_MENU_ID = "file-export-annotations-menu";
+    private static final String FILE_IMPORT_ANNOTATIONS_MENU_ID = "file-import-annotations-menu";
+    private static final String FILE_EXIT_MENU_ITEM_ID = "file-exit-menu-item";
+    private static final String VIEW_MENU_ID = "view-menu";
+    private static final String VIEW_MAXIMIZE_IMAGES_MENU_ITEM_ID = "view-maximize-images-menu-item";
+    private static final String VIEW_SHOW_IMAGES_PANEL_MENU_ITEM_ID = "view-show-images-panel-menu-item";
+    private static final String PVOC_EXPORT_MENU_ITEM_ID = "pvoc-export-menu-item";
+    private static final String YOLO_EXPORT_MENU_ITEM_ID = "yolo-export-menu-item";
+    private static final String JSON_EXPORT_MENU_ITEM_ID = "json-export-menu-item";
+    private static final String PVOC_IMPORT_MENU_ITEM_ID = "pvoc-import-menu-item";
+    private static final String YOLO_IMPORT_MENU_ITEM_ID = "yolo-import-menu-item";
+    private static final String JSON_IMPORT_MENU_ITEM_ID = "json-import-menu-item";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
-    private final Menu fileExportMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
-    private final MenuItem PVOCExportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_EXPORT_TEXT);
-    private final MenuItem YOLOExportMenuItem = new MenuItem(YOLO_FORMAT_EXPORT_TEXT);
-    private final MenuItem JSONExportMenuItem = new MenuItem(JSON_FORMAT_EXPORT_TEXT);
+    private final Menu fileExportAnnotationsMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
+    private final MenuItem pvocExportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_EXPORT_TEXT);
+    private final MenuItem yoloExportMenuItem = new MenuItem(YOLO_FORMAT_EXPORT_TEXT);
+    private final MenuItem jsonExportMenuItem = new MenuItem(JSON_FORMAT_EXPORT_TEXT);
 
-    private final Menu fileImportAnnotationsItem =
+    private final Menu fileImportAnnotationsMenu =
             new Menu(ANNOTATION_IMPORT_TEXT, createIconRegion(FILE_IMPORT_ICON_ID));
-    private final MenuItem PVOCImportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_IMPORT_TEXT);
-    private final MenuItem YOLORImportMenuItem = new MenuItem(YOLO_FORMAT_IMPORT_TEXT);
-    private final MenuItem JSONImportMenuItem = new MenuItem(JSON_FORMAT_IMPORT_TEXT);
+    private final MenuItem pvocImportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_IMPORT_TEXT);
+    private final MenuItem yoloRImportMenuItem = new MenuItem(YOLO_FORMAT_IMPORT_TEXT);
+    private final MenuItem jsonImportMenuItem = new MenuItem(JSON_FORMAT_IMPORT_TEXT);
     private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT, createIconRegion(EXIT_ICON_ID));
     private final CheckMenuItem viewMaximizeImagesItem = new CheckMenuItem(MAXIMIZE_IMAGES_TEXT);
     private final CheckMenuItem viewShowImagesPanelItem = new CheckMenuItem(SHOW_IMAGE_FILE_EXPLORER_TEXT);
@@ -57,31 +71,41 @@ class MenuBarView extends MenuBar implements View {
         viewShowImagesPanelItem.setSelected(true);
         viewMaximizeImagesItem.setSelected(true);
 
-        fileExportMenu.getItems().addAll(PVOCExportMenuItem, YOLOExportMenuItem, JSONExportMenuItem);
-        fileImportAnnotationsItem.getItems().addAll(PVOCImportMenuItem,
-                                                    YOLORImportMenuItem, JSONImportMenuItem);
+        fileExportAnnotationsMenu.getItems().addAll(pvocExportMenuItem, yoloExportMenuItem, jsonExportMenuItem);
+
+        pvocExportMenuItem.setId(PVOC_EXPORT_MENU_ITEM_ID);
+        yoloExportMenuItem.setId(YOLO_EXPORT_MENU_ITEM_ID);
+        jsonExportMenuItem.setId(JSON_EXPORT_MENU_ITEM_ID);
+
+        fileImportAnnotationsMenu.getItems().addAll(pvocImportMenuItem,
+                                                    yoloRImportMenuItem,
+                                                    jsonImportMenuItem);
+
+        pvocImportMenuItem.setId(PVOC_IMPORT_MENU_ITEM_ID);
+        yoloRImportMenuItem.setId(YOLO_IMPORT_MENU_ITEM_ID);
+        jsonImportMenuItem.setId(JSON_IMPORT_MENU_ITEM_ID);
     }
 
     @Override
     public void connectToController(final Controller controller) {
         fileOpenFolderItem.setOnAction(action ->
                                                controller.onRegisterOpenImageFolderAction());
-        PVOCExportMenuItem.setOnAction(action ->
+        pvocExportMenuItem.setOnAction(action ->
                                                controller.onRegisterSaveAnnotationsAction(
                                                        ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
-        YOLOExportMenuItem.setOnAction(action ->
+        yoloExportMenuItem.setOnAction(action ->
                                                controller.onRegisterSaveAnnotationsAction(
                                                        ImageAnnotationSaveStrategy.Type.YOLO));
-        JSONExportMenuItem.setOnAction(action ->
+        jsonExportMenuItem.setOnAction(action ->
                                                controller.onRegisterSaveAnnotationsAction(
                                                        ImageAnnotationSaveStrategy.Type.JSON));
-        PVOCImportMenuItem.setOnAction(action ->
+        pvocImportMenuItem.setOnAction(action ->
                                                controller.onRegisterImportAnnotationsAction(
                                                        ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
-        YOLORImportMenuItem.setOnAction(action ->
+        yoloRImportMenuItem.setOnAction(action ->
                                                 controller.onRegisterImportAnnotationsAction(
                                                         ImageAnnotationLoadStrategy.Type.YOLO));
-        JSONImportMenuItem.setOnAction(action ->
+        jsonImportMenuItem.setOnAction(action ->
                                                controller.onRegisterImportAnnotationsAction(
                                                        ImageAnnotationLoadStrategy.Type.JSON));
         fileExitItem.setOnAction(action ->
@@ -93,8 +117,8 @@ class MenuBarView extends MenuBar implements View {
      *
      * @return the menu-item
      */
-    MenuItem getFileImportAnnotationsItem() {
-        return fileImportAnnotationsItem;
+    MenuItem getFileImportAnnotationsMenu() {
+        return fileImportAnnotationsMenu;
     }
 
     /**
@@ -118,25 +142,35 @@ class MenuBarView extends MenuBar implements View {
 
     private Menu createFileMenu() {
         Menu fileMenu = new Menu(FILE_MENU_TEXT);
+        fileMenu.setId(FILE_MENU_ID);
 
         fileMenu.getItems().addAll(
                 fileOpenFolderItem,
-                fileExportMenu,
-                fileImportAnnotationsItem,
+                fileExportAnnotationsMenu,
+                fileImportAnnotationsMenu,
                 fileExitItem
         );
+
+        fileOpenFolderItem.setId(FILE_OPEN_FOLDER_MENU_ITEM_ID);
+        fileExportAnnotationsMenu.setId(FILE_EXPORT_ANNOTATIONS_MENU_ID);
+        fileImportAnnotationsMenu.setId(FILE_IMPORT_ANNOTATIONS_MENU_ID);
+        fileExitItem.setId(FILE_EXIT_MENU_ITEM_ID);
 
         return fileMenu;
     }
 
     private Menu createViewMenu() {
         Menu viewMenu = new Menu(VIEW_MENU_TEXT);
+        viewMenu.setId(VIEW_MENU_ID);
 
         viewMenu.getItems().addAll(
                 viewMaximizeImagesItem,
                 new SeparatorMenuItem(),
                 viewShowImagesPanelItem
         );
+
+        viewMaximizeImagesItem.setId(VIEW_MAXIMIZE_IMAGES_MENU_ITEM_ID);
+        viewShowImagesPanelItem.setId(VIEW_SHOW_IMAGES_PANEL_MENU_ITEM_ID);
 
         return viewMenu;
     }

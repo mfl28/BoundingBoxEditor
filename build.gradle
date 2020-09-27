@@ -68,7 +68,7 @@ javafx {
 test {
     useJUnitPlatform()
 
-    jvmArgs = ['-Dtestfx.robot=awt', '-Dprism.verbose=true', '-Dprism.forceGPU=true']
+    jvmArgs = ['-Dtestfx.robot=awt', '-Dprism.forceGPU=true']
     maxHeapSize = '3072m'
 
     moduleOptions {
@@ -82,6 +82,7 @@ ci {
     githubactions {
         test {
             systemProperty "fullScreenTests", false
+            jvmArgs = ['-Dprism.verbose=true']
         }
     }
 }
