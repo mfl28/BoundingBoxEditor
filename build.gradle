@@ -165,6 +165,7 @@ task dist {
 sonarqube {
     properties {
         property "sonar.projectKey", "mfl28_BoundingBoxEditor"
+        property "sonar.organization", "mfl28"
     }
 }
 

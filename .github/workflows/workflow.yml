@@ -57,10 +57,6 @@ jobs:
         with:
           name: Failed-Test-Screenshots-Windows
           path: build/test-screenshots
-      - name: Publish coverage report
-        uses: codecov/codecov-action@v1
-        with:
-          directory: build/reports/
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Upload installer (exe)
@@ -68,6 +64,12 @@ jobs:
         with:
           name: BoundingBoxEditor-Windows-exe
           path: build/jpackage/*.exe
+      - name: Sonarqube analysis
+        if: success()
+        run: ./gradlew sonarqube '-Dsonar.host.url=https://sonarcloud.io' '-Dsonar.login=${{ secrets.SONAR_TOKEN }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   Build-and-Test-Linux:
     runs-on: ubuntu-latest
     name: Build and Test (Linux)
