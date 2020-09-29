@@ -9,6 +9,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.io.TempDir;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.testfx.api.FxAssert.verifyThat;
 
+@Tag("ui")
 class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {

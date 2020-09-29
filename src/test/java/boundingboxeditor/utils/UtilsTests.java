@@ -3,11 +3,13 @@ package boundingboxeditor.utils;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+@Tag("unit")
 class UtilsTests {
     @Test
     void onCreateMathUtils_ShouldThrowException() throws Exception {

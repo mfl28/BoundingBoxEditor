@@ -8,6 +8,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.testfx.api.FxRobot;
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
+@Tag("ui")
 class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {

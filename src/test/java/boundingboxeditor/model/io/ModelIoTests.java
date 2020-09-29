@@ -6,11 +6,13 @@ import boundingboxeditor.model.data.ObjectCategory;
 import javafx.geometry.BoundingBox;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 
+@Tag("unit")
 class ModelIoTests {
     @Test
     void onBoundingBoxDataEqualityCheck_ShouldHandleCorrectly() {
