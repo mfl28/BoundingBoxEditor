@@ -190,7 +190,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: boundingboxeditor-portable-macos
-          path: build/jpackage/BoundingBoxEditor
+          path: build/jpackage/BoundingBoxEditor.app
   Release:
     needs: [Build-and-Test-Windows, Build-and-Test-Linux, Build-and-Test-macOS]
     if: startsWith(github.ref, 'refs/tags/v')
