@@ -72,7 +72,7 @@ jobs:
       - name: Upload installer (exe)
         uses: actions/upload-artifact@v2
         with:
-          name: boundingboxeditor-windows-exe
+          name: boundingboxeditor-installer-windows-exe
           path: build/jpackage/*.exe
       - name: Upload image
         uses: actions/upload-artifact@v2
@@ -132,12 +132,12 @@ jobs:
       - name: Upload installer (deb)
         uses: actions/upload-artifact@v2
         with:
-          name: boundingboxeditor-linux-deb
+          name: boundingboxeditor-installer-linux-deb
           path: build/jpackage/*.deb
       - name: Upload installer (rpm)
         uses: actions/upload-artifact@v2
         with:
-          name: boundingboxeditor-linux-rpm
+          name: boundingboxeditor-installer-linux-rpm
           path: build/jpackage/*.rpm
       - name: Upload image
         uses: actions/upload-artifact@v2
@@ -184,7 +184,7 @@ jobs:
       - name: Upload installer (dmg)
         uses: actions/upload-artifact@v2
         with:
-          name: boundingboxeditor-macos-dmg
+          name: boundingboxeditor-installer-macos-dmg
           path: build/jpackage/*.dmg
       - name: Upload image
         uses: actions/upload-artifact@v2
@@ -221,7 +221,7 @@ jobs:
         uses: actions/download-artifact@v2
       - name: Zip artifacts
         run: |
-          for artifact_dir in $(find $PWD/* -maxdepth 0 -type d -name boundingboxeditor*)
+          for artifact_dir in $(find $PWD/* -maxdepth 0 -type d -name "boundingboxeditor*")
           do
             cd $artifact_dir
             zip -r $artifact_dir *
@@ -231,4 +231,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag_name="${GITHUB_REF##*/}"
-          hub release edit $(find . -maxdepth 0 -type f -name "boundingbixeditor*.zip" -printf "-a %p ") -m "" "$tag_name"
+          hub release edit $(find . -maxdepth 0 -type f -name "boundingboxeditor*.zip" -printf "-a %p ") -m "" "$tag_name"
