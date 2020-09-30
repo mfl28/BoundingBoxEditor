@@ -104,7 +104,7 @@ ci {
             jvmArgs = ['-Dprism.verbose=true']
 
             if(org.gradle.internal.os.OperatingSystem.current().macOsX) {
-                // Currently there is, no support for running UI tests on macOS in a VM via github-actions.
+                // Currently there is no support for running UI tests on macOS in a VM via github-actions.
                 useJUnitPlatform {
                     excludeTags 'ui'
                 }
