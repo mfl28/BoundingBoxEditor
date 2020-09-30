@@ -79,7 +79,7 @@ dependencies {
 }
 
 javafx {
-    version = '14'
+    version = '15'
     // javafx.swing necessary for screenshot capturing in tests
     modules = ['javafx.controls', 'javafx.swing']
 }
