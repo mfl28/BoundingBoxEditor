@@ -36,7 +36,7 @@ plugins {
 
 apply plugin: 'com.github.fgiannesini.libsass.gradle.plugin'
 
-version '2.1.1'
+version '2.2.0'
 
 sourceCompatibility = 1.11
 
