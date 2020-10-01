@@ -1,12 +1,9 @@
 /build
-/image
+/artifacts
 /Dockerfile
-/jobs
-/azure-pipelines.yml
 /.git
 /src/test
 /.gitignore
 /.dockerignore
 /README.md
-/LICENSE
 /demo-media

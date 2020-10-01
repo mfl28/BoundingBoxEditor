@@ -1,9 +1,18 @@
-FROM gradle:jdk11 AS builder
-COPY --chown=gradle:gradle . /home/gradle/boundingboxeditor
-WORKDIR /home/gradle/boundingboxeditor
-RUN bash ./gradlew dist --no-daemon -x test && \
-    unzip /home/gradle/boundingboxeditor/build/distributions/boundingboxeditor-linux.zip -d /tmp/boundingboxeditor
+FROM adoptopenjdk:14-jdk-hotspot AS builder-base
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      dos2unix \
+      binutils \
+      fakeroot \
+      rpm && \
+    rm -rf /var/lib/apt/lists/*
 
-FROM scratch AS image
-COPY --from=builder /tmp/boundingboxeditor/image/ /image
-CMD [ "/image" ]
+FROM builder-base AS builder
+COPY . /home/boundingboxeditor
+WORKDIR /home/boundingboxeditor
+RUN dos2unix gradlew && \
+    bash ./gradlew jpackage
+
+FROM scratch AS artifacts
+COPY --from=builder /home/boundingboxeditor/build/jpackage/ /artifacts
+CMD [ "/artifacts" ]

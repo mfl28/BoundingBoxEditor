@@ -77,7 +77,7 @@ To run the tests, use :
 gradlew test
 ```
 
-## How to build latest Linux runtime image using Docker
+## How to build the latest Linux image and installers using Docker
 First build the Docker image from the cloned repo's root directory using:
 ```bash
 docker image build -t bbeditor .
@@ -86,15 +86,15 @@ Then create a writable container layer over the image (without starting a contai
 ```bash
 docker container create --name bbeditor bbeditor
 ```
-Finally, copy the directory containing the built image to the host:
+Finally, copy the directory containing the build artifacts to the host:
 ```bash
-docker container cp bbeditor:/image .
+docker container cp bbeditor:/artifacts .
 ```
 > **Alternative**:  
 > If you have a recent Docker version that supports BuildKit engine (version >= 19.03) you can do 
-> the whole image creation using a one-line command:
+> the whole build using a one-line command:
 >```bash
-> DOCKER_BUILDKIT=1 docker image build --target image --output type=local,dest=. . 
+> DOCKER_BUILDKIT=1 docker image build --target artifacts --output type=local,dest=. . 
 >```
 
 ## Acknowledgements

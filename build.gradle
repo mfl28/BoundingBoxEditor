@@ -181,6 +181,11 @@ jlink {
         } else if(org.gradle.internal.os.OperatingSystem.current().macOsX) {
             icon = 'src/main/resources/icons/app_icon.icns'
         }
+
+        // Allow to pass installer type as command line parameter:
+        if(project.hasProperty('installerType')) {
+            installerType = project.property('installerType')
+        }
     }
 }
 
