@@ -157,8 +157,9 @@ jlink {
         installerOptions += [
                 '--app-version', version,
                 '--copyright', 'Copyright 2020, Markus Fleischhacker',
+                '--description', 'Graphical image annotation application',
                 '--license-file', 'LICENSE',
-                '--vendor', 'Markus Fleischhacker'
+                '--vendor', 'Markus Fleischhacker',
         ]
 
         if(org.gradle.internal.os.OperatingSystem.current().windows) {
@@ -175,7 +176,8 @@ jlink {
             installerOptions += [
                     '--resource-dir', 'build/jpackage/BoundingBoxEditor/lib',
                     '--linux-shortcut',
-                    '--linux-menu-group', 'Science'
+                    '--linux-menu-group', 'Graphics',
+                    '--linux-deb-maintainer', 'markus.fleischhacker28@gmail.com'
             ]
             icon = 'src/main/resources/icons/app_icon.png'
         } else if(org.gradle.internal.os.OperatingSystem.current().macOsX) {
