@@ -4,11 +4,10 @@
 # Bounding Box Editor
 </p>
 
-[![Build Status](https://dev.azure.com/mfl28/BoundingBoxEditor/_apis/build/status/mfl28.BoundingBoxEditor?branchName=master)](https://dev.azure.com/mfl28/BoundingBoxEditor/_build/latest?definitionId=1&branchName=master)
-![Azure DevOps tests (master)](https://img.shields.io/azure-devops/tests/mfl28/BoundingBoxEditor/1/master)
-![Azure DevOps coverage (master)](https://img.shields.io/azure-devops/coverage/mfl28/BoundingBoxEditor/1/master)
-[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java)
+[![Build](https://github.com/mfl28/BoundingBoxEditor/workflows/Build/badge.svg)](https://dev.azure.com/mfl28/BoundingBoxEditor/_build/latest?definitionId=1&branchName=master)
+[![Codecov coverage (master)](https://codecov.io/gh/mfl28/BoundingBoxEditor/branch/master/graph/badge.svg)](https://codecov.io/gh/mfl28/BoundingBoxEditor)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mfl28_BoundingBoxEditor&metric=alert_status)](https://sonarcloud.io/dashboard?id=mfl28_BoundingBoxEditor)
+[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java)
 
 
 This is an image annotation desktop-application written in Java using the JavaFX application platform. It allows you to create bounding box annotations using rectangular and polygonal shapes. 
