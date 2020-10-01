@@ -204,7 +204,11 @@ jobs:
       - name: Create changelog
         id: changelog
         run: |
-          echo "::set-output name=body::$(git log --pretty=format:"* %H %s" $(git describe --tags --abbrev=0 @^)..@)"
+          commitlist="$(git log --pretty=format:"* %H %s" $(git describe --tags --abbrev=0 @^)..@)"
+          commitlist="${commitlist//'%'/'%25'}"
+          commitlist="${commitlist//$'\n'/'%0A'}"
+          commitlist="${commitlist//$'\r'/'%0D'}"
+          echo "::set-output name=body::$commitlist"
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -212,7 +216,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          release_name: ${{ github.ref }}
           body: |
             ## Changes:
 
