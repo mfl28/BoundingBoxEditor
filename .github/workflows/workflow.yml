@@ -209,18 +209,6 @@ jobs:
           commitlist="${commitlist//$'\n'/'%0A'}"
           commitlist="${commitlist//$'\r'/'%0D'}"
           echo "::set-output name=body::$commitlist"
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body: |
-            ## Changes:
-
-            ${{ steps.changelog.outputs.body }}
       - name: Download all build artifacts
         uses: actions/download-artifact@v2
       - name: Zip artifacts
