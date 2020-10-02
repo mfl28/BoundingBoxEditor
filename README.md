@@ -4,11 +4,12 @@
 # Bounding Box Editor
 </p>
 
-[![Build](https://github.com/mfl28/BoundingBoxEditor/workflows/Build/badge.svg)](https://dev.azure.com/mfl28/BoundingBoxEditor/_build/latest?definitionId=1&branchName=master)
+[![Build](https://github.com/mfl28/BoundingBoxEditor/workflows/Build/badge.svg)](https://github.com/mfl28/BoundingBoxEditor/actions)
 [![Codecov coverage (master)](https://codecov.io/gh/mfl28/BoundingBoxEditor/branch/master/graph/badge.svg)](https://codecov.io/gh/mfl28/BoundingBoxEditor)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mfl28_BoundingBoxEditor&metric=alert_status)](https://sonarcloud.io/dashboard?id=mfl28_BoundingBoxEditor)
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java)
-
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/mfl28/BoundingBoxEditor?label=release)](https://github.com/mfl28/BoundingBoxEditor/releases/latest)
+[![License](https://img.shields.io/badge/license-GPLv3-informational)](LICENSE)
 
 This is an image annotation desktop-application written in Java using the JavaFX application platform. It allows you to create bounding box annotations using rectangular and polygonal shapes. 
 Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format XML-files or [YOLO](https://pjreddie.com/darknet/yolo/) format TXT-files.
@@ -29,19 +30,23 @@ Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://ho
 * Tag bounding boxes using tags defined in the Pascal VOC format (truncated, difficult, occluded, pose: *, action: *)
 * Color-coded, searchable and fully dynamic object categories
 
-## Latest Release ![GitHub release](https://img.shields.io/github/v/release/mfl28/BoundingBoxEditor)
-Download the latest release of *Bounding Box Editor* for your operating system from the links below. The files are zipped, custom runtime images (created using the [Badass JLink plugin](https://github.com/beryx/badass-jlink-plugin)) that contain binaries (inside the `image/bin/` folder) to start the application on your system.
+## Latest Release 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/mfl28/BoundingBoxEditor?label=release&style=for-the-badge)](https://github.com/mfl28/BoundingBoxEditor/releases/latest)
+![platform](https://img.shields.io/static/v1.svg?label=Platform&message=Linux%20|%20macOS%20|%20Win%20&style=for-the-badge)
 
-| OS            |
-| ------------- |
-| [Linux](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-linux.zip)        |
-| [MacOs](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-mac.zip)          |
-| [Windows](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-win.zip)        | 
+Download the latest release installer or portable image (no installation required) of *Bounding Box Editor* for your operating system from the links below. These files were created using the
+[jpackage](https://openjdk.java.net/jeps/343) packaging tool, the [Badass JLink Gradle plugin](https://github.com/beryx/badass-jlink-plugin) and [github-actions](.github/workflows/workflow.yml).
+
+| OS            | Installer | Portable |
+| ------------- | --------- | -------- |
+| Linux | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-linux-deb.zip), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-portable-linux.zip)         | [image]()|
+| macOS | [dmg](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-macos-dmg.zip)          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-portable-macos.zip) |
+| Windows | [exe](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-windows-exe.zip)      | [image](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-portable-windows.zip) | 
 
 > **Note for Linux users with Hi-DPI screens**  
-> Currently JavaFX does not follow the system-wide scale settings in Linux (see e.g. bug reports [here](https://bugs.openjdk.java.net/browse/JDK-8248126) and [here](https://bugs.openjdk.java.net/browse/JDK-8238077)). The easiest way to set the desired scaling manually is by setting the `GDK_SCALE` variable when starting the application from the terminal, for example:
+> Currently JavaFX does not follow the system-wide scale settings in some Linux distributions (see e.g. bug reports [here](https://bugs.openjdk.java.net/browse/JDK-8248126) and [here](https://bugs.openjdk.java.net/browse/JDK-8238077)). The easiest way to set the desired scaling manually is by setting the `GDK_SCALE` variable when starting the application from the terminal, for example:
 > ```bash 
-> GDK_SCALE=2x ./boundingboxeditor
+> GDK_SCALE=2x ./BoundingBoxEditor
 > ``` 
 ## How to use the application
 Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) in the Wiki for a detailed usage guide and presentation (including gifs) of the application's main functions.
