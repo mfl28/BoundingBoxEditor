@@ -39,7 +39,7 @@ Download the latest release installer or portable image (no installation require
 
 | OS            | Installer | Portable |
 | ------------- | --------- | -------- |
-| Linux | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-linux-deb.zip), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-portable-linux.zip)         | [image]()|
+| Linux | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-linux-deb.zip), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-linux-rpm.zip)  | [image](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-portable-linux.zip)|
 | macOS | [dmg](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-macos-dmg.zip)          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-portable-macos.zip) |
 | Windows | [exe](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-windows-exe.zip)      | [image](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-portable-windows.zip) | 
 
