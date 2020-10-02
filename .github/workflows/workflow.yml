@@ -6,7 +6,7 @@ on:
       - master
       - dev
     tags:
-      - v*
+      - 'v*.*.*'
     paths-ignore:
       - .dockerignore
       - .gitignore
@@ -230,9 +230,13 @@ jobs:
             cd $artifact_dir
             zip -r $artifact_dir *
           done
-      - name: Upload release assets
+      - name: Release to github
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          tag_name="${GITHUB_REF##*/}"
-          hub release edit $(find . -maxdepth 0 -type f -name "boundingboxeditor*.zip" -printf "-a %p ") -m "" "$tag_name"
+        with:
+          body: |
+            ## Changes:
+
+            ${{ steps.changelog.outputs.body }}
+          files: boundingboxeditor*.zip
