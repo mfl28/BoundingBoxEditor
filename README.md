@@ -1,8 +1,10 @@
-<p>
-<img src="src/main/resources/icons/app_icon.svg" height= "60" width="60" align="left"/>
-
-# Bounding Box Editor
+<p align="center">
+<img src="src/main/resources/icons/app_icon.svg" height= "80" width="80" alt="Bounding Box Editor Icon"/>
+<br/>
+<img src="demo-media/logo-text.svg" height="30" alt="Bounding Box Editor"/>
 </p>
+
+<center>
 
 [![Build](https://github.com/mfl28/BoundingBoxEditor/workflows/Build/badge.svg)](https://github.com/mfl28/BoundingBoxEditor/actions)
 [![Codecov coverage (master)](https://codecov.io/gh/mfl28/BoundingBoxEditor/branch/master/graph/badge.svg)](https://codecov.io/gh/mfl28/BoundingBoxEditor)
@@ -10,6 +12,7 @@
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/mfl28/BoundingBoxEditor?label=release)](https://github.com/mfl28/BoundingBoxEditor/releases/latest)
 [![License](https://img.shields.io/badge/license-GPLv3-informational)](LICENSE)
+</center>
 
 This is an image annotation desktop-application written in Java using the JavaFX application platform. It allows you to create bounding box annotations using rectangular and polygonal shapes. 
 Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format XML-files or [YOLO](https://pjreddie.com/darknet/yolo/) format TXT-files.
@@ -25,7 +28,7 @@ Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://ho
 * Export and import  rectangular and polygonal bounding box annotations to and from JSON and XML files (using [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format)
 * Export and import rectangular bounding box annotations using the [YOLO](https://pjreddie.com/darknet/yolo/) format
 * Format validation and error reporting when importing annotations
-* Nest bounding box labels (which is then reflected in the output xml-file if using Pascal VOC format)
+* Nest bounding box labels (which is then reflected in the output XML-file if using Pascal VOC format)
 * Easily and swiftly navigate and search the loaded image files via a side-panel with thumbnails
 * Tag bounding boxes using tags defined in the Pascal VOC format (truncated, difficult, occluded, pose: *, action: *)
 * Color-coded, searchable and fully dynamic object categories
