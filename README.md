@@ -1,18 +1,29 @@
 <p align="center">
-<img src="src/main/resources/icons/app_icon.svg" height= "80" width="80" alt="Bounding Box Editor Icon"/>
-<br/>
-<img src="demo-media/logo-text.svg" height="30" alt="Bounding Box Editor"/>
+  <img src="src/main/resources/icons/app_icon.svg" height= "80" width="80" alt="Bounding Box Editor Icon">
+  <br/>
+  <img src="demo-media/logo-text.svg" height="30" alt="Bounding Box Editor">
 </p>
 
-<center>
-
-[![Build](https://github.com/mfl28/BoundingBoxEditor/workflows/Build/badge.svg)](https://github.com/mfl28/BoundingBoxEditor/actions)
-[![Codecov coverage (master)](https://codecov.io/gh/mfl28/BoundingBoxEditor/branch/master/graph/badge.svg)](https://codecov.io/gh/mfl28/BoundingBoxEditor)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mfl28_BoundingBoxEditor&metric=alert_status)](https://sonarcloud.io/dashboard?id=mfl28_BoundingBoxEditor)
-[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/mfl28/BoundingBoxEditor?label=release)](https://github.com/mfl28/BoundingBoxEditor/releases/latest)
-[![License](https://img.shields.io/badge/license-GPLv3-informational)](LICENSE)
-</center>
+<p align="center">
+  <a href="https://github.com/mfl28/BoundingBoxEditor/actions">
+    <img src="https://github.com/mfl28/BoundingBoxEditor/workflows/Build/badge.svg" alt="Build Status">
+  </a>
+  <a href="https://codecov.io/gh/mfl28/BoundingBoxEditor">
+    <img src="https://codecov.io/gh/mfl28/BoundingBoxEditor/branch/master/graph/badge.svg" alt="Codecov Coverage (master)">
+  </a>
+  <a href="https://sonarcloud.io/dashboard?id=mfl28_BoundingBoxEditor">
+    <img src="https://sonarcloud.io/api/project_badges/measure?project=mfl28_BoundingBoxEditor&metric=alert_status" alt="Quality Gate Status">
+  </a>
+  <a href="https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java">
+    <img src="https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18" alt="Language Grade: Java">
+  </a>
+  <a href="https://github.com/mfl28/BoundingBoxEditor/releases/latest">
+    <img src="https://img.shields.io/github/v/release/mfl28/BoundingBoxEditor?label=release" alt="GitHub Release (latest by date)">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-GPLv3-informational" alt="License">
+  </a>
+</p>
 
 This is an image annotation desktop-application written in Java using the JavaFX application platform. It allows you to create bounding box annotations using rectangular and polygonal shapes. 
 Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format XML-files or [YOLO](https://pjreddie.com/darknet/yolo/) format TXT-files.
@@ -131,7 +142,3 @@ docker container cp bbeditor:/artifacts .
 
 ## License
 This project is licensed under GPL v3. See [LICENSE](LICENSE).
-
-
-
-
