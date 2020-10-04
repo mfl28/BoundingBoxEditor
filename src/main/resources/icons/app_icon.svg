@@ -1,147 +1,28 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
-<svg
-        xmlns:osb="http://www.openswatchbook.org/uri/2009/osb"
-        xmlns:dc="http://purl.org/dc/elements/1.1/"
-        xmlns:cc="http://creativecommons.org/ns#"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-        xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-        xmlns="http://www.w3.org/2000/svg"
-        width="60mm"
-        height="60mm"
-        viewBox="0 0 60 60"
-        version="1.1"
-        id="svg1382"
-        sodipodi:docname="simple_app_icon.svg"
-        inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-        inkscape:export-filename="C:\Dev\Java\Projects\BoundingboxEditor\src\main\resources\icons\app_icon.png"
-        inkscape:export-xdpi="50.799999"
-        inkscape:export-ydpi="50.799999">
-    <defs
-            id="defs1376">
-        <linearGradient
-                id="linearGradient1955"
-                osb:paint="solid">
-            <stop
-                    style="stop-color:#020202;stop-opacity:1;"
-                    offset="0"
-                    id="stop1953"/>
-        </linearGradient>
-    </defs>
-    <sodipodi:namedview
-            id="base"
-            pagecolor="#ffffff"
-            bordercolor="#666666"
-            borderopacity="1.0"
-            inkscape:pageopacity="0.0"
-            inkscape:pageshadow="2"
-            inkscape:zoom="5.6"
-            inkscape:cx="197.62781"
-            inkscape:cy="111.40916"
-            inkscape:document-units="mm"
-            inkscape:current-layer="layer1"
-            showgrid="false"
-            inkscape:window-width="3840"
-            inkscape:window-height="2066"
-            inkscape:window-x="-11"
-            inkscape:window-y="-11"
-            inkscape:window-maximized="1"/>
-    <metadata
-            id="metadata1379">
-        <rdf:RDF>
-            <cc:Work
-                    rdf:about="">
-                <dc:format>image/svg+xml</dc:format>
-                <dc:type
-                        rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-                <dc:title></dc:title>
-            </cc:Work>
-        </rdf:RDF>
-    </metadata>
-    <g
-            inkscape:label="Layer 1"
-            inkscape:groupmode="layer"
-            id="layer1"
-            transform="translate(0,-237)">
-        <rect
-                style="fill:#81a1c1;fill-opacity:0;stroke:#81a1c1;stroke-width:5;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"
-                id="rect1959"
-                width="37"
-                height="37"
-                x="5.5"
-                y="242.5"/>
-        <g
-                id="g2310"
-                transform="matrix(0.89898579,0,0,0.89898579,4.1355623,28.075803)"
-                style="stroke-width:5.56182337;stroke-miterlimit:4;stroke-dasharray:none"
-                inkscape:export-filename="C:\Dev\Java\Projects\BoundingboxEditor\src\main\resources\icons\app_icon.png"
-                inkscape:export-xdpi="74.341461"
-                inkscape:export-ydpi="74.341461">
-            <rect
-                    y="253"
-                    x="16"
-                    height="38"
-                    width="38"
-                    id="rect1959-5"
-                    style="fill:#bf616a;fill-opacity:0;stroke:#bf616a;stroke-width:5.56182337;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"/>
-            <rect
-                    y="250.86514"
-                    x="13.865"
-                    height="4.2698545"
-                    width="4.2698541"
-                    id="rect2176"
-                    style="fill:#bf616a;fill-opacity:1;stroke:#bf616a;stroke-width:5.56182337;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"/>
-            <rect
-                    y="250.86514"
-                    x="51.865002"
-                    height="4.2698545"
-                    width="4.2698541"
-                    id="rect2176-2"
-                    style="fill:#bf616a;fill-opacity:1;stroke:#bf616a;stroke-width:5.56182337;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"/>
-            <rect
-                    y="288.86514"
-                    x="51.865002"
-                    height="4.2698545"
-                    width="4.2698541"
-                    id="rect2176-0"
-                    style="fill:#bf616a;fill-opacity:1;stroke:#bf616a;stroke-width:5.56182337;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"/>
-            <rect
-                    y="288.86514"
-                    x="13.865"
-                    height="4.2698545"
-                    width="4.2698541"
-                    id="rect2176-4"
-                    style="fill:#bf616a;fill-opacity:1;stroke:#bf616a;stroke-width:5.56182337;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"/>
-            <rect
-                    y="250.86514"
-                    x="32.865002"
-                    height="4.2698545"
-                    width="4.2698541"
-                    id="rect2176-2-5"
-                    style="fill:#bf616a;fill-opacity:1;stroke:#bf616a;stroke-width:5.56182337;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"/>
-            <rect
-                    y="288.86514"
-                    x="32.865002"
-                    height="4.2698545"
-                    width="4.2698541"
-                    id="rect2176-0-2"
-                    style="fill:#bf616a;fill-opacity:1;stroke:#bf616a;stroke-width:5.56182337;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"/>
-            <rect
-                    y="269.86514"
-                    x="13.865"
-                    height="4.2698545"
-                    width="4.2698541"
-                    id="rect2176-0-2-3"
-                    style="fill:#bf616a;fill-opacity:1;stroke:#bf616a;stroke-width:5.56182337;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"/>
-            <rect
-                    y="269.86514"
-                    x="51.865002"
-                    height="4.2698545"
-                    width="4.2698541"
-                    id="rect2176-0-2-3-5"
-                    style="fill:#bf616a;fill-opacity:1;stroke:#bf616a;stroke-width:5.56182337;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"/>
-        </g>
-    </g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="60mm" height="60mm" version="1.1" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:osb="http://www.openswatchbook.org/uri/2009/osb" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g transform="translate(0,-237)" stroke-linecap="square">
+  <rect x="5.5" y="242.5" width="37" height="37" fill-opacity="0" stroke="#81a1c1" stroke-width="5" style="paint-order:markers fill stroke"/>
+  <g transform="matrix(.89899 0 0 .89899 4.1356 28.076)" stroke="#bf616a" stroke-width="5.5618">
+   <rect x="16" y="253" width="38" height="38" fill-opacity="0" style="paint-order:markers fill stroke"/>
+   <g fill="#bf616a">
+    <rect x="13.865" y="250.87" width="4.2699" height="4.2699" style="paint-order:markers fill stroke"/>
+    <rect x="51.865" y="250.87" width="4.2699" height="4.2699" style="paint-order:markers fill stroke"/>
+    <rect x="51.865" y="288.87" width="4.2699" height="4.2699" style="paint-order:markers fill stroke"/>
+    <rect x="13.865" y="288.87" width="4.2699" height="4.2699" style="paint-order:markers fill stroke"/>
+    <rect x="32.865" y="250.87" width="4.2699" height="4.2699" style="paint-order:markers fill stroke"/>
+    <rect x="32.865" y="288.87" width="4.2699" height="4.2699" style="paint-order:markers fill stroke"/>
+    <rect x="13.865" y="269.87" width="4.2699" height="4.2699" style="paint-order:markers fill stroke"/>
+    <rect x="51.865" y="269.87" width="4.2699" height="4.2699" style="paint-order:markers fill stroke"/>
+   </g>
+  </g>
+ </g>
 </svg>
