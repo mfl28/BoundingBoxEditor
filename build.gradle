@@ -175,7 +175,7 @@ jlink {
             installerType = 'exe'
         } else if(org.gradle.internal.os.OperatingSystem.current().linux) {
             installerOptions += [
-                    '--resource-dir', 'build/jpackage/BoundingBoxEditor/lib',
+                    '--resource-dir', 'build/jpackage/boundingboxeditor/lib',
                     '--linux-shortcut',
                     '--linux-menu-group', 'Graphics',
                     '--linux-deb-maintainer', 'markus.fleischhacker28@gmail.com'
