@@ -204,16 +204,28 @@ jobs:
       - name: Create changelog
         id: changelog
         run: |
-          commitlist="$(git log --pretty=format:"* %H %s" $(git describe --tags --abbrev=0 @^)..@)"
-          commitlist="${commitlist//'%'/'%25'}"
-          commitlist="${commitlist//$'\n'/'%0A'}"
-          commitlist="${commitlist//$'\r'/'%0D'}"
-          echo "::set-output name=body::$commitlist"
+          body_text="$(git log --pretty=format:"* %H %s" $(git describe --tags --abbrev=0 @^)..@)"
+          num_lines="$(echo "$body_text" | wc -l)"
+
+          if [ "$num_lines" -gt "10" ]
+          then
+            body_text="$(echo "$body_text" | sed '10a<details><summary><b>See More</b></summary>\n')"
+            body_text="$(echo "$body_text" | sed '$a\\n</details>')"
+          fi
+
+          body_text="$(echo "$body_text" | sed '1i## Changes:\n')"
+
+          body_text="${body_text//'%'/'%25'}"
+          body_text="${body_text//$'\n'/'%0A'}"
+          body_text="${body_text//$'\r'/'%0D'}"
+          echo "::set-output name=body::$body_text"
       - name: Download all build artifacts
         uses: actions/download-artifact@v2
-      - name: Zip artifacts
+      - name: Prepare artifacts
         run: |
-          for artifact_dir in $(find $PWD/* -maxdepth 0 -type d -name "boundingboxeditor*")
+          mv boundingboxeditor-installer-*/* .
+
+          for artifact_dir in $(find $PWD/* -maxdepth 0 -type d -name "boundingboxeditor-portable-*")
           do
             cd $artifact_dir
             zip -r $artifact_dir *
@@ -223,8 +235,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          body: |
-            ## Changes:
-
-            ${{ steps.changelog.outputs.body }}
-          files: boundingboxeditor*.zip
+          body: ${{ steps.changelog.outputs.body }}
+          files: |
+            boundingboxeditor*.exe
+            boundingboxeditor*.deb
+            boundingboxeditor*.rpm
+            boundingboxeditor*.dmg
+            boundingboxeditor-portable-*.zip
