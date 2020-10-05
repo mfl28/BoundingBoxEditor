@@ -53,14 +53,14 @@ Download the latest release installer or portable image (no installation require
 
 | OS            | Installer | Portable |
 | ------------- | --------- | -------- |
-| Linux | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-linux-deb.zip), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-linux-rpm.zip)  | [image](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-portable-linux.zip)|
-| macOS | [dmg](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-macos-dmg.zip)          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-portable-macos.zip) |
-| Windows | [exe](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-installer-windows-exe.zip)      | [image](https://github.com/mfl28/BoundingBoxEditor/releases/download/v2.2.0/boundingboxeditor-portable-windows.zip) | 
+| Linux | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor_2.2.0-1_amd64.deb), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-2.2.0-1.x86_64.rpm)  | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-linux.zip)|
+| macOS | [dmg](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-2.2.0.dmg)          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-macos.zip) |
+| Windows | [exe](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-2.2.0.exe)      | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-windows.zip) | 
 
 > **Note for Linux users with Hi-DPI screens**  
 > Currently JavaFX does not follow the system-wide scale settings in some Linux distributions (see e.g. bug reports [here](https://bugs.openjdk.java.net/browse/JDK-8248126) and [here](https://bugs.openjdk.java.net/browse/JDK-8238077)). The easiest way to set the desired scaling manually is by setting the `GDK_SCALE` variable when starting the application from the terminal, for example:
 > ```bash 
-> GDK_SCALE=2x ./BoundingBoxEditor
+> GDK_SCALE=2x ./boundingboxeditor
 > ``` 
 ## How to use the application
 Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) in the Wiki for a detailed usage guide and presentation (including gifs) of the application's main functions.
