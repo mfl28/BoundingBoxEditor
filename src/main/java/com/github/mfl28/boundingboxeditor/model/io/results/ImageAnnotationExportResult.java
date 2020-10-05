@@ -16,21 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with Bounding Box Editor. If not, see <http://www.gnu.org/licenses/>.
  */
-module com.github.mfl28.boundingboxeditor {
-    requires javafx.controls;
-    requires java.desktop;
-    requires org.controlsfx.controls;
-    requires org.apache.commons.collections4;
-    requires com.github.benmanes.caffeine;
-    requires java.xml;
-    requires org.apache.commons.lang3;
-    requires java.prefs;
-    requires java.logging;
-    requires com.google.gson;
+package com.github.mfl28.boundingboxeditor.model.io.results;
 
-    opens com.github.mfl28.boundingboxeditor.model to javafx.base, com.google.gson;
-    opens com.github.mfl28.boundingboxeditor.model.data to javafx.base, com.google.gson;
-    opens com.github.mfl28.boundingboxeditor.model.io to javafx.base, com.google.gson;
-    opens com.github.mfl28.boundingboxeditor.model.io.results to javafx.base, com.google.gson;
-    exports com.github.mfl28.boundingboxeditor to javafx.graphics;
+import java.util.List;
+
+public class ImageAnnotationExportResult extends IOResult {
+    /**
+     * Creates a new io-operation result.
+     *
+     * @param nrSuccessfullyProcessedItems the number of items (files/annotations) that
+     *                                     were successfully processed
+     * @param errorTableEntries            a list of objects of type {@link IOErrorInfoEntry} that contain information
+     */
+    public ImageAnnotationExportResult(int nrSuccessfullyProcessedItems,
+                                       List<IOErrorInfoEntry> errorTableEntries) {
+        super(OperationType.ANNOTATION_SAVING, nrSuccessfullyProcessedItems, errorTableEntries);
+    }
 }

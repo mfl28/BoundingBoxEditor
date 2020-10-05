@@ -36,6 +36,7 @@ plugins {
 
 apply plugin: 'com.github.fgiannesini.libsass.gradle.plugin'
 
+group 'com.github.mfl28'
 version '2.2.0'
 
 sourceCompatibility = 1.11
@@ -135,8 +136,8 @@ compileJava {
 compileJava.finalizedBy('compileLibSass')
 
 application {
-    mainModule = "boundingboxeditor"
-    mainClass = "boundingboxeditor.BoundingBoxEditorApp"
+    mainModule = "com.github.mfl28.boundingboxeditor"
+    mainClass = "com.github.mfl28.boundingboxeditor.BoundingBoxEditorApp"
     applicationDefaultJvmArgs = ['-Dprism.forceGPU=true']
 }
 
@@ -147,7 +148,7 @@ java {
 jlink {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
     launcher {
-        name = 'BoundingBoxEditor'
+        name = 'boundingboxeditor'
         jvmArgs = ['-Dprism.forceGPU=true']
     }
 

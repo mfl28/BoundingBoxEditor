@@ -16,21 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Bounding Box Editor. If not, see <http://www.gnu.org/licenses/>.
  */
-module com.github.mfl28.boundingboxeditor {
-    requires javafx.controls;
-    requires java.desktop;
-    requires org.controlsfx.controls;
-    requires org.apache.commons.collections4;
-    requires com.github.benmanes.caffeine;
-    requires java.xml;
-    requires org.apache.commons.lang3;
-    requires java.prefs;
-    requires java.logging;
-    requires com.google.gson;
+package com.github.mfl28.boundingboxeditor.ui;
 
-    opens com.github.mfl28.boundingboxeditor.model to javafx.base, com.google.gson;
-    opens com.github.mfl28.boundingboxeditor.model.data to javafx.base, com.google.gson;
-    opens com.github.mfl28.boundingboxeditor.model.io to javafx.base, com.google.gson;
-    opens com.github.mfl28.boundingboxeditor.model.io.results to javafx.base, com.google.gson;
-    exports com.github.mfl28.boundingboxeditor to javafx.graphics;
+import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
+
+/**
+ * Interface for objects that can be converted to a {@link BoundingShapeData} object.
+ */
+public interface BoundingShapeDataConvertible {
+    BoundingShapeData toBoundingShapeData();
 }
