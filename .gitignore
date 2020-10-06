@@ -40,3 +40,6 @@
 
 # Artifacts
 /artifacts
+
+# Chocolatey
+/chocolatey/*.nupkg

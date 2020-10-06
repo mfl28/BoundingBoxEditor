@@ -2,8 +2,10 @@
 /artifacts
 /Dockerfile
 /.git
+/.github
 /src/test
 /.gitignore
 /.dockerignore
 /README.md
 /demo-media
+/chocolatey
