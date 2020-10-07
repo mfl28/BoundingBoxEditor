@@ -227,7 +227,11 @@ jobs:
           sudo apt-get install rename
           mv boundingboxeditor-installer-*/* .
           find "$PWD"/* -maxdepth 0 -type f -name "BoundingBoxEditor*" -exec basename {} ";" | rename -f 'y/A-Z/a-z/'
-          find "$PWD"/* -maxdepth 0 -type d -name "boundingboxeditor-portable-*" -exec zip -r {}.zip {} ";"
+          for image_dir in $(find "$PWD"/* -maxdepth 0 -type d -name "boundingboxeditor-portable-*")
+          do
+            cd $image_dir
+            zip -r $image_dir *
+          done
       - name: Release to github
         uses: softprops/action-gh-release@v1
         env:
