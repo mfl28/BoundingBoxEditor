@@ -62,6 +62,13 @@ Download the latest release installer or portable image (no installation require
 > ```bash 
 > GDK_SCALE=2x ./boundingboxeditor
 > ``` 
+
+### Alternative installation methods
+#### Windows ([chocolatey package](https://chocolatey.org/packages/boundingboxeditor))
+```
+choco install boundingboxeditor
+```
+
 ## How to use the application
 Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) in the Wiki for a detailed usage guide and presentation (including gifs) of the application's main functions.
 
