@@ -77,6 +77,21 @@ dependencies {
 
     // Google GSON https://github.com/google/gson
     implementation 'com.google.code.gson:gson:2.8.6'
+
+    // Jersey REST client https://mvnrepository.com/artifact/org.glassfish.jersey.core/jersey-client
+    implementation 'org.glassfish.jersey.core:jersey-client:2.32'
+
+    // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
+    //implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:2.32'
+    // https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-json-jackson
+    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:2.32'
+
+    // https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-multipart
+    implementation 'org.glassfish.jersey.media:jersey-media-multipart:2.32'
+
+    // https://mvnrepository.com/artifact/org.jvnet.mimepull/mimepull
+    implementation 'org.jvnet.mimepull:mimepull:1.9.13'
 }
 
 javafx {
@@ -102,7 +117,7 @@ ci {
     githubactions {
         test {
             systemProperty "fullScreenTests", false
-            jvmArgs = ['-Dprism.verbose=true']
+            jvmArgs = ['-Dprism.verbose=true', '-Djava.net.preferIPv6Addresses=system']
 
             if(org.gradle.internal.os.OperatingSystem.current().macOsX) {
                 // Currently there is no support for running UI tests on macOS in a VM via github-actions.
@@ -138,7 +153,7 @@ compileJava.finalizedBy('compileLibSass')
 application {
     mainModule = "com.github.mfl28.boundingboxeditor"
     mainClass = "com.github.mfl28.boundingboxeditor.BoundingBoxEditorApp"
-    applicationDefaultJvmArgs = ['-Dprism.forceGPU=true']
+    applicationDefaultJvmArgs = ['-Dprism.forceGPU=true', '-Djava.net.preferIPv6Addresses=system']
 }
 
 java {
@@ -149,7 +164,7 @@ jlink {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
     launcher {
         name = 'BoundingBoxEditor'
-        jvmArgs = ['-Dprism.forceGPU=true']
+        jvmArgs = ['-Dprism.forceGPU=true', '-Djava.net.preferIPv6Addresses=system']
     }
 
     imageZip = project.file("${buildDir}/distributions/boundingboxeditor-${javafx.platform.classifier}.zip")

@@ -19,6 +19,8 @@
 package com.github.mfl28.boundingboxeditor.model;
 
 import com.github.mfl28.boundingboxeditor.model.data.*;
+import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorConfig;
+import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorClientConfig;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -80,6 +82,11 @@ public class Model {
     private final BooleanProperty nextImageFileExists = new SimpleBooleanProperty(false);
     private final BooleanProperty previousImageFileExists = new SimpleBooleanProperty(false);
     private final BooleanProperty saved = new SimpleBooleanProperty(true);
+
+    private final BoundingBoxPredictorClientConfig
+            boundingBoxPredictorClientConfig = new BoundingBoxPredictorClientConfig();
+    private final BoundingBoxPredictorConfig boundingBoxPredictorConfig = new BoundingBoxPredictorConfig();
+
     /**
      * Maps the filenames of the currently loaded image-files onto the corresponding {@link File} objects. A
      * {@link ListOrderedMap} data-structure is used to preserve an order (in this case the input order) to
@@ -264,6 +271,14 @@ public class Model {
      */
     public int getCurrentFileIndex() {
         return fileIndex.get();
+    }
+
+    public BoundingBoxPredictorClientConfig getBoundingBoxPredictorClientConfig() {
+        return boundingBoxPredictorClientConfig;
+    }
+
+    public BoundingBoxPredictorConfig getBoundingBoxPredictorConfig() {
+        return boundingBoxPredictorConfig;
     }
 
     /**

@@ -31,10 +31,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -64,10 +61,22 @@ public class MainView extends BorderPane implements View {
     private static final String ANNOTATION_IMPORT_ERROR_REPORT_TITLE = "Annotation import error report";
     private static final String ANNOTATION_SAVING_ERROR_REPORT_TITLE = "Annotation saving error report";
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
+    private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Saving Annotations";
+    private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
+    private static final String LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Loading";
+    private static final String LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER = "Loading annotations...";
+    private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE = "Loading images";
+    private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER = "Loading image meta-data";
+    private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE = "Predicting";
+    private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER = "Predicting bounding boxes";
 
     private final HeaderView header = new HeaderView();
     private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
     private final StatusBarView statusBar = new StatusBarView();
+    private ProgressDialog imageMetaDataLoadingProgressDialog;
+    private ProgressDialog annotationImportProgressDialog;
+    private ProgressDialog annotationExportProgressDialog;
+    private ProgressDialog boundingBoxPredictorProgressDialog;
 
     /**
      * Constructs the app's main view-component which contains all other UI-elements.
@@ -79,6 +88,20 @@ public class MainView extends BorderPane implements View {
 
         setId(MAIN_VIEW_ID);
         setUpInternalListeners();
+    }
+
+    public void connectImageMetaDataLoadingService(Service<? extends IOResult> service) {
+        imageMetaDataLoadingProgressDialog = new ProgressDialog(service);
+    }
+
+    public void connectAnnotationImportService(Service<? extends IOResult> service) {
+        annotationImportProgressDialog = new ProgressDialog(service);
+    }
+    public void connectAnnotationExportService(Service<? extends IOResult> service) {
+        annotationExportProgressDialog = new ProgressDialog(service);
+    }
+    public void connectBoundingBoxPredictorService(Service<? extends IOResult> service) {
+        boundingBoxPredictorProgressDialog = new ProgressDialog(service);
     }
 
     /**
@@ -241,23 +264,13 @@ public class MainView extends BorderPane implements View {
                                           numErrorEntries + " image file" + (numErrorEntries > 1 ? "s" : "") +
                                                   " could not be loaded.", errorTable);
             }
+        } else if(ioResult.getOperationType().equals(IOResult.OperationType.BOUNDING_BOX_PREDICTION)) {
+            MainView.displayInfoAlert("Bounding Box Prediction Error Report", "There were erros while perform the " +
+                                              "prediction",
+                                      "Bounding box predictions for " + numErrorEntries + " image file" +
+                                              (numErrorEntries > 1 ? "s" : "") + " could not be loaded.",
+                                      errorTable);
         }
-    }
-
-    /**
-     * Displays a dialog showing the progress of a {@link Service} object's progress-property.
-     *
-     * @param service the {@link Service} whose progress will be shown
-     * @param title   the title of the dialog-window
-     * @param header  the header-text of the dialog-window
-     */
-    public static void displayServiceProgressDialog(Service<? extends IOResult> service, String title, String header) {
-        final ProgressDialog progressDialog = new ProgressDialog(service);
-        progressDialog.setTitle(title);
-        progressDialog.setHeaderText(header);
-        progressDialog.getDialogPane().getStylesheets()
-                      .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-        ((Stage) progressDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
     }
 
     /**
@@ -545,6 +558,29 @@ public class MainView extends BorderPane implements View {
 
         alert.getDialogPane().setExpandableContent(expandableContent);
         alert.showAndWait();
+    }
+
+    public void setUpProgressDialogs() {
+        for(ProgressDialog progressDialog : List.of(imageMetaDataLoadingProgressDialog,
+                                                    annotationImportProgressDialog,
+                                                    annotationExportProgressDialog,
+                                                    boundingBoxPredictorProgressDialog)) {
+            progressDialog.getDialogPane().getStylesheets()
+                          .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+            ((Stage) progressDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+        }
+
+        imageMetaDataLoadingProgressDialog.setTitle(IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE);
+        imageMetaDataLoadingProgressDialog.setHeaderText(IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER);
+
+        annotationImportProgressDialog.setTitle(LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE);
+        annotationImportProgressDialog.setHeaderText(LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER);
+
+        annotationExportProgressDialog.setTitle(SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE);
+        annotationExportProgressDialog.setHeaderText(SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
+
+        boundingBoxPredictorProgressDialog.setTitle(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE);
+        boundingBoxPredictorProgressDialog.setHeaderText(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
     }
 
     public enum FileChooserType {SAVE, OPEN}

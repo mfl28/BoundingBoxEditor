@@ -27,6 +27,13 @@ module com.github.mfl28.boundingboxeditor {
     requires java.prefs;
     requires java.logging;
     requires com.google.gson;
+    requires jersey.client;
+    requires jersey.common;
+    requires jersey.media.json.jackson;
+    requires java.ws.rs;
+    requires com.fasterxml.jackson.core;
+    requires jersey.media.multipart;
+    requires org.jvnet.mimepull;
 
     opens com.github.mfl28.boundingboxeditor.model to javafx.base, com.google.gson;
     opens com.github.mfl28.boundingboxeditor.model.data to javafx.base, com.google.gson;

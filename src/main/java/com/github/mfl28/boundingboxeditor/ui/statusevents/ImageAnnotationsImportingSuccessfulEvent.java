@@ -18,6 +18,9 @@
  */
 package com.github.mfl28.boundingboxeditor.ui.statusevents;
 
+/**
+ * Represents the event of a successful bounding box prediction.
+ */
 import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
 
 /**

@@ -19,20 +19,18 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.model.Model;
-import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
-import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
-import com.github.mfl28.boundingboxeditor.model.data.IoMetaData;
-import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
-import com.github.mfl28.boundingboxeditor.model.io.FileChangeWatcher;
-import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
-import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
+import com.github.mfl28.boundingboxeditor.model.data.*;
+import com.github.mfl28.boundingboxeditor.model.io.*;
+import com.github.mfl28.boundingboxeditor.model.io.results.BoundingBoxPredictionResult;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationImportResult;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageMetaDataLoadingResult;
+import com.github.mfl28.boundingboxeditor.model.io.services.BoundingBoxPredictorService;
 import com.github.mfl28.boundingboxeditor.model.io.services.ImageAnnotationExportService;
 import com.github.mfl28.boundingboxeditor.model.io.services.ImageAnnotationImportService;
 import com.github.mfl28.boundingboxeditor.model.io.services.ImageMetaDataLoadingService;
 import com.github.mfl28.boundingboxeditor.ui.*;
+import com.github.mfl28.boundingboxeditor.ui.statusevents.BoundingBoxPredictionSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsImportingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsSavingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageFilesLoadingSuccessfulEvent;
@@ -99,13 +97,9 @@ public class Controller {
     private static final String SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE = "Save Error";
     private static final String NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT =
             "There are no image annotations to save.";
-    private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Saving Annotations";
-    private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
     private static final String ANNOTATION_IMPORT_ERROR_TITLE = "Annotation Import Error";
     private static final String ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT =
             "The source does not contain any valid annotations.";
-    private static final String LOADING_ANNOTATIONS_DIALOG_TITLE = "Loading";
-    private static final String LOADING_ANNOTATIONS_DIALOG_HEADER = "Loading annotations...";
     private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE = "Open image folder";
     private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT =
             "Opening a new image folder will remove any existing annotation data. " +
@@ -136,15 +130,15 @@ public class Controller {
     private static final String IMAGE_IMPORT_ERROR_ALERT_TITLE = "Image Import Error";
     private static final String IMAGE_IMPORT_ERROR_ALERT_CONTENT =
             "The folder does not contain any valid image files.";
-    private static final String IMAGE_FILES_LOADING_DIALOG_TITLE = "Loading images";
-    private static final String IMAGE_FILES_LOADING_DIALOG_HEADER = "Loading image meta-data";
     private static final String IMAGE_FILES_CHANGED_ERROR_TITLE = "Image files changed";
     private static final String IMAGE_FILES_CHANGED_ERROR_CONTENT =
             "Image files were changed externally, will reload folder.";
     private static final String IMAGE_FILE_CHANGE_WATCHER_THREAD_NAME = "ImageFileChangeWatcher";
+
     private final ImageAnnotationExportService annotationExportService = new ImageAnnotationExportService();
     private final ImageAnnotationImportService annotationImportService = new ImageAnnotationImportService();
     private final ImageMetaDataLoadingService imageMetaDataLoadingService = new ImageMetaDataLoadingService();
+    private final BoundingBoxPredictorService boundingBoxPredictorService = new BoundingBoxPredictorService();
     private final Stage stage;
     private final MainView view = new MainView();
     private final Model model = new Model();
@@ -179,6 +173,15 @@ public class Controller {
         view.connectToController(this);
         setUpModelListeners();
         setUpServices();
+        connectServicesToView();
+    }
+
+    private void connectServicesToView() {
+        view.connectAnnotationImportService(annotationImportService);
+        view.connectAnnotationExportService(annotationExportService);
+        view.connectImageMetaDataLoadingService(imageMetaDataLoadingService);
+        view.connectBoundingBoxPredictorService(boundingBoxPredictorService);
+        view.setUpProgressDialogs();
     }
 
     /**
@@ -191,6 +194,14 @@ public class Controller {
 
         if(imageFolder != null) {
             initiateImageFolderLoading(imageFolder);
+        }
+    }
+
+    public void onRegisterPerformCurrentImageBoundingBoxPredictionAction() {
+        if(model.containsImageFiles()) {
+            initiateBoundingBoxPrediction(model.getCurrentImageFile());
+        } else {
+            // TODO: Error handling
         }
     }
 
@@ -303,6 +314,11 @@ public class Controller {
         }
 
         startAnnotationImportService(source, loadFormat);
+    }
+
+    public void initiateBoundingBoxPrediction(File imageFile) {
+        updateModelFromView();
+        startBoundingBoxPredictionService(imageFile);
     }
 
     /**
@@ -555,6 +571,35 @@ public class Controller {
         return model;
     }
 
+    private void onBoundingBoxPredictionSucceeded(WorkerStateEvent event) {
+        final BoundingBoxPredictionResult predictionResult = boundingBoxPredictorService.getValue();
+
+        if(predictionResult.getNrSuccessfullyProcessedItems() != 0) {
+            model.updateFromImageAnnotationData(predictionResult.getImageAnnotationData());
+            view.getStatusBar().setStatusEvent(new BoundingBoxPredictionSuccessfulEvent(predictionResult));
+        }
+
+        updateViewFileExplorerFileInfoElements();
+
+        final ImageAnnotation annotation = model.getCurrentImageAnnotation();
+
+        if(annotation != null) {
+            view.getObjectTree().reset();
+            view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
+            view.loadBoundingShapeViewsFromAnnotation(annotation);
+            view.getCurrentBoundingShapes().addListener(boundingShapeCountPerCategoryListener);
+            view.getObjectCategoryTable().refresh();
+            view.getObjectTree().refresh();
+        }
+
+        if(!predictionResult.getErrorTableEntries().isEmpty()) {
+            MainView.displayIOResultErrorInfoAlert(predictionResult);
+        } else if(predictionResult.getNrSuccessfullyProcessedItems() == 0) {
+            MainView.displayErrorAlert("Bounding Box Prediction Error",
+                                       "Could not predict any bounding boxes.");
+        }
+    }
+
     IoMetaData getIoMetaData() {
         return ioMetaData;
     }
@@ -578,13 +623,11 @@ public class Controller {
     void initiateAnnotationExport(File destination,
                                   ImageAnnotationSaveStrategy.Type exportFormat,
                                   Runnable chainedOperation) {
+        annotationExportService.reset();
         annotationExportService.setDestination(destination);
         annotationExportService.setExportFormat(exportFormat);
         annotationExportService.setAnnotationData(model.createImageAnnotationData());
         annotationExportService.setChainedOperation(chainedOperation);
-        annotationExportService.reset();
-        MainView.displayServiceProgressDialog(annotationExportService, SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
-                                              SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
         annotationExportService.restart();
     }
 
@@ -598,10 +641,6 @@ public class Controller {
         annotationImportService.setImportFormat(importFormat);
         annotationImportService.setImportableFileNames(model.getImageFileNameSet());
         annotationImportService.setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
-
-        MainView.displayServiceProgressDialog(annotationImportService, LOADING_ANNOTATIONS_DIALOG_TITLE,
-                                              LOADING_ANNOTATIONS_DIALOG_HEADER);
-
         annotationImportService.restart();
     }
 
@@ -610,10 +649,21 @@ public class Controller {
         imageMetaDataLoadingService.setSource(source);
         imageMetaDataLoadingService.setImageFiles(imageFiles);
         imageMetaDataLoadingService.setReload(reload);
-        MainView.displayServiceProgressDialog(imageMetaDataLoadingService, IMAGE_FILES_LOADING_DIALOG_TITLE,
-                                              IMAGE_FILES_LOADING_DIALOG_HEADER);
-
         imageMetaDataLoadingService.restart();
+    }
+
+    private void startBoundingBoxPredictionService(File imageFile) {
+        boundingBoxPredictorService.reset();
+        boundingBoxPredictorService.setImageFile(imageFile);
+        boundingBoxPredictorService.setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
+        boundingBoxPredictorService.setImageMetaData(model.getImageFileNameToMetaDataMap().get(imageFile.getName()));
+        boundingBoxPredictorService.setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
+
+        model.getBoundingBoxPredictorClientConfig().setInferenceModelName("fastrcnn");
+
+        boundingBoxPredictorService.setPredictorClient(BoundingBoxPredictorClient.create(model.getBoundingBoxPredictorClientConfig()));
+
+        boundingBoxPredictorService.restart();
     }
 
     private void setUpServices() {
@@ -625,6 +675,9 @@ public class Controller {
 
         imageMetaDataLoadingService.setOnSucceeded(this::onImageMetaDataLoadingSucceeded);
         imageMetaDataLoadingService.setOnFailed(this::onIoServiceFailed);
+
+        boundingBoxPredictorService.setOnSucceeded(this::onBoundingBoxPredictionSucceeded);
+        boundingBoxPredictorService.setOnFailed(this::onIoServiceFailed);
     }
 
     private void onImageMetaDataLoadingSucceeded(WorkerStateEvent workerStateEvent) {

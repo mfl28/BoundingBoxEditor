@@ -70,6 +70,7 @@ class MenuBarView extends MenuBar implements View {
     private final MenuItem pvocExportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_EXPORT_TEXT);
     private final MenuItem yoloExportMenuItem = new MenuItem(YOLO_FORMAT_EXPORT_TEXT);
     private final MenuItem jsonExportMenuItem = new MenuItem(JSON_FORMAT_EXPORT_TEXT);
+    private final MenuItem restCall = new MenuItem("Rest call");
 
     private final Menu fileImportAnnotationsMenu =
             new Menu(ANNOTATION_IMPORT_TEXT, createIconRegion(FILE_IMPORT_ICON_ID));
@@ -126,8 +127,8 @@ class MenuBarView extends MenuBar implements View {
         jsonImportMenuItem.setOnAction(action ->
                                                controller.onRegisterImportAnnotationsAction(
                                                        ImageAnnotationLoadStrategy.Type.JSON));
-        fileExitItem.setOnAction(action ->
-                                         controller.onRegisterExitAction());
+        restCall.setOnAction(action -> controller.onRegisterPerformCurrentImageBoundingBoxPredictionAction());
+        fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
     }
 
     /**
@@ -166,6 +167,7 @@ class MenuBarView extends MenuBar implements View {
                 fileOpenFolderItem,
                 fileExportAnnotationsMenu,
                 fileImportAnnotationsMenu,
+                restCall,
                 fileExitItem
         );
 
