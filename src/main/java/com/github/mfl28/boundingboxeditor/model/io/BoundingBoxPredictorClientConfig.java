@@ -1,39 +1,70 @@
 package com.github.mfl28.boundingboxeditor.model.io;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 
 public class BoundingBoxPredictorClientConfig {
     private final ObjectProperty<BoundingBoxPredictorClient.ServiceType> serviceName = new SimpleObjectProperty<>(
             BoundingBoxPredictorClient.ServiceType.TORCH_SERVE);
-    private final StringProperty inferenceAddress = new SimpleStringProperty("http://localhost:8080");
-    private final StringProperty managementAddress = new SimpleStringProperty("http://localhost:8081");
+    private final StringProperty inferenceUrl = new SimpleStringProperty("http://localhost");
+    private final IntegerProperty inferencePort = new SimpleIntegerProperty(8080);
+    private final StringProperty managementUrl = new SimpleStringProperty("http://localhost");
+    private final IntegerProperty managementPort = new SimpleIntegerProperty(8081);
     private final StringProperty inferenceModelName = new SimpleStringProperty();
 
     public String getInferenceAddress() {
-        return inferenceAddress.get();
-    }
-
-    public StringProperty inferenceAddressProperty() {
-        return inferenceAddress;
-    }
-
-    public void setInferenceAddress(String inferenceAddress) {
-        this.inferenceAddress.set(inferenceAddress);
+        return inferenceUrl.get() + ":" + inferencePort.get();
     }
 
     public String getManagementAddress() {
-        return managementAddress.get();
+        return managementUrl.get() + ":" + managementPort.get();
     }
 
-    public StringProperty managementAddressProperty() {
-        return managementAddress;
+    public int getInferencePort() {
+        return inferencePort.get();
     }
 
-    public void setManagementAddress(String managementAddress) {
-        this.managementAddress.set(managementAddress);
+    public IntegerProperty inferencePortProperty() {
+        return inferencePort;
+    }
+
+    public void setInferencePort(int inferencePort) {
+        this.inferencePort.set(inferencePort);
+    }
+
+    public int getManagementPort() {
+        return managementPort.get();
+    }
+
+    public IntegerProperty managementPortProperty() {
+        return managementPort;
+    }
+
+    public void setManagementPort(int managementPort) {
+        this.managementPort.set(managementPort);
+    }
+
+    public String getInferenceUrl() {
+        return inferenceUrl.get();
+    }
+
+    public StringProperty inferenceUrlProperty() {
+        return inferenceUrl;
+    }
+
+    public void setInferenceUrl(String inferenceUrl) {
+        this.inferenceUrl.set(inferenceUrl);
+    }
+
+    public String getManagementUrl() {
+        return managementUrl.get();
+    }
+
+    public StringProperty managementUrlProperty() {
+        return managementUrl;
+    }
+
+    public void setManagementUrl(String managementUrl) {
+        this.managementUrl.set(managementUrl);
     }
 
     public String getInferenceModelName() {

@@ -109,6 +109,7 @@ public class EditorToolBarView extends ToolBar implements View {
     private final HBox symmetryBox = new HBox();
     private final HBox boundingShapeToolBox = new HBox(hideBoundingShapesButton, showBoundingShapesButton);
     private final HBox imageSettingsToolBox = new HBox(resetSizeAndCenterImageButton, createImageSettingsButton());
+    private final Button predictButton = new Button("Predict");
 
     /**
      * Creates a new tool-bar containing controls to navigate images
@@ -124,6 +125,7 @@ public class EditorToolBarView extends ToolBar implements View {
                 nextButton,
                 UiUtils.createHSpacer(),
                 symmetryBox,
+                predictButton,
                 imageSettingsToolBox
         );
 
@@ -138,6 +140,7 @@ public class EditorToolBarView extends ToolBar implements View {
     public void connectToController(Controller controller) {
         nextButton.setOnAction(action -> controller.onRegisterNextImageFileRequested());
         previousButton.setOnAction(action -> controller.onRegisterPreviousImageFileRequested());
+        predictButton.setOnAction(action -> controller.onRegisterPerformCurrentImageBoundingBoxPredictionAction());
     }
 
     /**

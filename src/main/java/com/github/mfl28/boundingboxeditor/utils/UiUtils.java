@@ -18,11 +18,15 @@
  */
 package com.github.mfl28.boundingboxeditor.utils;
 
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import org.controlsfx.dialog.ProgressDialog;
 
 /***
  * A class that comprises general ui utility-functions.
@@ -73,5 +77,27 @@ public class UiUtils {
      */
     public static Tooltip createFocusTooltip(KeyCombination keyCombination) {
         return new Tooltip("(" + keyCombination.getDisplayText() + " to focus)");
+    }
+
+    /**
+     * Creates a text formatter that only matches decimal number inputs.
+     *
+     * @return the formatter
+     */
+    public static TextFormatter<String> createDecimalFormatter() {
+        return new TextFormatter<>(change -> {
+            if(change.getText().matches("[0-9]*")) {
+                return change;
+            }
+
+            return null;
+        });
+    }
+
+    public static void closeProgressDialog(ProgressDialog dialog) {
+        // TODO: check if no bad side-effects
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.close();
+        dialog.getDialogPane().getButtonTypes().remove(ButtonType.CLOSE);
     }
 }

@@ -385,6 +385,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-shape: $file-import-icon;
 }
 
+#settings-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $settings-icon;
+}
+
 #exit-icon {
     @include medium-icon;
     -fx-background-color: $base-font-color;
@@ -1033,4 +1039,65 @@ $base-separator-line-color: derive($base-background-color, -15%);
     > .list-cell:filled:selected {
     -fx-background-color: $base-highlight-light-color;
     -fx-text-fill: $base-font-color;
+}
+
+.spinner {
+    -fx-background-color: $base-highlight-light-color;
+    & .increment-arrow-button, .decrement-arrow-button {
+        -fx-body-color: $base-font-color;
+        -fx-border-color: $base-font-color;
+        -fx-background-color: $base-font-color;
+
+        &:pressed {
+            -fx-body-color: $base-font-highlight-color;
+            -fx-border-color: $base-font-highlight-color;
+            -fx-background-color: $base-font-highlight-color;
+        }
+    }
+}
+
+.toggle-switch {
+    -thumb-move-animation-time: 100;
+
+    & .thumb-area {
+        -fx-background-color: derive($base-font-color, -15%);
+    }
+
+    &:selected {
+        .thumb-area {
+            -fx-background-color: $base-alt-accent-color;
+        }
+    }
+
+    & .thumb {
+        -fx-background-color: linear-gradient(to bottom, derive($base-font-color, -20%), derive($base-font-color, -30%)), $base-font-light-color,
+    $base-font-highlight-color;
+        -fx-content-display: RIGHT;
+    }
+}
+
+#settings-dialog-pane {
+    -fx-background-color: $base-background-color;
+
+    & .split-pane {
+        -fx-background-color: $base-background-color;
+    }
+
+    & .list-view {
+        @extend .list-view;
+        -fx-padding: 0;
+        -fx-background-color: derive($base-background-color, -25%);
+
+        &:focused {
+            -fx-background-color: derive($base-background-color, -25%);
+        }
+
+        & .list-cell :selected {
+            -fx-text-fill: derive($base-background-color, -25%);
+        }
+
+        & .button-bar {
+            -fx-background-color: derive($base-background-color, -25%);
+        }
+    }
 }

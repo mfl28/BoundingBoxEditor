@@ -103,6 +103,13 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
         private String modelName;
         private String modelUrl;
 
+        public String getModelName() {
+            return modelName;
+        }
+
+        public String getModelUrl() {
+            return modelUrl;
+        }
 
         @Override
         public String toString() {

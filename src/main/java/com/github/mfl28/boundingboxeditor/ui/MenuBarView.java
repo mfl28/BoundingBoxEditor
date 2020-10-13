@@ -21,6 +21,7 @@ package com.github.mfl28.boundingboxeditor.ui;
 import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
+import com.github.mfl28.boundingboxeditor.ui.settings.SettingsDialogView;
 import javafx.scene.control.*;
 import javafx.scene.layout.Region;
 
@@ -64,13 +65,15 @@ class MenuBarView extends MenuBar implements View {
     private static final String PVOC_IMPORT_MENU_ITEM_ID = "pvoc-import-menu-item";
     private static final String YOLO_IMPORT_MENU_ITEM_ID = "yolo-import-menu-item";
     private static final String JSON_IMPORT_MENU_ITEM_ID = "json-import-menu-item";
+    private static final String SETTINGS_TEXT = "Se_ttings";
+    private static final String SETTINGS_ICON_ID = "settings-icon";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
     private final Menu fileExportAnnotationsMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
     private final MenuItem pvocExportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_EXPORT_TEXT);
     private final MenuItem yoloExportMenuItem = new MenuItem(YOLO_FORMAT_EXPORT_TEXT);
     private final MenuItem jsonExportMenuItem = new MenuItem(JSON_FORMAT_EXPORT_TEXT);
-    private final MenuItem restCall = new MenuItem("Rest call");
+    private final MenuItem settingsMenuItem = new MenuItem(SETTINGS_TEXT, createIconRegion(SETTINGS_ICON_ID));
 
     private final Menu fileImportAnnotationsMenu =
             new Menu(ANNOTATION_IMPORT_TEXT, createIconRegion(FILE_IMPORT_ICON_ID));
@@ -127,8 +130,9 @@ class MenuBarView extends MenuBar implements View {
         jsonImportMenuItem.setOnAction(action ->
                                                controller.onRegisterImportAnnotationsAction(
                                                        ImageAnnotationLoadStrategy.Type.JSON));
-        restCall.setOnAction(action -> controller.onRegisterPerformCurrentImageBoundingBoxPredictionAction());
         fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
+
+        settingsMenuItem.setOnAction(action -> controller.onRegisterSettingsAction());
     }
 
     /**
@@ -167,7 +171,7 @@ class MenuBarView extends MenuBar implements View {
                 fileOpenFolderItem,
                 fileExportAnnotationsMenu,
                 fileImportAnnotationsMenu,
-                restCall,
+                settingsMenuItem,
                 fileExitItem
         );
 

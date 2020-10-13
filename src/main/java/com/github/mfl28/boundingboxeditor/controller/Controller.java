@@ -19,22 +19,21 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.model.Model;
-import com.github.mfl28.boundingboxeditor.model.data.*;
+import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
+import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
+import com.github.mfl28.boundingboxeditor.model.data.IoMetaData;
+import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.model.io.*;
-import com.github.mfl28.boundingboxeditor.model.io.results.BoundingBoxPredictionResult;
-import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
-import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationImportResult;
-import com.github.mfl28.boundingboxeditor.model.io.results.ImageMetaDataLoadingResult;
-import com.github.mfl28.boundingboxeditor.model.io.services.BoundingBoxPredictorService;
-import com.github.mfl28.boundingboxeditor.model.io.services.ImageAnnotationExportService;
-import com.github.mfl28.boundingboxeditor.model.io.services.ImageAnnotationImportService;
-import com.github.mfl28.boundingboxeditor.model.io.services.ImageMetaDataLoadingService;
+import com.github.mfl28.boundingboxeditor.model.io.results.*;
+import com.github.mfl28.boundingboxeditor.model.io.services.*;
 import com.github.mfl28.boundingboxeditor.ui.*;
+import com.github.mfl28.boundingboxeditor.ui.settings.SettingsDialogView;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.BoundingBoxPredictionSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsImportingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsSavingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageFilesLoadingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
+import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -44,6 +43,7 @@ import javafx.collections.ListChangeListener;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.scene.Cursor;
 import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.Image;
 import javafx.scene.input.*;
@@ -139,6 +139,7 @@ public class Controller {
     private final ImageAnnotationImportService annotationImportService = new ImageAnnotationImportService();
     private final ImageMetaDataLoadingService imageMetaDataLoadingService = new ImageMetaDataLoadingService();
     private final BoundingBoxPredictorService boundingBoxPredictorService = new BoundingBoxPredictorService();
+    private final ModelNameFetchService modelNameFetchService = new ModelNameFetchService();
     private final Stage stage;
     private final MainView view = new MainView();
     private final Model model = new Model();
@@ -176,12 +177,17 @@ public class Controller {
         connectServicesToView();
     }
 
-    private void connectServicesToView() {
-        view.connectAnnotationImportService(annotationImportService);
-        view.connectAnnotationExportService(annotationExportService);
-        view.connectImageMetaDataLoadingService(imageMetaDataLoadingService);
-        view.connectBoundingBoxPredictorService(boundingBoxPredictorService);
-        view.setUpProgressDialogs();
+    public void onRegisterSettingsAction() {
+        final SettingsDialogView settingsDialog = view.getSettingsDialog();
+        settingsDialog.getInferenceSettings()
+                      .setDisplayedSettingsFromConfig(model.getBoundingBoxPredictorClientConfig());
+        // TODO: update predictor config
+        settingsDialog.showAndWait();
+    }
+
+    public void onRegisterSettingsApplyAction() {
+        view.getSettingsDialog().getInferenceSettings()
+            .applyDisplayedSettingsToConfig(model.getBoundingBoxPredictorClientConfig());
     }
 
     /**
@@ -275,6 +281,14 @@ public class Controller {
         if(source != null) {
             initiateAnnotationImport(source, loadFormat);
         }
+    }
+
+    public void onRegisterModelNameFetchingAction() {
+        modelNameFetchService.reset();
+        final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
+        view.getSettingsDialog().getInferenceSettings().applyDisplayedSettingsToConfig(clientConfig);
+        modelNameFetchService.setClientConfig(clientConfig);
+        modelNameFetchService.restart();
     }
 
     /**
@@ -571,35 +585,6 @@ public class Controller {
         return model;
     }
 
-    private void onBoundingBoxPredictionSucceeded(WorkerStateEvent event) {
-        final BoundingBoxPredictionResult predictionResult = boundingBoxPredictorService.getValue();
-
-        if(predictionResult.getNrSuccessfullyProcessedItems() != 0) {
-            model.updateFromImageAnnotationData(predictionResult.getImageAnnotationData());
-            view.getStatusBar().setStatusEvent(new BoundingBoxPredictionSuccessfulEvent(predictionResult));
-        }
-
-        updateViewFileExplorerFileInfoElements();
-
-        final ImageAnnotation annotation = model.getCurrentImageAnnotation();
-
-        if(annotation != null) {
-            view.getObjectTree().reset();
-            view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
-            view.loadBoundingShapeViewsFromAnnotation(annotation);
-            view.getCurrentBoundingShapes().addListener(boundingShapeCountPerCategoryListener);
-            view.getObjectCategoryTable().refresh();
-            view.getObjectTree().refresh();
-        }
-
-        if(!predictionResult.getErrorTableEntries().isEmpty()) {
-            MainView.displayIOResultErrorInfoAlert(predictionResult);
-        } else if(predictionResult.getNrSuccessfullyProcessedItems() == 0) {
-            MainView.displayErrorAlert("Bounding Box Prediction Error",
-                                       "Could not predict any bounding boxes.");
-        }
-    }
-
     IoMetaData getIoMetaData() {
         return ioMetaData;
     }
@@ -635,6 +620,44 @@ public class Controller {
         initiateAnnotationExport(destination, exportFormat, null);
     }
 
+    private void connectServicesToView() {
+        view.connectAnnotationImportService(annotationImportService);
+        view.connectAnnotationExportService(annotationExportService);
+        view.connectImageMetaDataLoadingService(imageMetaDataLoadingService);
+        view.connectBoundingBoxPredictorService(boundingBoxPredictorService);
+        view.connectModelNameFetchingService(modelNameFetchService);
+        view.setUpProgressDialogs();
+    }
+
+    private void onBoundingBoxPredictionSucceeded(WorkerStateEvent event) {
+        final BoundingBoxPredictionResult predictionResult = boundingBoxPredictorService.getValue();
+
+        if(predictionResult.getNrSuccessfullyProcessedItems() != 0) {
+            model.updateFromImageAnnotationData(predictionResult.getImageAnnotationData());
+            view.getStatusBar().setStatusEvent(new BoundingBoxPredictionSuccessfulEvent(predictionResult));
+        }
+
+        updateViewFileExplorerFileInfoElements();
+
+        final ImageAnnotation annotation = model.getCurrentImageAnnotation();
+
+        if(annotation != null) {
+            view.getObjectTree().reset();
+            view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
+            view.loadBoundingShapeViewsFromAnnotation(annotation);
+            view.getCurrentBoundingShapes().addListener(boundingShapeCountPerCategoryListener);
+            view.getObjectCategoryTable().refresh();
+            view.getObjectTree().refresh();
+        }
+
+        if(!predictionResult.getErrorTableEntries().isEmpty()) {
+            MainView.displayIOResultErrorInfoAlert(predictionResult);
+        } else if(predictionResult.getNrSuccessfullyProcessedItems() == 0) {
+            MainView.displayErrorAlert("Bounding Box Prediction Error",
+                                       "Could not predict any bounding boxes.");
+        }
+    }
+
     private void startAnnotationImportService(File source, ImageAnnotationLoadStrategy.Type importFormat) {
         annotationImportService.reset();
         annotationImportService.setSource(source);
@@ -659,9 +682,8 @@ public class Controller {
         boundingBoxPredictorService.setImageMetaData(model.getImageFileNameToMetaDataMap().get(imageFile.getName()));
         boundingBoxPredictorService.setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
 
-        model.getBoundingBoxPredictorClientConfig().setInferenceModelName("fastrcnn");
-
-        boundingBoxPredictorService.setPredictorClient(BoundingBoxPredictorClient.create(model.getBoundingBoxPredictorClientConfig()));
+        boundingBoxPredictorService
+                .setPredictorClient(BoundingBoxPredictorClient.create(model.getBoundingBoxPredictorClientConfig()));
 
         boundingBoxPredictorService.restart();
     }
@@ -678,6 +700,32 @@ public class Controller {
 
         boundingBoxPredictorService.setOnSucceeded(this::onBoundingBoxPredictionSucceeded);
         boundingBoxPredictorService.setOnFailed(this::onIoServiceFailed);
+
+        modelNameFetchService.setOnSucceeded(this::onModelNameFetchingSucceeded);
+        // TODO: custom handling?
+        modelNameFetchService.setOnFailed(this::onIoServiceFailed);
+    }
+
+    private void onModelNameFetchingSucceeded(WorkerStateEvent workerStateEvent) {
+        final ModelNameFetchResult result = modelNameFetchService.getValue();
+
+        final List<String> modelNames = result.getModelNames();
+
+        UiUtils.closeProgressDialog(view.getModelNameFetchingProgressDialog());
+
+        if(!modelNames.isEmpty()) {
+            final Optional<String> modelChoice = MainView.displayChoiceDialogAndGetResult(modelNames.get(0),
+                                                                                          modelNames,
+                                                                                          "Model choice",
+                                                                                          "Choose the model" +
+                                                                                                  " used for performing predictions.",
+                                                                                          "Model: ");
+            modelChoice
+                    .ifPresent(s -> view.getSettingsDialog().getInferenceSettings().getSelectedModelLabel().setText(s));
+
+        } else {
+            MainView.displayErrorAlert("Model Name Fetching Error", "The server did not report any models.");
+        }
     }
 
     private void onImageMetaDataLoadingSucceeded(WorkerStateEvent workerStateEvent) {
@@ -688,13 +736,16 @@ public class Controller {
         }
 
         if(!ioResult.getErrorTableEntries().isEmpty()) {
+            UiUtils.closeProgressDialog(view.getImageMetaDataLoadingProgressDialog());
             MainView.displayIOResultErrorInfoAlert(ioResult);
         } else if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
+            UiUtils.closeProgressDialog(view.getImageMetaDataLoadingProgressDialog());
             MainView.displayErrorAlert(IMAGE_IMPORT_ERROR_ALERT_TITLE, IMAGE_IMPORT_ERROR_ALERT_CONTENT);
         }
 
         if(imageMetaDataLoadingService.isReload() && ioResult.getNrSuccessfullyProcessedItems() == 0) {
-            Controller.this.askToSaveExistingAnnotationDataAndClearModelAndView();
+            UiUtils.closeProgressDialog(view.getImageMetaDataLoadingProgressDialog());
+            askToSaveExistingAnnotationDataAndClearModelAndView();
         }
     }
 
@@ -704,6 +755,7 @@ public class Controller {
         boolean keepExistingCategories = false;
 
         if(model.containsCategories()) {
+            UiUtils.closeProgressDialog(view.getImageMetaDataLoadingProgressDialog());
             ButtonBar.ButtonData answer = imageMetaDataLoadingService.isReload() ?
                     MainView.displayYesNoDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
                                                             KEEP_EXISTING_CATEGORIES_DIALOG_TEXT) :
@@ -718,6 +770,7 @@ public class Controller {
         }
 
         if(!model.isSaved()) {
+            UiUtils.closeProgressDialog(view.getImageMetaDataLoadingProgressDialog());
             // First ask if user wants to save the existing annotations.
             ButtonBar.ButtonData answer = imageMetaDataLoadingService.isReload() ?
                     MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
@@ -733,8 +786,7 @@ public class Controller {
                             finalKeepExistingCategories));
                 } else {
                     initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(
-                            () -> onValidFilesPresentHandler(
-                                    finalKeepExistingCategories));
+                            () -> onValidFilesPresentHandler(finalKeepExistingCategories));
                 }
             } else if(answer == ButtonBar.ButtonData.NO || imageMetaDataLoadingService.isReload()) {
                 onValidFilesPresentHandler(keepExistingCategories);
@@ -794,8 +846,10 @@ public class Controller {
         }
 
         if(!loadResult.getErrorTableEntries().isEmpty()) {
+            UiUtils.closeProgressDialog(view.getAnnotationImportProgressDialog());
             MainView.displayIOResultErrorInfoAlert(loadResult);
         } else if(loadResult.getNrSuccessfullyProcessedItems() == 0) {
+            UiUtils.closeProgressDialog(view.getAnnotationImportProgressDialog());
             MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE,
                                        ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
             return;
@@ -821,6 +875,7 @@ public class Controller {
         }
 
         if(!saveResult.getErrorTableEntries().isEmpty()) {
+            UiUtils.closeProgressDialog(view.getAnnotationExportProgressDialog());
             MainView.displayIOResultErrorInfoAlert(saveResult);
         } else {
             model.setSaved(true);

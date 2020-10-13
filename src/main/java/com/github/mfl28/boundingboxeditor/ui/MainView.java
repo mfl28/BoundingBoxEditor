@@ -23,6 +23,7 @@ import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
+import com.github.mfl28.boundingboxeditor.ui.settings.SettingsDialogView;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
@@ -69,6 +70,8 @@ public class MainView extends BorderPane implements View {
     private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER = "Loading image meta-data";
     private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE = "Predicting";
     private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER = "Predicting bounding boxes";
+    private static final String FETCHING_MODELS_PROGRESS_DIALOG_TITLE = "Fetching Models";
+    private static final String FETCHING_MODELs_PROGRESS_DIALOG_HEADER = "Fetching model names from server";
 
     private final HeaderView header = new HeaderView();
     private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
@@ -77,6 +80,8 @@ public class MainView extends BorderPane implements View {
     private ProgressDialog annotationImportProgressDialog;
     private ProgressDialog annotationExportProgressDialog;
     private ProgressDialog boundingBoxPredictorProgressDialog;
+    private ProgressDialog modelNameFetchingProgressDialog;
+    private final SettingsDialogView settingsDialog = new SettingsDialogView();
 
     /**
      * Constructs the app's main view-component which contains all other UI-elements.
@@ -88,6 +93,33 @@ public class MainView extends BorderPane implements View {
 
         setId(MAIN_VIEW_ID);
         setUpInternalListeners();
+        setUpDialogStyles();
+    }
+
+    private void setUpDialogStyles() {
+       settingsDialog.getDialogPane().getStylesheets()
+                     .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+       ((Stage) settingsDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+    }
+
+    public ProgressDialog getModelNameFetchingProgressDialog() {
+        return modelNameFetchingProgressDialog;
+    }
+
+    public ProgressDialog getImageMetaDataLoadingProgressDialog() {
+        return imageMetaDataLoadingProgressDialog;
+    }
+
+    public ProgressDialog getAnnotationImportProgressDialog() {
+        return annotationImportProgressDialog;
+    }
+
+    public ProgressDialog getAnnotationExportProgressDialog() {
+        return annotationExportProgressDialog;
+    }
+
+    public ProgressDialog getBoundingBoxPredictorProgressDialog() {
+        return boundingBoxPredictorProgressDialog;
     }
 
     public void connectImageMetaDataLoadingService(Service<? extends IOResult> service) {
@@ -97,11 +129,21 @@ public class MainView extends BorderPane implements View {
     public void connectAnnotationImportService(Service<? extends IOResult> service) {
         annotationImportProgressDialog = new ProgressDialog(service);
     }
+
     public void connectAnnotationExportService(Service<? extends IOResult> service) {
         annotationExportProgressDialog = new ProgressDialog(service);
     }
+
     public void connectBoundingBoxPredictorService(Service<? extends IOResult> service) {
         boundingBoxPredictorProgressDialog = new ProgressDialog(service);
+    }
+
+    public void connectModelNameFetchingService(Service<? extends IOResult> service) {
+        modelNameFetchingProgressDialog = new ProgressDialog(service);
+    }
+
+    public SettingsDialogView getSettingsDialog() {
+        return settingsDialog;
     }
 
     /**
@@ -314,6 +356,7 @@ public class MainView extends BorderPane implements View {
     public void connectToController(final Controller controller) {
         header.connectToController(controller);
         workspaceSplitPane.connectToController(controller);
+        settingsDialog.connectToController(controller);
     }
 
     @Override
@@ -564,7 +607,8 @@ public class MainView extends BorderPane implements View {
         for(ProgressDialog progressDialog : List.of(imageMetaDataLoadingProgressDialog,
                                                     annotationImportProgressDialog,
                                                     annotationExportProgressDialog,
-                                                    boundingBoxPredictorProgressDialog)) {
+                                                    boundingBoxPredictorProgressDialog,
+                                                    modelNameFetchingProgressDialog)) {
             progressDialog.getDialogPane().getStylesheets()
                           .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
             ((Stage) progressDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
@@ -581,6 +625,9 @@ public class MainView extends BorderPane implements View {
 
         boundingBoxPredictorProgressDialog.setTitle(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE);
         boundingBoxPredictorProgressDialog.setHeaderText(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
+
+        modelNameFetchingProgressDialog.setTitle(FETCHING_MODELS_PROGRESS_DIALOG_TITLE);
+        modelNameFetchingProgressDialog.setHeaderText(FETCHING_MODELs_PROGRESS_DIALOG_HEADER);
     }
 
     public enum FileChooserType {SAVE, OPEN}

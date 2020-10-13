@@ -92,6 +92,7 @@ public abstract class IOResult {
         return errorTableEntries;
     }
 
-    public enum OperationType {ANNOTATION_IMPORT, ANNOTATION_SAVING, IMAGE_METADATA_LOADING, BOUNDING_BOX_PREDICTION}
+    public enum OperationType {ANNOTATION_IMPORT, ANNOTATION_SAVING, IMAGE_METADATA_LOADING, BOUNDING_BOX_PREDICTION,
+    MODEL_NAME_FETCHING}
 
 }
