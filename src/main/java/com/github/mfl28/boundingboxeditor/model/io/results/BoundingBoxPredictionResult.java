@@ -14,11 +14,11 @@ public class BoundingBoxPredictionResult extends IOResult {
      *                                     were successfully processed
      * @param errorTableEntries            a list of objects of type {@link IOErrorInfoEntry} that contain information
      *                                     about where and which errors occurred.
-     * @param imageAnnotationData the predicted annotation data
+     * @param imageAnnotationData          the predicted annotation data
      */
     public BoundingBoxPredictionResult(int nrSuccessfullyProcessedItems,
-                                          List<IOErrorInfoEntry> errorTableEntries,
-                                          ImageAnnotationData imageAnnotationData) {
+                                       List<IOErrorInfoEntry> errorTableEntries,
+                                       ImageAnnotationData imageAnnotationData) {
         super(OperationType.BOUNDING_BOX_PREDICTION, nrSuccessfullyProcessedItems, errorTableEntries);
         this.imageAnnotationData = imageAnnotationData;
     }

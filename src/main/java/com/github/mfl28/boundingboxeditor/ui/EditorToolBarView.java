@@ -76,6 +76,8 @@ public class EditorToolBarView extends ToolBar implements View {
     private static final String POLYGON_MODE_BUTTON_TEXT = "Polygon";
     private static final String RECTANGLE_MODE_BUTTON_ICON_ID = "rectangle-mode-button-icon";
     private static final String POLYGON_MODE_BUTTON_ICON_ID = "polygon-mode-button-icon";
+    private static final String PREDICT_BUTTON_TEXT = "Predict";
+    private static final String PREDICT_BUTTON_ID = "predict-button";
 
     private final IconButton showBoundingShapesButton =
             new IconButton(SHOW_BOUNDING_BOXES_ICON_BUTTON_ID, IconButton.IconType.BACKGROUND);
@@ -109,7 +111,7 @@ public class EditorToolBarView extends ToolBar implements View {
     private final HBox symmetryBox = new HBox();
     private final HBox boundingShapeToolBox = new HBox(hideBoundingShapesButton, showBoundingShapesButton);
     private final HBox imageSettingsToolBox = new HBox(resetSizeAndCenterImageButton, createImageSettingsButton());
-    private final Button predictButton = new Button("Predict");
+    private final Button predictButton = new Button(PREDICT_BUTTON_TEXT);
 
     /**
      * Creates a new tool-bar containing controls to navigate images
@@ -159,6 +161,10 @@ public class EditorToolBarView extends ToolBar implements View {
 
     public ToggleButton getPolygonModeButton() {
         return polygonModeButton;
+    }
+
+    public Button getPredictButton() {
+        return predictButton;
     }
 
     /**
@@ -329,6 +335,8 @@ public class EditorToolBarView extends ToolBar implements View {
                                                            Controller.KeyCombinations.selectPolygonDrawingMode));
 
         modeToggleGroup.selectToggle(rectangleModeButton);
+
+        predictButton.setId(PREDICT_BUTTON_ID);
     }
 
     private void setUpInternalListeners() {

@@ -32,7 +32,10 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -76,12 +79,12 @@ public class MainView extends BorderPane implements View {
     private final HeaderView header = new HeaderView();
     private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
     private final StatusBarView statusBar = new StatusBarView();
+    private final SettingsDialogView settingsDialog = new SettingsDialogView();
     private ProgressDialog imageMetaDataLoadingProgressDialog;
     private ProgressDialog annotationImportProgressDialog;
     private ProgressDialog annotationExportProgressDialog;
     private ProgressDialog boundingBoxPredictorProgressDialog;
     private ProgressDialog modelNameFetchingProgressDialog;
-    private final SettingsDialogView settingsDialog = new SettingsDialogView();
 
     /**
      * Constructs the app's main view-component which contains all other UI-elements.
@@ -94,56 +97,6 @@ public class MainView extends BorderPane implements View {
         setId(MAIN_VIEW_ID);
         setUpInternalListeners();
         setUpDialogStyles();
-    }
-
-    private void setUpDialogStyles() {
-       settingsDialog.getDialogPane().getStylesheets()
-                     .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-       ((Stage) settingsDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-    }
-
-    public ProgressDialog getModelNameFetchingProgressDialog() {
-        return modelNameFetchingProgressDialog;
-    }
-
-    public ProgressDialog getImageMetaDataLoadingProgressDialog() {
-        return imageMetaDataLoadingProgressDialog;
-    }
-
-    public ProgressDialog getAnnotationImportProgressDialog() {
-        return annotationImportProgressDialog;
-    }
-
-    public ProgressDialog getAnnotationExportProgressDialog() {
-        return annotationExportProgressDialog;
-    }
-
-    public ProgressDialog getBoundingBoxPredictorProgressDialog() {
-        return boundingBoxPredictorProgressDialog;
-    }
-
-    public void connectImageMetaDataLoadingService(Service<? extends IOResult> service) {
-        imageMetaDataLoadingProgressDialog = new ProgressDialog(service);
-    }
-
-    public void connectAnnotationImportService(Service<? extends IOResult> service) {
-        annotationImportProgressDialog = new ProgressDialog(service);
-    }
-
-    public void connectAnnotationExportService(Service<? extends IOResult> service) {
-        annotationExportProgressDialog = new ProgressDialog(service);
-    }
-
-    public void connectBoundingBoxPredictorService(Service<? extends IOResult> service) {
-        boundingBoxPredictorProgressDialog = new ProgressDialog(service);
-    }
-
-    public void connectModelNameFetchingService(Service<? extends IOResult> service) {
-        modelNameFetchingProgressDialog = new ProgressDialog(service);
-    }
-
-    public SettingsDialogView getSettingsDialog() {
-        return settingsDialog;
     }
 
     /**
@@ -307,11 +260,15 @@ public class MainView extends BorderPane implements View {
                                                   " could not be loaded.", errorTable);
             }
         } else if(ioResult.getOperationType().equals(IOResult.OperationType.BOUNDING_BOX_PREDICTION)) {
-            MainView.displayInfoAlert("Bounding Box Prediction Error Report", "There were erros while perform the " +
-                                              "prediction",
+            MainView.displayInfoAlert("Bounding Box Prediction Error Report",
+                                      "There were errors while performing the prediction",
                                       "Bounding box predictions for " + numErrorEntries + " image file" +
                                               (numErrorEntries > 1 ? "s" : "") + " could not be loaded.",
                                       errorTable);
+        } else if(ioResult.getOperationType().equals(IOResult.OperationType.MODEL_NAME_FETCHING)) {
+            MainView.displayInfoAlert("Model Fetching Error Report",
+                                      "There were errors while fetching model names from the server",
+                                      null, errorTable);
         }
     }
 
@@ -350,6 +307,50 @@ public class MainView extends BorderPane implements View {
         ((Stage) exceptionDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
         ((Stage) exceptionDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
         exceptionDialog.showAndWait();
+    }
+
+    public ProgressDialog getModelNameFetchingProgressDialog() {
+        return modelNameFetchingProgressDialog;
+    }
+
+    public ProgressDialog getImageMetaDataLoadingProgressDialog() {
+        return imageMetaDataLoadingProgressDialog;
+    }
+
+    public ProgressDialog getAnnotationImportProgressDialog() {
+        return annotationImportProgressDialog;
+    }
+
+    public ProgressDialog getAnnotationExportProgressDialog() {
+        return annotationExportProgressDialog;
+    }
+
+    public ProgressDialog getBoundingBoxPredictorProgressDialog() {
+        return boundingBoxPredictorProgressDialog;
+    }
+
+    public void connectImageMetaDataLoadingService(Service<? extends IOResult> service) {
+        imageMetaDataLoadingProgressDialog = new ProgressDialog(service);
+    }
+
+    public void connectAnnotationImportService(Service<? extends IOResult> service) {
+        annotationImportProgressDialog = new ProgressDialog(service);
+    }
+
+    public void connectAnnotationExportService(Service<? extends IOResult> service) {
+        annotationExportProgressDialog = new ProgressDialog(service);
+    }
+
+    public void connectBoundingBoxPredictorService(Service<? extends IOResult> service) {
+        boundingBoxPredictorProgressDialog = new ProgressDialog(service);
+    }
+
+    public void connectModelNameFetchingService(Service<? extends IOResult> service) {
+        modelNameFetchingProgressDialog = new ProgressDialog(service);
+    }
+
+    public SettingsDialogView getSettingsDialog() {
+        return settingsDialog;
     }
 
     @Override
@@ -475,11 +476,11 @@ public class MainView extends BorderPane implements View {
         return workspaceSplitPane.getEditor();
     }
 
-    /* Delegating Getters */
-
     public ObjectTreeView getObjectTree() {
         return workspaceSplitPane.getEditorsSplitPane().getObjectTree();
     }
+
+    /* Delegating Getters */
 
     public EditorImagePaneView getEditorImagePane() {
         return workspaceSplitPane.getEditor().getEditorImagePane();
@@ -549,6 +550,39 @@ public class MainView extends BorderPane implements View {
         return workspaceSplitPane.getEditorsSplitPane();
     }
 
+    public void setUpProgressDialogs() {
+        for(ProgressDialog progressDialog : List.of(imageMetaDataLoadingProgressDialog,
+                                                    annotationImportProgressDialog,
+                                                    annotationExportProgressDialog,
+                                                    boundingBoxPredictorProgressDialog,
+                                                    modelNameFetchingProgressDialog)) {
+            progressDialog.getDialogPane().getStylesheets()
+                          .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+            ((Stage) progressDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+        }
+
+        imageMetaDataLoadingProgressDialog.setTitle(IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE);
+        imageMetaDataLoadingProgressDialog.setHeaderText(IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER);
+
+        annotationImportProgressDialog.setTitle(LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE);
+        annotationImportProgressDialog.setHeaderText(LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER);
+
+        annotationExportProgressDialog.setTitle(SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE);
+        annotationExportProgressDialog.setHeaderText(SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
+
+        boundingBoxPredictorProgressDialog.setTitle(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE);
+        boundingBoxPredictorProgressDialog.setHeaderText(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
+
+        modelNameFetchingProgressDialog.setTitle(FETCHING_MODELS_PROGRESS_DIALOG_TITLE);
+        modelNameFetchingProgressDialog.setHeaderText(FETCHING_MODELs_PROGRESS_DIALOG_HEADER);
+    }
+
+    private void setUpDialogStyles() {
+        settingsDialog.getDialogPane().getStylesheets()
+                      .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        ((Stage) settingsDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+    }
+
     private static void setupAndShowDialog(Alert dialog, String title, String content) {
         dialog.setTitle(title);
         dialog.setHeaderText(null);
@@ -601,33 +635,6 @@ public class MainView extends BorderPane implements View {
 
         alert.getDialogPane().setExpandableContent(expandableContent);
         alert.showAndWait();
-    }
-
-    public void setUpProgressDialogs() {
-        for(ProgressDialog progressDialog : List.of(imageMetaDataLoadingProgressDialog,
-                                                    annotationImportProgressDialog,
-                                                    annotationExportProgressDialog,
-                                                    boundingBoxPredictorProgressDialog,
-                                                    modelNameFetchingProgressDialog)) {
-            progressDialog.getDialogPane().getStylesheets()
-                          .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-            ((Stage) progressDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        }
-
-        imageMetaDataLoadingProgressDialog.setTitle(IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE);
-        imageMetaDataLoadingProgressDialog.setHeaderText(IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER);
-
-        annotationImportProgressDialog.setTitle(LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE);
-        annotationImportProgressDialog.setHeaderText(LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER);
-
-        annotationExportProgressDialog.setTitle(SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE);
-        annotationExportProgressDialog.setHeaderText(SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
-
-        boundingBoxPredictorProgressDialog.setTitle(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE);
-        boundingBoxPredictorProgressDialog.setHeaderText(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
-
-        modelNameFetchingProgressDialog.setTitle(FETCHING_MODELS_PROGRESS_DIALOG_TITLE);
-        modelNameFetchingProgressDialog.setHeaderText(FETCHING_MODELs_PROGRESS_DIALOG_HEADER);
     }
 
     public enum FileChooserType {SAVE, OPEN}

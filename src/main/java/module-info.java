@@ -31,6 +31,7 @@ module com.github.mfl28.boundingboxeditor {
     requires jersey.common;
     requires jersey.media.json.jackson;
     requires java.ws.rs;
+    requires javafx.swing;
     requires com.fasterxml.jackson.core;
     requires jersey.media.multipart;
     requires org.jvnet.mimepull;

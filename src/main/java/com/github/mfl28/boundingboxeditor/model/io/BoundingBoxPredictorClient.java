@@ -1,6 +1,6 @@
 package com.github.mfl28.boundingboxeditor.model.io;
 
-import java.io.File;
+import java.io.InputStream;
 import java.security.InvalidParameterException;
 import java.util.List;
 
@@ -13,7 +13,7 @@ public interface BoundingBoxPredictorClient {
         throw new InvalidParameterException();
     }
 
-    List<BoundingBoxPredictionEntry> predict(File imageFile);
+    List<BoundingBoxPredictionEntry> predict(InputStream input) throws PredictionClientException;
 
     enum ServiceType {TORCH_SERVE}
 }

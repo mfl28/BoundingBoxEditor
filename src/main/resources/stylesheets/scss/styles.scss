@@ -91,6 +91,11 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-min-height: $huge-icon-size;
 }
 
+@mixin flat-button {
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
 @mixin light-background-pane {
     -fx-background-color: $base-background-light-color;
 }
@@ -240,6 +245,10 @@ $base-separator-line-color: derive($base-background-color, -15%);
             -fx-background-radius: 0.25em;
         }
     }
+}
+
+#predict-button {
+    @include flat-button;
 }
 
 .color-picker {
@@ -1041,21 +1050,6 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-text-fill: $base-font-color;
 }
 
-.spinner {
-    -fx-background-color: $base-highlight-light-color;
-    & .increment-arrow-button, .decrement-arrow-button {
-        -fx-body-color: $base-font-color;
-        -fx-border-color: $base-font-color;
-        -fx-background-color: $base-font-color;
-
-        &:pressed {
-            -fx-body-color: $base-font-highlight-color;
-            -fx-border-color: $base-font-highlight-color;
-            -fx-background-color: $base-font-highlight-color;
-        }
-    }
-}
-
 .toggle-switch {
     -thumb-move-animation-time: 100;
 
@@ -1078,6 +1072,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
 #settings-dialog-pane {
     -fx-background-color: $base-background-color;
+    -fx-font-size: 12 pt;
 
     & .split-pane {
         -fx-background-color: $base-background-color;
@@ -1098,6 +1093,73 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
         & .button-bar {
             -fx-background-color: derive($base-background-color, -25%);
+        }
+    }
+
+    & .grid-pane {
+        -fx-hgap: 10;
+        -fx-vgap: 15;
+        -fx-padding: 15 15 0 15;
+
+        & .settings-entry-box {
+            -fx-spacing: 10;
+            -fx-alignment: center-left;
+        }
+    }
+
+    & .label {
+        -fx-font-size: 12 pt;
+    }
+
+    & .spinner {
+        -fx-background-color: $base-highlight-light-color;
+        & .increment-arrow-button, .decrement-arrow-button {
+            -fx-body-color: $base-font-color;
+            -fx-border-color: $base-font-color;
+            -fx-background-color: $base-font-color;
+
+            &:pressed {
+                -fx-body-color: $base-font-highlight-color;
+                -fx-border-color: $base-font-highlight-color;
+                -fx-background-color: $base-font-highlight-color;
+            }
+        }
+    }
+
+    & .check-box {
+
+        & .box {
+            -fx-background-color: transparent;
+            -fx-background-insets: 0;
+            -fx-border-color: $base-highlight-light-color;
+            -fx-border-radius: 3px;
+        }
+
+        & .mark {
+            -fx-background-color: transparent;
+        }
+
+        &:selected {
+            & .mark {
+                -fx-background-color: $base-background-color;
+            }
+
+            & .box {
+                -fx-background-color: $base-alt-accent-color;
+                -fx-border-color: $base-alt-accent-color;
+            }
+
+        }
+    }
+
+    & #selected-model-label {
+        -fx-background-insets: 0;
+        -fx-border-color: $base-highlight-light-color;
+        -fx-border-radius: 3px;
+        -fx-padding: 3 6 3 6;
+
+        &:disabled {
+            -fx-border-color: transparent;
         }
     }
 }

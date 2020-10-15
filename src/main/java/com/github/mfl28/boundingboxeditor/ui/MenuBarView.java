@@ -21,7 +21,6 @@ package com.github.mfl28.boundingboxeditor.ui;
 import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
-import com.github.mfl28.boundingboxeditor.ui.settings.SettingsDialogView;
 import javafx.scene.control.*;
 import javafx.scene.layout.Region;
 
@@ -131,7 +130,6 @@ class MenuBarView extends MenuBar implements View {
                                                controller.onRegisterImportAnnotationsAction(
                                                        ImageAnnotationLoadStrategy.Type.JSON));
         fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
-
         settingsMenuItem.setOnAction(action -> controller.onRegisterSettingsAction());
     }
 

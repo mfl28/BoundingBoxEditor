@@ -19,7 +19,6 @@
 package com.github.mfl28.boundingboxeditor.utils;
 
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCombination;

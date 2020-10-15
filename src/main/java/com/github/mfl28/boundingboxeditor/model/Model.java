@@ -19,8 +19,9 @@
 package com.github.mfl28.boundingboxeditor.model;
 
 import com.github.mfl28.boundingboxeditor.model.data.*;
-import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorConfig;
 import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorClientConfig;
+import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorConfig;
+import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -184,7 +185,8 @@ public class Model {
      *
      * @param imageAnnotations the new image-annotations
      */
-    public void updateImageAnnotations(Collection<ImageAnnotation> imageAnnotations) {
+    public void updateImageAnnotations(Collection<ImageAnnotation> imageAnnotations,
+                                       IOResult.OperationType operationType) {
         boolean noCurrentAnnotations = imageFileNameToAnnotation.isEmpty();
 
         imageAnnotations.forEach(annotation -> {
@@ -198,7 +200,11 @@ public class Model {
         });
 
         if(!imageAnnotations.isEmpty()) {
-            saved.set(noCurrentAnnotations);
+            if(operationType.equals(IOResult.OperationType.ANNOTATION_IMPORT)) {
+                saved.set(noCurrentAnnotations);
+            } else if(operationType.equals(IOResult.OperationType.BOUNDING_BOX_PREDICTION)) {
+                saved.set(false);
+            }
         }
     }
 
@@ -296,13 +302,14 @@ public class Model {
      *
      * @param imageAnnotationData the image-annotation data
      */
-    public void updateFromImageAnnotationData(ImageAnnotationData imageAnnotationData) {
+    public void updateFromImageAnnotationData(ImageAnnotationData imageAnnotationData,
+                                              IOResult.OperationType operationType) {
         final Map<String, Integer> updatedCategoryNameToBoundingShapeCountMap =
                 createMergedCategoryToBoundingShapeCountMap(
                         imageAnnotationData.getCategoryNameToBoundingShapeCountMap());
         updateObjectCategoriesFromData(imageAnnotationData.getCategoryNameToCategoryMap());
         categoryToAssignedBoundingShapesCount.putAll(updatedCategoryNameToBoundingShapeCountMap);
-        updateImageAnnotations(imageAnnotationData.getImageAnnotations());
+        updateImageAnnotations(imageAnnotationData.getImageAnnotations(), operationType);
     }
 
     /**

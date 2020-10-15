@@ -23,60 +23,60 @@ public class BoundingBoxPredictorClientConfig {
         return inferencePort.get();
     }
 
-    public IntegerProperty inferencePortProperty() {
-        return inferencePort;
-    }
-
     public void setInferencePort(int inferencePort) {
         this.inferencePort.set(inferencePort);
+    }
+
+    public IntegerProperty inferencePortProperty() {
+        return inferencePort;
     }
 
     public int getManagementPort() {
         return managementPort.get();
     }
 
-    public IntegerProperty managementPortProperty() {
-        return managementPort;
-    }
-
     public void setManagementPort(int managementPort) {
         this.managementPort.set(managementPort);
+    }
+
+    public IntegerProperty managementPortProperty() {
+        return managementPort;
     }
 
     public String getInferenceUrl() {
         return inferenceUrl.get();
     }
 
-    public StringProperty inferenceUrlProperty() {
-        return inferenceUrl;
-    }
-
     public void setInferenceUrl(String inferenceUrl) {
         this.inferenceUrl.set(inferenceUrl);
+    }
+
+    public StringProperty inferenceUrlProperty() {
+        return inferenceUrl;
     }
 
     public String getManagementUrl() {
         return managementUrl.get();
     }
 
-    public StringProperty managementUrlProperty() {
-        return managementUrl;
-    }
-
     public void setManagementUrl(String managementUrl) {
         this.managementUrl.set(managementUrl);
+    }
+
+    public StringProperty managementUrlProperty() {
+        return managementUrl;
     }
 
     public String getInferenceModelName() {
         return inferenceModelName.get();
     }
 
-    public StringProperty inferenceModelNameProperty() {
-        return inferenceModelName;
-    }
-
     public void setInferenceModelName(String inferenceModelName) {
         this.inferenceModelName.set(inferenceModelName);
+    }
+
+    public StringProperty inferenceModelNameProperty() {
+        return inferenceModelName;
     }
 
     public BoundingBoxPredictorClient.ServiceType getServiceType() {

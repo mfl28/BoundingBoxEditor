@@ -30,60 +30,60 @@ public class BoundingBoxPredictorService extends Service<BoundingBoxPredictionRe
         return imageFile.get();
     }
 
-    public ObjectProperty<File> imageFileProperty() {
-        return imageFile;
-    }
-
     public void setImageFile(File imageFile) {
         this.imageFile.set(imageFile);
+    }
+
+    public ObjectProperty<File> imageFileProperty() {
+        return imageFile;
     }
 
     public ImageMetaData getImageMetaData() {
         return imageMetaData.get();
     }
 
-    public ObjectProperty<ImageMetaData> imageMetaDataProperty() {
-        return imageMetaData;
-    }
-
     public void setImageMetaData(ImageMetaData imageMetaDate) {
         this.imageMetaData.set(imageMetaDate);
+    }
+
+    public ObjectProperty<ImageMetaData> imageMetaDataProperty() {
+        return imageMetaData;
     }
 
     public Map<String, ObjectCategory> getCategoryNameToCategoryMap() {
         return categoryNameToCategoryMap.get();
     }
 
-    public ObjectProperty<Map<String, ObjectCategory>> categoryNameToCategoryMapProperty() {
-        return categoryNameToCategoryMap;
-    }
-
     public void setCategoryNameToCategoryMap(Map<String, ObjectCategory> categoryNameToCategoryMap) {
         this.categoryNameToCategoryMap.set(categoryNameToCategoryMap);
+    }
+
+    public ObjectProperty<Map<String, ObjectCategory>> categoryNameToCategoryMapProperty() {
+        return categoryNameToCategoryMap;
     }
 
     public BoundingBoxPredictorClient getPredictorClient() {
         return predictorClient.get();
     }
 
-    public ObjectProperty<BoundingBoxPredictorClient> predictorClientProperty() {
-        return predictorClient;
-    }
-
     public void setPredictorClient(BoundingBoxPredictorClient predictorClient) {
         this.predictorClient.set(predictorClient);
+    }
+
+    public ObjectProperty<BoundingBoxPredictorClient> predictorClientProperty() {
+        return predictorClient;
     }
 
     public BoundingBoxPredictorConfig getBoundingBoxPredictorConfig() {
         return boundingBoxPredictorConfig.get();
     }
 
-    public ObjectProperty<BoundingBoxPredictorConfig> boundingBoxPredictorConfigProperty() {
-        return boundingBoxPredictorConfig;
-    }
-
     public void setBoundingBoxPredictorConfig(BoundingBoxPredictorConfig boundingBoxPredictorConfig) {
         this.boundingBoxPredictorConfig.set(boundingBoxPredictorConfig);
+    }
+
+    public ObjectProperty<BoundingBoxPredictorConfig> boundingBoxPredictorConfigProperty() {
+        return boundingBoxPredictorConfig;
     }
 
     @Override
