@@ -88,7 +88,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
 
         // Verify that exactly one Image file change watcher thread is running:
-        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 1, testinfo);
+        timeOutAssertThreadCount("ImageFileChangeWatcher", 1, testinfo);
 
         // Rename the loaded image file:
         Assertions.assertDoesNotThrow(() -> Files.move(tempDir.toPath().resolve("foo.jpg"),
@@ -105,7 +105,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getCurrentImageFile(), Matchers.equalTo(tempDir.toPath().resolve("bar.jpg").toFile()),
                    saveScreenshot(testinfo));
-        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 1, testinfo);
+        timeOutAssertThreadCount("ImageFileChangeWatcher", 1, testinfo);
 
         timeOutAssertNoTopModelStage(robot, testinfo);
 
@@ -129,7 +129,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 0, testinfo);
+        timeOutAssertThreadCount("ImageFileChangeWatcher", 0, testinfo);
 
         verifyThat(model.containsImageFiles(), Matchers.is(false), saveScreenshot(testinfo));
         verifyThat(mainView.isWorkspaceVisible(), Matchers.is(false), saveScreenshot(testinfo));
@@ -143,7 +143,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertThreadCount(robot, "ImageFileChangeWatcher", 0, testinfo);
+        timeOutAssertThreadCount("ImageFileChangeWatcher", 0, testinfo);
     }
 
     private void verifyNodeVisibilities(TestInfo testinfo) {

@@ -190,10 +190,7 @@ public class BoundingBoxEditorTestBase {
         model = controller.getModel();
         // To make sure that the window is on top of all other windows at the start.
         stage.setAlwaysOnTop(true);
-
-        if(Boolean.getBoolean(FULL_SCREEN_TESTS_SYSTEM_PROPERTY_NAME)) {
-            stage.setMaximized(true);
-        }
+        stage.setMaximized(Boolean.getBoolean(FULL_SCREEN_TESTS_SYSTEM_PROPERTY_NAME));
 
         final Scene scene = createSceneFromParent(mainView);
         scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
@@ -409,7 +406,7 @@ public class BoundingBoxEditorTestBase {
                                                                                    TIMEOUT_DURATION_IN_SEC + "  sec."));
     }
 
-    protected void timeOutAssertThreadCount(FxRobot robot, String threadName, int count, TestInfo testinfo) {
+    protected void timeOutAssertThreadCount(String threadName, int count, TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> threadCount(threadName) == count),
                                       () -> saveScreenshotAndReturnMessage(testinfo,
