@@ -31,6 +31,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
@@ -193,6 +194,13 @@ public class BoundingBoxView extends Rectangle implements
         this.boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
         initializeFromBoundsInImage(imageWidth, imageHeight);
         addAutoScaleListener();
+    }
+
+    @Override
+    public Rectangle2D getRelativeOutlineRectangle() {
+        final Bounds relativeBounds = getRelativeBoundsInImageView();
+        return new Rectangle2D(relativeBounds.getMinX(), relativeBounds.getMinY(), relativeBounds.getWidth(),
+                               relativeBounds.getHeight());
     }
 
     @Override

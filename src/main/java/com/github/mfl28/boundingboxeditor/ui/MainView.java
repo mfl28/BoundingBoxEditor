@@ -80,6 +80,7 @@ public class MainView extends BorderPane implements View {
     private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
     private final StatusBarView statusBar = new StatusBarView();
     private final SettingsDialogView settingsDialog = new SettingsDialogView();
+    private final UISettingsConfig uiSettingsConfig = new UISettingsConfig();
     private ProgressDialog imageMetaDataLoadingProgressDialog;
     private ProgressDialog annotationImportProgressDialog;
     private ProgressDialog annotationExportProgressDialog;
@@ -550,6 +551,10 @@ public class MainView extends BorderPane implements View {
         return workspaceSplitPane.getEditorsSplitPane();
     }
 
+    public UISettingsConfig getUiSettingsConfig() {
+        return uiSettingsConfig;
+    }
+
     public void setUpProgressDialogs() {
         for(ProgressDialog progressDialog : List.of(imageMetaDataLoadingProgressDialog,
                                                     annotationImportProgressDialog,
@@ -614,6 +619,8 @@ public class MainView extends BorderPane implements View {
             getEditorImagePane().setMaximizeImageView(newValue);
             getEditorImagePane().resetImageViewSize();
         });
+
+        workspaceSplitPane.showObjectPopoverProperty().bind(uiSettingsConfig.showObjectPopoverProperty());
     }
 
     private static void displayInfoAlert(String title, String header, String content, Node additionalInfoNode) {

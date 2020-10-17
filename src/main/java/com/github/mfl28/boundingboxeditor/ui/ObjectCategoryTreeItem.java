@@ -150,7 +150,7 @@ class ObjectCategoryTreeItem extends TreeItem<Object> {
     private void setUpInternalListeners() {
         toggleIcon.fillProperty().bind(((ObjectCategory) getValue()).colorProperty());
 
-        toggleIcon.setOnMousePressed(event -> {
+        toggleIcon.setOnMouseClicked(event -> {
             setIconToggledOn(!isIconToggledOn());
             event.consume();
         });

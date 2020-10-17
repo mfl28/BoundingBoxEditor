@@ -185,6 +185,8 @@ public class Controller {
                       .setDisplayedSettingsFromPredictorClientConfig(model.getBoundingBoxPredictorClientConfig());
         settingsDialog.getInferenceSettings()
                       .setDisplayedSettingsFromPredictorConfig(model.getBoundingBoxPredictorConfig());
+        settingsDialog.getUiSettings()
+                      .setDisplayedSettingsFromUISettingsConfig(view.getUiSettingsConfig());
 
         settingsDialog.showAndWait();
     }
@@ -205,6 +207,8 @@ public class Controller {
             .applyDisplayedSettingsToPredictorClientConfig(model.getBoundingBoxPredictorClientConfig());
         view.getSettingsDialog().getInferenceSettings()
             .applyDisplayedSettingsToPredictorConfig(model.getBoundingBoxPredictorConfig());
+        view.getSettingsDialog().getUiSettings()
+            .applyDisplayedSettingsToUISettingsConfig(view.getUiSettingsConfig());
 
         if(buttonType.equals(ButtonType.APPLY)) {
             event.consume();

@@ -20,6 +20,7 @@ package com.github.mfl28.boundingboxeditor.ui;
 
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.geometry.Bounds;
+import javafx.geometry.Rectangle2D;
 
 /**
  * Interface to access common data of bounding shapes.
@@ -29,6 +30,8 @@ public interface BoundingShapeViewable {
 
     void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds, double imageWith,
                                           double imageHeight);
+
+    Rectangle2D getRelativeOutlineRectangle();
 
     BoundingShapeTreeItem toTreeItem();
 }

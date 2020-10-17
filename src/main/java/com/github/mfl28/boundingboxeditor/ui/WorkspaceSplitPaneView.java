@@ -20,11 +20,17 @@ package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ListChangeListener;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Polygon;
 import javafx.scene.transform.Transform;
 import javafx.util.Callback;
 
@@ -55,6 +61,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     private final EditorsSplitPaneView editorsSplitPane = new EditorsSplitPaneView();
     private final EditorView editor = new EditorView();
     private final ImageFileExplorerView imageFileExplorer = new ImageFileExplorerView();
+    private final BooleanProperty showObjectPopover = new SimpleBooleanProperty();
     private boolean treeUpdateEnabled = true;
     private double[] savedDividerPositions = {DEFAULT_FIRST_DIVIDER_RATIO, DEFAULT_SECOND_DIVIDER_RATIO};
 
@@ -86,6 +93,14 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     public void reset() {
         setVisible(true);
         editorsSplitPane.reset();
+    }
+
+    public boolean isShowObjectPopover() {
+        return showObjectPopover.get();
+    }
+
+    public BooleanProperty showObjectPopoverProperty() {
+        return showObjectPopover;
     }
 
     /**
@@ -304,7 +319,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     }
 
     private class ObjectTreeElementCellFactory implements Callback<TreeView<Object>, TreeCell<Object>> {
-
+        private static final int MAX_POPOVER_SIDE_LENGTH = 250;
         private TreeItem<Object> draggedItem;
 
         @Override
@@ -318,6 +333,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             applyOnDragEnteredListener(cell);
             applyOnDragExitedListener(cell);
             applyOnDragDroppedListener(cell);
+            applyOnMouseEnteredListener(cell);
+            applyOnMouseExitedListener(cell);
 
             return cell;
         }
@@ -427,6 +444,61 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 event.setDropCompleted(true);
                 event.consume();
             });
+        }
+
+        private void applyOnMouseEnteredListener(ObjectTreeElementCell cell) {
+            cell.setOnMouseEntered(event -> {
+                if(!showObjectPopover.get() || cell.isEmpty() || cell.getTreeItem() instanceof ObjectCategoryTreeItem) {
+                    return;
+                }
+
+                final Image currentImage = getEditor().getEditorImagePane().getCurrentImage();
+                final ImageView imageView = cell.getPopOverImageView();
+
+                if(imageView.getImage() == null
+                        || !imageView.getImage().getUrl().equals(currentImage.getUrl())) {
+                    imageView.setImage(currentImage);
+                }
+
+                final Rectangle2D relativeOutline =
+                        ((BoundingShapeViewable) cell.getItem()).getRelativeOutlineRectangle();
+
+                final Rectangle2D outline = new Rectangle2D(relativeOutline.getMinX() * currentImage.getWidth(),
+                                                            relativeOutline.getMinY() * currentImage.getHeight(),
+                                                            relativeOutline.getWidth() * currentImage.getWidth(),
+                                                            relativeOutline.getHeight() * currentImage.getHeight());
+
+                imageView.setViewport(outline);
+
+                double scaleWidth;
+                double scaleHeight;
+
+                if(outline.getWidth() > outline.getHeight()) {
+                    scaleWidth = Math.min(outline.getWidth(), MAX_POPOVER_SIDE_LENGTH);
+                    scaleHeight = outline.getHeight() * scaleWidth / outline.getWidth();
+                    imageView.setFitWidth(scaleWidth);
+                } else {
+                    scaleHeight = Math.min(outline.getHeight(), MAX_POPOVER_SIDE_LENGTH);
+                    scaleWidth = outline.getWidth() * scaleHeight / outline.getHeight();
+                    imageView.setFitHeight(scaleHeight);
+                }
+
+                if(cell.getItem() instanceof BoundingPolygonView) {
+                    final List<Double> points = ((BoundingPolygonView) cell.getItem())
+                            .getMinMaxScaledPoints(scaleWidth, scaleHeight);
+
+                    final Polygon polygon = new Polygon();
+                    polygon.getPoints().setAll(points);
+
+                    imageView.setClip(polygon);
+                }
+
+                cell.getPopOver().show(cell);
+            });
+        }
+
+        private void applyOnMouseExitedListener(ObjectTreeElementCell cell) {
+            cell.setOnMouseExited(event -> cell.getPopOver().hide());
         }
     }
 }

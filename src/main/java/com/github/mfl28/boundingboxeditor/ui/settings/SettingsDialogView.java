@@ -17,11 +17,13 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
     private static final String SETTINGS_TITLE = "Settings";
     private static final String INFERENCE_CATEGORY_NAME = "Inference";
     private static final double SPLITPANE_DIVIDER_POSITION = 0.15;
+    private static final String UI_CATEGORY_NAME = "UI";
     private final ObservableList<String> settingCategories = FXCollections.observableArrayList();
     private final Map<String, Node> categoryToContentMap = new HashMap<>();
     private final ListView<String> settingCategoriesView = new ListView<>(settingCategories);
     private final VBox contentBox = new VBox();
     private final InferenceSettingsView inferenceSettings = new InferenceSettingsView();
+    private final UISettingsView uiSettingsView = new UISettingsView();
 
     public SettingsDialogView() {
         setTitle(SETTINGS_TITLE);
@@ -50,6 +52,10 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
         return inferenceSettings;
     }
 
+    public UISettingsView getUiSettings() {
+        return uiSettingsView;
+    }
+
     @Override
     public void connectToController(Controller controller) {
         getDialogPane().lookupButton(ButtonType.APPLY).addEventFilter(ActionEvent.ACTION, event -> {
@@ -70,10 +76,14 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
 
     private void setUpSettingCategories() {
         addCategoryContentPair(INFERENCE_CATEGORY_NAME, inferenceSettings);
+        addCategoryContentPair(UI_CATEGORY_NAME, uiSettingsView);
     }
 
-    private <T extends Node & ApplyButtonChangeListener> void addCategoryContentPair(String category, T contentNode) {
-        categoryToContentMap.put(category, contentNode);
+    private <T extends Node & ApplyButtonChangeProvider> void addCategoryContentPair(String category, T contentNode) {
+        final ScrollPane scrollPane = new ScrollPane(contentNode);
+        scrollPane.setFitToWidth(true);
+
+        categoryToContentMap.put(category, scrollPane);
         settingCategories.add(category);
         contentNode.registerPropertyListeners((Button) getDialogPane().lookupButton(ButtonType.APPLY));
     }
@@ -81,10 +91,12 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
     private void setUpInternalListeners() {
         settingCategoriesView.getSelectionModel()
                              .selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            contentBox.getChildren().clear();
-            contentBox.getChildren().add(categoryToContentMap.get(newValue));
+            contentBox.getChildren().setAll(categoryToContentMap.get(newValue));
         });
 
-        setOnShowing(event -> getDialogPane().lookupButton(ButtonType.APPLY).setDisable(true));
+        setOnShowing(event -> {
+            settingCategoriesView.getSelectionModel().selectFirst();
+            getDialogPane().lookupButton(ButtonType.APPLY).setDisable(true);
+        });
     }
 }

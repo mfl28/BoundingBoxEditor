@@ -31,6 +31,7 @@ import javafx.collections.ObservableSet;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseButton;
@@ -61,10 +62,12 @@ public class BoundingPolygonView extends Polygon implements
 
     private final BooleanProperty editing = createEditingProperty();
     private final BooleanProperty constructing = new SimpleBooleanProperty(false);
-    private final DoubleProperty width = new SimpleDoubleProperty();
-    private final DoubleProperty height = new SimpleDoubleProperty();
     private final ObservableList<VertexHandle> vertexHandles = FXCollections.observableArrayList();
     private final ObservableSet<Integer> editingIndices = FXCollections.observableSet(new LinkedHashSet<>());
+    private final DoubleProperty xMin = new SimpleDoubleProperty();
+    private final DoubleProperty yMin = new SimpleDoubleProperty();
+    private final DoubleProperty xMax = new SimpleDoubleProperty();
+    private final DoubleProperty yMax = new SimpleDoubleProperty();
     private List<Double> pointsInImage = Collections.emptyList();
 
     /**
@@ -228,6 +231,18 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     @Override
+    public Rectangle2D getRelativeOutlineRectangle() {
+        final Bounds imageViewBounds = boundingShapeViewData.autoScaleBounds().getValue();
+
+        double relativeXMin = (xMin.get() - imageViewBounds.getMinX()) / imageViewBounds.getWidth();
+        double relativeYMin = (yMin.get() - imageViewBounds.getMinY()) / imageViewBounds.getHeight();
+        double relativeWidth = (xMax.get() - xMin.get()) / imageViewBounds.getWidth();
+        double relativeHeight = (yMax.get() - yMin.get()) / imageViewBounds.getHeight();
+
+        return new Rectangle2D(relativeXMin, relativeYMin, relativeWidth, relativeHeight);
+    }
+
+    @Override
     public BoundingShapeTreeItem toTreeItem() {
         return new BoundingPolygonTreeItem(this);
     }
@@ -260,6 +275,17 @@ public class BoundingPolygonView extends Polygon implements
         for(VertexHandle vertexHandle : vertexHandles) {
             points.add((vertexHandle.getCenterX() - imageViewBounds.getMinX()) / imageViewBounds.getWidth());
             points.add((vertexHandle.getCenterY() - imageViewBounds.getMinY()) / imageViewBounds.getHeight());
+        }
+
+        return points;
+    }
+
+    List<Double> getMinMaxScaledPoints(double width, double height) {
+        final List<Double> points = new ArrayList<>(getPoints().size());
+
+        for(VertexHandle vertexHandle : vertexHandles) {
+            points.add((vertexHandle.getCenterX() - xMin.get()) / (xMax.get() - xMin.get()) * width);
+            points.add((vertexHandle.getCenterY() - yMin.get()) / (yMax.get() - yMin.get()) * height);
         }
 
         return points;
@@ -312,7 +338,7 @@ public class BoundingPolygonView extends Polygon implements
                     }
 
                     boundingShapeViewData.getNodeGroup().getChildren().addAll(c.getAddedSubList());
-                    updateWidthAndHeight();
+                    updateOutlineBox();
                 }
 
                 if(c.wasRemoved()) {
@@ -326,7 +352,7 @@ public class BoundingPolygonView extends Polygon implements
                     }
 
                     boundingShapeViewData.getNodeGroup().getChildren().removeAll(c.getRemoved());
-                    updateWidthAndHeight();
+                    updateOutlineBox();
                 }
 
                 if(isConstructing() && !vertexHandles.isEmpty()) {
@@ -396,27 +422,29 @@ public class BoundingPolygonView extends Polygon implements
         boundingShapeViewData.getNodeGroup().viewOrderProperty().bind(
                 Bindings.when(boundingShapeViewData.selectedProperty())
                         .then(0)
-                        .otherwise(Bindings.min(width, height))
+                        .otherwise(Bindings.min(xMax.subtract(xMin), yMax.subtract(yMin)))
         );
     }
 
-    private void updateWidthAndHeight() {
-        double xMin = Double.MAX_VALUE;
-        double yMin = Double.MAX_VALUE;
-        double xMax = 0;
-        double yMax = 0;
+    private void updateOutlineBox() {
+        double newXMin = Double.MAX_VALUE;
+        double newYMin = Double.MAX_VALUE;
+        double newXMax = 0;
+        double newYMax = 0;
 
         List<Double> points = getPoints();
 
         for(int i = 0; i < points.size(); i += 2) {
-            xMin = Math.min(points.get(i), xMin);
-            yMin = Math.min(points.get(i + 1), yMin);
-            xMax = Math.max(points.get(i), xMax);
-            yMax = Math.max(points.get(i + 1), yMax);
+            newXMin = Math.min(points.get(i), newXMin);
+            newYMin = Math.min(points.get(i + 1), newYMin);
+            newXMax = Math.max(points.get(i), newXMax);
+            newYMax = Math.max(points.get(i + 1), newYMax);
         }
 
-        width.set(Math.abs(xMax - xMin));
-        height.set(Math.abs(yMax - yMin));
+        xMin.set(newXMin);
+        xMax.set(newXMax);
+        yMin.set(newYMin);
+        yMax.set(newYMax);
     }
 
     private void initializeFromBoundsInImage(double imageWidth, double imageHeight) {
@@ -443,6 +471,8 @@ public class BoundingPolygonView extends Polygon implements
                 vertexHandle.setCenterY(
                         newValue.getMinY() + (vertexHandle.getCenterY() - oldValue.getMinY()) * yScaleFactor);
             }
+
+            updateOutlineBox();
         });
     }
 
@@ -633,11 +663,17 @@ public class BoundingPolygonView extends Polygon implements
                 }
                 mouseEvent.consume();
             });
+
+            setOnMouseReleased(mouseEvent -> {
+                if(mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                    updateOutlineBox();
+                }
+                mouseEvent.consume();
+            });
         }
 
         private void setUpInternalListeners() {
-            fillProperty().bind(Bindings
-                                        .when(selected)
+            fillProperty().bind(Bindings.when(selected)
                                         .then(Bindings.createObjectBinding(() -> Color
                                                                                    .web(BoundingPolygonView.this.strokeProperty().get().toString(), 1.0)
                                                                                    .brighter(),
@@ -663,12 +699,11 @@ public class BoundingPolygonView extends Polygon implements
             );
 
             strokeProperty().bind(Bindings.when(editing)
-                                          .then(Bindings.createObjectBinding(() ->
-                                                                                     ((Color) getFill())
-                                                                                             .getBrightness() >
-                                                                                             BRIGHTNESS_BLACK_SWITCH_THRESHOLD
-                                                                                             ? Color.BLACK :
-                                                                                             Color.WHITE,
+                                          .then(Bindings.createObjectBinding(() -> ((Color) getFill())
+                                                                                     .getBrightness() >
+                                                                                     BRIGHTNESS_BLACK_SWITCH_THRESHOLD
+                                                                                     ? Color.BLACK :
+                                                                                     Color.WHITE,
                                                                              fillProperty()))
                                           .otherwise(Bindings.createObjectBinding(() -> ((Color) getFill()),
                                                                                   fillProperty())));

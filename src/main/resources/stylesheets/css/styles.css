@@ -753,99 +753,104 @@
   /* line 804, src/main/resources/stylesheets/scss/styles.scss */
   .tree-view .tree-cell {
     -fx-padding: 0.1em 0;
-    -fx-background-color: transparent; }
-    /* line 808, src/main/resources/stylesheets/scss/styles.scss */
+    -fx-background-color: transparent;
+    -fx-border-radius: 3px;
+    -fx-border-color: transparent; }
+    /* line 810, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:hover {
       -fx-background-color: #434c5e; }
-    /* line 812, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 814, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:selected {
       -fx-background-color: #4c566a; }
-    /* line 816, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 818, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:empty {
       -fx-background-color: transparent; }
-    /* line 820, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 822, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:dragged-over {
-      -fx-background-color: #bf616a; }
-    /* line 824, src/main/resources/stylesheets/scss/styles.scss */
+      -fx-border-color: #d8dee9; }
+    /* line 826, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell > .tree-disclosure-node > .arrow {
       -fx-rotate: 0;
       -fx-background-color: #d8dee9; }
-    /* line 829, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 831, src/main/resources/stylesheets/scss/styles.scss */
     .tree-view .tree-cell:expanded > .tree-disclosure-node > .arrow {
       -fx-rotate: 90; }
 
-/* line 835, src/main/resources/stylesheets/scss/styles.scss */
+/* line 837, src/main/resources/stylesheets/scss/styles.scss */
 #info-text {
   -fx-fill: #d08770; }
 
-/* line 839, src/main/resources/stylesheets/scss/styles.scss */
+/* line 841, src/main/resources/stylesheets/scss/styles.scss */
 #category-name-text {
   -fx-font-weight: bold; }
 
-/* line 843, src/main/resources/stylesheets/scss/styles.scss */
+/* line 845, src/main/resources/stylesheets/scss/styles.scss */
 #tree-cell-content {
   -fx-spacing: 4px; }
 
-/* line 848, src/main/resources/stylesheets/scss/styles.scss */
+/* line 850, src/main/resources/stylesheets/scss/styles.scss */
 .scroll-bar, .scroll-bar .track, .scroll-bar .track-background {
   -fx-background-color: #3b4252;
   -fx-effect: none;
   -fx-border-style: hidden; }
-  /* line 857, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 859, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar .thumb {
     -fx-background-color: #d8dee9; }
-    /* line 860, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 862, src/main/resources/stylesheets/scss/styles.scss */
     .scroll-bar .thumb:hover {
-      -fx-background-color: #bf616a; }
-  /* line 865, src/main/resources/stylesheets/scss/styles.scss */
+      -fx-background-color: derive(#d8dee9, -10%); }
+    /* line 866, src/main/resources/stylesheets/scss/styles.scss */
+    .scroll-bar .thumb:pressed {
+      -fx-background-color: derive(#d8dee9, -20%); }
+  /* line 871, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:vertical .decrement-button, .scroll-bar .track:vertical .decrement-button, .scroll-bar .track-background:vertical .decrement-button,
   .scroll-bar:vertical .increment-button, .scroll-bar .track:vertical .increment-button, .scroll-bar .track-background:vertical .increment-button {
     -fx-padding: 0 4px;
     -fx-opacity: 0; }
-  /* line 871, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 877, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:horizontal .decrement-button, .scroll-bar .track:horizontal .decrement-button, .scroll-bar .track-background:horizontal .decrement-button,
   .scroll-bar:horizontal .increment-button, .scroll-bar .track:horizontal .increment-button, .scroll-bar .track-background:horizontal .increment-button {
     -fx-padding: 4px 0;
     -fx-opacity: 0; }
-  /* line 877, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 883, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:horizontal .increment-arrow, .scroll-bar .track:horizontal .increment-arrow, .scroll-bar .track-background:horizontal .increment-arrow,
   .scroll-bar:horizontal .decrement-arrow, .scroll-bar .track:horizontal .decrement-arrow, .scroll-bar .track-background:horizontal .decrement-arrow {
     -fx-shape: " ";
     -fx-padding: 0.10em 0; }
-  /* line 884, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 890, src/main/resources/stylesheets/scss/styles.scss */
   .scroll-bar:vertical .increment-arrow, .scroll-bar .track:vertical .increment-arrow, .scroll-bar .track-background:vertical .increment-arrow,
   .scroll-bar:vertical .decrement-arrow, .scroll-bar .track:vertical .decrement-arrow, .scroll-bar .track-background:vertical .decrement-arrow {
     -fx-shape: " ";
     -fx-padding: 0 0.10em; }
 
-/* line 892, src/main/resources/stylesheets/scss/styles.scss */
+/* line 898, src/main/resources/stylesheets/scss/styles.scss */
 .list-view, #settings-dialog-pane .list-view {
   -fx-background-color: transparent;
   -fx-color: #2e3440;
   -fx-padding: 0 5px 0 0; }
-  /* line 897, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 903, src/main/resources/stylesheets/scss/styles.scss */
   .list-view .corner, #settings-dialog-pane .list-view .corner {
     -fx-background-color: transparent; }
-  /* line 901, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 907, src/main/resources/stylesheets/scss/styles.scss */
   .list-view:focused, #settings-dialog-pane .list-view:focused {
     -fx-background-color: transparent; }
-    /* line 904, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 910, src/main/resources/stylesheets/scss/styles.scss */
     .list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:focused, #settings-dialog-pane .list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:focused {
       -fx-background-insets: 0;
       -fx-border-width: 0;
       -fx-padding: 5px; }
-  /* line 911, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 917, src/main/resources/stylesheets/scss/styles.scss */
   .list-view .list-cell, #settings-dialog-pane .list-view .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: #d8dee9;
     -fx-padding: 5px;
     -fx-background-insets: 0;
     -fx-border-width: 0; }
-    /* line 918, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 924, src/main/resources/stylesheets/scss/styles.scss */
     .list-view .list-cell:empty, #settings-dialog-pane .list-view .list-cell:empty {
       -fx-opacity: 0;
       -fx-padding: 5px; }
-    /* line 923, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 929, src/main/resources/stylesheets/scss/styles.scss */
     .list-view .list-cell:selected, #settings-dialog-pane .list-view .list-cell:selected {
       -fx-background-color: #88c0d0;
       -fx-text-fill: #2e3440;
@@ -853,197 +858,216 @@
       -fx-border-width: 0;
       -fx-padding: 5px; }
 
-/* line 934, src/main/resources/stylesheets/scss/styles.scss */
+/* line 940, src/main/resources/stylesheets/scss/styles.scss */
 #tag {
   -fx-background-color: #4c566a;
   -fx-border-radius: 10;
   -fx-background-radius: 10;
   -fx-padding: 3px 5px; }
 
-/* line 941, src/main/resources/stylesheets/scss/styles.scss */
+/* line 947, src/main/resources/stylesheets/scss/styles.scss */
 #tag-input-field {
   -fx-background-color: transparent;
   -fx-padding: 0;
   -fx-pref-width: 65px;
   -fx-max-width: 100px; }
 
-/* line 948, src/main/resources/stylesheets/scss/styles.scss */
+/* line 954, src/main/resources/stylesheets/scss/styles.scss */
 #tag-label {
   -fx-font-size: 12 pt; }
 
-/* line 952, src/main/resources/stylesheets/scss/styles.scss */
+/* line 958, src/main/resources/stylesheets/scss/styles.scss */
 #tag-box {
   -fx-border-style: hidden hidden solid hidden;
   -fx-border-color: derive(#2e3440, -15%);
   -fx-border-width: 2px; }
 
-/* line 960, src/main/resources/stylesheets/scss/styles.scss */
+/* line 966, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane {
   -fx-background-color: #2e3440; }
 
-/* line 964, src/main/resources/stylesheets/scss/styles.scss */
+/* line 970, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .label {
   -fx-text-fill: #d8dee9; }
 
-/* line 968, src/main/resources/stylesheets/scss/styles.scss */
+/* line 974, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane:header .header-panel {
   -fx-background-color: #2e3440, linear-gradient(derive(#3b4252, 10%) 5%, #2e3440); }
 
-/* line 972, src/main/resources/stylesheets/scss/styles.scss */
+/* line 978, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .button {
   -fx-background-color: #3b4252;
   -fx-text-fill: #d8dee9;
   -fx-background-insets: 0; }
-  /* line 977, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 983, src/main/resources/stylesheets/scss/styles.scss */
   .dialog-pane .button:selected, .dialog-pane .button:focused, .dialog-pane .button:armed {
     -fx-background-color: #4c566a;
     -fx-text-fill: #eceff4;
     -fx-background-insets: 0; }
-  /* line 985, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 991, src/main/resources/stylesheets/scss/styles.scss */
   .dialog-pane .button:hover {
     -fx-background-color: #4c566a;
     -fx-text-fill: #eceff4;
     -fx-background-insets: 0; }
-  /* line 991, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 997, src/main/resources/stylesheets/scss/styles.scss */
   .dialog-pane .button:pressed {
     -fx-background-color: derive(#4c566a, 25%);
     -fx-text-fill: #eceff4;
     -fx-background-insets: 0; }
 
-/* line 998, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1004, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane > .button-bar > .container > .details-button {
   -fx-text-fill: #88c0d0; }
 
-/* line 1002, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1008, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .progress-bar > .bar {
   -fx-background-color: #8fbcbb;
   -fx-background-insets: 0;
   -fx-background-radius: 0; }
 
-/* line 1008, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1014, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .progress-bar:indeterminate > .bar {
   -fx-background-color: linear-gradient(to left, transparent, #8fbcbb); }
 
-/* line 1012, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1018, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .progress-bar > .track {
   -fx-background-color: #3b4252;
   -fx-background-insets: 0;
   -fx-background-radius: 0; }
 
-/* line 1018, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1024, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box {
   -fx-background-color: #3b4252;
   -fx-font-weight: bold;
   -fx-padding: 0; }
 
-/* line 1024, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1030, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box > .list-cell {
   -fx-text-fill: #d8dee9;
   -fx-padding: 5px;
   -fx-background-insets: 0; }
 
-/* line 1030, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1036, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box-popup > .list-view, .dialog-pane #settings-dialog-pane .combo-box-popup > .list-view, #settings-dialog-pane .dialog-pane .combo-box-popup > .list-view {
   -fx-background-color: #3b4252;
   -fx-effect: none; }
 
-/* line 1035, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1041, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell, .dialog-pane #settings-dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell, #settings-dialog-pane .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
   -fx-padding: 4 0 4 5;
   -fx-background-insets: 0;
   -fx-background: #3b4252; }
 
-/* line 1041, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1047, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover, .dialog-pane #settings-dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover, #settings-dialog-pane .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover {
   -fx-background-color: #434c5e;
   -fx-text-fill: #eceff4; }
 
-/* line 1047, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1053, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected, .dialog-pane #settings-dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected, #settings-dialog-pane .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
   -fx-background-color: #4c566a;
   -fx-text-fill: #d8dee9; }
 
-/* line 1053, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1060, src/main/resources/stylesheets/scss/styles.scss */
+.popover > .border {
+  -fx-stroke-width: 0;
+  -fx-fill: rgba(46, 52, 64, 0.95) !important; }
+
+/* line 1065, src/main/resources/stylesheets/scss/styles.scss */
 .toggle-switch {
   -thumb-move-animation-time: 100; }
-  /* line 1056, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1068, src/main/resources/stylesheets/scss/styles.scss */
   .toggle-switch .thumb-area {
     -fx-background-color: derive(#d8dee9, -15%); }
-  /* line 1061, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1073, src/main/resources/stylesheets/scss/styles.scss */
   .toggle-switch:selected .thumb-area {
     -fx-background-color: #88c0d0; }
-  /* line 1066, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1078, src/main/resources/stylesheets/scss/styles.scss */
   .toggle-switch .thumb {
     -fx-background-color: linear-gradient(to bottom, derive(#d8dee9, -20%), derive(#d8dee9, -30%)), #e5e9f0, #eceff4;
     -fx-content-display: RIGHT; }
 
-/* line 1073, src/main/resources/stylesheets/scss/styles.scss */
+/* line 1085, src/main/resources/stylesheets/scss/styles.scss */
 #settings-dialog-pane {
   -fx-background-color: #2e3440;
   -fx-font-size: 12 pt; }
-  /* line 1077, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1089, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .split-pane {
     -fx-background-color: #2e3440; }
-  /* line 1081, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1093, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .list-view {
     -fx-padding: 0;
-    -fx-background-color: derive(#2e3440, -25%); }
-    /* line 1086, src/main/resources/stylesheets/scss/styles.scss */
+    -fx-background-color: derive(#2e3440, -30%); }
+    /* line 1098, src/main/resources/stylesheets/scss/styles.scss */
     #settings-dialog-pane .list-view:focused {
-      -fx-background-color: derive(#2e3440, -25%); }
-    /* line 1090, src/main/resources/stylesheets/scss/styles.scss */
+      -fx-background-color: derive(#2e3440, -30%); }
+    /* line 1102, src/main/resources/stylesheets/scss/styles.scss */
     #settings-dialog-pane .list-view .list-cell :selected {
-      -fx-text-fill: derive(#2e3440, -25%); }
-    /* line 1094, src/main/resources/stylesheets/scss/styles.scss */
-    #settings-dialog-pane .list-view .button-bar {
-      -fx-background-color: derive(#2e3440, -25%); }
-  /* line 1099, src/main/resources/stylesheets/scss/styles.scss */
+      -fx-text-fill: derive(#2e3440, -30%); }
+  /* line 1107, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .grid-pane {
     -fx-hgap: 10;
     -fx-vgap: 15;
     -fx-padding: 15 15 0 15; }
-    /* line 1104, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 1112, src/main/resources/stylesheets/scss/styles.scss */
     #settings-dialog-pane .grid-pane .settings-entry-box {
       -fx-spacing: 10;
       -fx-alignment: center-left; }
-  /* line 1110, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1118, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .label {
     -fx-font-size: 12 pt; }
-  /* line 1114, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1122, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .spinner {
     -fx-background-color: #4c566a; }
-    /* line 1116, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 1124, src/main/resources/stylesheets/scss/styles.scss */
     #settings-dialog-pane .spinner .increment-arrow-button, #settings-dialog-pane .spinner .decrement-arrow-button {
       -fx-body-color: #d8dee9;
       -fx-border-color: #d8dee9;
       -fx-background-color: #d8dee9; }
-      /* line 1121, src/main/resources/stylesheets/scss/styles.scss */
+      /* line 1129, src/main/resources/stylesheets/scss/styles.scss */
       #settings-dialog-pane .spinner .increment-arrow-button:pressed, #settings-dialog-pane .spinner .decrement-arrow-button:pressed {
         -fx-body-color: #eceff4;
         -fx-border-color: #eceff4;
         -fx-background-color: #eceff4; }
-  /* line 1131, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1139, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .check-box .box {
     -fx-background-color: transparent;
     -fx-background-insets: 0;
     -fx-border-color: #4c566a;
     -fx-border-radius: 3px; }
-  /* line 1138, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1146, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .check-box .mark {
     -fx-background-color: transparent; }
-  /* line 1143, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1151, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .check-box:selected .mark {
     -fx-background-color: #2e3440; }
-  /* line 1147, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1155, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .check-box:selected .box {
     -fx-background-color: #88c0d0;
     -fx-border-color: #88c0d0; }
-  /* line 1155, src/main/resources/stylesheets/scss/styles.scss */
+  /* line 1163, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane #selected-model-label {
     -fx-background-insets: 0;
     -fx-border-color: #4c566a;
     -fx-border-radius: 3px;
     -fx-padding: 3 6 3 6; }
-    /* line 1161, src/main/resources/stylesheets/scss/styles.scss */
+    /* line 1169, src/main/resources/stylesheets/scss/styles.scss */
     #settings-dialog-pane #selected-model-label:disabled {
       -fx-border-color: transparent; }
+  /* line 1174, src/main/resources/stylesheets/scss/styles.scss */
+  #settings-dialog-pane .scroll-pane {
+    -fx-background-color: transparent; }
+    /* line 1177, src/main/resources/stylesheets/scss/styles.scss */
+    #settings-dialog-pane .scroll-pane > viewport {
+      -fx-background-color: transparent; }
+  /* line 1182, src/main/resources/stylesheets/scss/styles.scss */
+  #settings-dialog-pane #settings-subgroup-box {
+    -fx-spacing: 5;
+    -fx-alignment: center-left; }
+    /* line 1186, src/main/resources/stylesheets/scss/styles.scss */
+    #settings-dialog-pane #settings-subgroup-box .separator:horizontal .line {
+      -fx-border-color: #3b4252;
+      -fx-border-width: 0.5; }
+  /* line 1192, src/main/resources/stylesheets/scss/styles.scss */
+  #settings-dialog-pane #subgroup-title-label {
+    -fx-font-weight: bold; }

@@ -145,6 +145,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         // Now toggle the category-item's icon to on.
         robot.clickOn(testCategoryTreeItem.getGraphic());
+        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(testCategoryTreeItem.isIconToggledOn(), Matchers.equalTo(true), saveScreenshot(testinfo));
         // This should toggle on all child-items.
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.equalTo(true), saveScreenshot(testinfo));

@@ -804,6 +804,8 @@ $base-separator-line-color: derive($base-background-color, -15%);
     & .tree-cell {
         -fx-padding: 0.1em 0;
         -fx-background-color: transparent;
+        -fx-border-radius: 3px;
+        -fx-border-color: transparent;
 
         &:hover {
             -fx-background-color: $base-highlight-color;
@@ -818,7 +820,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
         }
 
         &:dragged-over {
-            -fx-background-color: $base-colorful-component-color;
+            -fx-border-color: $base-font-color;
         }
 
         & > .tree-disclosure-node > .arrow {
@@ -858,7 +860,11 @@ $base-separator-line-color: derive($base-background-color, -15%);
         -fx-background-color: $base-font-color;
 
         &:hover {
-            -fx-background-color: $base-colorful-component-color;
+            -fx-background-color: derive($base-font-color, -10%);
+        }
+
+        &:pressed {
+            -fx-background-color: derive($base-font-color, -20%);
         }
     }
 
@@ -1050,6 +1056,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-text-fill: $base-font-color;
 }
 
+
+.popover > .border {
+    -fx-stroke-width: 0;
+    -fx-fill: rgba($base-background-color, 0.95) !important;
+}
+
 .toggle-switch {
     -thumb-move-animation-time: 100;
 
@@ -1081,18 +1093,14 @@ $base-separator-line-color: derive($base-background-color, -15%);
     & .list-view {
         @extend .list-view;
         -fx-padding: 0;
-        -fx-background-color: derive($base-background-color, -25%);
+        -fx-background-color: derive($base-background-color, -30%);
 
         &:focused {
-            -fx-background-color: derive($base-background-color, -25%);
+            -fx-background-color: derive($base-background-color, -30%);
         }
 
         & .list-cell :selected {
-            -fx-text-fill: derive($base-background-color, -25%);
-        }
-
-        & .button-bar {
-            -fx-background-color: derive($base-background-color, -25%);
+            -fx-text-fill: derive($base-background-color, -30%);
         }
     }
 
@@ -1161,5 +1169,27 @@ $base-separator-line-color: derive($base-background-color, -15%);
         &:disabled {
             -fx-border-color: transparent;
         }
+    }
+
+    &  .scroll-pane {
+        -fx-background-color: transparent;
+
+        & > viewport {
+            -fx-background-color: transparent;
+        }
+    }
+
+    & #settings-subgroup-box {
+        -fx-spacing: 5;
+        -fx-alignment: center-left;
+
+        & .separator:horizontal .line {
+            -fx-border-color: $base-background-light-color;
+            -fx-border-width: 0.5;
+        }
+    }
+
+    & #subgroup-title-label {
+        -fx-font-weight: bold;
     }
 }

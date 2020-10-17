@@ -29,11 +29,13 @@ import javafx.css.PseudoClass;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
+import org.controlsfx.control.PopOver;
 
 import java.util.Objects;
 
@@ -78,6 +80,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private final ObjectTreeElementContextMenu contextMenu = new ObjectTreeElementContextMenu();
     private final EventHandler<ContextMenuEvent> showContextMenuEventHandler = createShowContextMenuEventHandler();
     private final ChangeListener<Boolean> boundingShapeVisibilityListener = createBoundingShapeVisibilityListener();
+    private final PopOver popOver = new PopOver();
+    private final ImageView popOverImageView = new ImageView();
 
     /**
      * Creates a new tree-cell object responsible for the visual representation of a {@link ObjectCategoryTreeItem}
@@ -86,6 +90,12 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     ObjectTreeElementCell() {
         nameText.getStyleClass().add(NAME_TEXT_STYLE);
         additionalInfoText.setId(INFO_TEXT_ID);
+
+        popOver.setAutoHide(true);
+        popOver.setHideOnEscape(true);
+        popOver.setArrowLocation(PopOver.ArrowLocation.LEFT_CENTER);
+        popOver.setContentNode(popOverImageView);
+        popOverImageView.setPreserveRatio(true);
 
         setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         setUpInternalListeners();
@@ -118,6 +128,9 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             contextMenu.hide();
             setContextMenu(null);
             setDraggedOver(false);
+            popOverImageView.setImage(null);
+            popOverImageView.setViewport(null);
+            popOverImageView.setClip(null);
         } else {
             setGraphic(createContentBox());
 
@@ -168,6 +181,14 @@ class ObjectTreeElementCell extends TreeCell<Object> {
      */
     MenuItem getChangeObjectCategoryMenuItem() {
         return changeObjectCategoryMenuItem;
+    }
+
+    PopOver getPopOver() {
+        return popOver;
+    }
+
+    ImageView getPopOverImageView() {
+        return popOverImageView;
     }
 
     private void setUpInternalListeners() {

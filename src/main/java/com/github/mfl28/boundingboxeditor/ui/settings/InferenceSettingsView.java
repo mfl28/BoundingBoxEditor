@@ -6,14 +6,15 @@ import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorConfig;
 import com.github.mfl28.boundingboxeditor.ui.View;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.beans.binding.Bindings;
+import javafx.geometry.Orientation;
 import javafx.scene.control.*;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
 import org.controlsfx.control.ToggleSwitch;
 
-public class InferenceSettingsView extends VBox implements View, ApplyButtonChangeListener {
+public class InferenceSettingsView extends GridPane implements View, ApplyButtonChangeProvider {
     private static final String NO_MODEL_SELECTED_TEXT = "None";
     private static final String ENABLE_INFERENCE_LABEL_TEXT = "Enable inference";
     private static final String PORT_LABEL_TEXT = "Port";
@@ -27,9 +28,10 @@ public class InferenceSettingsView extends VBox implements View, ApplyButtonChan
     private static final String RESIZE_IMAGES_LABEL_TEXT = "Resize Images";
     private static final String RESIZE_IMAGES_WIDTH_LABEL_TEXT = "Width";
     private static final String RESIZE_IMAGES_HEIGHT_LABEL_TEXT = "Height";
-    private static final String RESIZE_IMAGES_SIZE_LABEL_TEXT = "Size";
     private static final String RESIZE_IMAGES_KEEP_RATIO_LABEL_TEXT = "Keep Ratio";
     private static final String MERGE_CATEGORIES_LABEL_TEXT = "Merge Categories";
+    private static final String SUBGROUP_TITLE_LABEL_ID = "subgroup-title-label";
+    private static final String SETTINGS_SUBGROUP_BOX_ID = "settings-subgroup-box";
     private final Button selectModelButton = new Button("Select");
     private final Label selectedModelLabel = new Label(NO_MODEL_SELECTED_TEXT);
     private final ToggleSwitch inferenceEnabledControl = new ToggleSwitch();
@@ -41,11 +43,15 @@ public class InferenceSettingsView extends VBox implements View, ApplyButtonChan
     private final CheckBox resizeImagesControl = new CheckBox();
     private final TextField maxImageWidthField = new TextField();
     private final TextField maxImageHeightField = new TextField();
-    private final CheckBox keepImageRatio = new CheckBox();
+    private final CheckBox keepImageRatioControl = new CheckBox();
     private final CheckBox mergeCategoriesControl = new CheckBox();
 
     InferenceSettingsView() {
+        getStyleClass().add(GRID_PANE_STYLE_CLASS);
         setUpContent();
+        final ColumnConstraints columnConstraints = new ColumnConstraints();
+        columnConstraints.setHgrow(Priority.ALWAYS);
+        getColumnConstraints().addAll(new ColumnConstraints(), columnConstraints);
     }
 
     public void setDisplayedSettingsFromPredictorClientConfig(BoundingBoxPredictorClientConfig config) {
@@ -80,7 +86,7 @@ public class InferenceSettingsView extends VBox implements View, ApplyButtonChan
         config.setResizeImages(resizeImagesControl.isSelected());
         config.setMaxImageWidth(Integer.parseInt(maxImageWidthField.getText()));
         config.setMaxImageHeight(Integer.parseInt(maxImageHeightField.getText()));
-        config.setKeepImageRatio(keepImageRatio.isSelected());
+        config.setKeepImageRatio(keepImageRatioControl.isSelected());
         config.setMergeCategories(mergeCategoriesControl.isSelected());
     }
 
@@ -90,7 +96,7 @@ public class InferenceSettingsView extends VBox implements View, ApplyButtonChan
         resizeImagesControl.setSelected(config.isResizeImages());
         maxImageWidthField.setText(Integer.toString(config.getMaxImageWidth()));
         maxImageHeightField.setText(Integer.toString(config.getMaxImageHeight()));
-        keepImageRatio.setSelected(config.isKeepImageRatio());
+        keepImageRatioControl.setSelected(config.isKeepImageRatio());
         mergeCategoriesControl.setSelected(config.isMergeCategories());
     }
 
@@ -121,8 +127,8 @@ public class InferenceSettingsView extends VBox implements View, ApplyButtonChan
                           .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
         maxImageHeightField.textProperty()
                            .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
-        keepImageRatio.selectedProperty()
-                      .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
+        keepImageRatioControl.selectedProperty()
+                             .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
         mergeCategoriesControl.selectedProperty()
                               .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
     }
@@ -160,36 +166,31 @@ public class InferenceSettingsView extends VBox implements View, ApplyButtonChan
     }
 
     private void setUpContent() {
-        final GridPane gridPane = new GridPane();
-        gridPane.getStyleClass().add(GRID_PANE_STYLE_CLASS);
-
         int rowIndex = -1;
 
-        addInferenceControlRow(gridPane, ++rowIndex);
-        addInferenceAddressRow(gridPane, ++rowIndex);
-        addManagementAddressRow(gridPane, ++rowIndex);
-        addModelSelectionRow(gridPane, ++rowIndex);
-        addMinimumPredictionScoreRow(gridPane, ++rowIndex);
-        addImageResizePreprocessingChoiceRow(gridPane, ++rowIndex);
-        addImageResizePreprocessingSetupRow(gridPane, ++rowIndex);
-        addImageResizePreprocessingRatioRow(gridPane, ++rowIndex);
-        addPredictionMergeCategoryChoiceRow(gridPane, ++rowIndex);
-
-        VBox.setVgrow(gridPane, Priority.ALWAYS);
-        getChildren().add(gridPane);
+        addInferenceControlRow(++rowIndex);
+        addSubgroupTitleRow("Servers", ++rowIndex);
+        addInferenceAddressRow(++rowIndex);
+        addManagementAddressRow(++rowIndex);
+        addModelSelectionRow(++rowIndex);
+        addSubgroupTitleRow("Prediction", ++rowIndex);
+        addMinimumPredictionScoreRow(++rowIndex);
+        addPredictionMergeCategoryChoiceRow(++rowIndex);
+        addSubgroupTitleRow("Preprocessing", ++rowIndex);
+        addImageResizePreprocessingSetupRow(++rowIndex);
     }
 
-    private void addInferenceControlRow(GridPane gridPane, int row) {
+    private void addInferenceControlRow(int row) {
         inferenceEnabledControl.setSelected(false);
         inferenceEnabledControl.setText("  ");
 
         final HBox inferenceEnabledControlBox = new HBox(new Label(ENABLE_INFERENCE_LABEL_TEXT),
                                                          inferenceEnabledControl);
         inferenceEnabledControlBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
-        gridPane.add(inferenceEnabledControlBox, 0, row, 2, 1);
+        add(inferenceEnabledControlBox, 0, row, 2, 1);
     }
 
-    private void addInferenceAddressRow(GridPane gridPane, int row) {
+    private void addInferenceAddressRow(int row) {
         inferenceAddressField.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
         inferencePortField.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
         inferencePortField.setTextFormatter(UiUtils.createDecimalFormatter());
@@ -197,10 +198,10 @@ public class InferenceSettingsView extends VBox implements View, ApplyButtonChan
         final HBox inferenceBox = new HBox(inferenceAddressField, new Label(PORT_LABEL_TEXT), inferencePortField);
         inferenceBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
         inferenceBox.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
-        gridPane.addRow(row, new Label(INFERENCE_ADDRESS_LABEL_TEXT), inferenceBox);
+        addRow(row, new Label(INFERENCE_ADDRESS_LABEL_TEXT), inferenceBox);
     }
 
-    private void addManagementAddressRow(GridPane gridPane, int row) {
+    private void addManagementAddressRow(int row) {
         managementAddressField.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
         managementPortField.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
         managementPortField.setTextFormatter(UiUtils.createDecimalFormatter());
@@ -208,10 +209,10 @@ public class InferenceSettingsView extends VBox implements View, ApplyButtonChan
         final HBox managementBox = new HBox(managementAddressField, new Label(PORT_LABEL_TEXT), managementPortField);
         managementBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
         managementBox.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
-        gridPane.addRow(row, new Label(MANAGEMENT_ADDRESS_LABEL_TEXT), managementBox);
+        addRow(row, new Label(MANAGEMENT_ADDRESS_LABEL_TEXT), managementBox);
     }
 
-    private void addModelSelectionRow(GridPane gridPane, int row) {
+    private void addModelSelectionRow(int row) {
         selectModelButton.disableProperty().bind(managementAddressField.textProperty().isEmpty()
                                                                        .or(managementPortField.textProperty()
                                                                                               .isEmpty()));
@@ -219,23 +220,18 @@ public class InferenceSettingsView extends VBox implements View, ApplyButtonChan
         final HBox modelSelectionBox = new HBox(selectedModelLabel, selectModelButton);
         modelSelectionBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
         modelSelectionBox.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
-        gridPane.addRow(row, new Label(MODEL_LABEL_TEXT), modelSelectionBox);
+        addRow(row, new Label(MODEL_LABEL_TEXT), modelSelectionBox);
         selectedModelLabel.disableProperty().bind(selectedModelLabel.textProperty().isEqualTo(NO_MODEL_SELECTED_TEXT));
         selectedModelLabel.setId(SELECTED_MODEL_LABEL_ID);
     }
 
-    private void addMinimumPredictionScoreRow(GridPane gridPane, int row) {
+    private void addMinimumPredictionScoreRow(int row) {
         minimumScoreControl.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
         minimumScoreControl.setEditable(true);
-        gridPane.addRow(row, new Label(MINIMUM_SCORE_LABEL_TEXT), minimumScoreControl);
+        addRow(row, new Label(MINIMUM_SCORE_LABEL_TEXT), minimumScoreControl);
     }
 
-    private void addImageResizePreprocessingChoiceRow(GridPane gridPane, int row) {
-        gridPane.addRow(row, new Label(RESIZE_IMAGES_LABEL_TEXT), resizeImagesControl);
-        resizeImagesControl.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
-    }
-
-    private void addImageResizePreprocessingSetupRow(GridPane gridPane, int row) {
+    private void addImageResizePreprocessingSetupRow(int row) {
         maxImageWidthField.setTextFormatter(UiUtils.createDecimalFormatter());
         maxImageWidthField.setPrefColumnCount(4);
         maxImageHeightField.setTextFormatter(UiUtils.createDecimalFormatter());
@@ -243,21 +239,34 @@ public class InferenceSettingsView extends VBox implements View, ApplyButtonChan
         final HBox imageMaxSizeBox = new HBox(new Label(RESIZE_IMAGES_WIDTH_LABEL_TEXT),
                                               maxImageWidthField,
                                               new Label(RESIZE_IMAGES_HEIGHT_LABEL_TEXT),
-                                              maxImageHeightField);
+                                              maxImageHeightField,
+                                              new Label(RESIZE_IMAGES_KEEP_RATIO_LABEL_TEXT),
+                                              keepImageRatioControl);
         imageMaxSizeBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
-        imageMaxSizeBox.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty())
-                                                       .or(Bindings.not(resizeImagesControl.selectedProperty())));
-        gridPane.addRow(row, new Label(RESIZE_IMAGES_SIZE_LABEL_TEXT), imageMaxSizeBox);
+        imageMaxSizeBox.visibleProperty().bind(resizeImagesControl.selectedProperty());
+
+        final HBox controlBox = new HBox(resizeImagesControl, imageMaxSizeBox);
+        controlBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
+        controlBox.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
+
+        addRow(row, new Label(RESIZE_IMAGES_LABEL_TEXT), controlBox);
     }
 
-    private void addImageResizePreprocessingRatioRow(GridPane gridPane, int row) {
-        keepImageRatio.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty())
-                                                      .or(Bindings.not(resizeImagesControl.selectedProperty())));
-        gridPane.addRow(row, new Label(RESIZE_IMAGES_KEEP_RATIO_LABEL_TEXT), keepImageRatio);
-    }
-
-    private void addPredictionMergeCategoryChoiceRow(GridPane gridPane, int row) {
+    private void addPredictionMergeCategoryChoiceRow(int row) {
         mergeCategoriesControl.disableProperty().bind(Bindings.not(inferenceEnabledControl.selectedProperty()));
-        gridPane.addRow(row, new Label(MERGE_CATEGORIES_LABEL_TEXT), mergeCategoriesControl);
+        addRow(row, new Label(MERGE_CATEGORIES_LABEL_TEXT), mergeCategoriesControl);
+    }
+
+    private void addSubgroupTitleRow(String title, int row) {
+        final Label titleLabel = new Label(title);
+        titleLabel.setId(SUBGROUP_TITLE_LABEL_ID);
+        final Separator separator = new Separator();
+        separator.setOrientation(Orientation.HORIZONTAL);
+        HBox.setHgrow(separator, Priority.ALWAYS);
+
+        final HBox box = new HBox(titleLabel, separator);
+        box.setId(SETTINGS_SUBGROUP_BOX_ID);
+
+        add(box, 0, row, 2, 1);
     }
 }
