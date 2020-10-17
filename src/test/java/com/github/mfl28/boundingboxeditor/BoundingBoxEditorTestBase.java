@@ -32,10 +32,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.DialogPane;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Modality;
@@ -251,6 +248,13 @@ public class BoundingBoxEditorTestBase {
     protected void timeOutLookUpInStageAndClickOn(FxRobot robot, Stage stage, String id, TestInfo testinfo) {
         timeOutLookUpInStage(robot, stage, id, testinfo);
         robot.targetWindow(stage).clickOn(id);
+    }
+
+    protected void clickOnButtonInDialogStage(FxRobot robot, Stage stage, ButtonType buttonType, TestInfo testinfo) {
+        verifyThat(stage.getScene().getRoot(), Matchers.instanceOf(DialogPane.class), saveScreenshot(testinfo));
+
+        robot.clickOn(((DialogPane)stage.getScene().getRoot()).lookupButton(buttonType));
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     protected void timeOutLookUp(FxRobot robot, String id, TestInfo testinfo) {

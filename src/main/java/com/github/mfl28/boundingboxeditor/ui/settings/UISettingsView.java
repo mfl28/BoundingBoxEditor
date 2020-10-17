@@ -10,7 +10,7 @@ import javafx.scene.layout.Priority;
 
 public class UISettingsView extends GridPane implements ApplyButtonChangeProvider {
     private static final String GRID_PANE_STYLE_CLASS = "grid-pane";
-    private final CheckBox showObjectPopover = new CheckBox();
+    private final CheckBox showObjectPopoverControl = new CheckBox();
 
     public UISettingsView() {
         getStyleClass().add(GRID_PANE_STYLE_CLASS);
@@ -21,20 +21,24 @@ public class UISettingsView extends GridPane implements ApplyButtonChangeProvide
     }
 
     public void setDisplayedSettingsFromUISettingsConfig(UISettingsConfig config) {
-        showObjectPopover.setSelected(config.isShowObjectPopover());
+        showObjectPopoverControl.setSelected(config.isShowObjectPopover());
     }
 
     public void applyDisplayedSettingsToUISettingsConfig(UISettingsConfig config) {
-        config.setShowObjectPopover(showObjectPopover.isSelected());
+        config.setShowObjectPopover(showObjectPopoverControl.isSelected());
     }
 
     @Override
     public void registerPropertyListeners(Button applyButton) {
-        showObjectPopover.selectedProperty()
-                         .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
+        showObjectPopoverControl.selectedProperty()
+                                .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
+    }
+
+    public CheckBox getShowObjectPopoverControl() {
+        return showObjectPopoverControl;
     }
 
     private void setUpContent() {
-        addRow(0, new Label("Show object popover"), showObjectPopover);
+        addRow(0, new Label("Show object popover"), showObjectPopoverControl);
     }
 }

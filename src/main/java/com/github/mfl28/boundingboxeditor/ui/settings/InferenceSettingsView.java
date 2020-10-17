@@ -32,6 +32,9 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private static final String MERGE_CATEGORIES_LABEL_TEXT = "Merge Categories";
     private static final String SUBGROUP_TITLE_LABEL_ID = "subgroup-title-label";
     private static final String SETTINGS_SUBGROUP_BOX_ID = "settings-subgroup-box";
+    private static final String SERVERS_SUBGROUP_TITLE = "Torch serve";
+    private static final String PREDICTION_SUBGROUP_TITLE = "Prediction";
+    private static final String PREPROCESSING_SUBGROUP_TITLE = "Preprocessing";
     private final Button selectModelButton = new Button("Select");
     private final Label selectedModelLabel = new Label(NO_MODEL_SELECTED_TEXT);
     private final ToggleSwitch inferenceEnabledControl = new ToggleSwitch();
@@ -91,7 +94,7 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     }
 
     public void setDisplayedSettingsFromPredictorConfig(BoundingBoxPredictorConfig config) {
-        minimumScoreControl.getEditor().setText(Double.toString(config.getMinimumScore()));
+        minimumScoreControl.getValueFactory().setValue(config.getMinimumScore());
         inferenceEnabledControl.setSelected(config.isInferenceEnabled());
         resizeImagesControl.setSelected(config.isResizeImages());
         maxImageWidthField.setText(Integer.toString(config.getMaxImageWidth()));
@@ -165,18 +168,38 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         return minimumScoreControl;
     }
 
+    public CheckBox getResizeImagesControl() {
+        return resizeImagesControl;
+    }
+
+    public TextField getMaxImageWidthField() {
+        return maxImageWidthField;
+    }
+
+    public TextField getMaxImageHeightField() {
+        return maxImageHeightField;
+    }
+
+    public CheckBox getKeepImageRatioControl() {
+        return keepImageRatioControl;
+    }
+
+    public CheckBox getMergeCategoriesControl() {
+        return mergeCategoriesControl;
+    }
+
     private void setUpContent() {
         int rowIndex = -1;
 
         addInferenceControlRow(++rowIndex);
-        addSubgroupTitleRow("Servers", ++rowIndex);
+        addSubgroupTitleRow(SERVERS_SUBGROUP_TITLE, ++rowIndex);
         addInferenceAddressRow(++rowIndex);
         addManagementAddressRow(++rowIndex);
         addModelSelectionRow(++rowIndex);
-        addSubgroupTitleRow("Prediction", ++rowIndex);
+        addSubgroupTitleRow(PREDICTION_SUBGROUP_TITLE, ++rowIndex);
         addMinimumPredictionScoreRow(++rowIndex);
         addPredictionMergeCategoryChoiceRow(++rowIndex);
-        addSubgroupTitleRow("Preprocessing", ++rowIndex);
+        addSubgroupTitleRow(PREPROCESSING_SUBGROUP_TITLE, ++rowIndex);
         addImageResizePreprocessingSetupRow(++rowIndex);
     }
 

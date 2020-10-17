@@ -6,8 +6,8 @@ public class BoundingBoxPredictorConfig {
     private final BooleanProperty inferenceEnabled = new SimpleBooleanProperty(false);
     private final DoubleProperty minimumScore = new SimpleDoubleProperty(0.5);
     private final BooleanProperty resizeImages = new SimpleBooleanProperty(true);
-    private final IntegerProperty maxImageWidth = new SimpleIntegerProperty(400);
-    private final IntegerProperty maxImageHeight = new SimpleIntegerProperty(400);
+    private final IntegerProperty maxImageWidth = new SimpleIntegerProperty(600);
+    private final IntegerProperty maxImageHeight = new SimpleIntegerProperty(600);
     private final BooleanProperty keepImageRatio = new SimpleBooleanProperty(true);
     private final BooleanProperty mergeCategories = new SimpleBooleanProperty(true);
 

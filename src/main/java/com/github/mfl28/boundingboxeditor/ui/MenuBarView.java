@@ -66,6 +66,7 @@ class MenuBarView extends MenuBar implements View {
     private static final String JSON_IMPORT_MENU_ITEM_ID = "json-import-menu-item";
     private static final String SETTINGS_TEXT = "Se_ttings";
     private static final String SETTINGS_ICON_ID = "settings-icon";
+    private static final String FILE_SETTINGS_MENU_ITEM_ID = "file-settings-menu-item";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
     private final Menu fileExportAnnotationsMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
@@ -176,6 +177,7 @@ class MenuBarView extends MenuBar implements View {
         fileOpenFolderItem.setId(FILE_OPEN_FOLDER_MENU_ITEM_ID);
         fileExportAnnotationsMenu.setId(FILE_EXPORT_ANNOTATIONS_MENU_ID);
         fileImportAnnotationsMenu.setId(FILE_IMPORT_ANNOTATIONS_MENU_ID);
+        settingsMenuItem.setId(FILE_SETTINGS_MENU_ITEM_ID);
         fileExitItem.setId(FILE_EXIT_MENU_ITEM_ID);
 
         return fileMenu;

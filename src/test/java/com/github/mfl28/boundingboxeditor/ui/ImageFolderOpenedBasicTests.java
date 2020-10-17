@@ -273,6 +273,13 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
+        MenuItem settingsItem = getSubMenuItem(robot, "File", "Settings");
+
+        assertTrue(settingsItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Setttings item not " +
+                "visible"));
+        assertFalse(settingsItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Settings item not " +
+                "enabled"));
+
         MenuItem exitItem = getSubMenuItem(robot, "File", "Exit");
         assertTrue(exitItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not visible"));
         assertFalse(exitItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not enabled"));
