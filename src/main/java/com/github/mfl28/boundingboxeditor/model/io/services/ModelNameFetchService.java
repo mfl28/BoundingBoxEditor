@@ -1,8 +1,8 @@
 package com.github.mfl28.boundingboxeditor.model.io.services;
 
-import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorClientConfig;
-import com.github.mfl28.boundingboxeditor.model.io.PredictionClientException;
-import com.github.mfl28.boundingboxeditor.model.io.TorchServeRestClient;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.PredictionClientException;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.TorchServeRestClient;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ModelNameFetchResult;
 import javafx.beans.property.ObjectProperty;
@@ -16,18 +16,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ModelNameFetchService extends Service<ModelNameFetchResult> {
-    private final ObjectProperty<BoundingBoxPredictorClientConfig> clientConfig = new SimpleObjectProperty<>();
+    private final ObjectProperty<BoundingBoxPredictorClient> client = new SimpleObjectProperty<>(this, "client");
 
-    public BoundingBoxPredictorClientConfig getClientConfig() {
-        return clientConfig.get();
+    public BoundingBoxPredictorClient getClient() {
+        return client.get();
     }
 
-    public void setClientConfig(BoundingBoxPredictorClientConfig clientConfig) {
-        this.clientConfig.set(clientConfig);
+    public void setClient(BoundingBoxPredictorClient client) {
+        this.client.set(client);
     }
 
-    public ObjectProperty<BoundingBoxPredictorClientConfig> clientConfigProperty() {
-        return clientConfig;
+    public ObjectProperty<BoundingBoxPredictorClient> clientProperty() {
+        return client;
     }
 
     @Override
@@ -35,14 +35,12 @@ public class ModelNameFetchService extends Service<ModelNameFetchResult> {
         return new Task<>() {
             @Override
             protected ModelNameFetchResult call() {
-                TorchServeRestClient client = new TorchServeRestClient(clientConfig.get());
-
                 List<IOErrorInfoEntry> errorInfoEntries = new ArrayList<>();
 
                 List<TorchServeRestClient.ModelEntry> modelEntries;
 
                 try {
-                    modelEntries = client.models();
+                    modelEntries = client.get().models();
                 } catch(PredictionClientException e) {
                     errorInfoEntries.add(new IOErrorInfoEntry("Torch serve", e.getMessage()));
                     return new ModelNameFetchResult(0, errorInfoEntries, Collections.emptyList());

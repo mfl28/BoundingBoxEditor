@@ -20,6 +20,7 @@ package com.github.mfl28.boundingboxeditor;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.Model;
+import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
 import com.github.mfl28.boundingboxeditor.ui.MainView;
 import com.github.mfl28.boundingboxeditor.utils.MathUtils;
@@ -35,6 +36,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -253,7 +255,7 @@ public class BoundingBoxEditorTestBase {
     protected void clickOnButtonInDialogStage(FxRobot robot, Stage stage, ButtonType buttonType, TestInfo testinfo) {
         verifyThat(stage.getScene().getRoot(), Matchers.instanceOf(DialogPane.class), saveScreenshot(testinfo));
 
-        robot.clickOn(((DialogPane)stage.getScene().getRoot()).lookupButton(buttonType));
+        robot.clickOn(((DialogPane) stage.getScene().getRoot()).lookupButton(buttonType));
         WaitForAsyncUtils.waitForFxEvents();
     }
 
@@ -448,6 +450,26 @@ public class BoundingBoxEditorTestBase {
                                                                          .orElseThrow()
                                                                          .getName()).toString())
                          .apply(new StringBuilder(message)).toString();
+    }
+
+    protected List<IOErrorInfoEntry> timeOutGetErrorInfoEntriesFromStage(Stage errorReportStage, TestInfo testinfo) {
+        verifyThat(errorReportStage, Matchers.notNullValue(), saveScreenshot(testinfo));
+
+        final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
+
+        verifyThat(errorReportDialog.getExpandableContent(), Matchers.instanceOf(GridPane.class),
+                   saveScreenshot(testinfo));
+        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().get(0),
+                   Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
+        final GridPane errorReportDialogContentPane = (GridPane) errorReportDialog.getExpandableContent();
+
+        verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class),
+                   saveScreenshot(testinfo));
+
+        @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+
+        return errorInfoTable.getItems();
     }
 
     private boolean nodePresentAndVisibleInStage(FxRobot robot, Stage stage, String id) {

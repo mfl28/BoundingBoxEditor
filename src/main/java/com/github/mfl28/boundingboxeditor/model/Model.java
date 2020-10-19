@@ -19,8 +19,8 @@
 package com.github.mfl28.boundingboxeditor.model;
 
 import com.github.mfl28.boundingboxeditor.model.data.*;
-import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorConfig;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;

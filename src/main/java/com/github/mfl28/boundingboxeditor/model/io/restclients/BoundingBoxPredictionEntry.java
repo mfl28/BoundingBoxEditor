@@ -1,4 +1,4 @@
-package com.github.mfl28.boundingboxeditor.model.io;
+package com.github.mfl28.boundingboxeditor.model.io.restclients;
 
 import java.util.List;
 import java.util.Map;

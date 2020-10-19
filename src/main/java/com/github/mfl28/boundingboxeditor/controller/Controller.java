@@ -23,7 +23,11 @@ import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.IoMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
-import com.github.mfl28.boundingboxeditor.model.io.*;
+import com.github.mfl28.boundingboxeditor.model.io.FileChangeWatcher;
+import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
+import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.model.io.results.*;
 import com.github.mfl28.boundingboxeditor.model.io.services.*;
 import com.github.mfl28.boundingboxeditor.ui.*;
@@ -310,7 +314,7 @@ public class Controller {
         modelNameFetchService.reset();
         final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
         view.getSettingsDialog().getInferenceSettings().applyDisplayedSettingsToPredictorClientConfig(clientConfig);
-        modelNameFetchService.setClientConfig(clientConfig);
+        modelNameFetchService.setClient(BoundingBoxPredictorClient.create(clientConfig));
         modelNameFetchService.restart();
     }
 

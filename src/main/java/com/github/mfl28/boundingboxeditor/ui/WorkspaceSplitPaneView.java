@@ -20,6 +20,7 @@ package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
+import javafx.animation.PauseTransition;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ListChangeListener;
@@ -33,6 +34,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.transform.Transform;
 import javafx.util.Callback;
+import javafx.util.Duration;
 
 import java.util.List;
 import java.util.Objects;
@@ -320,6 +322,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
     private class ObjectTreeElementCellFactory implements Callback<TreeView<Object>, TreeCell<Object>> {
         private static final int MAX_POPOVER_SIDE_LENGTH = 250;
+        private final PauseTransition popoverDelayTransition = new PauseTransition(Duration.seconds(0.5));
         private TreeItem<Object> draggedItem;
 
         @Override
@@ -448,57 +451,72 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
         private void applyOnMouseEnteredListener(ObjectTreeElementCell cell) {
             cell.setOnMouseEntered(event -> {
+                if(!cell.isEmpty()) {
+                    cell.setHighlightStatusIncludingChildren(true);
+                }
+
                 if(!showObjectPopover.get() || cell.isEmpty() || cell.getTreeItem() instanceof ObjectCategoryTreeItem) {
                     return;
                 }
 
-                final Image currentImage = getEditor().getEditorImagePane().getCurrentImage();
-                final ImageView imageView = cell.getPopOverImageView();
+                popoverDelayTransition.setOnFinished(action -> {
+                    final Image currentImage = getEditor().getEditorImagePane().getCurrentImage();
+                    final ImageView imageView = cell.getPopOverImageView();
 
-                if(imageView.getImage() == null
-                        || !imageView.getImage().getUrl().equals(currentImage.getUrl())) {
-                    imageView.setImage(currentImage);
-                }
+                    if(imageView.getImage() == null
+                            || !imageView.getImage().getUrl().equals(currentImage.getUrl())) {
+                        imageView.setImage(currentImage);
+                    }
 
-                final Rectangle2D relativeOutline =
-                        ((BoundingShapeViewable) cell.getItem()).getRelativeOutlineRectangle();
+                    final Rectangle2D relativeOutline =
+                            ((BoundingShapeViewable) cell.getItem()).getRelativeOutlineRectangle();
 
-                final Rectangle2D outline = new Rectangle2D(relativeOutline.getMinX() * currentImage.getWidth(),
-                                                            relativeOutline.getMinY() * currentImage.getHeight(),
-                                                            relativeOutline.getWidth() * currentImage.getWidth(),
-                                                            relativeOutline.getHeight() * currentImage.getHeight());
+                    final Rectangle2D outline = new Rectangle2D(relativeOutline.getMinX() * currentImage.getWidth(),
+                                                                relativeOutline.getMinY() * currentImage.getHeight(),
+                                                                relativeOutline.getWidth() * currentImage.getWidth(),
+                                                                relativeOutline.getHeight() * currentImage.getHeight());
 
-                imageView.setViewport(outline);
+                    imageView.setViewport(outline);
 
-                double scaleWidth;
-                double scaleHeight;
+                    double scaleWidth;
+                    double scaleHeight;
 
-                if(outline.getWidth() > outline.getHeight()) {
-                    scaleWidth = Math.min(outline.getWidth(), MAX_POPOVER_SIDE_LENGTH);
-                    scaleHeight = outline.getHeight() * scaleWidth / outline.getWidth();
-                    imageView.setFitWidth(scaleWidth);
-                } else {
-                    scaleHeight = Math.min(outline.getHeight(), MAX_POPOVER_SIDE_LENGTH);
-                    scaleWidth = outline.getWidth() * scaleHeight / outline.getHeight();
-                    imageView.setFitHeight(scaleHeight);
-                }
+                    if(outline.getWidth() > outline.getHeight()) {
+                        scaleWidth = Math.min(outline.getWidth(), MAX_POPOVER_SIDE_LENGTH);
+                        scaleHeight = outline.getHeight() * scaleWidth / outline.getWidth();
+                        imageView.setFitWidth(scaleWidth);
+                    } else {
+                        scaleHeight = Math.min(outline.getHeight(), MAX_POPOVER_SIDE_LENGTH);
+                        scaleWidth = outline.getWidth() * scaleHeight / outline.getHeight();
+                        imageView.setFitHeight(scaleHeight);
+                    }
 
-                if(cell.getItem() instanceof BoundingPolygonView) {
-                    final List<Double> points = ((BoundingPolygonView) cell.getItem())
-                            .getMinMaxScaledPoints(scaleWidth, scaleHeight);
+                    if(cell.getItem() instanceof BoundingPolygonView) {
+                        final List<Double> points = ((BoundingPolygonView) cell.getItem())
+                                .getMinMaxScaledPoints(scaleWidth, scaleHeight);
 
-                    final Polygon polygon = new Polygon();
-                    polygon.getPoints().setAll(points);
+                        final Polygon polygon = new Polygon();
+                        polygon.getPoints().setAll(points);
 
-                    imageView.setClip(polygon);
-                }
+                        imageView.setClip(polygon);
+                    }
 
-                cell.getPopOver().show(cell);
+                    cell.getPopOver().show(cell);
+                });
+
+                popoverDelayTransition.playFromStart();
             });
         }
 
         private void applyOnMouseExitedListener(ObjectTreeElementCell cell) {
-            cell.setOnMouseExited(event -> cell.getPopOver().hide());
+            cell.setOnMouseExited(event -> {
+                if(!cell.isEmpty() && (cell.getContextMenu() == null || !cell.getContextMenu().isShowing())) {
+                    cell.setHighlightStatusIncludingChildren(false);
+                }
+
+                cell.getPopOver().hide();
+                popoverDelayTransition.stop();
+            });
         }
     }
 }

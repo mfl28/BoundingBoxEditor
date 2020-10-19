@@ -58,6 +58,12 @@ dependencies {
     // Hamcrest https://mvnrepository.com/artifact/org.hamcrest/hamcrest
     testImplementation 'org.hamcrest:hamcrest:2.2'
 
+    // Mockito https://mvnrepository.com/artifact/org.mockito/mockito-inline
+    testImplementation 'org.mockito:mockito-inline:3.5.13'
+
+    // Mockito-Junit https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
+    testImplementation 'org.mockito:mockito-junit-jupiter:3.5.13'
+
     // Commons Collections https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
     implementation 'org.apache.commons:commons-collections4:4.4'
 
@@ -81,22 +87,21 @@ dependencies {
     // Jersey REST client https://mvnrepository.com/artifact/org.glassfish.jersey.core/jersey-client
     implementation 'org.glassfish.jersey.core:jersey-client:2.32'
 
-    // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
-    //implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    // HK2 InjectionManager https://mvnrepository.com/artifact/org.glassfish.jersey.inject/jersey-hk2
     implementation 'org.glassfish.jersey.inject:jersey-hk2:2.32'
-    // https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-json-jackson
-    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:2.32'
 
-    // https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-multipart
+    // Jersey Multipart https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-multipart
     implementation 'org.glassfish.jersey.media:jersey-media-multipart:2.32'
 
-    // https://mvnrepository.com/artifact/org.jvnet.mimepull/mimepull
+    // Mimepull https://mvnrepository.com/artifact/org.jvnet.mimepull/mimepull
     implementation 'org.jvnet.mimepull:mimepull:1.9.13'
+
+    // Xml bind https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
 }
 
 javafx {
     version = '15'
-    // javafx.swing necessary for screenshot capturing in tests
     modules = ['javafx.controls', 'javafx.swing']
 }
 

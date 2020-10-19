@@ -1,4 +1,4 @@
-package com.github.mfl28.boundingboxeditor.model.io;
+package com.github.mfl28.boundingboxeditor.model.io.restclients;
 
 import javafx.beans.property.*;
 

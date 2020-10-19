@@ -1,4 +1,4 @@
-package com.github.mfl28.boundingboxeditor.model.io;
+package com.github.mfl28.boundingboxeditor.model.io.restclients;
 
 import java.io.InputStream;
 import java.security.InvalidParameterException;
@@ -14,6 +14,8 @@ public interface BoundingBoxPredictorClient {
     }
 
     List<BoundingBoxPredictionEntry> predict(InputStream input) throws PredictionClientException;
+
+    List<TorchServeRestClient.ModelEntry> models() throws PredictionClientException;
 
     enum ServiceType {TORCH_SERVE}
 }

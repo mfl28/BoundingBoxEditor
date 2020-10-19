@@ -209,23 +209,23 @@ public class MainView extends BorderPane implements View {
      */
     public static void displayIOResultErrorInfoAlert(IOResult ioResult) {
         TableView<IOErrorInfoEntry> errorTable = new TableView<>();
-        TableColumn<IOErrorInfoEntry, String> fileNameColumn = new TableColumn<>("File");
+        TableColumn<IOErrorInfoEntry, String> errorSourceColumn = new TableColumn<>("Source");
         TableColumn<IOErrorInfoEntry, String> errorDescriptionColumn = new TableColumn<>("Error");
 
-        errorTable.getColumns().add(fileNameColumn);
+        errorTable.getColumns().add(errorSourceColumn);
         errorTable.getColumns().add(errorDescriptionColumn);
         errorTable.setEditable(false);
         errorTable.setMaxWidth(Double.MAX_VALUE);
         errorTable.setMaxHeight(Double.MAX_VALUE);
 
-        fileNameColumn.setCellValueFactory(new PropertyValueFactory<>("fileName"));
+        errorSourceColumn.setCellValueFactory(new PropertyValueFactory<>("fileName"));
 
         errorDescriptionColumn.setCellValueFactory(new PropertyValueFactory<>("errorDescription"));
         errorDescriptionColumn.setSortable(false);
         errorTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         errorTable.setItems(FXCollections.observableArrayList(ioResult.getErrorTableEntries()));
-        errorTable.getSortOrder().add(fileNameColumn);
+        errorTable.getSortOrder().add(errorSourceColumn);
         errorTable.sort();
 
         long numErrorEntries = ioResult.getErrorTableEntries().stream()

@@ -1,6 +1,8 @@
 package com.github.mfl28.boundingboxeditor.model.io;
 
 import com.github.mfl28.boundingboxeditor.model.data.*;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictionEntry;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
 import com.github.mfl28.boundingboxeditor.model.io.results.BoundingBoxPredictionResult;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;

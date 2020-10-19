@@ -191,19 +191,25 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         return popOverImageView;
     }
 
+    void setHighlightStatusIncludingChildren(boolean highlightStatus) {
+        TreeItem<Object> treeItem = getTreeItem();
+
+        if(treeItem instanceof ObjectCategoryTreeItem) {
+            treeItem.getChildren().stream()
+                    .filter(child -> child.getValue() instanceof BoundingShapeViewable)
+                    .map(child -> ((BoundingShapeViewable) child.getValue()).getViewData())
+                    .filter(viewData -> !viewData.isSelected())
+                    .forEach(viewData -> viewData.setHighlighted(highlightStatus));
+        } else if(treeItem instanceof BoundingShapeTreeItem) {
+            final BoundingShapeViewData viewData = ((BoundingShapeViewable) treeItem.getValue()).getViewData();
+
+            if(!viewData.isSelected()) {
+                viewData.setHighlighted(highlightStatus);
+            }
+        }
+    }
+
     private void setUpInternalListeners() {
-        setOnMouseEntered(event -> {
-            if(!isEmpty()) {
-                setHighlightStatusIncludingChildren(true);
-            }
-        });
-
-        setOnMouseExited(event -> {
-            if(!isEmpty() && !contextMenu.isShowing()) {
-                setHighlightStatusIncludingChildren(false);
-            }
-        });
-
         setOnScroll(event -> {
             if(!isEmpty() && !contextMenu.isShowing()) {
                 setHighlightStatusIncludingChildren(false);
@@ -224,24 +230,6 @@ class ObjectTreeElementCell extends TreeCell<Object> {
                 (observable, oldValue, newValue) -> pseudoClassStateChanged(draggedOverPseudoClass, newValue));
         addVerticesMenuItem.setOnAction(event -> ((BoundingPolygonView) getItem()).refine());
         deleteVerticesMenuItem.setOnAction(event -> ((BoundingPolygonView) getItem()).removeEditingVertices());
-    }
-
-    private void setHighlightStatusIncludingChildren(boolean highlightStatus) {
-        TreeItem<Object> treeItem = getTreeItem();
-
-        if(treeItem instanceof ObjectCategoryTreeItem) {
-            treeItem.getChildren().stream()
-                    .filter(child -> child.getValue() instanceof BoundingShapeViewable)
-                    .map(child -> ((BoundingShapeViewable) child.getValue()).getViewData())
-                    .filter(viewData -> !viewData.isSelected())
-                    .forEach(viewData -> viewData.setHighlighted(highlightStatus));
-        } else if(treeItem instanceof BoundingShapeTreeItem) {
-            final BoundingShapeViewData viewData = ((BoundingShapeViewable) treeItem.getValue()).getViewData();
-
-            if(!viewData.isSelected()) {
-                viewData.setHighlighted(highlightStatus);
-            }
-        }
     }
 
     private HBox createContentBox() {

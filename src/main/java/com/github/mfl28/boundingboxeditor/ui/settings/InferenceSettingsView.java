@@ -1,8 +1,8 @@
 package com.github.mfl28.boundingboxeditor.ui.settings;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
-import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorConfig;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.ui.View;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.beans.binding.Bindings;

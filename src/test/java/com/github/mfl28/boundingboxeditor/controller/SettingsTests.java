@@ -1,12 +1,15 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
-import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorConfig;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.ui.settings.InferenceSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.settings.SettingsDialogView;
 import com.github.mfl28.boundingboxeditor.ui.settings.UISettingsView;
-import javafx.scene.control.*;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SplitPane;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
@@ -52,8 +55,8 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
 
         verifyThat(settingsSplitPane.getItems().get(0), Matchers.instanceOf(ListView.class), saveScreenshot(testinfo));
 
-        @SuppressWarnings("unchecked")
-        final ListView<String> categoriesListView = (ListView<String>) settingsSplitPane.getItems().get(0);
+        @SuppressWarnings("unchecked") final ListView<String> categoriesListView =
+                (ListView<String>) settingsSplitPane.getItems().get(0);
         verifyThat(categoriesListView.getSelectionModel().getSelectedItem(), Matchers.equalTo("Inference"),
                    saveScreenshot(testinfo));
 
@@ -116,8 +119,8 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
 
         verifyThat(settingsSplitPane.getItems().get(0), Matchers.instanceOf(ListView.class), saveScreenshot(testinfo));
 
-        @SuppressWarnings("unchecked")
-        final ListView<String> categoriesListView = (ListView<String>) settingsSplitPane.getItems().get(0);
+        @SuppressWarnings("unchecked") final ListView<String> categoriesListView =
+                (ListView<String>) settingsSplitPane.getItems().get(0);
         verifyThat(categoriesListView.getSelectionModel().getSelectedItem(), Matchers.equalTo("Inference"),
                    saveScreenshot(testinfo));
 
@@ -239,7 +242,8 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
         robot.doubleClickOn(inferenceSettingsView.getManagementPortField()).eraseText(1);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(inferenceSettingsView.getSelectModelButton().isDisable(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(inferenceSettingsView.getSelectModelButton().isDisable(), Matchers.is(true),
+                   saveScreenshot(testinfo));
 
         robot.doubleClickOn(inferenceSettingsView.getManagementPortField()).write("1234");
         WaitForAsyncUtils.waitForFxEvents();
