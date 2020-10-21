@@ -50,6 +50,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.matcher.base.NodeMatchers;
 import org.testfx.util.DebugUtils;
 import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.PointQueryUtils;
@@ -252,11 +253,33 @@ public class BoundingBoxEditorTestBase {
         robot.targetWindow(stage).clickOn(id);
     }
 
-    protected void clickOnButtonInDialogStage(FxRobot robot, Stage stage, ButtonType buttonType, TestInfo testinfo) {
+    protected void timeOutClickOnButtonInDialogStage(FxRobot robot, Stage stage, ButtonType buttonType,
+                                                     TestInfo testinfo) {
+        final Node buttonNode = timeOutLookUpAndGetButtonInDialogStage(stage, buttonType, testinfo);
+        verifyThat(buttonNode, Matchers.notNullValue());
+        verifyThat(buttonNode, NodeMatchers.isVisible());
+
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.clickOn(buttonNode);
+    }
+
+    protected Node timeOutLookUpAndGetButtonInDialogStage(Stage stage, ButtonType buttonType,
+                                                          TestInfo testinfo) {
         verifyThat(stage.getScene().getRoot(), Matchers.instanceOf(DialogPane.class), saveScreenshot(testinfo));
 
-        robot.clickOn(((DialogPane) stage.getScene().getRoot()).lookupButton(buttonType));
-        WaitForAsyncUtils.waitForFxEvents();
+        final DialogPane dialogPane = (DialogPane) stage.getScene().getRoot();
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> dialogPane.lookupButton(buttonType) !=
+                                                                              null &&
+                                                                              dialogPane.lookupButton(buttonType)
+                                                                                        .isVisible()),
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                           "Button was not visible " +
+                                                                                   " within " +
+                                                                                   TIMEOUT_DURATION_IN_SEC +
+                                                                                   " sec."));
+
+        return dialogPane.lookupButton(buttonType);
     }
 
     protected void timeOutLookUp(FxRobot robot, String id, TestInfo testinfo) {
@@ -328,14 +351,14 @@ public class BoundingBoxEditorTestBase {
         loadImageFolder(imageFolderPath);
 
         Stage keepExistingCategoriesDialogStage = timeOutAssertDialogOpenedAndGetStage(robot,
-                                                                                       "Open image folder",
+                                                                                       "Open Image Folder",
                                                                                        "Keep existing categories?",
                                                                                        testinfo);
 
         timeOutLookUpInStageAndClickOn(robot, keepExistingCategoriesDialogStage, keepCategoriesOption, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Stage saveAnnotationsDialogStage = timeOutAssertDialogOpenedAndGetStage(robot, "Open image folder",
+        Stage saveAnnotationsDialogStage = timeOutAssertDialogOpenedAndGetStage(robot, "Open Image Folder",
                                                                                 "Opening a new image folder will remove any existing annotation data. " +
                                                                                         "Do you want to save the " +
                                                                                         "currently existing " +

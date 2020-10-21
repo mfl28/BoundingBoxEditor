@@ -20,6 +20,7 @@ package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
@@ -96,9 +97,9 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
                                       () -> saveScreenshotAndReturnMessage(testinfo, "Could not rename image file in " +
                                               "temporary directory."));
 
-        final Stage alert = timeOutGetTopModalStage(robot, "Image files changed", testinfo);
+        final Stage alert = timeOutGetTopModalStage(robot, "Image Files Changed", testinfo);
         timeOutLookUpInStageAndClickOn(robot, alert, "OK", testinfo);
-        timeOutAssertTopModalStageClosed(robot, "Image files changed", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Image Files Changed", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
         waitUntilCurrentImageIsLoaded(testinfo);
@@ -115,17 +116,17 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
                                                                            "Could not delete image in temporary " +
                                                                                    "directory."));
 
-        final Stage alert2 = timeOutGetTopModalStage(robot, "Image files changed", testinfo);
-        timeOutLookUpInStageAndClickOn(robot, alert2, "OK", testinfo);
+        final Stage alert2 = timeOutGetTopModalStage(robot, "Image Files Changed", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, alert2, ButtonType.OK, testinfo);
 
-        timeOutAssertTopModalStageClosed(robot, "Image files changed", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Image Files Changed", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        final Stage errorAlert = timeOutGetTopModalStage(robot, "Error loading image folder", testinfo);
-        timeOutLookUpInStageAndClickOn(robot, errorAlert, "OK", testinfo);
+        final Stage errorAlert = timeOutGetTopModalStage(robot, "Image Folder Loading Error", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, errorAlert, ButtonType.OK, testinfo);
 
-        timeOutAssertTopModalStageClosed(robot, "Error loading image folder", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Image Folder Loading Error", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -136,10 +137,10 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         loadImageFolder(tempDir);
 
-        final Stage errorAlert1 = timeOutGetTopModalStage(robot, "Error loading image folder", testinfo);
-        timeOutLookUpInStageAndClickOn(robot, errorAlert1, "OK", testinfo);
+        final Stage errorAlert1 = timeOutGetTopModalStage(robot, "Image Folder Loading Error", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, errorAlert1, ButtonType.OK, testinfo);
 
-        timeOutAssertTopModalStageClosed(robot, "Error loading image folder", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Image Folder Loading Error", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -235,7 +236,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         Stage errorDialogStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
         verifyThat(errorDialogStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, errorDialogStage, "OK", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, errorDialogStage, ButtonType.OK, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
@@ -252,7 +253,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         Stage errorDialogStage2 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
         verifyThat(errorDialogStage2, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, errorDialogStage2, "OK", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, errorDialogStage2, ButtonType.OK, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
@@ -268,7 +269,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         Stage errorDialogStage3 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
         verifyThat(errorDialogStage3, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, errorDialogStage3, "OK", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, errorDialogStage3, ButtonType.OK, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
@@ -297,7 +298,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         Stage categoryCreationErrorStage = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
         verifyThat(categoryCreationErrorStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage, "OK", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, categoryCreationErrorStage, ButtonType.OK, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
@@ -317,7 +318,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         Stage categoryCreationErrorStage2 = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
         verifyThat(categoryCreationErrorStage2, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage2, "OK", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, categoryCreationErrorStage2, ButtonType.OK, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
@@ -351,7 +352,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         Stage categoryCreationErrorStage3 = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
         verifyThat(categoryCreationErrorStage3, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage3, "OK", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, categoryCreationErrorStage3, ButtonType.OK, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
@@ -372,7 +373,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         Stage categoryCreationErrorStage4 = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
         verifyThat(categoryCreationErrorStage4, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage4, "OK", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, categoryCreationErrorStage4, ButtonType.OK, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 

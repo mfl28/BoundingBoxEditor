@@ -6,9 +6,9 @@ public class BoundingBoxPredictorConfig {
     private final BooleanProperty inferenceEnabled = new SimpleBooleanProperty(false);
     private final DoubleProperty minimumScore = new SimpleDoubleProperty(0.5);
     private final BooleanProperty resizeImages = new SimpleBooleanProperty(true);
-    private final IntegerProperty maxImageWidth = new SimpleIntegerProperty(600);
-    private final IntegerProperty maxImageHeight = new SimpleIntegerProperty(600);
-    private final BooleanProperty keepImageRatio = new SimpleBooleanProperty(true);
+    private final IntegerProperty imageResizeWidth = new SimpleIntegerProperty(600);
+    private final IntegerProperty imageResizeHeight = new SimpleIntegerProperty(600);
+    private final BooleanProperty imageResizeKeepRatio = new SimpleBooleanProperty(true);
     private final BooleanProperty mergeCategories = new SimpleBooleanProperty(true);
 
     public double getMinimumScore() {
@@ -35,40 +35,40 @@ public class BoundingBoxPredictorConfig {
         return inferenceEnabled;
     }
 
-    public int getMaxImageWidth() {
-        return maxImageWidth.get();
+    public int getImageResizeWidth() {
+        return imageResizeWidth.get();
     }
 
-    public void setMaxImageWidth(int maxImageWidth) {
-        this.maxImageWidth.set(maxImageWidth);
+    public void setImageResizeWidth(int imageResizeWidth) {
+        this.imageResizeWidth.set(imageResizeWidth);
     }
 
-    public IntegerProperty maxImageWidthProperty() {
-        return maxImageWidth;
+    public IntegerProperty imageResizeWidthProperty() {
+        return imageResizeWidth;
     }
 
-    public int getMaxImageHeight() {
-        return maxImageHeight.get();
+    public int getImageResizeHeight() {
+        return imageResizeHeight.get();
     }
 
-    public void setMaxImageHeight(int maxImageHeight) {
-        this.maxImageHeight.set(maxImageHeight);
+    public void setImageResizeHeight(int imageResizeHeight) {
+        this.imageResizeHeight.set(imageResizeHeight);
     }
 
-    public IntegerProperty maxImageHeightProperty() {
-        return maxImageHeight;
+    public IntegerProperty imageResizeHeightProperty() {
+        return imageResizeHeight;
     }
 
-    public boolean isKeepImageRatio() {
-        return keepImageRatio.get();
+    public boolean getImageResizeKeepRatio() {
+        return imageResizeKeepRatio.get();
     }
 
-    public void setKeepImageRatio(boolean keepImageRatio) {
-        this.keepImageRatio.set(keepImageRatio);
+    public void setImageResizeKeepRatio(boolean imageResizeKeepRatio) {
+        this.imageResizeKeepRatio.set(imageResizeKeepRatio);
     }
 
-    public BooleanProperty keepImageRatioProperty() {
-        return keepImageRatio;
+    public BooleanProperty imageResizeKeepRatioProperty() {
+        return imageResizeKeepRatio;
     }
 
     public boolean isResizeImages() {

@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 public class BoundingBoxPredictor {
     private static final String DEFAULT_IMAGE_STREAM_FORMAT_NAME = "png";
+    private static final String NON_EXISTANT_IMAGE_ERROR_MESSAGE = "Image file does not exist.";
     private final BoundingBoxPredictorClient client;
     private final BoundingBoxPredictorConfig predictorConfig;
     private double predictedImageWidth;
@@ -44,14 +45,14 @@ public class BoundingBoxPredictor {
                                                                   imageMetaData.getImageHeight())) {
                 boundingBoxPredictions = client.predict(inputStream);
             } catch(FileNotFoundException e) {
-                errorInfoEntries.add(new IOErrorInfoEntry(imageFile.getName(), "Image file does not exist."));
+                errorInfoEntries.add(new IOErrorInfoEntry(imageFile.getName(), NON_EXISTANT_IMAGE_ERROR_MESSAGE));
                 return new BoundingBoxPredictionResult(
                         0,
                         errorInfoEntries,
                         ImageAnnotationData.empty()
                 );
             } catch(Exception e) {
-                errorInfoEntries.add(new IOErrorInfoEntry("Torch serve model", e.getMessage()));
+                errorInfoEntries.add(new IOErrorInfoEntry(client.getName(), e.getMessage()));
                 return new BoundingBoxPredictionResult(
                         0,
                         errorInfoEntries,
@@ -59,12 +60,8 @@ public class BoundingBoxPredictor {
             }
 
             if(boundingBoxPredictions == null || boundingBoxPredictions.isEmpty()) {
-                errorInfoEntries.add(new IOErrorInfoEntry("Torch serve model",
-                                                          "No bounding boxes predicted for image " +
-                                                                  imageFile.getName()));
-
                 return new BoundingBoxPredictionResult(
-                        0,
+                        1,
                         errorInfoEntries,
                         ImageAnnotationData.empty());
             }
@@ -95,9 +92,9 @@ public class BoundingBoxPredictor {
                                           double originalImageHeight) throws IOException {
         if(shouldResize()) {
             final Image image = new Image(imageFile.toURI().toString(),
-                                          predictorConfig.getMaxImageWidth(),
-                                          predictorConfig.getMaxImageHeight(),
-                                          predictorConfig.isKeepImageRatio(),
+                                          predictorConfig.getImageResizeWidth(),
+                                          predictorConfig.getImageResizeHeight(),
+                                          predictorConfig.getImageResizeKeepRatio(),
                                           true,
                                           false);
 
@@ -119,7 +116,7 @@ public class BoundingBoxPredictor {
 
     private boolean shouldResize() {
         return predictorConfig.isResizeImages() &&
-                !(predictorConfig.getMaxImageWidth() == 0 && predictorConfig.getMaxImageHeight() == 0);
+                !(predictorConfig.getImageResizeWidth() == 0 && predictorConfig.getImageResizeHeight() == 0);
     }
 
     private class PredictionExtractor {

@@ -27,45 +27,45 @@ import java.util.Objects;
  * Holds information about an error that occurred during an io-operation.
  */
 public class IOErrorInfoEntry {
-    private final StringProperty fileName;
+    private final StringProperty sourceName;
     private final StringProperty errorDescription;
 
     /**
      * Creates a new error-information entry.
      *
-     * @param fileName         the filename of the file in the processing of which the error occurred
+     * @param sourceName       the name of the source of the error
      * @param errorDescription a description of the error that occurred
      */
-    public IOErrorInfoEntry(String fileName, String errorDescription) {
-        this.fileName = new SimpleStringProperty(fileName);
+    public IOErrorInfoEntry(String sourceName, String errorDescription) {
+        this.sourceName = new SimpleStringProperty(sourceName);
         this.errorDescription = new SimpleStringProperty(errorDescription);
     }
 
     /**
-     * Returns the filename of the file in the processing of which the error occurred.
+     * Returns the name of the source of the error.
      *
-     * @return the filename
+     * @return the source-name
      */
-    public String getFileName() {
-        return fileName.get();
+    public String getSourceName() {
+        return sourceName.get();
     }
 
     /**
-     * Set the filename of the file in the processing of which the error occurred.
+     * Set the name of the source of the error.
      *
-     * @param fileName the filename to set
+     * @param sourceName the name of the source
      */
-    public void setFileName(String fileName) {
-        this.fileName.set(fileName);
+    public void setSourceName(String sourceName) {
+        this.sourceName.set(sourceName);
     }
 
     /**
-     * Returns the filename-property of the file in the processing of which the error occurred.
+     * Returns the error source-name property.
      *
-     * @return filename-property
+     * @return source-name property
      */
-    public StringProperty fileNameProperty() {
-        return fileName;
+    public StringProperty sourceNameProperty() {
+        return sourceName;
     }
 
     /**
@@ -97,7 +97,7 @@ public class IOErrorInfoEntry {
 
     @Override
     public int hashCode() {
-        return Objects.hash(fileName.get(), errorDescription.get());
+        return Objects.hash(sourceName.get(), errorDescription.get());
     }
 
     @Override
@@ -112,7 +112,7 @@ public class IOErrorInfoEntry {
 
         IOErrorInfoEntry that = (IOErrorInfoEntry) o;
 
-        return Objects.equals(fileName.get(), that.fileName.get()) &&
+        return Objects.equals(sourceName.get(), that.sourceName.get()) &&
                 Objects.equals(errorDescription.get(), that.errorDescription.get());
     }
 }

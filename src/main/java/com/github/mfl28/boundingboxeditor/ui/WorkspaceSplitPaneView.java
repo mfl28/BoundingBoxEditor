@@ -322,7 +322,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
     private class ObjectTreeElementCellFactory implements Callback<TreeView<Object>, TreeCell<Object>> {
         private static final int MAX_POPOVER_SIDE_LENGTH = 250;
-        private final PauseTransition popoverDelayTransition = new PauseTransition(Duration.seconds(0.5));
+        private final PauseTransition popoverDelayTransition = new PauseTransition(Duration.seconds(0.8));
         private TreeItem<Object> draggedItem;
 
         @Override
@@ -484,12 +484,13 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                     if(outline.getWidth() > outline.getHeight()) {
                         scaleWidth = Math.min(outline.getWidth(), MAX_POPOVER_SIDE_LENGTH);
                         scaleHeight = outline.getHeight() * scaleWidth / outline.getWidth();
-                        imageView.setFitWidth(scaleWidth);
                     } else {
                         scaleHeight = Math.min(outline.getHeight(), MAX_POPOVER_SIDE_LENGTH);
                         scaleWidth = outline.getWidth() * scaleHeight / outline.getHeight();
-                        imageView.setFitHeight(scaleHeight);
                     }
+
+                    imageView.setFitWidth(scaleWidth);
+                    imageView.setFitHeight(scaleHeight);
 
                     if(cell.getItem() instanceof BoundingPolygonView) {
                         final List<Double> points = ((BoundingPolygonView) cell.getItem())

@@ -62,14 +62,14 @@ public class MainView extends BorderPane implements View {
 
     private static final int INFO_DIALOGUE_MIN_WIDTH = 600;
     private static final String MAIN_VIEW_ID = "main-view";
-    private static final String ANNOTATION_IMPORT_ERROR_REPORT_TITLE = "Annotation import error report";
-    private static final String ANNOTATION_SAVING_ERROR_REPORT_TITLE = "Annotation saving error report";
+    private static final String ANNOTATION_IMPORT_ERROR_REPORT_TITLE = "Annotation Import Error Report";
+    private static final String ANNOTATION_SAVING_ERROR_REPORT_TITLE = "Annotation Saving Error Report";
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
     private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Saving Annotations";
     private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
     private static final String LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Loading";
     private static final String LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER = "Loading annotations...";
-    private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE = "Loading images";
+    private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE = "Loading Images";
     private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER = "Loading image meta-data";
     private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE = "Predicting";
     private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER = "Predicting bounding boxes";
@@ -218,7 +218,7 @@ public class MainView extends BorderPane implements View {
         errorTable.setMaxWidth(Double.MAX_VALUE);
         errorTable.setMaxHeight(Double.MAX_VALUE);
 
-        errorSourceColumn.setCellValueFactory(new PropertyValueFactory<>("fileName"));
+        errorSourceColumn.setCellValueFactory(new PropertyValueFactory<>("sourceName"));
 
         errorDescriptionColumn.setCellValueFactory(new PropertyValueFactory<>("errorDescription"));
         errorDescriptionColumn.setSortable(false);
@@ -229,7 +229,7 @@ public class MainView extends BorderPane implements View {
         errorTable.sort();
 
         long numErrorEntries = ioResult.getErrorTableEntries().stream()
-                                       .map(IOErrorInfoEntry::getFileName)
+                                       .map(IOErrorInfoEntry::getSourceName)
                                        .distinct()
                                        .count();
 

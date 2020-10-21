@@ -87,7 +87,7 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(settingsDialogView.getDialogPane().lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(true),
                    saveScreenshot(testinfo));
 
-        clickOnButtonInDialogStage(robot, settingsStage, ButtonType.OK, testinfo);
+        timeOutClickOnButtonInDialogStage(robot, settingsStage, ButtonType.OK, testinfo);
 
         timeOutAssertNoTopModelStage(robot, testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.is(false));
@@ -139,31 +139,31 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
 
         verifyThat(inferenceSettingsView.getInferenceEnabledControl().isSelected(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getInferenceEnabledControl().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getInferenceEnabledControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getInferenceAddressField().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getInferenceAddressField().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getInferencePortField().isDisabled(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getInferencePortField().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getManagementAddressField().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getManagementAddressField().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getManagementPortField().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getManagementPortField().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getSelectedModelLabel().isDisable(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getSelectModelButton().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getSelectModelButton().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMinimumScoreControl().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getMinimumScoreControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMergeCategoriesControl().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getMergeCategoriesControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getResizeImagesControl().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getResizeImagesControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMaxImageWidthField().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getImageResizeWidthField().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMaxImageHeightField().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getImageResizeHeightField().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getKeepImageRatioControl().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getKeepImageRatioControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
 
         verifyThat(inferenceSettingsView.getInferenceAddressField().getText(), Matchers.equalTo("http://localhost"),
@@ -182,18 +182,20 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getResizeImagesControl().isSelected(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMaxImageWidthField().getText(), Matchers.equalTo("600"),
+        verifyThat(inferenceSettingsView.getImageResizeWidthField().getText(), Matchers.equalTo("600"),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMaxImageHeightField().getText(), Matchers.equalTo("600"),
+        verifyThat(inferenceSettingsView.getImageResizeHeightField().getText(), Matchers.equalTo("600"),
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getKeepImageRatioControl().isSelected(), Matchers.is(true),
                    saveScreenshot(testinfo));
 
 
-        robot.doubleClickOn(inferenceSettingsView.getMaxImageWidthField()).eraseText(1).write("777");
+        inferenceSettingsView.getImageResizeWidthField().clear();
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.clickOn(inferenceSettingsView.getImageResizeWidthField()).write("777");
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(inferenceSettingsView.getMaxImageWidthField().getText(), Matchers.equalTo("777"),
+        verifyThat(inferenceSettingsView.getImageResizeWidthField().getText(), Matchers.equalTo("777"),
                    saveScreenshot(testinfo));
 
         robot.clickOn(settingsDialogView.getDialogPane().lookupButton(ButtonType.CANCEL));
@@ -222,11 +224,11 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         verifyThat(predictorConfig.isResizeImages(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(predictorConfig.getMaxImageWidth(), Matchers.equalTo(600),
+        verifyThat(predictorConfig.getImageResizeWidth(), Matchers.equalTo(600),
                    saveScreenshot(testinfo));
-        verifyThat(predictorConfig.getMaxImageHeight(), Matchers.equalTo(600),
+        verifyThat(predictorConfig.getImageResizeHeight(), Matchers.equalTo(600),
                    saveScreenshot(testinfo));
-        verifyThat(predictorConfig.isKeepImageRatio(), Matchers.is(true),
+        verifyThat(predictorConfig.getImageResizeKeepRatio(), Matchers.is(true),
                    saveScreenshot(testinfo));
 
         timeOutClickOn(robot, "#file-menu", testinfo);
@@ -239,13 +241,13 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.doubleClickOn(inferenceSettingsView.getManagementPortField()).eraseText(1);
+        inferenceSettingsView.getManagementPortField().clear();
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(inferenceSettingsView.getSelectModelButton().isDisable(), Matchers.is(true),
                    saveScreenshot(testinfo));
 
-        robot.doubleClickOn(inferenceSettingsView.getManagementPortField()).write("1234");
+        robot.clickOn(inferenceSettingsView.getManagementPortField()).write("1234");
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(inferenceSettingsView.getManagementPortField().getText(), Matchers.equalTo("1234"),
@@ -259,26 +261,28 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
 
         verifyThat(inferenceSettingsView.getResizeImagesControl().isSelected(), Matchers.equalTo(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMaxImageWidthField().getParent().isVisible(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getImageResizeWidthField().getParent().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getKeepImageRatioControl().getParent().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
 
-        clickOnButtonInDialogStage(robot, settingsStage, ButtonType.OK, testinfo);
+        timeOutClickOnButtonInDialogStage(robot, settingsStage, ButtonType.OK, testinfo);
 
         final Stage errorStage = timeOutGetTopModalStage(robot, "Settings Application Error", testinfo);
-        clickOnButtonInDialogStage(robot, errorStage, ButtonType.OK, testinfo);
+        timeOutClickOnButtonInDialogStage(robot, errorStage, ButtonType.OK, testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
         WaitForAsyncUtils.waitForFxEvents();
 
-        clickOnButtonInDialogStage(robot, settingsStage, ButtonType.OK, testinfo);
+        timeOutClickOnButtonInDialogStage(robot, settingsStage, ButtonType.OK, testinfo);
 
         timeOutAssertNoTopModelStage(robot, testinfo);
-        verifyThat(settingsStage.isShowing(), Matchers.is(false));
+        verifyThat(settingsStage.isShowing(), Matchers.is(false), saveScreenshot(testinfo));
+        WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(clientConfig.getManagementPort(), Matchers.equalTo(1234));
-        verifyThat(predictorConfig.isResizeImages(), Matchers.is(false));
+        verifyThat(clientConfig.getManagementPort(), Matchers.equalTo(8081), saveScreenshot(testinfo));
+        verifyThat(predictorConfig.isResizeImages(), Matchers.is(true), saveScreenshot(testinfo));
     }
 
 
@@ -287,31 +291,34 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
 
         verifyThat(inferenceSettingsView.getInferenceEnabledControl().isSelected(), Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getInferenceEnabledControl().isDisable(), Matchers.is(false),
+        verifyThat(inferenceSettingsView.getInferenceEnabledControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getInferenceAddressField().isDisable(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getInferenceAddressField().getParent().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getInferencePortField().isDisable(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getInferencePortField().getParent().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getManagementAddressField().isDisable(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getManagementAddressField().getParent().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getManagementPortField().isDisable(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getManagementPortField().getParent().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getSelectedModelLabel().isDisable(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getSelectedModelLabel().getParent().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getSelectModelButton().isDisabled(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getSelectModelButton().getParent().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMinimumScoreControl().isDisable(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getMinimumScoreControl().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMergeCategoriesControl().isDisable(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getMergeCategoriesControl().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getResizeImagesControl().isDisabled(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getResizeImagesControl().getParent().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMaxImageWidthField().isDisabled(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getImageResizeWidthField().getParent().getParent().isVisible(),
+                   Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getMaxImageHeightField().isDisabled(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getImageResizeHeightField().getParent().getParent().isVisible(),
+                   Matchers.is(false),
                    saveScreenshot(testinfo));
-        verifyThat(inferenceSettingsView.getKeepImageRatioControl().isDisabled(), Matchers.is(true),
+        verifyThat(inferenceSettingsView.getKeepImageRatioControl().getParent().getParent().isVisible(),
+                   Matchers.is(false),
                    saveScreenshot(testinfo));
     }
 

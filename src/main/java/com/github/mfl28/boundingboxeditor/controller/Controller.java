@@ -28,6 +28,7 @@ import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.GsonMessageBodyHandler;
 import com.github.mfl28.boundingboxeditor.model.io.results.*;
 import com.github.mfl28.boundingboxeditor.model.io.services.*;
 import com.github.mfl28.boundingboxeditor.ui.*;
@@ -56,7 +57,10 @@ import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -80,14 +84,14 @@ import java.util.stream.Stream;
 public class Controller {
     private static final String PROGRAM_NAME = "Bounding Box Editor";
     private static final String PROGRAM_NAME_EXTENSION_SEPARATOR = " - ";
-    private static final String OPEN_FOLDER_ERROR_DIALOG_TITLE = "Error while opening image folder";
+    private static final String OPEN_FOLDER_ERROR_DIALOG_TITLE = "Image Folder Loading Error";
     private static final String OPEN_FOLDER_ERROR_DIALOG_HEADER = "The selected folder is not a valid image folder.";
-    private static final String SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE = "Save image annotations to a folder";
-    private static final String SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Save image annotations to a file";
+    private static final String SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE = "Save Image Annotations to Folder";
+    private static final String SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Save Image Annotations to File";
     private static final String LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE =
             "Load image annotations from a folder containing annotation files";
-    private static final String LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Load image annotations from a file";
-    private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE = "Error loading image folder";
+    private static final String LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Load Image Annotations from File";
+    private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE = "Image Folder Loading Error";
     private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT =
             "The chosen folder does not contain any valid image files.";
     private static final String CATEGORY_INPUT_ERROR_DIALOG_TITLE = "Category Creation Error";
@@ -97,7 +101,7 @@ public class Controller {
     private static final String CATEGORY_DELETION_ERROR_DIALOG_CONTENT =
             "You cannot delete a category that has existing bounding-boxes assigned to it.";
 
-    private static final String IMAGE_FOLDER_CHOOSER_TITLE = "Choose an image folder";
+    private static final String IMAGE_FOLDER_CHOOSER_TITLE = "Choose Image Folder";
     private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
     private static final String SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE = "Save Error";
@@ -106,14 +110,14 @@ public class Controller {
     private static final String ANNOTATION_IMPORT_ERROR_TITLE = "Annotation Import Error";
     private static final String ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT =
             "The source does not contain any valid annotations.";
-    private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE = "Open image folder";
+    private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE = "Open Image Folder";
     private static final String OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT =
             "Opening a new image folder will remove any existing annotation data. " +
                     "Do you want to save the currently existing annotation data?";
     private static final String RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT =
             "Reloading the image folder will remove any existing annotation data. " +
                     "Do you want to save the currently existing annotation data (Closing = No)?";
-    private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE = "Import annotation data";
+    private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE = "Import Annotation Data";
     private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT =
             "Do you want to keep existing categories and annotation data?";
     private static final String EXIT_APPLICATION_OPTION_DIALOG_TITLE = "Exit Application";
@@ -125,10 +129,10 @@ public class Controller {
             "currentAnnotationLoadingDirectory";
     private static final String CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME =
             "currentAnnotationSavingDirectory";
-    private static final String RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE = "Reload image folder";
-    private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE = "Save annotations";
+    private static final String RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE = "Reload Image Folder";
+    private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE = "Save Annotations";
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER = "Choose the format for the saved annotations.";
-    private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT = "Annotation format: ";
+    private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT = "Annotation format:";
     private static final String KEEP_EXISTING_CATEGORIES_DIALOG_TEXT = "Keep existing categories?";
     private static final String DEFAULT_JSON_EXPORT_FILENAME = "annotations.json";
     private static final String ANNOTATION_IMPORT_SAVE_EXISTING_DIALOG_CONTENT = "All current annotations are about " +
@@ -136,10 +140,22 @@ public class Controller {
     private static final String IMAGE_IMPORT_ERROR_ALERT_TITLE = "Image Import Error";
     private static final String IMAGE_IMPORT_ERROR_ALERT_CONTENT =
             "The folder does not contain any valid image files.";
-    private static final String IMAGE_FILES_CHANGED_ERROR_TITLE = "Image files changed";
+    private static final String IMAGE_FILES_CHANGED_ERROR_TITLE = "Image Files Changed";
     private static final String IMAGE_FILES_CHANGED_ERROR_CONTENT =
-            "Image files were changed externally, will reload folder.";
+            "Image files were changed externally. Will reload folder.";
     private static final String IMAGE_FILE_CHANGE_WATCHER_THREAD_NAME = "ImageFileChangeWatcher";
+    private static final String SETTINGS_APPLICATION_ERROR_DIALOG_TITLE = "Settings Application Error";
+    private static final String SETTINGS_APPLICATION_INVALID_FIELDS_ERROR_DIALOG_CONTENT =
+            "Please provide valid values for the indicated fields.";
+    private static final String SETTINGS_APPLICATION_NO_MODEL_SELECTED_ERROR_DIALOG_CONTENT =
+            "Please select a model or disable inference.";
+    private static final String MODEL_FETCHING_ERROR_DIALOG_TITLE = "Model Fetching Error";
+    private static final String MODEL_FETCHING_NO_MODELS_ERROR_DIALOG_CONTENT =
+            "No models are registered with the management server.";
+    private static final String MODEL_CHOICE_DIALOG_TITLE = "Model Choice";
+    private static final String MODEL_CHOICE_DIALOG_HEADER = "Choose the model used for performing predictions.";
+    private static final String MODEL_CHOICE_DIALOG_CONTENT = "Model:";
+    private static final String IMAGE_LOADING_ERROR_DIALOG_TITLE = "Image Loading Error";
 
     private final ImageAnnotationExportService annotationExportService = new ImageAnnotationExportService();
     private final ImageAnnotationImportService annotationImportService = new ImageAnnotationImportService();
@@ -159,6 +175,7 @@ public class Controller {
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
     Thread directoryWatcher;
+    private Client client;
 
     /**
      * Creates a new controller object that is responsible for handling the application logic and
@@ -198,14 +215,24 @@ public class Controller {
     public void onRegisterSettingsApplyAction(ActionEvent event, ButtonType buttonType) {
         final InferenceSettingsView inferenceSettingsView = view.getSettingsDialog().getInferenceSettings();
 
-        if(buttonType.equals(ButtonType.OK)) {
+        if(buttonType.equals(ButtonType.OK) || buttonType.equals(ButtonType.APPLY)) {
+            if(!inferenceSettingsView.validateSettings()) {
+                MainView.displayErrorAlert(SETTINGS_APPLICATION_ERROR_DIALOG_TITLE,
+                                           SETTINGS_APPLICATION_INVALID_FIELDS_ERROR_DIALOG_CONTENT);
+                event.consume();
+                return;
+            }
+
             if(inferenceSettingsView.getInferenceEnabledControl().isSelected() &&
                     inferenceSettingsView.getSelectedModelLabel().getText().equals("None")) {
-                MainView.displayErrorAlert("Settings Application Error", "Please select a model or disable inference.");
+                MainView.displayErrorAlert(SETTINGS_APPLICATION_ERROR_DIALOG_TITLE,
+                                           SETTINGS_APPLICATION_NO_MODEL_SELECTED_ERROR_DIALOG_CONTENT);
                 event.consume();
                 return;
             }
         }
+
+        final boolean inferenceWasEnabled = model.getBoundingBoxPredictorConfig().isInferenceEnabled();
 
         view.getSettingsDialog().getInferenceSettings()
             .applyDisplayedSettingsToPredictorClientConfig(model.getBoundingBoxPredictorClientConfig());
@@ -213,6 +240,12 @@ public class Controller {
             .applyDisplayedSettingsToPredictorConfig(model.getBoundingBoxPredictorConfig());
         view.getSettingsDialog().getUiSettings()
             .applyDisplayedSettingsToUISettingsConfig(view.getUiSettingsConfig());
+
+        if(!inferenceWasEnabled && model.getBoundingBoxPredictorConfig().isInferenceEnabled()) {
+            makeClientAvailable();
+        } else if(inferenceWasEnabled && !model.getBoundingBoxPredictorConfig().isInferenceEnabled()) {
+            makeClientUnavailable();
+        }
 
         if(buttonType.equals(ButtonType.APPLY)) {
             event.consume();
@@ -314,7 +347,8 @@ public class Controller {
         modelNameFetchService.reset();
         final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
         view.getSettingsDialog().getInferenceSettings().applyDisplayedSettingsToPredictorClientConfig(clientConfig);
-        modelNameFetchService.setClient(BoundingBoxPredictorClient.create(clientConfig));
+        makeClientAvailable();
+        modelNameFetchService.setClient(BoundingBoxPredictorClient.create(client, clientConfig));
         modelNameFetchService.restart();
     }
 
@@ -422,6 +456,7 @@ public class Controller {
 
         savePreferences();
         interruptDirectoryWatcher();
+        makeClientUnavailable();
         Platform.exit();
     }
 
@@ -617,6 +652,23 @@ public class Controller {
             .setDisplayedSettingsFromPredictorClientConfig(model.getBoundingBoxPredictorClientConfig());
         view.getSettingsDialog().getInferenceSettings()
             .setDisplayedSettingsFromPredictorConfig(model.getBoundingBoxPredictorConfig());
+        view.getSettingsDialog().getInferenceSettings().setAllFieldsValid();
+    }
+
+    void makeClientAvailable() {
+        if(client == null) {
+            client = ClientBuilder.newBuilder()
+                                  .register(MultiPartFeature.class)
+                                  .register(GsonMessageBodyHandler.class)
+                                  .build();
+        }
+    }
+
+    void makeClientUnavailable() {
+        if(client != null) {
+            client.close();
+            client = null;
+        }
     }
 
     IoMetaData getIoMetaData() {
@@ -633,6 +685,14 @@ public class Controller {
 
     ImageMetaDataLoadingService getImageMetaDataLoadingService() {
         return imageMetaDataLoadingService;
+    }
+
+    BoundingBoxPredictorService getBoundingBoxPredictorService() {
+        return boundingBoxPredictorService;
+    }
+
+    ModelNameFetchService getModelNameFetchService() {
+        return modelNameFetchService;
     }
 
     Stage getStage() {
@@ -688,10 +748,6 @@ public class Controller {
         if(!predictionResult.getErrorTableEntries().isEmpty()) {
             UiUtils.closeProgressDialog(view.getBoundingBoxPredictorProgressDialog());
             MainView.displayIOResultErrorInfoAlert(predictionResult);
-        } else if(predictionResult.getNrSuccessfullyProcessedItems() == 0) {
-            UiUtils.closeProgressDialog(view.getBoundingBoxPredictorProgressDialog());
-            MainView.displayErrorAlert("Bounding Box Prediction Error",
-                                       "Could not predict any bounding boxes.");
         }
     }
 
@@ -720,7 +776,8 @@ public class Controller {
         boundingBoxPredictorService.setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
 
         boundingBoxPredictorService
-                .setPredictorClient(BoundingBoxPredictorClient.create(model.getBoundingBoxPredictorClientConfig()));
+                .setPredictorClient(BoundingBoxPredictorClient.create(client,
+                                                                      model.getBoundingBoxPredictorClientConfig()));
 
         boundingBoxPredictorService.restart();
     }
@@ -750,16 +807,20 @@ public class Controller {
 
         UiUtils.closeProgressDialog(view.getModelNameFetchingProgressDialog());
 
-        if(!modelNames.isEmpty()) {
-            final Optional<String> modelChoice = MainView.displayChoiceDialogAndGetResult(modelNames.get(0),
-                                                                                          modelNames,
-                                                                                          "Model choice",
-                                                                                          "Choose the model" +
-                                                                                                  " used for performing predictions.",
-                                                                                          "Model: ");
-            modelChoice
-                    .ifPresent(s -> view.getSettingsDialog().getInferenceSettings().getSelectedModelLabel().setText(s));
-
+        if(result.getErrorTableEntries().isEmpty()) {
+            if(modelNames.isEmpty()) {
+                MainView.displayErrorAlert(MODEL_FETCHING_ERROR_DIALOG_TITLE,
+                                           MODEL_FETCHING_NO_MODELS_ERROR_DIALOG_CONTENT);
+            } else {
+                final Optional<String> modelChoice = MainView.displayChoiceDialogAndGetResult(modelNames.get(0),
+                                                                                              modelNames,
+                                                                                              MODEL_CHOICE_DIALOG_TITLE,
+                                                                                              MODEL_CHOICE_DIALOG_HEADER,
+                                                                                              MODEL_CHOICE_DIALOG_CONTENT);
+                modelChoice
+                        .ifPresent(s -> view.getSettingsDialog().getInferenceSettings().getSelectedModelLabel()
+                                            .setText(s));
+            }
         } else {
             MainView.displayIOResultErrorInfoAlert(result);
         }
@@ -1281,7 +1342,7 @@ public class Controller {
             metaData = model.getCurrentImageMetaData();
         } catch(Exception e) {
             view.getEditorImagePane().getImageLoadingProgressIndicator().setVisible(false);
-            MainView.displayErrorAlert("Image loading error",
+            MainView.displayErrorAlert(IMAGE_LOADING_ERROR_DIALOG_TITLE,
                                        "Could not read meta-data from image file \"" + model.getCurrentImageFileName() +
                                                "\".");
             return;
@@ -1298,11 +1359,10 @@ public class Controller {
 
             while(change.next()) {
                 if(change.wasAdded()) {
-                    change.getAddedSubList().forEach(item ->
-                                                             categoryToShapesCountMap
-                                                                     .merge(item.getViewData().getObjectCategory()
-                                                                                .getName(),
-                                                                            1, Integer::sum));
+                    change.getAddedSubList().forEach(item -> categoryToShapesCountMap
+                            .merge(item.getViewData().getObjectCategory()
+                                       .getName(),
+                                   1, Integer::sum));
                 }
 
                 if(change.wasRemoved()) {

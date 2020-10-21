@@ -479,7 +479,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testinfo);
 
-        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report", testinfo);
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation Import Error Report", testinfo);
         verifyThat(errorReportStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
@@ -515,7 +515,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         // Check if closed
-        timeOutAssertTopModalStageClosed(robot, "Annotation import error report", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         verifyThat(counts.size(), Matchers.equalTo(0), saveScreenshot(testinfo));
@@ -544,7 +544,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testinfo);
 
-        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report", testinfo);
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation Import Error Report", testinfo);
         verifyThat(errorReportStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         final String errorReportDialogContentReferenceText =
@@ -599,7 +599,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertTopModalStageClosed(robot, "Annotation import error report", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         verifyThat(counts.size(), Matchers.equalTo(1), saveScreenshot(testinfo));
@@ -630,7 +630,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testinfo);
 
-        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report", testinfo);
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation Import Error Report", testinfo);
         verifyThat(errorReportStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         final String errorReportDialogContentReferenceText =
@@ -669,7 +669,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutAssertTopModalStageClosed(robot, "Annotation import error report", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
@@ -702,7 +702,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testinfo);
 
-        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report", testinfo);
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation Import Error Report", testinfo);
         verifyThat(errorReportStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
@@ -744,7 +744,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertTopModalStageClosed(robot, "Annotation import error report", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().isEmpty(), Matchers.is(true),
                    saveScreenshot(testinfo));
@@ -843,7 +843,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testinfo);
 
-        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report", testinfo);
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation Import Error Report", testinfo);
         verifyThat(errorReportStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         final String errorReportDialogContentReferenceText = "Some bounding boxes could not be loaded from 1 " +
@@ -943,7 +943,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertTopModalStageClosed(robot, "Annotation import error report", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         verifyThat(counts.size(), Matchers.equalTo(4), saveScreenshot(testinfo));
@@ -1006,7 +1006,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testinfo);
 
-        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation import error report", testinfo);
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Annotation Import Error Report", testinfo);
         verifyThat(errorReportStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
@@ -1030,7 +1030,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(errorInfoEntries, Matchers.hasSize(1), saveScreenshot(testinfo));
 
-        verifyThat(errorInfoEntries.get(0).getFileName(), Matchers.equalTo("corrupt.json"), saveScreenshot(testinfo));
+        verifyThat(errorInfoEntries.get(0).getSourceName(), Matchers.equalTo("corrupt.json"), saveScreenshot(testinfo));
         verifyThat(errorInfoEntries.get(0).getErrorDescription(), Matchers.startsWith("Unterminated array at line 2 " +
                                                                                               "column 13"),
                    saveScreenshot(testinfo));
@@ -1087,7 +1087,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         loadImageFolder(TEST_IMAGE_FOLDER_PATH_1);
 
         Stage keepExistingCategoriesDialogStage = timeOutAssertDialogOpenedAndGetStage(robot,
-                                                                                       "Open image folder",
+                                                                                       "Open Image Folder",
                                                                                        "Keep existing categories?",
                                                                                        testinfo);
 
@@ -1144,14 +1144,14 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                                                         TestInfo testinfo) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "No", testinfo);
 
-        Stage saveAnnotationsDialog = timeOutGetTopModalStage(robot, "Save annotations", testinfo);
+        Stage saveAnnotationsDialog = timeOutGetTopModalStage(robot, "Save Annotations", testinfo);
 
         // User chooses to save existing annotations:
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialog, "Yes", testinfo);
 
-        Stage saveFormatDialog = timeOutGetTopModalStage(robot, "Save annotations", testinfo);
+        Stage saveFormatDialog = timeOutGetTopModalStage(robot, "Save Annotations", testinfo);
         timeOutLookUpInStageAndClickOn(robot, saveFormatDialog, "Cancel", testinfo);
-        timeOutAssertTopModalStageClosed(robot, "Save annotations", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Save Annotations", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
@@ -1168,11 +1168,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                                                            TestInfo testinfo) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "No", testinfo);
 
-        Stage saveAnnotationsDialog = timeOutGetTopModalStage(robot, "Save annotations", testinfo);
+        Stage saveAnnotationsDialog = timeOutGetTopModalStage(robot, "Save Annotations", testinfo);
 
         // User chooses not to save existing annotations:
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialog, "No", testinfo);
-        timeOutAssertTopModalStageClosed(robot, "Save annotations", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Save Annotations", testinfo);
         timeOutAssertNoTopModelStage(robot, testinfo);
 
         // All previously existing bounding boxes should have been removed, only
@@ -1296,11 +1296,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 () -> controller.initiateAnnotationImport(annotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Stage topModalStage = timeOutGetTopModalStage(robot, "Import annotation data", testinfo);
+        Stage topModalStage = timeOutGetTopModalStage(robot, "Import Annotation Data", testinfo);
         timeOutLookUpInStageAndClickOn(robot, topModalStage, userChoice, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        timeOutAssertTopModalStageClosed(robot, "Import annotation data", testinfo);
+        timeOutAssertTopModalStageClosed(robot, "Import Annotation Data", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
     }

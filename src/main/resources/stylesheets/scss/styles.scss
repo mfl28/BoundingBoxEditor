@@ -1192,4 +1192,13 @@ $base-separator-line-color: derive($base-background-color, -15%);
     & #subgroup-title-label {
         -fx-font-weight: bold;
     }
+
+    & .text-field {
+        -fx-border-width: 1px;
+        -fx-border-color: transparent;
+
+        &:invalid-value {
+            -fx-border-color: $base-colorful-component-color;
+        }
+    }
 }

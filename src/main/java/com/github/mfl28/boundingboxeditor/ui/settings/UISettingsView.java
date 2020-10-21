@@ -1,15 +1,20 @@
 package com.github.mfl28.boundingboxeditor.ui.settings;
 
 import com.github.mfl28.boundingboxeditor.ui.UISettingsConfig;
+import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
 public class UISettingsView extends GridPane implements ApplyButtonChangeProvider {
     private static final String GRID_PANE_STYLE_CLASS = "grid-pane";
+    private static final String SHOW_OBJECT_POPOVER_LABEL_TEXT = "Show object popover";
+    private static final String SHOW_POPOVER_TOOLTIP =
+            "Show an image popover when hovering objects in the Annotated Objects tree.";
     private final CheckBox showObjectPopoverControl = new CheckBox();
 
     public UISettingsView() {
@@ -39,6 +44,10 @@ public class UISettingsView extends GridPane implements ApplyButtonChangeProvide
     }
 
     private void setUpContent() {
-        addRow(0, new Label("Show object popover"), showObjectPopoverControl);
+        final Label showPopoverLabel = new Label(SHOW_OBJECT_POPOVER_LABEL_TEXT);
+        Tooltip.install(showPopoverLabel, UiUtils.createTooltip(
+                SHOW_POPOVER_TOOLTIP));
+
+        addRow(0, showPopoverLabel, showObjectPopoverControl);
     }
 }

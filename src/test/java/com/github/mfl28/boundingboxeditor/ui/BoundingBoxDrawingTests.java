@@ -228,7 +228,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         timeOutLookUpInStageAndClickOn(robot, exitDialogStage2, "Yes", testinfo);
 
-        final Stage saveAnnotationsStage = timeOutGetTopModalStage(robot, "Save annotations", testinfo);
+        final Stage saveAnnotationsStage = timeOutGetTopModalStage(robot, "Save Annotations", testinfo);
 
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsStage, "Cancel", testinfo);
 

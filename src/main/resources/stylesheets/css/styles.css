@@ -1071,3 +1071,10 @@
   /* line 1192, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane #subgroup-title-label {
     -fx-font-weight: bold; }
+  /* line 1196, src/main/resources/stylesheets/scss/styles.scss */
+  #settings-dialog-pane .text-field {
+    -fx-border-width: 1px;
+    -fx-border-color: transparent; }
+    /* line 1200, src/main/resources/stylesheets/scss/styles.scss */
+    #settings-dialog-pane .text-field:invalid-value {
+      -fx-border-color: #bf616a; }

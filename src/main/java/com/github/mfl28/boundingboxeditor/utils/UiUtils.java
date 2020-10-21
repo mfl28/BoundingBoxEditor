@@ -93,6 +93,16 @@ public class UiUtils {
         });
     }
 
+    public static TextFormatter<String> createFloatFormatter() {
+        return new TextFormatter<>(change -> {
+            if(!change.getControlNewText().equals(".") && change.getControlNewText().matches("[0-9]*\\.?[0-9]*")) {
+                return change;
+            }
+
+            return null;
+        });
+    }
+
     public static void closeProgressDialog(ProgressDialog dialog) {
         // TODO: check if no bad side-effects
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);

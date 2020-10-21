@@ -1,8 +1,8 @@
 package com.github.mfl28.boundingboxeditor.model.io.services;
 
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.ModelEntry;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.PredictionClientException;
-import com.github.mfl28.boundingboxeditor.model.io.restclients.TorchServeRestClient;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ModelNameFetchResult;
 import javafx.beans.property.ObjectProperty;
@@ -37,17 +37,18 @@ public class ModelNameFetchService extends Service<ModelNameFetchResult> {
             protected ModelNameFetchResult call() {
                 List<IOErrorInfoEntry> errorInfoEntries = new ArrayList<>();
 
-                List<TorchServeRestClient.ModelEntry> modelEntries;
+                List<ModelEntry> modelEntries;
 
                 try {
                     modelEntries = client.get().models();
                 } catch(PredictionClientException e) {
-                    errorInfoEntries.add(new IOErrorInfoEntry("Torch serve", e.getMessage()));
+                    errorInfoEntries.add(new IOErrorInfoEntry(client.get().getName(), e.getMessage()));
                     return new ModelNameFetchResult(0, errorInfoEntries, Collections.emptyList());
                 }
 
                 List<String> models =
-                        modelEntries.stream().map(TorchServeRestClient.ModelEntry::getModelName)
+                        modelEntries.stream().map(ModelEntry::getModelName)
+                                    .filter(modelName -> !modelName.isBlank())
                                     .collect(Collectors.toList());
 
                 return new ModelNameFetchResult(1, Collections.emptyList(), models);

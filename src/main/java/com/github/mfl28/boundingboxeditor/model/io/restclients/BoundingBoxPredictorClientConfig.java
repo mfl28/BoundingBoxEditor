@@ -27,20 +27,12 @@ public class BoundingBoxPredictorClientConfig {
         this.inferencePort.set(inferencePort);
     }
 
-    public IntegerProperty inferencePortProperty() {
-        return inferencePort;
-    }
-
     public int getManagementPort() {
         return managementPort.get();
     }
 
     public void setManagementPort(int managementPort) {
         this.managementPort.set(managementPort);
-    }
-
-    public IntegerProperty managementPortProperty() {
-        return managementPort;
     }
 
     public String getInferenceUrl() {
@@ -51,20 +43,12 @@ public class BoundingBoxPredictorClientConfig {
         this.inferenceUrl.set(inferenceUrl);
     }
 
-    public StringProperty inferenceUrlProperty() {
-        return inferenceUrl;
-    }
-
     public String getManagementUrl() {
         return managementUrl.get();
     }
 
     public void setManagementUrl(String managementUrl) {
         this.managementUrl.set(managementUrl);
-    }
-
-    public StringProperty managementUrlProperty() {
-        return managementUrl;
     }
 
     public String getInferenceModelName() {
@@ -75,19 +59,7 @@ public class BoundingBoxPredictorClientConfig {
         this.inferenceModelName.set(inferenceModelName);
     }
 
-    public StringProperty inferenceModelNameProperty() {
-        return inferenceModelName;
-    }
-
     public BoundingBoxPredictorClient.ServiceType getServiceType() {
         return serviceName.get();
-    }
-
-    public ObjectProperty<BoundingBoxPredictorClient.ServiceType> serviceNameProperty() {
-        return serviceName;
-    }
-
-    public void setServiceName(BoundingBoxPredictorClient.ServiceType serviceType) {
-        this.serviceName.set(serviceType);
     }
 }
