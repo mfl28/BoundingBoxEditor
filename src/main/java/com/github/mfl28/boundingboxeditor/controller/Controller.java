@@ -734,6 +734,15 @@ public class Controller {
 
         updateViewFileExplorerFileInfoElements();
 
+        reloadCurrentAnnotationInView();
+
+        if(!predictionResult.getErrorTableEntries().isEmpty()) {
+            UiUtils.closeProgressDialog(view.getBoundingBoxPredictorProgressDialog());
+            MainView.displayIOResultErrorInfoAlert(predictionResult);
+        }
+    }
+
+    private void reloadCurrentAnnotationInView() {
         final ImageAnnotation annotation = model.getCurrentImageAnnotation();
 
         if(annotation != null) {
@@ -743,11 +752,6 @@ public class Controller {
             view.getCurrentBoundingShapes().addListener(boundingShapeCountPerCategoryListener);
             view.getObjectCategoryTable().refresh();
             view.getObjectTree().refresh();
-        }
-
-        if(!predictionResult.getErrorTableEntries().isEmpty()) {
-            UiUtils.closeProgressDialog(view.getBoundingBoxPredictorProgressDialog());
-            MainView.displayIOResultErrorInfoAlert(predictionResult);
         }
     }
 
@@ -932,16 +936,7 @@ public class Controller {
 
         updateViewFileExplorerFileInfoElements();
 
-        ImageAnnotation annotation = model.getCurrentImageAnnotation();
-
-        if(annotation != null) {
-            view.getObjectTree().reset();
-            view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
-            view.loadBoundingShapeViewsFromAnnotation(annotation);
-            view.getCurrentBoundingShapes().addListener(boundingShapeCountPerCategoryListener);
-            view.getObjectCategoryTable().refresh();
-            view.getObjectTree().refresh();
-        }
+        reloadCurrentAnnotationInView();
 
         if(!importResult.getErrorTableEntries().isEmpty()) {
             UiUtils.closeProgressDialog(view.getAnnotationImportProgressDialog());
@@ -1228,6 +1223,7 @@ public class Controller {
         imagePane.removeAllCurrentBoundingShapes();
         view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
         imagePane.getImageLoadingProgressIndicator().setVisible(true);
+        view.getEditor().getEditorToolBar().getPredictButton().setDisable(true);
 
         updateViewImageFromModel();
 
@@ -1258,6 +1254,7 @@ public class Controller {
                 ImageAnnotation annotation = model.getCurrentImageAnnotation();
                 // Hide the progress spinner.
                 view.getEditorImagePane().getImageLoadingProgressIndicator().setVisible(false);
+                view.getEditor().getEditorToolBar().getPredictButton().setDisable(false);
 
                 if(annotation != null) {
                     view.loadBoundingShapeViewsFromAnnotation(annotation);
@@ -1275,6 +1272,7 @@ public class Controller {
             view.getImageFileExplorer().getImageFileListView().getSelectionModel().select(newValue.intValue());
             // Show the progress spinner.
             view.getEditorImagePane().getImageLoadingProgressIndicator().setVisible(true);
+            view.getEditor().getEditorToolBar().getPredictButton().setDisable(true);
 
             final Image oldImage = view.getCurrentImage();
 

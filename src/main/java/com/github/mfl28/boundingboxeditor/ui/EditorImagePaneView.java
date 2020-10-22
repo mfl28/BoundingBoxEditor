@@ -190,7 +190,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
      * @return true if an image is registered and its loading progress is equal to 1, false otherwise
      */
     public boolean isImageFullyLoaded() {
-        Image image = getCurrentImage();
+        final Image image = getCurrentImage();
 
         return image != null && image.getProgress() == 1.0;
     }

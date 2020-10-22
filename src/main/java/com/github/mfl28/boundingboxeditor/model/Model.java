@@ -171,6 +171,8 @@ public class Model {
         } else {
             if(imageFileNameToAnnotation.remove(fileName) != null && !imageFileNameToAnnotation.isEmpty()) {
                 saved.set(false);
+            } else if(imageFileNameToAnnotation.isEmpty()) {
+                saved.set(true);
             }
         }
     }
@@ -187,9 +189,12 @@ public class Model {
      */
     public void updateImageAnnotations(Collection<ImageAnnotation> imageAnnotations,
                                        IOResult.OperationType operationType) {
-        boolean noCurrentAnnotations = imageFileNameToAnnotation.isEmpty();
+        boolean noCurrentAnnotations =
+                imageFileNameToAnnotation.values().stream()
+                                         .allMatch(imageAnnotation -> imageAnnotation.getBoundingShapeData().isEmpty());
+        boolean boundingShapesAdded = false;
 
-        imageAnnotations.forEach(annotation -> {
+        for(final ImageAnnotation annotation : imageAnnotations) {
             ImageAnnotation imageAnnotation = imageFileNameToAnnotation.get(annotation.getImageFileName());
             if(imageAnnotation == null) {
                 annotation.setImageMetaData(imageFileNameToMetaData.get(annotation.getImageFileName()));
@@ -197,9 +202,13 @@ public class Model {
             } else {
                 imageAnnotation.getBoundingShapeData().addAll(annotation.getBoundingShapeData());
             }
-        });
 
-        if(!imageAnnotations.isEmpty()) {
+            if(!annotation.getBoundingShapeData().isEmpty()) {
+                boundingShapesAdded = true;
+            }
+        }
+
+        if(boundingShapesAdded) {
             if(operationType.equals(IOResult.OperationType.ANNOTATION_IMPORT)) {
                 saved.set(noCurrentAnnotations);
             } else if(operationType.equals(IOResult.OperationType.BOUNDING_BOX_PREDICTION)) {
@@ -509,8 +518,7 @@ public class Model {
         objectCategories.addListener((ListChangeListener<ObjectCategory>) c -> {
             while(c.next()) {
                 if(c.wasAdded()) {
-                    c.getAddedSubList().forEach(item ->
-                                                        categoryToAssignedBoundingShapesCount.put(item.getName(), 0));
+                    c.getAddedSubList().forEach(item -> categoryToAssignedBoundingShapesCount.put(item.getName(), 0));
                 }
 
                 if(c.wasRemoved()) {

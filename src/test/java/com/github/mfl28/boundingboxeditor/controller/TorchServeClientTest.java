@@ -143,6 +143,11 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded(testinfo);
 
         // Setup
+        enterNewCategory(robot, "Foo", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(model.getObjectCategories().size(), Matchers.equalTo(1));
+
         timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
@@ -150,6 +155,8 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
 
         robot.clickOn(mainView.getSettingsDialog().getInferenceSettings().getInferenceEnabledControl());
         WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(model.getBoundingBoxPredictorConfig().isMergeCategories(), Matchers.is(true));
 
         setUpAndVerifyInferenceServerSettings(robot, testinfo);
         setUpAndVerifyManagementServerSettings(robot, testinfo);
@@ -257,7 +264,7 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
                                "There were errors while performing the prediction",
                                "Torch serve",
-                               "Could not get prediction from inference server.");
+                               "Could not get prediction from inference server. Reason: Not Found");
 
         reset(mockInferenceInvocationBuilder);
         reset(mockPredictionResponse);
@@ -319,6 +326,9 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
                    Matchers.startsWith("Successfully predicted 0 bounding boxes for 1 image in"),
                    saveScreenshot(testinfo));
 
+        verifyThat(model.getObjectCategories().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getObjectCategoryTable().getItems().size(), Matchers.equalTo(1));
+
         reset(mockInferenceInvocationBuilder);
         reset(mockPredictionResponse);
     }
@@ -356,7 +366,7 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(3));
         verifyThat(mainView.getObjectCategoryTable().getItems().size(), Matchers.equalTo(2));
         verifyThat(model.getCategoryNameToCategoryMap().size(), Matchers.equalTo(2));
-        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("foo"), Matchers.equalTo(2));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("Foo"), Matchers.equalTo(2));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("bar"), Matchers.equalTo(1));
 
         reset(mockInferenceInvocationBuilder);
@@ -446,7 +456,7 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
         verifyErrorReportStage(robot, testinfo, "Model Fetching Error Report",
                                "There were errors while fetching model names from the server",
                                "Torch serve",
-                               "Could not fetch models from management server.");
+                               "Could not fetch models from management server. Reason: Not Found");
 
         WaitForAsyncUtils.waitForFxEvents();
         resetAllMocks();

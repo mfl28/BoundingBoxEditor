@@ -96,8 +96,11 @@ dependencies {
     // Mimepull https://mvnrepository.com/artifact/org.jvnet.mimepull/mimepull
     implementation 'org.jvnet.mimepull:mimepull:1.9.13'
 
-    // Xml bind https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    // Xml bind https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:2.3.3'
+
+    // Jaxb runtime https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime
+    implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.3'
 }
 
 javafx {
@@ -171,6 +174,8 @@ jlink {
         name = 'BoundingBoxEditor'
         jvmArgs = ['-Dprism.forceGPU=true', '-Djava.net.preferIPv6Addresses=system']
     }
+
+    forceMerge 'jakarta'
 
     imageZip = project.file("${buildDir}/distributions/boundingboxeditor-${javafx.platform.classifier}.zip")
 

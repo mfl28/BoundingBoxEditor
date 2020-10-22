@@ -53,6 +53,7 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
     private static final String TORCH_SERVE_NAME = "Torch serve";
     private static final String INFERENCE_ADDRESS_ERROR_MESSAGE = "Invalid inference address or port.";
     private static final String INFERENCE_SERVER_CONNECTION_ERROR_MESSAGE = "Could not connect to inference server.";
+    private static final String SERVER_ERROR_REASON = " Reason: ";
     private final Client client;
     private final BoundingBoxPredictorClientConfig clientConfig;
 
@@ -91,8 +92,9 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
         }
 
         if(!response.getStatusInfo().equals(Response.Status.OK)) {
+            final String reason = response.getStatusInfo().getReasonPhrase();
             response.close();
-            throw new PredictionClientException(SERVER_PREDICTION_POST_ERROR_MESSAGE);
+            throw new PredictionClientException(SERVER_PREDICTION_POST_ERROR_MESSAGE + SERVER_ERROR_REASON + reason);
         }
 
         try {
@@ -132,8 +134,9 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
         }
 
         if(!response.getStatusInfo().equals(Response.Status.OK)) {
+            final String reason = response.getStatusInfo().getReasonPhrase();
             response.close();
-            throw new PredictionClientException(SERVER_MODELS_READ_ERROR_MESSAGE);
+            throw new PredictionClientException(SERVER_MODELS_READ_ERROR_MESSAGE + SERVER_ERROR_REASON + reason);
         }
 
         try {

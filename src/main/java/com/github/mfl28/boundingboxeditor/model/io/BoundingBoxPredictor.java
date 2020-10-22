@@ -77,13 +77,6 @@ public class BoundingBoxPredictor {
                         ImageAnnotationData.empty());
             }
 
-            if(boundingBoxPredictions == null || boundingBoxPredictions.isEmpty()) {
-                return new BoundingBoxPredictionResult(
-                        1,
-                        errorInfoEntries,
-                        ImageAnnotationData.empty());
-            }
-
             final Map<String, Integer> categoryToCount = new HashMap<>();
             final ImageAnnotation imageAnnotation = new ImageAnnotation(imageMetaData);
 
