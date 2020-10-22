@@ -31,6 +31,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.ArrayList;
@@ -72,18 +73,26 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
             throw new PredictionClientException(INFERENCE_ADDRESS_ERROR_MESSAGE);
         }
 
-        Response response;
+        Invocation.Builder invocationBuilder;
 
         try {
-            final Invocation.Builder invocationBuilder = predictionTarget.path(PREDICTIONS_RESOURCE_NAME)
-                                                                         .path(clientConfig.getInferenceModelName())
-                                                                         .request(MediaType.APPLICATION_JSON);
+            invocationBuilder = predictionTarget.path(PREDICTIONS_RESOURCE_NAME)
+                                                .path(clientConfig.getInferenceModelName())
+                                                .request(MediaType.APPLICATION_JSON);
+        } catch(IllegalArgumentException | IllegalStateException | ProcessingException e) {
+            if(e.getCause() instanceof ConnectException) {
+                throw new PredictionClientException(INFERENCE_SERVER_CONNECTION_ERROR_MESSAGE);
+            } else {
+                throw new PredictionClientException(SERVER_PREDICTION_POST_ERROR_MESSAGE);
+            }
+        }
 
-            final MultiPart multiPart = new FormDataMultiPart().bodyPart(new StreamDataBodyPart(DATA_BODY_PART_NAME,
-                                                                                                input));
+        Response response;
 
+        try(final MultiPart multiPart = new FormDataMultiPart()
+                .bodyPart(new StreamDataBodyPart(DATA_BODY_PART_NAME, input))) {
             response = invocationBuilder.post(Entity.entity(multiPart, multiPart.getMediaType()));
-        } catch(ProcessingException | IllegalArgumentException | IllegalStateException e) {
+        } catch(ProcessingException | IllegalArgumentException | IllegalStateException | IOException e) {
             if(e.getCause() instanceof ConnectException) {
                 throw new PredictionClientException(INFERENCE_SERVER_CONNECTION_ERROR_MESSAGE);
             } else {
