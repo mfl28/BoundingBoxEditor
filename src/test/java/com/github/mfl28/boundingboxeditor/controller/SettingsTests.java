@@ -152,11 +152,12 @@ public class SettingsTests extends BoundingBoxEditorTestBase {
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
         WaitForAsyncUtils.waitForFxEvents();
 
+        verifyThat(inferenceSettingsView.getInferenceEnabledControl().isSelected(), Matchers.is(true),
+                   saveScreenshot(testinfo));
+
         verifyThat(settingsDialogView.getDialogPane().lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(false),
                    saveScreenshot(testinfo));
 
-        verifyThat(inferenceSettingsView.getInferenceEnabledControl().isSelected(), Matchers.is(true),
-                   saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getInferenceEnabledControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getInferenceAddressField().isVisible(), Matchers.is(true),

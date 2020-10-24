@@ -57,7 +57,7 @@ jobs:
         run: ./gradlew --info --stacktrace test
       - name: Upload failed test screenshots
         uses: actions/upload-artifact@v2
-        if: steps.test.outcome == 'failure'
+        if: failure()
         with:
           name: failed-test-screenshots-windows
           path: build/test-screenshots
@@ -117,7 +117,7 @@ jobs:
         run: DISPLAY=:10 ./gradlew --stacktrace --info test
       - name: Upload failed test screenshots
         uses: actions/upload-artifact@v2
-        if: steps.test.outcome == 'failure'
+        if: failure()
         with:
           name: failed-test-screenshots-linux
           path: build/test-screenshots

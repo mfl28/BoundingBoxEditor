@@ -124,6 +124,9 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
+        final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        verifyThat(settingsStage.isShowing(), Matchers.equalTo(true));
+
         robot.clickOn(mainView.getSettingsDialog().getInferenceSettings().getInferenceEnabledControl());
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -640,6 +643,7 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
 
     private void setUpAndVerifyManagementServerSettings(FxRobot robot, TestInfo testinfo) {
         mainView.getSettingsDialog().getInferenceSettings().getManagementAddressField().clear();
+        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getSettingsDialog().getInferenceSettings().getManagementAddressField())
              .write(MANAGEMENT_SERVER);
@@ -649,6 +653,7 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
                    TextInputControlMatchers.hasText(MANAGEMENT_SERVER), saveScreenshot(testinfo));
 
         mainView.getSettingsDialog().getInferenceSettings().getManagementPortField().clear();
+        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getSettingsDialog().getInferenceSettings().getManagementPortField())
              .write(MANAGEMENT_PORT);
@@ -660,6 +665,7 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
 
     private void setUpAndVerifyInferenceServerSettings(FxRobot robot, TestInfo testinfo) {
         mainView.getSettingsDialog().getInferenceSettings().getInferenceAddressField().clear();
+        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getSettingsDialog().getInferenceSettings().getInferenceAddressField())
              .write(INFERENCE_SERVER);
@@ -669,6 +675,7 @@ public class TorchServeClientTest extends BoundingBoxEditorTestBase {
                    TextInputControlMatchers.hasText(INFERENCE_SERVER), saveScreenshot(testinfo));
 
         mainView.getSettingsDialog().getInferenceSettings().getInferencePortField().clear();
+        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getSettingsDialog().getInferenceSettings().getInferencePortField())
              .write(INFERENCE_PORT);
