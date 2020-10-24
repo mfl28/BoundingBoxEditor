@@ -543,6 +543,10 @@ $base-separator-line-color: derive($base-background-color, -15%);
 .tool-bar {
     @include panel;
     -fx-padding: 0;
+
+    & .tool-bar-overflow-button .arrow {
+        -fx-background-color: $base-font-color;
+    }
 }
 
 .side-panel-box {

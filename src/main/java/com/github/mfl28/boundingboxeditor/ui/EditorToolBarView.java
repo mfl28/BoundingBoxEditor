@@ -371,6 +371,7 @@ public class EditorToolBarView extends ToolBar implements View {
         imageSettingsToolBox.prefWidthProperty().bind(Bindings.max(boundingShapeToolBox.widthProperty(),
                                                                    imageSettingsToolBox.widthProperty()));
 
-        symmetryBox.prefWidthProperty().bind(drawingModeToolBox.widthProperty());
+        symmetryBox.prefWidthProperty()
+                   .bind(drawingModeToolBox.widthProperty().subtract(predictButton.widthProperty()));
     }
 }
