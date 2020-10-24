@@ -564,6 +564,7 @@ public class MainView extends BorderPane implements View {
             progressDialog.getDialogPane().getStylesheets()
                           .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
             ((Stage) progressDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+            ((Stage) progressDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
         }
 
         imageMetaDataLoadingProgressDialog.setTitle(IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE);
@@ -586,6 +587,7 @@ public class MainView extends BorderPane implements View {
         settingsDialog.getDialogPane().getStylesheets()
                       .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) settingsDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
+        ((Stage) settingsDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
     }
 
     private static void setupAndShowDialog(Alert dialog, String title, String content) {
