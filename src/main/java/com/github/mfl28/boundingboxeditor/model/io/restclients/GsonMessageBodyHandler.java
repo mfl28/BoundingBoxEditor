@@ -21,7 +21,6 @@ package com.github.mfl28.boundingboxeditor.model.io.restclients;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -47,7 +46,7 @@ public class GsonMessageBodyHandler implements MessageBodyReader<Object>, Messag
     @Override
     public Object readFrom(Class<Object> type, Type genericType, Annotation[] annotations, MediaType mediaType,
                            MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
-            throws IOException, WebApplicationException {
+            throws IOException {
         try(final InputStreamReader inputStreamReader = new InputStreamReader(entityStream, StandardCharsets.UTF_8)) {
             return gson.fromJson(inputStreamReader, genericType);
         }
@@ -61,7 +60,7 @@ public class GsonMessageBodyHandler implements MessageBodyReader<Object>, Messag
     @Override
     public void writeTo(Object o, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType,
                         MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream)
-            throws IOException, WebApplicationException {
+            throws IOException {
         try(final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(entityStream,
                                                                                  StandardCharsets.UTF_8)) {
             gson.toJson(o, genericType, outputStreamWriter);
@@ -74,7 +73,7 @@ public class GsonMessageBodyHandler implements MessageBodyReader<Object>, Messag
 
         @Override
         public BoundingBoxPredictionEntry deserialize(JsonElement json, Type typeOfT,
-                                                      JsonDeserializationContext context) throws JsonParseException {
+                                                      JsonDeserializationContext context) {
             final JsonObject jsonObject = json.getAsJsonObject();
             double score = jsonObject.get(SCORE_FIELD_NAME).getAsDouble();
 

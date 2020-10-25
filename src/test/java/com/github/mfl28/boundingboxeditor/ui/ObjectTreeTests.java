@@ -309,9 +309,9 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(changeCategoryStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         final DialogPane changeCategoryDialog = (DialogPane) changeCategoryStage.getScene().getRoot();
-        verifyThat(changeCategoryDialog.getHeaderText(), Matchers.equalTo("Select new Category (current: \"Dummy\")"),
+        verifyThat(changeCategoryDialog.getHeaderText(), Matchers.equalTo("Select new category (current: \"Dummy\")"),
                    saveScreenshot(testinfo));
-        verifyThat(changeCategoryDialog.getContentText(), Matchers.equalTo("New Category:"), saveScreenshot(testinfo));
+        verifyThat(changeCategoryDialog.getContentText(), Matchers.equalTo("New category:"), saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(2), saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories().stream().map(ObjectCategory::getName).collect(Collectors.toList()),
                    Matchers.containsInRelativeOrder("Test", "Dummy"));

@@ -104,64 +104,17 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     }
 
     public boolean validateSettings() {
-        boolean allValid = true;
-
         if(!inferenceEnabledControl.isSelected()) {
             return true;
         }
 
-        if(inferenceAddressField.getText().isBlank()) {
-            inferenceAddressField.pseudoClassStateChanged(invalidValuePseudoClass, true);
-            allValid = false;
-        } else {
-            inferenceAddressField.pseudoClassStateChanged(invalidValuePseudoClass, false);
-        }
+        boolean inferenceDataValid = validateInferenceServerData();
+        boolean managementServerDataValid = validateManagementServerData();
+        boolean minimumScoreControlDataValid = validateMinimumScoreControlData();
+        boolean resizeImagesControlDataValid = validateResizeImagesControlData();
 
-        if(!NumberUtils.isParsable(inferencePortField.getText())) {
-            inferencePortField.pseudoClassStateChanged(invalidValuePseudoClass, true);
-            allValid = false;
-        } else {
-            inferencePortField.pseudoClassStateChanged(invalidValuePseudoClass, false);
-        }
-
-        if(managementAddressField.getText().isBlank()) {
-            managementAddressField.pseudoClassStateChanged(invalidValuePseudoClass, true);
-            allValid = false;
-        } else {
-            managementAddressField.pseudoClassStateChanged(invalidValuePseudoClass, false);
-        }
-
-        if(!NumberUtils.isParsable(managementPortField.getText())) {
-            managementPortField.pseudoClassStateChanged(invalidValuePseudoClass, true);
-            allValid = false;
-        } else {
-            managementPortField.pseudoClassStateChanged(invalidValuePseudoClass, false);
-        }
-
-        if(minimumScoreControl.getEditor().getText().isBlank()) {
-            minimumScoreControl.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, true);
-            allValid = false;
-        } else {
-            minimumScoreControl.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, false);
-        }
-
-        if(resizeImagesControl.isSelected()) {
-            if(!NumberUtils.isParsable(imageResizeWidthField.getText())) {
-                imageResizeWidthField.pseudoClassStateChanged(invalidValuePseudoClass, true);
-                allValid = false;
-            } else {
-                imageResizeWidthField.pseudoClassStateChanged(invalidValuePseudoClass, false);
-            }
-
-            if(!NumberUtils.isParsable(imageResizeHeightField.getText())) {
-                imageResizeHeightField.pseudoClassStateChanged(invalidValuePseudoClass, true);
-                allValid = false;
-            } else {
-                imageResizeHeightField.pseudoClassStateChanged(invalidValuePseudoClass, false);
-            }
-        }
-
-        return allValid;
+        return inferenceDataValid && managementServerDataValid &&
+                minimumScoreControlDataValid && resizeImagesControlDataValid;
     }
 
     public void setAllFieldsValid() {
@@ -302,6 +255,66 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
 
     public CheckBox getMergeCategoriesControl() {
         return mergeCategoriesControl;
+    }
+
+    private boolean validateMinimumScoreControlData() {
+        boolean valid = true;
+
+        if(minimumScoreControl.getEditor().getText().isBlank()) {
+            minimumScoreControl.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, true);
+            valid = false;
+        } else {
+            minimumScoreControl.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, false);
+        }
+        return valid;
+    }
+
+    private boolean validateInferenceServerData() {
+        return validateAddressPortTextFields(inferenceAddressField, inferencePortField);
+    }
+
+    private boolean validateAddressPortTextFields(TextField addressField, TextField portField) {
+        boolean valid = true;
+
+        if(addressField.getText().isBlank()) {
+            addressField.pseudoClassStateChanged(invalidValuePseudoClass, true);
+            valid = false;
+        } else {
+            addressField.pseudoClassStateChanged(invalidValuePseudoClass, false);
+        }
+
+        if(!NumberUtils.isParsable(portField.getText())) {
+            portField.pseudoClassStateChanged(invalidValuePseudoClass, true);
+            valid = false;
+        } else {
+            portField.pseudoClassStateChanged(invalidValuePseudoClass, false);
+        }
+        return valid;
+    }
+
+    private boolean validateManagementServerData() {
+        return validateAddressPortTextFields(managementAddressField, managementPortField);
+    }
+
+    private boolean validateResizeImagesControlData() {
+        boolean valid = true;
+
+        if(resizeImagesControl.isSelected()) {
+            if(!NumberUtils.isParsable(imageResizeWidthField.getText())) {
+                imageResizeWidthField.pseudoClassStateChanged(invalidValuePseudoClass, true);
+                valid = false;
+            } else {
+                imageResizeWidthField.pseudoClassStateChanged(invalidValuePseudoClass, false);
+            }
+
+            if(!NumberUtils.isParsable(imageResizeHeightField.getText())) {
+                imageResizeHeightField.pseudoClassStateChanged(invalidValuePseudoClass, true);
+                valid = false;
+            } else {
+                imageResizeHeightField.pseudoClassStateChanged(invalidValuePseudoClass, false);
+            }
+        }
+        return valid;
     }
 
     private void setUpContent() {

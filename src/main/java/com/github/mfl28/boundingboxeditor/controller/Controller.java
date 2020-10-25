@@ -48,6 +48,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -57,6 +58,7 @@ import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import javax.ws.rs.client.Client;
@@ -172,6 +174,8 @@ public class Controller {
     private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
     private final BooleanProperty navigateNextKeyPressed = new SimpleBooleanProperty(false);
     private final IoMetaData ioMetaData = new IoMetaData();
+    private final List<Pair<KeyCombination, EventHandler<KeyEvent>>> keyCombinationHandlers =
+            createKeyCombinationHandlers();
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
     Thread directoryWatcher;
@@ -476,39 +480,11 @@ public class Controller {
             view.getEditorImagePane().setZoomableAndPannable(true);
         }
 
-        if(KeyCombinations.navigateNext.match(event)) {
-            handleNavigateNextKeyPressed();
-        } else if(KeyCombinations.navigatePrevious.match(event)) {
-            handleNavigatePreviousKeyPressed();
-        } else if(KeyCombinations.deleteSelectedBoundingShape.match(event)) {
-            view.removeSelectedTreeItemAndChildren();
-        } else if(KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected.match(event)) {
-            view.removeEditingVerticesWhenPolygonViewSelected();
-        } else if(KeyCombinations.focusCategorySearchField.match(event)) {
-            view.getCategorySearchField().requestFocus();
-        } else if(KeyCombinations.focusFileSearchField.match(event)) {
-            view.getImageFileSearchField().requestFocus();
-        } else if(KeyCombinations.focusCategoryNameTextField.match(event)) {
-            view.getObjectCategoryInputField().requestFocus();
-        } else if(KeyCombinations.focusTagTextField.match(event)) {
-            view.getTagInputField().requestFocus();
-        } else if(KeyCombinations.hideSelectedBoundingShape.match(event)) {
-            view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(false);
-        } else if(KeyCombinations.hideAllBoundingShapes.match(event)) {
-            view.getObjectTree().setToggleIconStateForAllTreeItems(false);
-        } else if(KeyCombinations.showSelectedBoundingShape.match(event)) {
-            view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(true);
-        } else if(KeyCombinations.showAllBoundingShapes.match(event)) {
-            view.getObjectTree().setToggleIconStateForAllTreeItems(true);
-        } else if(KeyCombinations.resetSizeAndCenterImage.match(event)) {
-            view.getEditorImagePane().resetImageViewSize();
-        } else if(KeyCombinations.selectRectangleDrawingMode.match(event)) {
-            view.getEditor().getEditorToolBar().getRectangleModeButton().setSelected(true);
-        } else if(KeyCombinations.selectPolygonDrawingMode.match(event)) {
-            view.getEditor().getEditorToolBar().getPolygonModeButton().setSelected(true);
-        } else if(KeyCombinations.changeSelectedBoundingShapeCategory.match(event)) {
-            view.initiateCurrentSelectedBoundingBoxCategoryChange();
-        }
+        keyCombinationHandlers.stream()
+                              .filter(keyCombinationHandlerPair -> keyCombinationHandlerPair.getKey().match(event))
+                              .findFirst()
+                              .ifPresent(
+                                      keyCombinationHandlerPair -> keyCombinationHandlerPair.getValue().handle(event));
     }
 
     /**
@@ -714,6 +690,43 @@ public class Controller {
         initiateAnnotationExport(destination, exportFormat, null);
     }
 
+    private List<Pair<KeyCombination, EventHandler<KeyEvent>>> createKeyCombinationHandlers() {
+        return List.of(
+                new Pair<>(KeyCombinations.navigateNext,
+                           event -> handleNavigateNextKeyPressed()),
+                new Pair<>(KeyCombinations.navigatePrevious,
+                           event -> handleNavigatePreviousKeyPressed()),
+                new Pair<>(KeyCombinations.deleteSelectedBoundingShape,
+                           event -> view.removeSelectedTreeItemAndChildren()),
+                new Pair<>(KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected,
+                           event -> view.removeEditingVerticesWhenPolygonViewSelected()),
+                new Pair<>(KeyCombinations.focusCategorySearchField,
+                           event -> view.getCategorySearchField().requestFocus()),
+                new Pair<>(KeyCombinations.focusFileSearchField,
+                           event -> view.getImageFileSearchField().requestFocus()),
+                new Pair<>(KeyCombinations.focusCategoryNameTextField,
+                           event -> view.getObjectCategoryInputField().requestFocus()),
+                new Pair<>(KeyCombinations.focusTagTextField,
+                           event -> view.getTagInputField().requestFocus()),
+                new Pair<>(KeyCombinations.hideSelectedBoundingShape,
+                           event -> view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(false)),
+                new Pair<>(KeyCombinations.hideAllBoundingShapes,
+                           event -> view.getObjectTree().setToggleIconStateForAllTreeItems(false)),
+                new Pair<>(KeyCombinations.showSelectedBoundingShape,
+                           event -> view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(true)),
+                new Pair<>(KeyCombinations.showAllBoundingShapes,
+                           event -> view.getObjectTree().setToggleIconStateForAllTreeItems(true)),
+                new Pair<>(KeyCombinations.resetSizeAndCenterImage,
+                           event -> view.getEditorImagePane().resetImageViewSize()),
+                new Pair<>(KeyCombinations.selectRectangleDrawingMode,
+                           event -> view.getEditor().getEditorToolBar().getRectangleModeButton().setSelected(true)),
+                new Pair<>(KeyCombinations.selectPolygonDrawingMode,
+                           event -> view.getEditor().getEditorToolBar().getPolygonModeButton().setSelected(true)),
+                new Pair<>(KeyCombinations.changeSelectedBoundingShapeCategory,
+                           event -> view.initiateCurrentSelectedBoundingBoxCategoryChange())
+        );
+    }
+
     private void connectServicesToView() {
         view.connectAnnotationImportService(annotationImportService);
         view.connectAnnotationExportService(annotationExportService);
@@ -800,7 +813,6 @@ public class Controller {
         boundingBoxPredictorService.setOnFailed(this::onIoServiceFailed);
 
         modelNameFetchService.setOnSucceeded(this::onModelNameFetchingSucceeded);
-        // TODO: custom handling?
         modelNameFetchService.setOnFailed(this::onIoServiceFailed);
     }
 
@@ -880,24 +892,26 @@ public class Controller {
                     MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
                                                                   OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
 
-            if(answer == ButtonBar.ButtonData.YES) {
-                boolean finalKeepExistingCategories = keepExistingCategories;
-
-                if(imageMetaDataLoadingService.isReload()) {
-                    initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(() -> onValidFilesPresentHandler(
-                            finalKeepExistingCategories));
-                } else {
-                    initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(
-                            () -> onValidFilesPresentHandler(finalKeepExistingCategories));
-                }
-            } else if(answer == ButtonBar.ButtonData.NO || imageMetaDataLoadingService.isReload()) {
-                onValidFilesPresentHandler(keepExistingCategories);
-            }
+            handleAnnotationSavingDecision(keepExistingCategories, answer);
         } else {
             onValidFilesPresentHandler(keepExistingCategories);
         }
 
         return true;
+    }
+
+    private void handleAnnotationSavingDecision(boolean keepExistingCategories, ButtonBar.ButtonData answer) {
+        if(answer == ButtonBar.ButtonData.YES) {
+            if(imageMetaDataLoadingService.isReload()) {
+                initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(
+                        () -> onValidFilesPresentHandler(keepExistingCategories));
+            } else {
+                initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(
+                        () -> onValidFilesPresentHandler(keepExistingCategories));
+            }
+        } else if(answer == ButtonBar.ButtonData.NO || imageMetaDataLoadingService.isReload()) {
+            onValidFilesPresentHandler(keepExistingCategories);
+        }
     }
 
     private void onValidFilesPresentHandler(boolean keepCategories) {
@@ -1527,5 +1541,4 @@ public class Controller {
             throw new IllegalStateException("Key Combination Class");
         }
     }
-
 }

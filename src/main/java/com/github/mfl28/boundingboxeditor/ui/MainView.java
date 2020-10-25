@@ -74,7 +74,7 @@ public class MainView extends BorderPane implements View {
     private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE = "Predicting";
     private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER = "Predicting bounding boxes";
     private static final String FETCHING_MODELS_PROGRESS_DIALOG_TITLE = "Fetching Models";
-    private static final String FETCHING_MODELs_PROGRESS_DIALOG_HEADER = "Fetching model names from server";
+    private static final String FETCHING_MODELS_PROGRESS_DIALOG_HEADER = "Fetching model names from server";
 
     private final HeaderView header = new HeaderView();
     private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
@@ -233,43 +233,32 @@ public class MainView extends BorderPane implements View {
                                        .distinct()
                                        .count();
 
-        if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_IMPORT)) {
-            if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
-                MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
-                                          "There were errors while loading annotations.",
-                                          "The source does not contain any valid annotations.", errorTable);
-            } else {
-                MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
-                                          "There were errors while loading annotations.",
-                                          "Some bounding boxes could not be loaded from " + numErrorEntries +
-                                                  " image-annotation"
-                                                  + (numErrorEntries > 1 ? "s" : "") + ".", errorTable);
-            }
-
-        } else if(ioResult.getOperationType().equals(IOResult.OperationType.ANNOTATION_SAVING)) {
-            MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE,
-                                      "There were errors while saving annotations.",
-                                      numErrorEntries + " image-annotation file"
-                                              + (numErrorEntries > 1 ? "s" : "") + " could not be saved.", errorTable);
-        } else if(ioResult.getOperationType().equals(IOResult.OperationType.IMAGE_METADATA_LOADING)) {
-            if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
-                MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
-                                          "The folder does not contain any valid image files.", errorTable);
-            } else {
-                MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
-                                          numErrorEntries + " image file" + (numErrorEntries > 1 ? "s" : "") +
-                                                  " could not be loaded.", errorTable);
-            }
-        } else if(ioResult.getOperationType().equals(IOResult.OperationType.BOUNDING_BOX_PREDICTION)) {
-            MainView.displayInfoAlert("Bounding Box Prediction Error Report",
-                                      "There were errors while performing the prediction",
-                                      "Bounding box predictions for " + numErrorEntries + " image file" +
-                                              (numErrorEntries > 1 ? "s" : "") + " could not be loaded.",
-                                      errorTable);
-        } else if(ioResult.getOperationType().equals(IOResult.OperationType.MODEL_NAME_FETCHING)) {
-            MainView.displayInfoAlert("Model Fetching Error Report",
-                                      "There were errors while fetching model names from the server",
-                                      null, errorTable);
+        switch(ioResult.getOperationType()) {
+            case ANNOTATION_IMPORT:
+                displayAnnotationImportInfoAlert(ioResult, errorTable, numErrorEntries);
+                break;
+            case ANNOTATION_SAVING:
+                MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE,
+                                          "There were errors while saving annotations.",
+                                          numErrorEntries + " image-annotation file"
+                                                  + (numErrorEntries > 1 ? "s" : "") + " could not be saved.",
+                                          errorTable);
+                break;
+            case IMAGE_METADATA_LOADING:
+                displayImageMetadataLoadingInfoAlert(ioResult, errorTable, numErrorEntries);
+                break;
+            case BOUNDING_BOX_PREDICTION:
+                MainView.displayInfoAlert("Bounding Box Prediction Error Report",
+                                          "There were errors while performing the prediction",
+                                          "Bounding box predictions for " + numErrorEntries + " image file" +
+                                                  (numErrorEntries > 1 ? "s" : "") + " could not be loaded.",
+                                          errorTable);
+                break;
+            case MODEL_NAME_FETCHING:
+                MainView.displayInfoAlert("Model Fetching Error Report",
+                                          "There were errors while fetching model names from the server",
+                                          null, errorTable);
+                break;
         }
     }
 
@@ -481,8 +470,6 @@ public class MainView extends BorderPane implements View {
         return workspaceSplitPane.getEditorsSplitPane().getObjectTree();
     }
 
-    /* Delegating Getters */
-
     public EditorImagePaneView getEditorImagePane() {
         return workspaceSplitPane.getEditor().getEditorImagePane();
     }
@@ -490,6 +477,8 @@ public class MainView extends BorderPane implements View {
     public ImageView getEditorImageView() {
         return workspaceSplitPane.getEditor().getEditorImagePane().getImageView();
     }
+
+    /* Delegating Getters */
 
     public Button getPreviousImageNavigationButton() {
         return workspaceSplitPane.getEditor().getEditorToolBar().getPreviousButton();
@@ -580,7 +569,34 @@ public class MainView extends BorderPane implements View {
         boundingBoxPredictorProgressDialog.setHeaderText(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
 
         modelNameFetchingProgressDialog.setTitle(FETCHING_MODELS_PROGRESS_DIALOG_TITLE);
-        modelNameFetchingProgressDialog.setHeaderText(FETCHING_MODELs_PROGRESS_DIALOG_HEADER);
+        modelNameFetchingProgressDialog.setHeaderText(FETCHING_MODELS_PROGRESS_DIALOG_HEADER);
+    }
+
+    private static void displayImageMetadataLoadingInfoAlert(IOResult ioResult, TableView<IOErrorInfoEntry> errorTable,
+                                                             long numErrorEntries) {
+        if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
+            MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
+                                      "The folder does not contain any valid image files.", errorTable);
+        } else {
+            MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
+                                      numErrorEntries + " image file" + (numErrorEntries > 1 ? "s" : "") +
+                                              " could not be loaded.", errorTable);
+        }
+    }
+
+    private static void displayAnnotationImportInfoAlert(IOResult ioResult, TableView<IOErrorInfoEntry> errorTable,
+                                                         long numErrorEntries) {
+        if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
+            MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
+                                      "There were errors while loading annotations.",
+                                      "The source does not contain any valid annotations.", errorTable);
+        } else {
+            MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
+                                      "There were errors while loading annotations.",
+                                      "Some bounding boxes could not be loaded from " + numErrorEntries +
+                                              " image-annotation"
+                                              + (numErrorEntries > 1 ? "s" : "") + ".", errorTable);
+        }
     }
 
     private void setUpDialogStyles() {

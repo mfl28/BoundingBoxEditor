@@ -108,9 +108,10 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
 
     private void setUpInternalListeners() {
         settingCategoriesView.getSelectionModel()
-                             .selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            contentBox.getChildren().setAll(categoryToContentMap.get(newValue));
-        });
+                             .selectedItemProperty().addListener((observable, oldValue, newValue) ->
+                                                                         contentBox.getChildren()
+                                                                                   .setAll(categoryToContentMap
+                                                                                                   .get(newValue)));
 
         setOnShowing(event -> {
             settingCategoriesView.getSelectionModel().selectFirst();

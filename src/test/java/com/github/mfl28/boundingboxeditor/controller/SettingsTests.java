@@ -42,7 +42,7 @@ import java.io.File;
 import static org.testfx.api.FxAssert.verifyThat;
 
 @Tag("ui")
-public class SettingsTests extends BoundingBoxEditorTestBase {
+class SettingsTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);

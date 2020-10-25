@@ -104,7 +104,6 @@ public class UiUtils {
     }
 
     public static void closeProgressDialog(ProgressDialog dialog) {
-        // TODO: check if no bad side-effects
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         dialog.close();
         dialog.getDialogPane().getButtonTypes().remove(ButtonType.CLOSE);

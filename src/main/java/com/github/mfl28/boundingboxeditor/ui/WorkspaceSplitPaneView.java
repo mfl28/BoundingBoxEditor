@@ -51,7 +51,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     private static final double DEFAULT_SECOND_DIVIDER_RATIO = 1.0;
     private static final String WORK_SPACE_ID = "work-space";
     private static final String CHANGE_CATEGORY_DIALOG_TITLE = "Change Category";
-    private static final String CATEGORY_CHANGE_DIALOG_CONTENT_TEXT = "New Category:";
+    private static final String CATEGORY_CHANGE_DIALOG_CONTENT_TEXT = "New category:";
     private static final SnapshotParameters snapShotParameters = new SnapshotParameters();
     private static final DataFormat dragDataFormat = new DataFormat("box-item");
 
@@ -117,7 +117,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         MainView.displayChoiceDialogAndGetResult(currentCategory,
                                                  editorsSplitPane.getObjectCategoryTable().getItems(),
                                                  CHANGE_CATEGORY_DIALOG_TITLE,
-                                                 "Select new Category (current: \"" + currentCategory.getName() + "\")",
+                                                 "Select new category (current: \"" + currentCategory.getName() + "\")",
                                                  CATEGORY_CHANGE_DIALOG_CONTENT_TEXT)
                 .ifPresent(newChoice -> {
                     if(!Objects.equals(newChoice, currentCategory)) {
@@ -459,54 +459,56 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                     return;
                 }
 
-                popoverDelayTransition.setOnFinished(action -> {
-                    final Image currentImage = getEditor().getEditorImagePane().getCurrentImage();
-                    final ImageView imageView = cell.getPopOverImageView();
-
-                    if(imageView.getImage() == null
-                            || !imageView.getImage().getUrl().equals(currentImage.getUrl())) {
-                        imageView.setImage(currentImage);
-                    }
-
-                    final Rectangle2D relativeOutline =
-                            ((BoundingShapeViewable) cell.getItem()).getRelativeOutlineRectangle();
-
-                    final Rectangle2D outline = new Rectangle2D(relativeOutline.getMinX() * currentImage.getWidth(),
-                                                                relativeOutline.getMinY() * currentImage.getHeight(),
-                                                                relativeOutline.getWidth() * currentImage.getWidth(),
-                                                                relativeOutline.getHeight() * currentImage.getHeight());
-
-                    imageView.setViewport(outline);
-
-                    double scaleWidth;
-                    double scaleHeight;
-
-                    if(outline.getWidth() > outline.getHeight()) {
-                        scaleWidth = Math.min(outline.getWidth(), MAX_POPOVER_SIDE_LENGTH);
-                        scaleHeight = outline.getHeight() * scaleWidth / outline.getWidth();
-                    } else {
-                        scaleHeight = Math.min(outline.getHeight(), MAX_POPOVER_SIDE_LENGTH);
-                        scaleWidth = outline.getWidth() * scaleHeight / outline.getHeight();
-                    }
-
-                    imageView.setFitWidth(scaleWidth);
-                    imageView.setFitHeight(scaleHeight);
-
-                    if(cell.getItem() instanceof BoundingPolygonView) {
-                        final List<Double> points = ((BoundingPolygonView) cell.getItem())
-                                .getMinMaxScaledPoints(scaleWidth, scaleHeight);
-
-                        final Polygon polygon = new Polygon();
-                        polygon.getPoints().setAll(points);
-
-                        imageView.setClip(polygon);
-                    }
-
-                    cell.getPopOver().show(cell);
-                });
+                popoverDelayTransition.setOnFinished(action -> handlePopoverTimerFinished(cell));
 
                 popoverDelayTransition.playFromStart();
             });
+        }
+
+        private void handlePopoverTimerFinished(ObjectTreeElementCell cell) {
+            final Image currentImage = getEditor().getEditorImagePane().getCurrentImage();
+            final ImageView imageView = cell.getPopOverImageView();
+
+            if(imageView.getImage() == null
+                    || !imageView.getImage().getUrl().equals(currentImage.getUrl())) {
+                imageView.setImage(currentImage);
+            }
+
+            final Rectangle2D relativeOutline =
+                    ((BoundingShapeViewable) cell.getItem()).getRelativeOutlineRectangle();
+
+            final Rectangle2D outline = new Rectangle2D(relativeOutline.getMinX() * currentImage.getWidth(),
+                                                        relativeOutline.getMinY() * currentImage.getHeight(),
+                                                        relativeOutline.getWidth() * currentImage.getWidth(),
+                                                        relativeOutline.getHeight() * currentImage.getHeight());
+
+            imageView.setViewport(outline);
+
+            double scaleWidth;
+            double scaleHeight;
+
+            if(outline.getWidth() > outline.getHeight()) {
+                scaleWidth = Math.min(outline.getWidth(), MAX_POPOVER_SIDE_LENGTH);
+                scaleHeight = outline.getHeight() * scaleWidth / outline.getWidth();
+            } else {
+                scaleHeight = Math.min(outline.getHeight(), MAX_POPOVER_SIDE_LENGTH);
+                scaleWidth = outline.getWidth() * scaleHeight / outline.getHeight();
+            }
+
+            imageView.setFitWidth(scaleWidth);
+            imageView.setFitHeight(scaleHeight);
+
+            if(cell.getItem() instanceof BoundingPolygonView) {
+                final List<Double> points = ((BoundingPolygonView) cell.getItem())
+                        .getMinMaxScaledPoints(scaleWidth, scaleHeight);
+
+                final Polygon polygon = new Polygon();
+                polygon.getPoints().setAll(points);
+
+                imageView.setClip(polygon);
+            }
+
+            cell.getPopOver().show(cell);
         }
 
         private void applyOnMouseExitedListener(ObjectTreeElementCell cell) {

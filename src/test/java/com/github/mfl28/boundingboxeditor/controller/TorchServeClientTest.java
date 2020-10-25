@@ -69,7 +69,7 @@ import static org.testfx.api.FxAssert.verifyThat;
 @Tag("ui")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class TorchServeClientTest extends BoundingBoxEditorTestBase {
+class TorchServeClientTest extends BoundingBoxEditorTestBase {
     private static final String INFERENCE_SERVER = "http://foo123";
     private static final String INFERENCE_PORT = "8080";
     private static final String MANAGEMENT_SERVER = "http://bar456";
