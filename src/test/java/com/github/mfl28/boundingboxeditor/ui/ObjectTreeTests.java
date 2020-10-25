@@ -155,6 +155,52 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat((BoundingBoxView) secondTestChildTreeItem.getValue(), NodeMatchers.isVisible(),
                    saveScreenshot(testinfo));
 
+        // Hide all except Test 1
+        robot.rightClickOn("Test 1");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Hide others", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(false), saveScreenshot(testinfo));
+
+        // Show all via context menu
+        robot.rightClickOn("Test 1");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Show all", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
+
+        // Hide all via context menu
+        robot.rightClickOn("Test 2");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Hide all", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.is(false), saveScreenshot(testinfo));
+        verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(false), saveScreenshot(testinfo));
+        verifyThat(testCategoryTreeItem.isIconToggledOn(), Matchers.is(false), saveScreenshot(testinfo));
+
+        // Show via context menu
+        robot.rightClickOn("Test 1");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Show", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(false), saveScreenshot(testinfo));
+
+        robot.rightClickOn("Test 2");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Show", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(testCategoryTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
+
         /* ----Nesting---- */
         // Draw another bounding-box belonging to the Test-category.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));

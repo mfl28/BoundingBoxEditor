@@ -330,7 +330,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             final ObjectTreeElementCell cell = new ObjectTreeElementCell();
 
             applyOnDeleteBoundingShapeMenuItemListener(cell);
-            applyChangeObjectCategoryMenuItemListeners(cell);
+            applyChangeObjectCategoryMenuItemListener(cell);
             applyOnDragDetectedListener(cell);
             applyOnDragOverListener(cell);
             applyOnDragEnteredListener(cell);
@@ -338,8 +338,28 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             applyOnDragDroppedListener(cell);
             applyOnMouseEnteredListener(cell);
             applyOnMouseExitedListener(cell);
+            applyOnHideAllBoundingShapesMenuItemListener(cell);
+            applyOnHideOtherBoundingShapesMenuItemListener(cell);
+            applyOnShowAllBoundingShapesMenuItemListener(cell);
 
             return cell;
+        }
+
+        private void applyOnShowAllBoundingShapesMenuItemListener(ObjectTreeElementCell cell) {
+            cell.getShowAllBoundingShapesMenuItem().setOnAction(
+                    event -> getEditorsSplitPane().getObjectTree().setToggleIconStateForAllTreeItems(true)
+            );
+        }
+
+        private void applyOnHideOtherBoundingShapesMenuItemListener(ObjectTreeElementCell cell) {
+            cell.getHideOtherBoundingShapesMenuItem().setOnAction(
+                    event -> getEditorsSplitPane().getObjectTree()
+                                                  .setToggleIconStateForAllTreeItemsExcept(cell.getTreeItem(), false));
+        }
+
+        private void applyOnHideAllBoundingShapesMenuItemListener(ObjectTreeElementCell cell) {
+            cell.getHideAllBoundingShapesMenuItem().setOnAction(
+                    event -> getEditorsSplitPane().getObjectTree().setToggleIconStateForAllTreeItems(false));
         }
 
         private void applyOnDeleteBoundingShapeMenuItemListener(ObjectTreeElementCell cell) {
@@ -350,7 +370,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             });
         }
 
-        private void applyChangeObjectCategoryMenuItemListeners(ObjectTreeElementCell cell) {
+        private void applyChangeObjectCategoryMenuItemListener(ObjectTreeElementCell cell) {
             cell.getChangeObjectCategoryMenuItem().setOnAction(event -> {
                 if(!cell.isEmpty()) {
                     initiateObjectCategoryChange(((BoundingShapeViewable) cell.getItem()));

@@ -101,10 +101,30 @@ public class ObjectTreeView extends TreeView<Object> implements View {
      * @param toggleState the toggle-icon-state to set
      */
     public void setToggleIconStateForSelectedObjectTreeItem(boolean toggleState) {
-        TreeItem<Object> selectedTreeItem = getSelectionModel().getSelectedItem();
+        final TreeItem<Object> selectedTreeItem = getSelectionModel().getSelectedItem();
 
-        if(selectedTreeItem instanceof BoundingShapeTreeItem) {
-            ((BoundingShapeTreeItem) selectedTreeItem).setIconToggledOn(toggleState);
+        if(selectedTreeItem instanceof IconToggleable) {
+            ((IconToggleable) selectedTreeItem).setIconToggledOn(toggleState);
+        }
+    }
+
+    /**
+     * Sets the toggle-icon state of all currently not selected tree-items.
+     *
+     * @param toggleState the toggle-state to set
+     */
+    public void setToggleIconStateForNonSelectedObjectTreeItems(boolean toggleState) {
+        final TreeItem<Object> selectedTreeItem = getSelectionModel().getSelectedItem();
+        setToggleIconStateForAllTreeItemsExcept(selectedTreeItem, toggleState);
+    }
+
+    void setToggleIconStateForAllTreeItemsExcept(TreeItem<Object> exemption, boolean toggleState) {
+        if(exemption instanceof IconToggleable) {
+            final boolean selectedItemToggledOn = ((IconToggleable) exemption).isIconToggledOn();
+
+            setToggleIconStateForAllTreeItems(toggleState);
+
+            ((IconToggleable) exemption).setIconToggledOn(selectedItemToggledOn);
         }
     }
 

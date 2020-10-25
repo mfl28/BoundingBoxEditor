@@ -24,13 +24,53 @@ import javafx.scene.shape.Shape;
 /**
  * Base class of all shape tree items.
  */
-public abstract class BoundingShapeTreeItem extends TreeItem<Object> {
+public abstract class BoundingShapeTreeItem extends TreeItem<Object> implements IconToggleable {
     protected final Toggleable toggleIcon;
     protected int id = 1;
 
     BoundingShapeTreeItem(Toggleable toggleIcon, BoundingShapeViewable shape) {
         super(shape);
         this.toggleIcon = toggleIcon;
+    }
+
+    /**
+     * Returns the toggle-state of the tree-item's toggle-square.
+     *
+     * @return true if toggled on, false otherwise
+     */
+    @Override
+    public boolean isIconToggledOn() {
+        return toggleIcon.isToggledOn();
+    }
+
+    /**
+     * Sets the toggle-state of the tree-item's toggle-square (and all its children)
+     * and updates the parent {@link ObjectCategoryTreeItem} object's number of
+     * toggled-on children.
+     *
+     * @param toggledOn true to toggle on, false to toggle off
+     */
+    @Override
+    public void setIconToggledOn(boolean toggledOn) {
+        if(toggledOn != isIconToggledOn()) {
+            // If the toggle-state changes, update the parent-category-item's
+            // toggled children count.
+            if(toggledOn) {
+                ((ObjectCategoryTreeItem) getParent()).incrementNrToggledOnChildren();
+            } else {
+                ((ObjectCategoryTreeItem) getParent()).decrementNrToggledOnChildren();
+            }
+        }
+
+        toggleIcon.setToggledOn(toggledOn);
+
+        ((Shape) getValue()).setVisible(toggledOn);
+
+        // A BoundingShapeTreeItem either does not have any children, or
+        // every child is an instance of ObjectCategoryTreeItem.
+        for(TreeItem<Object> child : getChildren()) {
+            ((ObjectCategoryTreeItem) child).setIconToggledOn(toggledOn);
+        }
     }
 
     /**
@@ -53,44 +93,6 @@ public abstract class BoundingShapeTreeItem extends TreeItem<Object> {
      */
     void setId(int id) {
         this.id = id;
-    }
-
-    /**
-     * Returns the toggle-state of the tree-item's toggle-square.
-     *
-     * @return true if toggled on, false otherwise
-     */
-    boolean isIconToggledOn() {
-        return toggleIcon.isToggledOn();
-    }
-
-    /**
-     * Sets the toggle-state of the tree-item's toggle-square (and all its children)
-     * and updates the parent {@link ObjectCategoryTreeItem} object's number of
-     * toggled-on children.
-     *
-     * @param toggledOn true to toggle on, false to toggle off
-     */
-    void setIconToggledOn(boolean toggledOn) {
-        if(toggledOn != isIconToggledOn()) {
-            // If the toggle-state changes, update the parent-category-item's
-            // toggled children count.
-            if(toggledOn) {
-                ((ObjectCategoryTreeItem) getParent()).incrementNrToggledOnChildren();
-            } else {
-                ((ObjectCategoryTreeItem) getParent()).decrementNrToggledOnChildren();
-            }
-        }
-
-        toggleIcon.setToggledOn(toggledOn);
-
-        ((Shape) getValue()).setVisible(toggledOn);
-
-        // A BoundingShapeTreeItem either does not have any children, or
-        // every child is an instance of ObjectCategoryTreeItem.
-        for(TreeItem<Object> child : getChildren()) {
-            ((ObjectCategoryTreeItem) child).setIconToggledOn(toggledOn);
-        }
     }
 
     void setHighlightShape(boolean value) {

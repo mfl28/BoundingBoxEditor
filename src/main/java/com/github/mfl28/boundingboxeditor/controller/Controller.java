@@ -712,6 +712,8 @@ public class Controller {
                            event -> view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(false)),
                 new Pair<>(KeyCombinations.hideAllBoundingShapes,
                            event -> view.getObjectTree().setToggleIconStateForAllTreeItems(false)),
+                new Pair<>(KeyCombinations.hideNonSelectedBoundingShapes,
+                           event -> view.getObjectTree().setToggleIconStateForNonSelectedObjectTreeItems(false)),
                 new Pair<>(KeyCombinations.showSelectedBoundingShape,
                            event -> view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(true)),
                 new Pair<>(KeyCombinations.showAllBoundingShapes,
@@ -1536,6 +1538,8 @@ public class Controller {
                 KeyCombination.keyCombination("Shift + Middle-Click inside Polygon");
         public static final KeyCombination changeSelectedBoundingShapeCategory =
                 new KeyCodeCombination(KeyCode.C, KeyCombination.SHIFT_DOWN);
+        public static final KeyCombination hideNonSelectedBoundingShapes =
+                new KeyCodeCombination(KeyCode.H, KeyCombination.SHIFT_DOWN);
 
         private KeyCombinations() {
             throw new IllegalStateException("Key Combination Class");

@@ -26,6 +26,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.css.PseudoClass;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -65,14 +66,25 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private static final String DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT = "Delete selected vertices";
     private static final String CHANGE_CATEGORY_MENU_ITEM_TEXT = "Change Category";
     private static final String CHANGE_CATEGORY_CONTEXT_MENU_ITEM_ID = "change-category-menu";
+    private static final String HIDE_OTHERS_CONTEXT_MENU_ITEM_ID = "hide-others-context-menu";
+    private static final String HIDE_OTHERS_MENU_ITEM_TEXT = "Hide others";
+    private static final String HIDE_ALL_CONTEXT_MENU_ITEM_ID = "hide-all-context-menu";
+    private static final String HIDE_ALL_MENU_ITEM_TEXT = "Hide all";
+    private static final String SHOW_CONTEXT_MENU_ITEM_ID = "show-context-menu";
+    private static final String SHOW_MENU_ITEM_TEXT = "Show";
+    private static final String SHOW_ALL_CONTEXT_MENU_ID = "show-all-context-menu";
+    private static final String SHOW_ALL_MENU_ITEM_TEXT = "Show all";
 
     private final MenuItem deleteBoundingShapeMenuItem = createDeleteBoundingShapeMenuItem();
     private final MenuItem hideBoundingShapeMenuItem = createHideBoundingShapeMenuItem();
+    private final MenuItem hideAllBoundingShapesMenuItem = createHideAllBoundingShapesMenuItem();
+    private final MenuItem hideOtherBoundingShapesMenuItem = createHideOtherBoundingShapesMenuItem();
+    private final MenuItem showBoundingShapeMenuItem = createShowBoundingShapeMenuItem();
+    private final MenuItem showAllBoundingShapesMenuItem = createShowAllBoundingShapesMenuItem();
     private final MenuItem addVerticesMenuItem = createRefineMenuItem();
     private final MenuItem deleteVerticesMenuItem = createDeleteVerticesMenuItem();
     private final MenuItem changeObjectCategoryMenuItem = createChangeObjectCategoryMenuItem();
     private final SeparatorMenuItem separatorMenuItem = new SeparatorMenuItem();
-
     private final BooleanProperty draggedOver = new SimpleBooleanProperty(false);
     private final Text nameText = new Text();
     private final Text additionalInfoText = new Text();
@@ -183,10 +195,52 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         return changeObjectCategoryMenuItem;
     }
 
+    /**
+     * Returns the menu-item of the context-menu which allows
+     * the user to hide all currently existing bounding shapes.
+     *
+     * @return the menu-item
+     */
+    MenuItem getHideAllBoundingShapesMenuItem() {
+        return hideAllBoundingShapesMenuItem;
+    }
+
+    /**
+     * Returns the menu-item of the context-menu which allows
+     * the user to hide all bounding shapes except the one
+     * associated with this cell's current TreeItem or its children.
+     *
+     * @return the menu-item
+     */
+    MenuItem getHideOtherBoundingShapesMenuItem() {
+        return hideOtherBoundingShapesMenuItem;
+    }
+
+    /**
+     * Returns the menu-item of the context-menu which allows
+     * the user to show all currently existing bounding shapes.
+     *
+     * @return the menu-item
+     */
+    MenuItem getShowAllBoundingShapesMenuItem() {
+        return showAllBoundingShapesMenuItem;
+    }
+
+    /**
+     * Returns the popover of this cell.
+     *
+     * @return the popover
+     */
     PopOver getPopOver() {
         return popOver;
     }
 
+    /**
+     * Returns the ImageView associated withe this cell's
+     * popover.
+     *
+     * @return the imageview
+     */
     ImageView getPopOverImageView() {
         return popOverImageView;
     }
@@ -209,6 +263,42 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         }
     }
 
+    private MenuItem createShowAllBoundingShapesMenuItem() {
+        final CustomMenuItem showAllMenuItem = new CustomMenuItem(new Label(SHOW_ALL_MENU_ITEM_TEXT));
+        showAllMenuItem.setId(SHOW_ALL_CONTEXT_MENU_ID);
+        Tooltip.install(showAllMenuItem.getContent(),
+                        UiUtils.createTooltip("",
+                                              Controller.KeyCombinations.showAllBoundingShapes));
+        return showAllMenuItem;
+    }
+
+    private MenuItem createShowBoundingShapeMenuItem() {
+        final CustomMenuItem showMenuItem = new CustomMenuItem(new Label(SHOW_MENU_ITEM_TEXT));
+        showMenuItem.setId(SHOW_CONTEXT_MENU_ITEM_ID);
+        Tooltip.install(showMenuItem.getContent(),
+                        UiUtils.createTooltip("",
+                                              Controller.KeyCombinations.showSelectedBoundingShape));
+        return showMenuItem;
+    }
+
+    private MenuItem createHideAllBoundingShapesMenuItem() {
+        final CustomMenuItem hideAllMenuItem = new CustomMenuItem(new Label(HIDE_ALL_MENU_ITEM_TEXT));
+        hideAllMenuItem.setId(HIDE_ALL_CONTEXT_MENU_ITEM_ID);
+        Tooltip.install(hideAllMenuItem.getContent(),
+                        UiUtils.createTooltip("",
+                                              Controller.KeyCombinations.hideAllBoundingShapes));
+        return hideAllMenuItem;
+    }
+
+    private MenuItem createHideOtherBoundingShapesMenuItem() {
+        final CustomMenuItem hideOthersMenuItem = new CustomMenuItem(new Label(HIDE_OTHERS_MENU_ITEM_TEXT));
+        hideOthersMenuItem.setId(HIDE_OTHERS_CONTEXT_MENU_ITEM_ID);
+        Tooltip.install(hideOthersMenuItem.getContent(),
+                        UiUtils.createTooltip("",
+                                              Controller.KeyCombinations.hideNonSelectedBoundingShapes));
+        return hideOthersMenuItem;
+    }
+
     private void setUpInternalListeners() {
         setOnScroll(event -> {
             if(!isEmpty() && !contextMenu.isShowing()) {
@@ -216,15 +306,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             }
         });
 
-        hideBoundingShapeMenuItem.setOnAction(event -> {
-            TreeItem<Object> treeItem = getTreeItem();
-
-            if(treeItem instanceof ObjectCategoryTreeItem) {
-                ((ObjectCategoryTreeItem) treeItem).setIconToggledOn(false);
-            } else if(treeItem instanceof BoundingShapeTreeItem) {
-                ((BoundingShapeTreeItem) treeItem).setIconToggledOn(false);
-            }
-        });
+        hideBoundingShapeMenuItem.setOnAction(this::handleHide);
+        showBoundingShapeMenuItem.setOnAction(this::handleShow);
 
         draggedOver.addListener(
                 (observable, oldValue, newValue) -> pseudoClassStateChanged(draggedOverPseudoClass, newValue));
@@ -329,9 +412,31 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         return menuItem;
     }
 
+    private void handleHide(ActionEvent event) {
+        final TreeItem<Object> treeItem = getTreeItem();
+
+        if(treeItem instanceof IconToggleable) {
+            ((IconToggleable) treeItem).setIconToggledOn(false);
+        }
+    }
+
+    private void handleShow(ActionEvent event) {
+        final TreeItem<Object> treeItem = getTreeItem();
+
+        if(treeItem instanceof IconToggleable) {
+            ((IconToggleable) treeItem).setIconToggledOn(true);
+        }
+    }
+
     private class ObjectTreeElementContextMenu extends ContextMenu {
         ObjectTreeElementContextMenu() {
-            super(hideBoundingShapeMenuItem, deleteBoundingShapeMenuItem, changeObjectCategoryMenuItem);
+            super(hideBoundingShapeMenuItem,
+                  hideOtherBoundingShapesMenuItem,
+                  hideAllBoundingShapesMenuItem,
+                  showBoundingShapeMenuItem,
+                  showAllBoundingShapesMenuItem,
+                  changeObjectCategoryMenuItem,
+                  deleteBoundingShapeMenuItem);
             setUpInternalListeners();
         }
 

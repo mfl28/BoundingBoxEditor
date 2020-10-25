@@ -32,7 +32,7 @@ import java.util.Objects;
  *
  * @see TreeItem
  */
-class ObjectCategoryTreeItem extends TreeItem<Object> {
+class ObjectCategoryTreeItem extends TreeItem<Object> implements IconToggleable {
     private static final double TOGGLE_ICON_SIDE_LENGTH = 9.5;
 
     private final ToggleSquare toggleIcon = new ToggleSquare(TOGGLE_ICON_SIDE_LENGTH);
@@ -77,6 +77,32 @@ class ObjectCategoryTreeItem extends TreeItem<Object> {
     }
 
     /**
+     * Returns the toggle-state of the tree-item's toggle-square.
+     *
+     * @return true if toggled on, false otherwise
+     */
+    @Override
+    public boolean isIconToggledOn() {
+        return toggleIcon.isToggledOn();
+    }
+
+    /**
+     * Sets the toggled-on state of the tree-item's toggle-square (and all its children).
+     *
+     * @param toggledOn if true, the toggle-square is toggled on, otherwise off
+     */
+    @Override
+    public void setIconToggledOn(boolean toggledOn) {
+        toggleIcon.setToggledOn(toggledOn);
+
+        for(TreeItem<Object> child : getChildren()) {
+            if(child instanceof BoundingShapeTreeItem) {
+                ((BoundingShapeTreeItem) child).setIconToggledOn(toggledOn);
+            }
+        }
+    }
+
+    /**
      * Returns the {@link ObjectCategory} object associated with the tree-item.
      *
      * @return the bounding-box category
@@ -105,30 +131,6 @@ class ObjectCategoryTreeItem extends TreeItem<Object> {
     void attachBoundingShapeTreeItemChild(BoundingShapeTreeItem boundingBoxShapeTreeItem) {
         boundingBoxShapeTreeItem.setId(getChildren().size() + 1);
         getChildren().add(boundingBoxShapeTreeItem);
-    }
-
-    /**
-     * Returns the toggle-state of the tree-item's toggle-square.
-     *
-     * @return true if toggled on, false otherwise
-     */
-    boolean isIconToggledOn() {
-        return toggleIcon.isToggledOn();
-    }
-
-    /**
-     * Sets the toggled-on state of the tree-item's toggle-square (and all its children).
-     *
-     * @param toggledOn if true, the toggle-square is toggled on, otherwise off
-     */
-    void setIconToggledOn(boolean toggledOn) {
-        toggleIcon.setToggledOn(toggledOn);
-
-        for(TreeItem<Object> child : getChildren()) {
-            if(child instanceof BoundingShapeTreeItem) {
-                ((BoundingShapeTreeItem) child).setIconToggledOn(toggledOn);
-            }
-        }
     }
 
     /**
