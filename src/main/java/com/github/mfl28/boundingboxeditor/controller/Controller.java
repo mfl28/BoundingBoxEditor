@@ -33,13 +33,11 @@ import com.github.mfl28.boundingboxeditor.model.io.results.*;
 import com.github.mfl28.boundingboxeditor.model.io.services.*;
 import com.github.mfl28.boundingboxeditor.ui.*;
 import com.github.mfl28.boundingboxeditor.ui.settings.InferenceSettingsView;
-import com.github.mfl28.boundingboxeditor.ui.settings.SettingsDialogView;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.BoundingBoxPredictionSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsImportingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsSavingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageFilesLoadingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
-import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -158,6 +156,16 @@ public class Controller {
     private static final String MODEL_CHOICE_DIALOG_HEADER = "Choose the model used for performing predictions.";
     private static final String MODEL_CHOICE_DIALOG_CONTENT = "Model:";
     private static final String IMAGE_LOADING_ERROR_DIALOG_TITLE = "Image Loading Error";
+    private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Saving Annotations";
+    private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
+    private static final String LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Loading";
+    private static final String LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER = "Loading annotations...";
+    private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE = "Loading Images";
+    private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER = "Loading image meta-data";
+    private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE = "Predicting";
+    private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER = "Predicting bounding boxes";
+    private static final String FETCHING_MODELS_PROGRESS_DIALOG_TITLE = "Fetching Models";
+    private static final String FETCHING_MODELS_PROGRESS_DIALOG_HEADER = "Fetching model names from server";
 
     private final ImageAnnotationExportService annotationExportService = new ImageAnnotationExportService();
     private final ImageAnnotationImportService annotationImportService = new ImageAnnotationImportService();
@@ -201,28 +209,27 @@ public class Controller {
         view.connectToController(this);
         setUpModelListeners();
         setUpServices();
-        connectServicesToView();
     }
 
     public void onRegisterSettingsAction() {
-        final SettingsDialogView settingsDialog = view.getSettingsDialog();
-        settingsDialog.getInferenceSettings()
-                      .setDisplayedSettingsFromPredictorClientConfig(model.getBoundingBoxPredictorClientConfig());
-        settingsDialog.getInferenceSettings()
-                      .setDisplayedSettingsFromPredictorConfig(model.getBoundingBoxPredictorConfig());
-        settingsDialog.getUiSettings()
-                      .setDisplayedSettingsFromUISettingsConfig(view.getUiSettingsConfig());
+        view.getInferenceSettingsView()
+            .setDisplayedSettingsFromPredictorClientConfig(model.getBoundingBoxPredictorClientConfig());
+        view.getInferenceSettingsView()
+            .setDisplayedSettingsFromPredictorConfig(model.getBoundingBoxPredictorConfig());
+        view.getUiSettingsView()
+            .setDisplayedSettingsFromUISettingsConfig(view.getUiSettingsConfig());
 
-        settingsDialog.showAndWait();
+        view.displaySettingsDialog(this, stage);
     }
 
     public void onRegisterSettingsApplyAction(ActionEvent event, ButtonType buttonType) {
-        final InferenceSettingsView inferenceSettingsView = view.getSettingsDialog().getInferenceSettings();
+        final InferenceSettingsView inferenceSettingsView = view.getInferenceSettingsView();
 
         if(buttonType.equals(ButtonType.OK) || buttonType.equals(ButtonType.APPLY)) {
             if(!inferenceSettingsView.validateSettings()) {
                 MainView.displayErrorAlert(SETTINGS_APPLICATION_ERROR_DIALOG_TITLE,
-                                           SETTINGS_APPLICATION_INVALID_FIELDS_ERROR_DIALOG_CONTENT);
+                                           SETTINGS_APPLICATION_INVALID_FIELDS_ERROR_DIALOG_CONTENT,
+                                           view.getSettingsWindow());
                 event.consume();
                 return;
             }
@@ -230,7 +237,8 @@ public class Controller {
             if(inferenceSettingsView.getInferenceEnabledControl().isSelected() &&
                     inferenceSettingsView.getSelectedModelLabel().getText().equals("None")) {
                 MainView.displayErrorAlert(SETTINGS_APPLICATION_ERROR_DIALOG_TITLE,
-                                           SETTINGS_APPLICATION_NO_MODEL_SELECTED_ERROR_DIALOG_CONTENT);
+                                           SETTINGS_APPLICATION_NO_MODEL_SELECTED_ERROR_DIALOG_CONTENT,
+                                           view.getSettingsWindow());
                 event.consume();
                 return;
             }
@@ -238,11 +246,11 @@ public class Controller {
 
         final boolean inferenceWasEnabled = model.getBoundingBoxPredictorConfig().isInferenceEnabled();
 
-        view.getSettingsDialog().getInferenceSettings()
+        view.getInferenceSettingsView()
             .applyDisplayedSettingsToPredictorClientConfig(model.getBoundingBoxPredictorClientConfig());
-        view.getSettingsDialog().getInferenceSettings()
+        view.getInferenceSettingsView()
             .applyDisplayedSettingsToPredictorConfig(model.getBoundingBoxPredictorConfig());
-        view.getSettingsDialog().getUiSettings()
+        view.getUiSettingsView()
             .applyDisplayedSettingsToUISettingsConfig(view.getUiSettingsConfig());
 
         if(!inferenceWasEnabled && model.getBoundingBoxPredictorConfig().isInferenceEnabled()) {
@@ -303,12 +311,13 @@ public class Controller {
         try {
             imageFiles = getImageFilesFromDirectory(imageFileDirectory);
         } catch(IOException e) {
-            MainView.displayErrorAlert(OPEN_FOLDER_ERROR_DIALOG_TITLE, OPEN_FOLDER_ERROR_DIALOG_HEADER);
+            MainView.displayErrorAlert(OPEN_FOLDER_ERROR_DIALOG_TITLE, OPEN_FOLDER_ERROR_DIALOG_HEADER, stage);
             return;
         }
 
         if(imageFiles.isEmpty()) {
-            MainView.displayErrorAlert(LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE, LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT);
+            MainView.displayErrorAlert(LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE, LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT,
+                                       stage);
             return;
         }
 
@@ -325,7 +334,7 @@ public class Controller {
 
         if(!model.containsAnnotations() && !view.containsBoundingShapeViews()) {
             MainView.displayErrorAlert(SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE,
-                                       NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT);
+                                       NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT, stage);
             return;
         }
 
@@ -350,9 +359,11 @@ public class Controller {
     public void onRegisterModelNameFetchingAction() {
         modelNameFetchService.reset();
         final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
-        view.getSettingsDialog().getInferenceSettings().applyDisplayedSettingsToPredictorClientConfig(clientConfig);
+        view.getInferenceSettingsView().applyDisplayedSettingsToPredictorClientConfig(clientConfig);
         makeClientAvailable();
         modelNameFetchService.setClient(BoundingBoxPredictorClient.create(client, clientConfig));
+        modelNameFetchService.getProgressViewer()
+                             .setParentWindow(view.getInferenceSettingsView().getScene().getWindow());
         modelNameFetchService.restart();
     }
 
@@ -367,13 +378,14 @@ public class Controller {
         if(model.containsCategories()) {
             ButtonBar.ButtonData keepExistingDataAnswer =
                     MainView.displayYesNoCancelDialogAndGetResult(IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE,
-                                                                  IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT);
+                                                                  IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT, stage);
 
             if(keepExistingDataAnswer == ButtonBar.ButtonData.NO) {
                 if(!model.isSaved()) {
                     ButtonBar.ButtonData saveAnswer =
                             MainView.displayYesNoCancelDialogAndGetResult(ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
-                                                                          ANNOTATION_IMPORT_SAVE_EXISTING_DIALOG_CONTENT);
+                                                                          ANNOTATION_IMPORT_SAVE_EXISTING_DIALOG_CONTENT,
+                                                                          stage);
                     if(saveAnswer == ButtonBar.ButtonData.YES) {
                         initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(() -> {
                             clearModelAndViewAnnotationData();
@@ -408,14 +420,14 @@ public class Controller {
 
         if(categoryName.isBlank()) {
             MainView.displayErrorAlert(CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                                       INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT);
+                                       INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT, stage);
             view.getObjectCategoryInputField().clear();
             return;
         }
 
         if(model.getCategoryToAssignedBoundingShapesCountMap().containsKey(categoryName)) {
             MainView.displayErrorAlert(CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                                       "The category \"" + categoryName + "\" already exists.");
+                                       "The category \"" + categoryName + "\" already exists.", stage);
             view.getObjectCategoryInputField().clear();
             return;
         }
@@ -424,10 +436,9 @@ public class Controller {
         model.getObjectCategories().add(new ObjectCategory(categoryName, categoryColor));
 
         view.getObjectCategoryTable().getSelectionModel().selectLast();
-        view.getObjectCategoryTable().scrollTo(view
-                                                       .getObjectCategoryTable()
-                                                       .getSelectionModel()
-                                                       .getSelectedIndex()
+        view.getObjectCategoryTable().scrollTo(view.getObjectCategoryTable()
+                                                   .getSelectionModel()
+                                                   .getSelectedIndex()
         );
 
         view.getObjectCategoryInputField().clear();
@@ -443,7 +454,7 @@ public class Controller {
         if(!model.isSaved()) {
             ButtonBar.ButtonData answer =
                     MainView.displayYesNoCancelDialogAndGetResult(EXIT_APPLICATION_OPTION_DIALOG_TITLE,
-                                                                  EXIT_APPLICATION_OPTION_DIALOG_CONTENT);
+                                                                  EXIT_APPLICATION_OPTION_DIALOG_CONTENT, stage);
 
             if(answer == ButtonBar.ButtonData.YES) {
                 initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(() -> {
@@ -545,12 +556,12 @@ public class Controller {
 
         if(newName.isBlank()) {
             MainView.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                                       INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT);
+                                       INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT, stage);
             objectCategory.setName(oldName);
             event.getTableView().refresh();
         } else if(boundingShapesPerCategoryNameMap.containsKey(newName)) {
             MainView.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                                       "The category \"" + newName + "\" already exists.");
+                                       "The category \"" + newName + "\" already exists.", stage);
             objectCategory.setName(oldName);
             event.getTableView().refresh();
         } else {
@@ -624,11 +635,11 @@ public class Controller {
     }
 
     public void onRegisterSettingsCancelCloseAction() {
-        view.getSettingsDialog().getInferenceSettings()
+        view.getInferenceSettingsView()
             .setDisplayedSettingsFromPredictorClientConfig(model.getBoundingBoxPredictorClientConfig());
-        view.getSettingsDialog().getInferenceSettings()
+        view.getInferenceSettingsView()
             .setDisplayedSettingsFromPredictorConfig(model.getBoundingBoxPredictorConfig());
-        view.getSettingsDialog().getInferenceSettings().setAllFieldsValid();
+        view.getInferenceSettingsView().setAllFieldsValid();
     }
 
     void makeClientAvailable() {
@@ -729,15 +740,6 @@ public class Controller {
         );
     }
 
-    private void connectServicesToView() {
-        view.connectAnnotationImportService(annotationImportService);
-        view.connectAnnotationExportService(annotationExportService);
-        view.connectImageMetaDataLoadingService(imageMetaDataLoadingService);
-        view.connectBoundingBoxPredictorService(boundingBoxPredictorService);
-        view.connectModelNameFetchingService(modelNameFetchService);
-        view.setUpProgressDialogs();
-    }
-
     private void onBoundingBoxPredictionSucceeded(WorkerStateEvent event) {
         final BoundingBoxPredictionResult predictionResult = boundingBoxPredictorService.getValue();
 
@@ -752,8 +754,8 @@ public class Controller {
         reloadCurrentAnnotationInView();
 
         if(!predictionResult.getErrorTableEntries().isEmpty()) {
-            UiUtils.closeProgressDialog(view.getBoundingBoxPredictorProgressDialog());
-            MainView.displayIOResultErrorInfoAlert(predictionResult);
+            boundingBoxPredictorService.getProgressViewer().hideProgress();
+            MainView.displayIOResultErrorInfoAlert(predictionResult, stage);
         }
     }
 
@@ -802,45 +804,76 @@ public class Controller {
     }
 
     private void setUpServices() {
+        final ServiceProgressDialog annotationExportProgressDialog =
+                MainView.createServiceProgressDialog(annotationExportService,
+                                                     SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
+                                                     SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
+        annotationExportProgressDialog.setParentWindow(stage);
+        annotationExportService.setProgressViewer(annotationExportProgressDialog);
         annotationExportService.setOnSucceeded(this::onAnnotationExportSucceeded);
         annotationExportService.setOnFailed(this::onIoServiceFailed);
 
+        final ServiceProgressDialog annotationImportProgressDialog =
+                MainView.createServiceProgressDialog(annotationImportService,
+                                                     LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
+                                                     LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER);
+        annotationImportProgressDialog.setParentWindow(stage);
+        annotationImportService.setProgressViewer(annotationImportProgressDialog);
         annotationImportService.setOnSucceeded(this::onAnnotationImportSucceeded);
         annotationImportService.setOnFailed(this::onIoServiceFailed);
 
+        final ServiceProgressDialog imageMetaDataLoadingProgressDialog =
+                MainView.createServiceProgressDialog(imageMetaDataLoadingService,
+                                                     IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE,
+                                                     IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER);
+        imageMetaDataLoadingProgressDialog.setParentWindow(stage);
+        imageMetaDataLoadingService.setProgressViewer(imageMetaDataLoadingProgressDialog);
         imageMetaDataLoadingService.setOnSucceeded(this::onImageMetaDataLoadingSucceeded);
         imageMetaDataLoadingService.setOnFailed(this::onIoServiceFailed);
 
+        final ServiceProgressDialog predictorProgressDialog =
+                MainView.createServiceProgressDialog(boundingBoxPredictorService,
+                                                     BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE,
+                                                     BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
+        predictorProgressDialog.setParentWindow(stage);
+        boundingBoxPredictorService.setProgressViewer(predictorProgressDialog);
         boundingBoxPredictorService.setOnSucceeded(this::onBoundingBoxPredictionSucceeded);
         boundingBoxPredictorService.setOnFailed(this::onIoServiceFailed);
 
-        modelNameFetchService.setOnSucceeded(this::onModelNameFetchingSucceeded);
+        modelNameFetchService.setProgressViewer(MainView.createServiceProgressDialog(modelNameFetchService,
+                                                                                     FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
+                                                                                     FETCHING_MODELS_PROGRESS_DIALOG_HEADER));
         modelNameFetchService.setOnFailed(this::onIoServiceFailed);
+        modelNameFetchService.setOnSucceeded(this::onModelNameFetchingSucceeded);
     }
 
-    private void onModelNameFetchingSucceeded(WorkerStateEvent workerStateEvent) {
+    private void onModelNameFetchingSucceeded(WorkerStateEvent event) {
         final ModelNameFetchResult result = modelNameFetchService.getValue();
 
         final List<String> modelNames = result.getModelNames();
 
-        UiUtils.closeProgressDialog(view.getModelNameFetchingProgressDialog());
+        modelNameFetchService.getProgressViewer().hideProgress();
 
         if(result.getErrorTableEntries().isEmpty()) {
             if(modelNames.isEmpty()) {
                 MainView.displayErrorAlert(MODEL_FETCHING_ERROR_DIALOG_TITLE,
-                                           MODEL_FETCHING_NO_MODELS_ERROR_DIALOG_CONTENT);
+                                           MODEL_FETCHING_NO_MODELS_ERROR_DIALOG_CONTENT,
+                                           view.getInferenceSettingsView().getScene().getWindow());
             } else {
                 final Optional<String> modelChoice = MainView.displayChoiceDialogAndGetResult(modelNames.get(0),
                                                                                               modelNames,
                                                                                               MODEL_CHOICE_DIALOG_TITLE,
                                                                                               MODEL_CHOICE_DIALOG_HEADER,
-                                                                                              MODEL_CHOICE_DIALOG_CONTENT);
+                                                                                              MODEL_CHOICE_DIALOG_CONTENT,
+                                                                                              view.getInferenceSettingsView()
+                                                                                                  .getScene()
+                                                                                                  .getWindow());
                 modelChoice
-                        .ifPresent(s -> view.getSettingsDialog().getInferenceSettings().getSelectedModelLabel()
+                        .ifPresent(s -> view.getInferenceSettingsView().getSelectedModelLabel()
                                             .setText(s));
             }
         } else {
-            MainView.displayIOResultErrorInfoAlert(result);
+            MainView.displayIOResultErrorInfoAlert(result, view.getInferenceSettingsView().getScene().getWindow());
         }
     }
 
@@ -852,15 +885,15 @@ public class Controller {
         }
 
         if(!ioResult.getErrorTableEntries().isEmpty()) {
-            UiUtils.closeProgressDialog(view.getImageMetaDataLoadingProgressDialog());
-            MainView.displayIOResultErrorInfoAlert(ioResult);
+            imageMetaDataLoadingService.getProgressViewer().hideProgress();
+            MainView.displayIOResultErrorInfoAlert(ioResult, stage);
         } else if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
-            UiUtils.closeProgressDialog(view.getImageMetaDataLoadingProgressDialog());
-            MainView.displayErrorAlert(IMAGE_IMPORT_ERROR_ALERT_TITLE, IMAGE_IMPORT_ERROR_ALERT_CONTENT);
+            imageMetaDataLoadingService.getProgressViewer().hideProgress();
+            MainView.displayErrorAlert(IMAGE_IMPORT_ERROR_ALERT_TITLE, IMAGE_IMPORT_ERROR_ALERT_CONTENT, stage);
         }
 
         if(imageMetaDataLoadingService.isReload() && ioResult.getNrSuccessfullyProcessedItems() == 0) {
-            UiUtils.closeProgressDialog(view.getImageMetaDataLoadingProgressDialog());
+            imageMetaDataLoadingService.getProgressViewer().hideProgress();
             askToSaveExistingAnnotationDataAndClearModelAndView();
         }
     }
@@ -871,12 +904,12 @@ public class Controller {
         boolean keepExistingCategories = false;
 
         if(model.containsCategories()) {
-            UiUtils.closeProgressDialog(view.getImageMetaDataLoadingProgressDialog());
+            imageMetaDataLoadingService.getProgressViewer().hideProgress();
             ButtonBar.ButtonData answer = imageMetaDataLoadingService.isReload() ?
                     MainView.displayYesNoDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                                            KEEP_EXISTING_CATEGORIES_DIALOG_TEXT) :
+                                                            KEEP_EXISTING_CATEGORIES_DIALOG_TEXT, stage) :
                     MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                                                  KEEP_EXISTING_CATEGORIES_DIALOG_TEXT);
+                                                                  KEEP_EXISTING_CATEGORIES_DIALOG_TEXT, stage);
 
             keepExistingCategories = (answer == ButtonBar.ButtonData.YES);
 
@@ -886,13 +919,13 @@ public class Controller {
         }
 
         if(!model.isSaved()) {
-            UiUtils.closeProgressDialog(view.getImageMetaDataLoadingProgressDialog());
+            imageMetaDataLoadingService.getProgressViewer().hideProgress();
             // First ask if user wants to save the existing annotations.
             ButtonBar.ButtonData answer = imageMetaDataLoadingService.isReload() ?
                     MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                                            RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT) :
+                                                            RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT, stage) :
                     MainView.displayYesNoCancelDialogAndGetResult(OPEN_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                                                  OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
+                                                                  OPEN_IMAGE_FOLDER_OPTION_DIALOG_CONTENT, stage);
 
             handleAnnotationSavingDecision(keepExistingCategories, answer);
         } else {
@@ -936,7 +969,7 @@ public class Controller {
 
         directoryWatcher = new Thread(new FileChangeWatcher(imageMetaDataLoadingService.getSource().toPath(),
                                                             model.getImageFileNameSet(), () -> {
-            MainView.displayErrorAlert(IMAGE_FILES_CHANGED_ERROR_TITLE, IMAGE_FILES_CHANGED_ERROR_CONTENT);
+            MainView.displayErrorAlert(IMAGE_FILES_CHANGED_ERROR_TITLE, IMAGE_FILES_CHANGED_ERROR_CONTENT, stage);
             Controller.this.initiateCurrentFolderReloading();
         }), IMAGE_FILE_CHANGE_WATCHER_THREAD_NAME);
         directoryWatcher.start();
@@ -955,12 +988,12 @@ public class Controller {
         reloadCurrentAnnotationInView();
 
         if(!importResult.getErrorTableEntries().isEmpty()) {
-            UiUtils.closeProgressDialog(view.getAnnotationImportProgressDialog());
-            MainView.displayIOResultErrorInfoAlert(importResult);
+            annotationImportService.getProgressViewer().hideProgress();
+            MainView.displayIOResultErrorInfoAlert(importResult, stage);
         } else if(importResult.getNrSuccessfullyProcessedItems() == 0) {
-            UiUtils.closeProgressDialog(view.getAnnotationImportProgressDialog());
+            annotationImportService.getProgressViewer().hideProgress();
             MainView.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE,
-                                       ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT);
+                                       ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT, stage);
             return;
         }
 
@@ -972,7 +1005,7 @@ public class Controller {
         final Throwable exception = event.getSource().getException();
 
         if(exception != null) {
-            MainView.displayExceptionDialog(exception);
+            MainView.displayExceptionDialog(exception, stage);
         }
     }
 
@@ -984,8 +1017,8 @@ public class Controller {
         }
 
         if(!saveResult.getErrorTableEntries().isEmpty()) {
-            UiUtils.closeProgressDialog(view.getAnnotationExportProgressDialog());
-            MainView.displayIOResultErrorInfoAlert(saveResult);
+            annotationExportService.getProgressViewer().hideProgress();
+            MainView.displayIOResultErrorInfoAlert(saveResult, stage);
         } else {
             model.setSaved(true);
         }
@@ -1029,13 +1062,14 @@ public class Controller {
         try {
             imageFiles = getImageFilesFromDirectory(imageFileDirectory);
         } catch(IOException e) {
-            MainView.displayErrorAlert(OPEN_FOLDER_ERROR_DIALOG_TITLE, OPEN_FOLDER_ERROR_DIALOG_HEADER);
+            MainView.displayErrorAlert(OPEN_FOLDER_ERROR_DIALOG_TITLE, OPEN_FOLDER_ERROR_DIALOG_HEADER, stage);
             askToSaveExistingAnnotationDataAndClearModelAndView();
             return;
         }
 
         if(imageFiles.isEmpty()) {
-            MainView.displayErrorAlert(LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE, LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT);
+            MainView.displayErrorAlert(LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE, LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT,
+                                       stage);
             askToSaveExistingAnnotationDataAndClearModelAndView();
             return;
         }
@@ -1050,7 +1084,7 @@ public class Controller {
             // First ask if user wants to save the existing annotations.
             ButtonBar.ButtonData answer =
                     MainView.displayYesNoDialogAndGetResult(RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE,
-                                                            RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT);
+                                                            RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT, stage);
 
             if(answer == ButtonBar.ButtonData.YES) {
                 initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(this::clearViewAndModel);
@@ -1068,7 +1102,7 @@ public class Controller {
                                                          Arrays.asList(ImageAnnotationSaveStrategy.Type.values()),
                                                          ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
                                                          ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER,
-                                                         ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT);
+                                                         ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT, stage);
 
         formatChoice.ifPresent(choice -> {
             // Ask for annotation save directory.
@@ -1088,7 +1122,7 @@ public class Controller {
                                                          Arrays.asList(ImageAnnotationSaveStrategy.Type.values()),
                                                          ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
                                                          ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER,
-                                                         ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT);
+                                                         ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT, stage);
 
         formatChoice.ifPresentOrElse(choice -> {
             // Ask for annotation save directory.
@@ -1205,7 +1239,8 @@ public class Controller {
                                                        nrExistingBoundingShapes
                                                        + " annotated object" +
                                                        (nrExistingBoundingShapes == 1 ? " " : "s ") +
-                                                       "with the category \"" + category.getName() + "\".");
+                                                       "with the category \"" + category.getName() + "\".",
+                                               stage);
                 } else {
                     cell.getTableView().getItems().remove(category);
                 }
@@ -1358,7 +1393,7 @@ public class Controller {
             view.getEditorImagePane().getImageLoadingProgressIndicator().setVisible(false);
             MainView.displayErrorAlert(IMAGE_LOADING_ERROR_DIALOG_TITLE,
                                        "Could not read meta-data from image file \"" + model.getCurrentImageFileName() +
-                                               "\".");
+                                               "\".", stage);
             return;
         }
 

@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.ui.settings;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
+import com.github.mfl28.boundingboxeditor.ui.MainView;
 import com.github.mfl28.boundingboxeditor.ui.View;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,17 +34,14 @@ import java.util.Map;
 public class SettingsDialogView extends Dialog<ButtonType> implements View {
     private static final String SETTINGS_DIALOG_PANE_ID = "settings-dialog-pane";
     private static final String SETTINGS_TITLE = "Settings";
-    private static final String INFERENCE_CATEGORY_NAME = "Inference";
-    private static final double SPLITPANE_DIVIDER_POSITION = 0.15;
-    private static final String UI_CATEGORY_NAME = "UI";
+    private static final double SPLITPANE_DIVIDER_POSITION = 0.35;
     private final ObservableList<String> settingCategories = FXCollections.observableArrayList();
     private final Map<String, Node> categoryToContentMap = new HashMap<>();
     private final ListView<String> settingCategoriesView = new ListView<>(settingCategories);
     private final VBox contentBox = new VBox();
-    private final InferenceSettingsView inferenceSettings = new InferenceSettingsView();
-    private final UISettingsView uiSettingsView = new UISettingsView();
 
     public SettingsDialogView() {
+        MainView.applyDialogStyle(this);
         setTitle(SETTINGS_TITLE);
 
         final SplitPane settingSplitPane = new SplitPane(settingCategoriesView, contentBox);
@@ -60,18 +58,7 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
         setDialogPane(dialogPane);
         setResizable(true);
 
-        setUpSettingCategories();
-
         setUpInternalListeners();
-        settingCategoriesView.getSelectionModel().selectFirst();
-    }
-
-    public InferenceSettingsView getInferenceSettings() {
-        return inferenceSettings;
-    }
-
-    public UISettingsView getUiSettings() {
-        return uiSettingsView;
     }
 
     @Override
@@ -88,16 +75,9 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
                                                                                                           ButtonType.OK));
 
         setOnCloseRequest(event -> controller.onRegisterSettingsCancelCloseAction());
-
-        inferenceSettings.connectToController(controller);
     }
 
-    private void setUpSettingCategories() {
-        addCategoryContentPair(INFERENCE_CATEGORY_NAME, inferenceSettings);
-        addCategoryContentPair(UI_CATEGORY_NAME, uiSettingsView);
-    }
-
-    private <T extends Node & ApplyButtonChangeProvider> void addCategoryContentPair(String category, T contentNode) {
+    public <T extends Node & ApplyButtonChangeProvider> void addCategoryContentPair(String category, T contentNode) {
         final ScrollPane scrollPane = new ScrollPane(contentNode);
         scrollPane.setFitToWidth(true);
 

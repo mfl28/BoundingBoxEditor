@@ -24,13 +24,12 @@ import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaver;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationExportResult;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
 import java.io.File;
 import java.nio.file.Paths;
 
-public class ImageAnnotationExportService extends Service<ImageAnnotationExportResult> {
+public class ImageAnnotationExportService extends IoService<ImageAnnotationExportResult> {
     final ObjectProperty<File> destination = new SimpleObjectProperty<>(this, "destination");
     final ObjectProperty<ImageAnnotationSaveStrategy.Type>
             exportFormat = new SimpleObjectProperty<>(this, "exportFormat");

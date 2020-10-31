@@ -26,7 +26,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
 import java.io.File;
@@ -34,7 +33,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-public class ImageMetaDataLoadingService extends Service<ImageMetaDataLoadingResult> {
+public class ImageMetaDataLoadingService extends IoService<ImageMetaDataLoadingResult> {
     private final ObjectProperty<File> source = new SimpleObjectProperty<>(this, "source");
     private final ObjectProperty<List<File>> imageFiles = new SimpleObjectProperty<>(this, "imageFiles");
     private final BooleanProperty reload = new SimpleBooleanProperty(this, "reload");

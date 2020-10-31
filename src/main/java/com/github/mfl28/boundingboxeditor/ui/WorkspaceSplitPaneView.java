@@ -118,7 +118,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                                                  editorsSplitPane.getObjectCategoryTable().getItems(),
                                                  CHANGE_CATEGORY_DIALOG_TITLE,
                                                  "Select new category (current: \"" + currentCategory.getName() + "\")",
-                                                 CATEGORY_CHANGE_DIALOG_CONTENT_TEXT)
+                                                 CATEGORY_CHANGE_DIALOG_CONTENT_TEXT,
+                                                 this.getScene().getWindow())
                 .ifPresent(newChoice -> {
                     if(!Objects.equals(newChoice, currentCategory)) {
                         // Set new object category.

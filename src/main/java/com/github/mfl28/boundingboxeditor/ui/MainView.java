@@ -23,7 +23,9 @@ import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
+import com.github.mfl28.boundingboxeditor.ui.settings.InferenceSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.settings.SettingsDialogView;
+import com.github.mfl28.boundingboxeditor.ui.settings.UISettingsView;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
@@ -39,8 +41,8 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.controlsfx.dialog.ExceptionDialog;
-import org.controlsfx.dialog.ProgressDialog;
 
 import java.io.File;
 import java.util.Collection;
@@ -65,27 +67,15 @@ public class MainView extends BorderPane implements View {
     private static final String ANNOTATION_IMPORT_ERROR_REPORT_TITLE = "Annotation Import Error Report";
     private static final String ANNOTATION_SAVING_ERROR_REPORT_TITLE = "Annotation Saving Error Report";
     private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
-    private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Saving Annotations";
-    private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
-    private static final String LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Loading";
-    private static final String LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER = "Loading annotations...";
-    private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE = "Loading Images";
-    private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER = "Loading image meta-data";
-    private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE = "Predicting";
-    private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER = "Predicting bounding boxes";
-    private static final String FETCHING_MODELS_PROGRESS_DIALOG_TITLE = "Fetching Models";
-    private static final String FETCHING_MODELS_PROGRESS_DIALOG_HEADER = "Fetching model names from server";
+
 
     private final HeaderView header = new HeaderView();
     private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
     private final StatusBarView statusBar = new StatusBarView();
-    private final SettingsDialogView settingsDialog = new SettingsDialogView();
     private final UISettingsConfig uiSettingsConfig = new UISettingsConfig();
-    private ProgressDialog imageMetaDataLoadingProgressDialog;
-    private ProgressDialog annotationImportProgressDialog;
-    private ProgressDialog annotationExportProgressDialog;
-    private ProgressDialog boundingBoxPredictorProgressDialog;
-    private ProgressDialog modelNameFetchingProgressDialog;
+    private final InferenceSettingsView inferenceSettingsView = new InferenceSettingsView();
+    private final UISettingsView uiSettingsView = new UISettingsView();
+
 
     /**
      * Constructs the app's main view-component which contains all other UI-elements.
@@ -97,7 +87,6 @@ public class MainView extends BorderPane implements View {
 
         setId(MAIN_VIEW_ID);
         setUpInternalListeners();
-        setUpDialogStyles();
     }
 
     /**
@@ -106,9 +95,9 @@ public class MainView extends BorderPane implements View {
      * @param title   the title of the dialog
      * @param content the text-content of the dialog
      */
-    public static void displayErrorAlert(String title, String content) {
+    public static void displayErrorAlert(String title, String content, Window owner) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        setupAndShowDialog(alert, title, content);
+        setupAndShowDialog(alert, title, content, owner);
     }
 
     /**
@@ -118,12 +107,13 @@ public class MainView extends BorderPane implements View {
      * @param content The content text of the dialog window
      * @return {@link ButtonBar.ButtonData}.YES/NO/CANCEL_CLOSE
      */
-    public static ButtonBar.ButtonData displayYesNoCancelDialogAndGetResult(String title, String content) {
+    public static ButtonBar.ButtonData displayYesNoCancelDialogAndGetResult(String title, String content,
+                                                                            Window owner) {
         Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
                                  content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
                                  new ButtonType("No", ButtonBar.ButtonData.NO),
                                  new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
-        setupAndShowDialog(dialog, title, content);
+        setupAndShowDialog(dialog, title, content, owner);
         return dialog.getResult().getButtonData();
     }
 
@@ -134,11 +124,11 @@ public class MainView extends BorderPane implements View {
      * @param content The content text of the dialog window
      * @return {@link ButtonBar.ButtonData}.YES/NO
      */
-    public static ButtonBar.ButtonData displayYesNoDialogAndGetResult(String title, String content) {
+    public static ButtonBar.ButtonData displayYesNoDialogAndGetResult(String title, String content, Window owner) {
         Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
                                  content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
                                  new ButtonType("No", ButtonBar.ButtonData.NO));
-        setupAndShowDialog(dialog, title, content);
+        setupAndShowDialog(dialog, title, content, owner);
         return dialog.getResult().getButtonData();
     }
 
@@ -207,7 +197,7 @@ public class MainView extends BorderPane implements View {
      *
      * @param ioResult the {@link IOResult} object containing the information tom display
      */
-    public static void displayIOResultErrorInfoAlert(IOResult ioResult) {
+    public static void displayIOResultErrorInfoAlert(IOResult ioResult, Window owner) {
         TableView<IOErrorInfoEntry> errorTable = new TableView<>();
         TableColumn<IOErrorInfoEntry, String> errorSourceColumn = new TableColumn<>("Source");
         TableColumn<IOErrorInfoEntry, String> errorDescriptionColumn = new TableColumn<>("Error");
@@ -235,29 +225,29 @@ public class MainView extends BorderPane implements View {
 
         switch(ioResult.getOperationType()) {
             case ANNOTATION_IMPORT:
-                displayAnnotationImportInfoAlert(ioResult, errorTable, numErrorEntries);
+                displayAnnotationImportInfoAlert(ioResult, errorTable, numErrorEntries, owner);
                 break;
             case ANNOTATION_SAVING:
                 MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE,
                                           "There were errors while saving annotations.",
                                           numErrorEntries + " image-annotation file"
                                                   + (numErrorEntries > 1 ? "s" : "") + " could not be saved.",
-                                          errorTable);
+                                          errorTable, owner);
                 break;
             case IMAGE_METADATA_LOADING:
-                displayImageMetadataLoadingInfoAlert(ioResult, errorTable, numErrorEntries);
+                displayImageMetadataLoadingInfoAlert(ioResult, errorTable, numErrorEntries, owner);
                 break;
             case BOUNDING_BOX_PREDICTION:
                 MainView.displayInfoAlert("Bounding Box Prediction Error Report",
                                           "There were errors while performing the prediction",
                                           "Bounding box predictions for " + numErrorEntries + " image file" +
                                                   (numErrorEntries > 1 ? "s" : "") + " could not be loaded.",
-                                          errorTable);
+                                          errorTable, owner);
                 break;
             case MODEL_NAME_FETCHING:
                 MainView.displayInfoAlert("Model Fetching Error Report",
                                           "There were errors while fetching model names from the server",
-                                          null, errorTable);
+                                          null, errorTable, owner);
                 break;
         }
     }
@@ -274,14 +264,15 @@ public class MainView extends BorderPane implements View {
      * @return an {@link Optional<T>} (possibly) containing the user's choice
      */
     public static <T> Optional<T> displayChoiceDialogAndGetResult(T defaultChoice, Collection<T> choices,
-                                                                  String title, String header, String content) {
+                                                                  String title, String header, String content,
+                                                                  Window owner) {
         ChoiceDialog<T> choiceDialog = new ChoiceDialog<>(defaultChoice, choices);
         choiceDialog.setTitle(title);
         choiceDialog.setHeaderText(header);
         choiceDialog.setContentText(content);
         choiceDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) choiceDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        ((Stage) choiceDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
+        choiceDialog.initOwner(owner);
         return choiceDialog.showAndWait();
     }
 
@@ -290,64 +281,37 @@ public class MainView extends BorderPane implements View {
      *
      * @param throwable the exception thrown
      */
-    public static void displayExceptionDialog(Throwable throwable) {
+    public static void displayExceptionDialog(Throwable throwable, Window owner) {
         ExceptionDialog exceptionDialog = new ExceptionDialog(throwable);
         exceptionDialog.getDialogPane().getStylesheets()
                        .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) exceptionDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        ((Stage) exceptionDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
+        exceptionDialog.initOwner(owner);
         exceptionDialog.showAndWait();
     }
 
-    public ProgressDialog getModelNameFetchingProgressDialog() {
-        return modelNameFetchingProgressDialog;
+    public static ServiceProgressDialog createServiceProgressDialog(Service<? extends IOResult> service, String title,
+                                                                    String header) {
+        final ServiceProgressDialog progressDialog = new ServiceProgressDialog(service);
+        progressDialog.setTitle(title);
+        progressDialog.setHeaderText(header);
+        ((Stage) progressDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
+
+
+        return progressDialog;
     }
 
-    public ProgressDialog getImageMetaDataLoadingProgressDialog() {
-        return imageMetaDataLoadingProgressDialog;
-    }
-
-    public ProgressDialog getAnnotationImportProgressDialog() {
-        return annotationImportProgressDialog;
-    }
-
-    public ProgressDialog getAnnotationExportProgressDialog() {
-        return annotationExportProgressDialog;
-    }
-
-    public ProgressDialog getBoundingBoxPredictorProgressDialog() {
-        return boundingBoxPredictorProgressDialog;
-    }
-
-    public void connectImageMetaDataLoadingService(Service<? extends IOResult> service) {
-        imageMetaDataLoadingProgressDialog = new ProgressDialog(service);
-    }
-
-    public void connectAnnotationImportService(Service<? extends IOResult> service) {
-        annotationImportProgressDialog = new ProgressDialog(service);
-    }
-
-    public void connectAnnotationExportService(Service<? extends IOResult> service) {
-        annotationExportProgressDialog = new ProgressDialog(service);
-    }
-
-    public void connectBoundingBoxPredictorService(Service<? extends IOResult> service) {
-        boundingBoxPredictorProgressDialog = new ProgressDialog(service);
-    }
-
-    public void connectModelNameFetchingService(Service<? extends IOResult> service) {
-        modelNameFetchingProgressDialog = new ProgressDialog(service);
-    }
-
-    public SettingsDialogView getSettingsDialog() {
-        return settingsDialog;
+    public static void applyDialogStyle(Dialog<?> dialog) {
+        dialog.getDialogPane().getStylesheets()
+              .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
     }
 
     @Override
     public void connectToController(final Controller controller) {
         header.connectToController(controller);
         workspaceSplitPane.connectToController(controller);
-        settingsDialog.connectToController(controller);
+        inferenceSettingsView.connectToController(controller);
     }
 
     @Override
@@ -474,11 +438,11 @@ public class MainView extends BorderPane implements View {
         return workspaceSplitPane.getEditor().getEditorImagePane();
     }
 
+    /* Delegating Getters */
+
     public ImageView getEditorImageView() {
         return workspaceSplitPane.getEditor().getEditorImagePane().getImageView();
     }
-
-    /* Delegating Getters */
 
     public Button getPreviousImageNavigationButton() {
         return workspaceSplitPane.getEditor().getEditorToolBar().getPreviousButton();
@@ -544,76 +508,70 @@ public class MainView extends BorderPane implements View {
         return uiSettingsConfig;
     }
 
-    public void setUpProgressDialogs() {
-        for(ProgressDialog progressDialog : List.of(imageMetaDataLoadingProgressDialog,
-                                                    annotationImportProgressDialog,
-                                                    annotationExportProgressDialog,
-                                                    boundingBoxPredictorProgressDialog,
-                                                    modelNameFetchingProgressDialog)) {
-            progressDialog.getDialogPane().getStylesheets()
-                          .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-            ((Stage) progressDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-            ((Stage) progressDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
-        }
+    public InferenceSettingsView getInferenceSettingsView() {
+        return inferenceSettingsView;
+    }
 
-        imageMetaDataLoadingProgressDialog.setTitle(IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE);
-        imageMetaDataLoadingProgressDialog.setHeaderText(IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER);
+    public UISettingsView getUiSettingsView() {
+        return uiSettingsView;
+    }
 
-        annotationImportProgressDialog.setTitle(LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE);
-        annotationImportProgressDialog.setHeaderText(LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER);
+    public void displaySettingsDialog(Controller controller, Window owner) {
+        final SettingsDialogView settingsDialog = new SettingsDialogView();
 
-        annotationExportProgressDialog.setTitle(SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE);
-        annotationExportProgressDialog.setHeaderText(SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
+        settingsDialog.addCategoryContentPair("Inference", inferenceSettingsView);
+        settingsDialog.addCategoryContentPair("UI", uiSettingsView);
 
-        boundingBoxPredictorProgressDialog.setTitle(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE);
-        boundingBoxPredictorProgressDialog.setHeaderText(BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
+        settingsDialog.connectToController(controller);
 
-        modelNameFetchingProgressDialog.setTitle(FETCHING_MODELS_PROGRESS_DIALOG_TITLE);
-        modelNameFetchingProgressDialog.setHeaderText(FETCHING_MODELS_PROGRESS_DIALOG_HEADER);
+        settingsDialog.initOwner(owner);
+
+        settingsDialog.showAndWait();
+    }
+
+    public Window getSettingsWindow() {
+        return List.of(inferenceSettingsView, uiSettingsView)
+                   .stream()
+                   .filter(item -> item.getScene() != null && item.getScene().getWindow() != null)
+                   .map(item -> item.getScene().getWindow())
+                   .findFirst().orElse(null);
     }
 
     private static void displayImageMetadataLoadingInfoAlert(IOResult ioResult, TableView<IOErrorInfoEntry> errorTable,
-                                                             long numErrorEntries) {
+                                                             long numErrorEntries, Window owner) {
         if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
             MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
-                                      "The folder does not contain any valid image files.", errorTable);
+                                      "The folder does not contain any valid image files.", errorTable, owner);
         } else {
             MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
                                       numErrorEntries + " image file" + (numErrorEntries > 1 ? "s" : "") +
-                                              " could not be loaded.", errorTable);
+                                              " could not be loaded.", errorTable, owner);
         }
     }
 
     private static void displayAnnotationImportInfoAlert(IOResult ioResult, TableView<IOErrorInfoEntry> errorTable,
-                                                         long numErrorEntries) {
+                                                         long numErrorEntries, Window owner) {
         if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
             MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
                                       "There were errors while loading annotations.",
-                                      "The source does not contain any valid annotations.", errorTable);
+                                      "The source does not contain any valid annotations.", errorTable, owner);
         } else {
             MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
                                       "There were errors while loading annotations.",
                                       "Some bounding boxes could not be loaded from " + numErrorEntries +
                                               " image-annotation"
-                                              + (numErrorEntries > 1 ? "s" : "") + ".", errorTable);
+                                              + (numErrorEntries > 1 ? "s" : "") + ".", errorTable, owner);
         }
     }
 
-    private void setUpDialogStyles() {
-        settingsDialog.getDialogPane().getStylesheets()
-                      .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-        ((Stage) settingsDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        ((Stage) settingsDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
-    }
-
-    private static void setupAndShowDialog(Alert dialog, String title, String content) {
+    private static void setupAndShowDialog(Alert dialog, String title, String content, Window owner) {
         dialog.setTitle(title);
         dialog.setHeaderText(null);
         dialog.setContentText(content);
         dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         dialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        ((Stage) dialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
+        dialog.initOwner(owner);
         dialog.showAndWait();
     }
 
@@ -641,15 +599,16 @@ public class MainView extends BorderPane implements View {
         workspaceSplitPane.showObjectPopoverProperty().bind(uiSettingsConfig.showObjectPopoverProperty());
     }
 
-    private static void displayInfoAlert(String title, String header, String content, Node additionalInfoNode) {
+    private static void displayInfoAlert(String title, String header, String content, Node additionalInfoNode,
+                                         Window owner) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(header);
         alert.setContentText(content);
-        alert.getDialogPane().setMinWidth(INFO_DIALOGUE_MIN_WIDTH);
+        alert.getDialogPane().setPrefWidth(INFO_DIALOGUE_MIN_WIDTH);
         alert.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        ((Stage) alert.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
+        alert.initOwner(owner);
 
         GridPane.setVgrow(additionalInfoNode, Priority.ALWAYS);
         GridPane.setHgrow(additionalInfoNode, Priority.ALWAYS);

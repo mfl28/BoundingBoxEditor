@@ -24,7 +24,6 @@ import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoader;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationImportResult;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
 import java.io.File;
@@ -32,7 +31,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
-public class ImageAnnotationImportService extends Service<ImageAnnotationImportResult> {
+public class ImageAnnotationImportService extends IoService<ImageAnnotationImportResult> {
     private final ObjectProperty<File> source = new SimpleObjectProperty<>(this, "source");
     private final ObjectProperty<ImageAnnotationLoadStrategy.Type> importFormat =
             new SimpleObjectProperty<>(this, "importFormat");

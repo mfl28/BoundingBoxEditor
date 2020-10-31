@@ -82,7 +82,7 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private final CheckBox keepImageRatioControl = new CheckBox();
     private final CheckBox mergeCategoriesControl = new CheckBox();
 
-    InferenceSettingsView() {
+    public InferenceSettingsView() {
         getStyleClass().add(GRID_PANE_STYLE_CLASS);
         setUpContent();
         final ColumnConstraints columnConstraints = new ColumnConstraints();
@@ -173,11 +173,6 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     }
 
     @Override
-    public void connectToController(Controller controller) {
-        selectModelButton.setOnAction(action -> controller.onRegisterModelNameFetchingAction());
-    }
-
-    @Override
     public void registerPropertyListeners(Button applyButton) {
         selectedModelLabel.textProperty()
                           .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
@@ -255,6 +250,12 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
 
     public CheckBox getMergeCategoriesControl() {
         return mergeCategoriesControl;
+    }
+
+    @Override
+    public void connectToController(Controller controller) {
+        selectModelButton
+                .setOnAction(action -> controller.onRegisterModelNameFetchingAction());
     }
 
     private boolean validateMinimumScoreControlData() {

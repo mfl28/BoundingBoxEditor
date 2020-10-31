@@ -25,7 +25,6 @@ import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ModelNameFetchResult;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ModelNameFetchService extends Service<ModelNameFetchResult> {
+public class ModelNameFetchService extends IoService<ModelNameFetchResult> {
     private final ObjectProperty<BoundingBoxPredictorClient> client = new SimpleObjectProperty<>(this, "client");
 
     public BoundingBoxPredictorClient getClient() {

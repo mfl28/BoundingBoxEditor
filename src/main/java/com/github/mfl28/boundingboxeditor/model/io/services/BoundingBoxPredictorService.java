@@ -26,13 +26,12 @@ import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredic
 import com.github.mfl28.boundingboxeditor.model.io.results.BoundingBoxPredictionResult;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
 import java.io.File;
 import java.util.Map;
 
-public class BoundingBoxPredictorService extends Service<BoundingBoxPredictionResult> {
+public class BoundingBoxPredictorService extends IoService<BoundingBoxPredictionResult> {
     private final ObjectProperty<File> imageFile = new SimpleObjectProperty<>(this, "imageFile");
     private final ObjectProperty<ImageMetaData> imageMetaData = new SimpleObjectProperty<>(this, "imageMetaData");
 
