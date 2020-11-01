@@ -618,9 +618,9 @@ $base-separator-line-color: derive($base-background-color, -15%);
     &:has-assigned-bounding-boxes {
         -fx-text-fill: $base-alt-accent-color;
         -fx-font-weight: bold;
-        -fx-border-width: 0px 0px 0px 5px;
+        -fx-border-width: 0 0 0 5px;
         -fx-border-color: $base-alt-accent-color;
-        -fx-padding: 5px 5px 5px 0px;
+        -fx-padding: 5px 5px 5px 0;
     }
 
     &:selected {
@@ -1043,7 +1043,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
 }
 
 .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet >  .list-cell {
-    -fx-padding: 4 0 4 5;
+    -fx-padding: 4px 0 4px 5px;
     -fx-background-insets: 0;
     -fx-background: $base-background-light-color;
 }
@@ -1109,12 +1109,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
     }
 
     & .grid-pane {
-        -fx-hgap: 10;
-        -fx-vgap: 15;
-        -fx-padding: 15 15 0 15;
+        -fx-hgap: 10px;
+        -fx-vgap: 15px;
+        -fx-padding: 15px 15px 0 15px;
 
         & .settings-entry-box {
-            -fx-spacing: 10;
+            -fx-spacing: 10px;
             -fx-alignment: center-left;
         }
     }
@@ -1168,7 +1168,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
         -fx-background-insets: 0;
         -fx-border-color: $base-highlight-light-color;
         -fx-border-radius: 3px;
-        -fx-padding: 3 6 3 6;
+        -fx-padding: 3px 6px 3px 6px;
 
         &:disabled {
             -fx-border-color: transparent;
@@ -1184,12 +1184,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
     }
 
     & #settings-subgroup-box {
-        -fx-spacing: 5;
+        -fx-spacing: 5px;
         -fx-alignment: center-left;
 
         & .separator:horizontal .line {
             -fx-border-color: $base-background-light-color;
-            -fx-border-width: 0.5;
+            -fx-border-width: 0.5px;
         }
     }
 

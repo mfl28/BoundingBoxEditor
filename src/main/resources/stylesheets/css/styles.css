@@ -592,9 +592,9 @@
   #image-file-info-cell:has-assigned-bounding-boxes:has-assigned-bounding-boxes {
     -fx-text-fill: #88c0d0;
     -fx-font-weight: bold;
-    -fx-border-width: 0px 0px 0px 5px;
+    -fx-border-width: 0 0 0 5px;
     -fx-border-color: #88c0d0;
-    -fx-padding: 5px 5px 5px 0px; }
+    -fx-padding: 5px 5px 5px 0; }
   /* line 626, src/main/resources/stylesheets/scss/styles.scss */
   #image-file-info-cell:has-assigned-bounding-boxes:selected {
     -fx-text-fill: #2e3440;
@@ -957,7 +957,7 @@
 
 /* line 1045, src/main/resources/stylesheets/scss/styles.scss */
 .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell, .dialog-pane #settings-dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell, #settings-dialog-pane .dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
-  -fx-padding: 4 0 4 5;
+  -fx-padding: 4px 0 4px 5px;
   -fx-background-insets: 0;
   -fx-background: #3b4252; }
 
@@ -1009,12 +1009,12 @@
       -fx-text-fill: derive(#2e3440, -30%); }
   /* line 1111, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .grid-pane {
-    -fx-hgap: 10;
-    -fx-vgap: 15;
-    -fx-padding: 15 15 0 15; }
+    -fx-hgap: 10px;
+    -fx-vgap: 15px;
+    -fx-padding: 15px 15px 0 15px; }
     /* line 1116, src/main/resources/stylesheets/scss/styles.scss */
     #settings-dialog-pane .grid-pane .settings-entry-box {
-      -fx-spacing: 10;
+      -fx-spacing: 10px;
       -fx-alignment: center-left; }
   /* line 1122, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane .label {
@@ -1053,7 +1053,7 @@
     -fx-background-insets: 0;
     -fx-border-color: #4c566a;
     -fx-border-radius: 3px;
-    -fx-padding: 3 6 3 6; }
+    -fx-padding: 3px 6px 3px 6px; }
     /* line 1173, src/main/resources/stylesheets/scss/styles.scss */
     #settings-dialog-pane #selected-model-label:disabled {
       -fx-border-color: transparent; }
@@ -1065,12 +1065,12 @@
       -fx-background-color: transparent; }
   /* line 1186, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane #settings-subgroup-box {
-    -fx-spacing: 5;
+    -fx-spacing: 5px;
     -fx-alignment: center-left; }
     /* line 1190, src/main/resources/stylesheets/scss/styles.scss */
     #settings-dialog-pane #settings-subgroup-box .separator:horizontal .line {
       -fx-border-color: #3b4252;
-      -fx-border-width: 0.5; }
+      -fx-border-width: 0.5px; }
   /* line 1196, src/main/resources/stylesheets/scss/styles.scss */
   #settings-dialog-pane #subgroup-title-label {
     -fx-font-weight: bold; }
