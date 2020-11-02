@@ -32,8 +32,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SettingsDialogView extends Dialog<ButtonType> implements View {
+    public static final String SETTINGS_TITLE = "Settings";
     private static final String SETTINGS_DIALOG_PANE_ID = "settings-dialog-pane";
-    private static final String SETTINGS_TITLE = "Settings";
     private static final double SPLITPANE_DIVIDER_POSITION = 0.35;
     private final ObservableList<String> settingCategories = FXCollections.observableArrayList();
     private final Map<String, Node> categoryToContentMap = new HashMap<>();

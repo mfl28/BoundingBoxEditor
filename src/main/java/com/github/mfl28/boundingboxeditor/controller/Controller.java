@@ -229,7 +229,7 @@ public class Controller {
             if(!inferenceSettingsView.validateSettings()) {
                 MainView.displayErrorAlert(SETTINGS_APPLICATION_ERROR_DIALOG_TITLE,
                                            SETTINGS_APPLICATION_INVALID_FIELDS_ERROR_DIALOG_CONTENT,
-                                           view.getSettingsWindow());
+                                           view.getSettingsWindow().orElse(stage));
                 event.consume();
                 return;
             }
@@ -238,7 +238,7 @@ public class Controller {
                     inferenceSettingsView.getSelectedModelLabel().getText().equals("None")) {
                 MainView.displayErrorAlert(SETTINGS_APPLICATION_ERROR_DIALOG_TITLE,
                                            SETTINGS_APPLICATION_NO_MODEL_SELECTED_ERROR_DIALOG_CONTENT,
-                                           view.getSettingsWindow());
+                                           view.getSettingsWindow().orElse(stage));
                 event.consume();
                 return;
             }
@@ -363,7 +363,7 @@ public class Controller {
         makeClientAvailable();
         modelNameFetchService.setClient(BoundingBoxPredictorClient.create(client, clientConfig));
         modelNameFetchService.getProgressViewer()
-                             .setParentWindow(view.getInferenceSettingsView().getScene().getWindow());
+                             .setParentWindow(view.getSettingsWindow().orElse(stage));
         modelNameFetchService.restart();
     }
 
@@ -858,22 +858,21 @@ public class Controller {
             if(modelNames.isEmpty()) {
                 MainView.displayErrorAlert(MODEL_FETCHING_ERROR_DIALOG_TITLE,
                                            MODEL_FETCHING_NO_MODELS_ERROR_DIALOG_CONTENT,
-                                           view.getInferenceSettingsView().getScene().getWindow());
+                                           view.getSettingsWindow().orElse(stage));
             } else {
                 final Optional<String> modelChoice = MainView.displayChoiceDialogAndGetResult(modelNames.get(0),
                                                                                               modelNames,
                                                                                               MODEL_CHOICE_DIALOG_TITLE,
                                                                                               MODEL_CHOICE_DIALOG_HEADER,
                                                                                               MODEL_CHOICE_DIALOG_CONTENT,
-                                                                                              view.getInferenceSettingsView()
-                                                                                                  .getScene()
-                                                                                                  .getWindow());
+                                                                                              view.getSettingsWindow()
+                                                                                                  .orElse(stage));
                 modelChoice
                         .ifPresent(s -> view.getInferenceSettingsView().getSelectedModelLabel()
                                             .setText(s));
             }
         } else {
-            MainView.displayIOResultErrorInfoAlert(result, view.getInferenceSettingsView().getScene().getWindow());
+            MainView.displayIOResultErrorInfoAlert(result, view.getSettingsWindow().orElse(stage));
         }
     }
 

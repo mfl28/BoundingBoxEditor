@@ -529,12 +529,12 @@ public class MainView extends BorderPane implements View {
         settingsDialog.showAndWait();
     }
 
-    public Window getSettingsWindow() {
-        return List.of(inferenceSettingsView, uiSettingsView)
-                   .stream()
-                   .filter(item -> item.getScene() != null && item.getScene().getWindow() != null)
-                   .map(item -> item.getScene().getWindow())
-                   .findFirst().orElse(null);
+    public Optional<Window> getSettingsWindow() {
+        return Window.getWindows()
+                     .stream()
+                     .filter(window -> window instanceof Stage
+                             && ((Stage) window).getTitle().equals(SettingsDialogView.SETTINGS_TITLE))
+                     .findFirst();
     }
 
     private static void displayImageMetadataLoadingInfoAlert(IOResult ioResult, TableView<IOErrorInfoEntry> errorTable,
