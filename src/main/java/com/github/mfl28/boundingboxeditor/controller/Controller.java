@@ -1236,7 +1236,7 @@ public class Controller {
                                                        + "\nCurrently there " +
                                                        (nrExistingBoundingShapes == 1 ? "is " : "are ") +
                                                        nrExistingBoundingShapes
-                                                       + " annotated object" +
+                                                       + " object" +
                                                        (nrExistingBoundingShapes == 1 ? " " : "s ") +
                                                        "with the category \"" + category.getName() + "\".",
                                                stage);

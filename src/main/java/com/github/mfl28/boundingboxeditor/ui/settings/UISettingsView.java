@@ -32,7 +32,7 @@ public class UISettingsView extends GridPane implements ApplyButtonChangeProvide
     private static final String GRID_PANE_STYLE_CLASS = "grid-pane";
     private static final String SHOW_OBJECT_POPOVER_LABEL_TEXT = "Show object popover";
     private static final String SHOW_POPOVER_TOOLTIP =
-            "Show an image popover when hovering objects in the Annotated Objects tree.";
+            "Show an image popover when hovering objects in the Objects tree.";
     private final CheckBox showObjectPopoverControl = new CheckBox();
 
     public UISettingsView() {

@@ -41,7 +41,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     private static final String SEARCH_CATEGORY_PROMPT_TEXT = "Search Category";
     private static final String OBJECT_CATEGORY_ADD_BUTTON_TEXT = "Add";
     private static final String OBJECT_CATEGORY_COLOR_PICKER_STYLE = "category-color-picker";
-    private static final String OBJECT_SELECTOR_LABEL_TEXT = "Annotated Objects";
+    private static final String OBJECT_SELECTOR_LABEL_TEXT = "Objects";
     private static final String CATEGORY_INPUT_FIELD_PROMPT_TEXT = "Category Name";
     private static final String CATEGORY_INPUT_FIELD_ID = "category-input-field";
     private static final String ADD_BUTTON_ID = "add-button";

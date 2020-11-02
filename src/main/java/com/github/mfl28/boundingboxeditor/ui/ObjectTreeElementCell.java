@@ -103,11 +103,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         nameText.getStyleClass().add(NAME_TEXT_STYLE);
         additionalInfoText.setId(INFO_TEXT_ID);
 
-        popOver.setAutoHide(true);
-        popOver.setHideOnEscape(true);
-        popOver.setArrowLocation(PopOver.ArrowLocation.LEFT_CENTER);
-        popOver.setContentNode(popOverImageView);
-        popOverImageView.setPreserveRatio(true);
+        setUpPopOver();
 
         setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         setUpInternalListeners();
@@ -261,6 +257,15 @@ class ObjectTreeElementCell extends TreeCell<Object> {
                 viewData.setHighlighted(highlightStatus);
             }
         }
+    }
+
+    private void setUpPopOver() {
+        popOver.setAutoHide(true);
+        popOver.setHideOnEscape(true);
+        popOver.setArrowLocation(PopOver.ArrowLocation.LEFT_CENTER);
+        popOver.setContentNode(popOverImageView);
+        popOver.setCornerRadius(0);
+        popOverImageView.setPreserveRatio(true);
     }
 
     private MenuItem createShowAllBoundingShapesMenuItem() {
