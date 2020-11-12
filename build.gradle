@@ -37,7 +37,7 @@ plugins {
 apply plugin: 'com.github.fgiannesini.libsass.gradle.plugin'
 
 group 'com.github.mfl28'
-version '2.2.0'
+version '2.3.0'
 
 sourceCompatibility = 1.11
 
