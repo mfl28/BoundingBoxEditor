@@ -65,7 +65,7 @@ Download the latest release installer or portable image (no installation require
 > ``` 
 
 ### Alternative installation methods
-#### Windows ([chocolatey package](https://chocolatey.org/packages/boundingboxeditor), v2.2.0)
+#### Windows ([chocolatey package](https://chocolatey.org/packages/boundingboxeditor))
 ```
 choco install boundingboxeditor
 ```
