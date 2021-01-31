@@ -443,6 +443,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-shape: $polygon-mode-icon;
 }
 
+#freehand-mode-button-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $shape-icon;
+}
+
 #toggle-square {
     -fx-opacity: 0.3;
 
@@ -468,6 +474,11 @@ $base-separator-line-color: derive($base-background-color, -15%);
     &:editing {
         -fx-stroke-width: 3px;
     }
+}
+
+#bounding-freehand-shape {
+    -fx-stroke-width: 3px;
+    -fx-stroke-line-join: round;
 }
 
 #expand-tree-items-icon {

@@ -277,5 +277,19 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
             return coordinateElement;
         }
+
+        @Override
+        public Element visit(BoundingFreehandShapeData boundingFreehandShapeData) {
+            Element coordinateElement = document.createElement("path");
+
+            List<Double> absolutePoints = boundingFreehandShapeData.getAbsolutePathPoints(imageWidth, imageHeight);
+
+            for(int i = 0; i < absolutePoints.size(); i += 2) {
+                coordinateElement.appendChild(createDoubleValueElement(document, "x", absolutePoints.get(i)));
+                coordinateElement.appendChild(createDoubleValueElement(document, "y", absolutePoints.get(i + 1)));
+            }
+
+            return coordinateElement;
+        }
     }
 }

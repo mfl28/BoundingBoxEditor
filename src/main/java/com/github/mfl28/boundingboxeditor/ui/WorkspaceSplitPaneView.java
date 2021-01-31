@@ -31,7 +31,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Polygon;
+import javafx.scene.shape.*;
 import javafx.scene.transform.Transform;
 import javafx.util.Callback;
 import javafx.util.Duration;
@@ -523,6 +523,21 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 polygon.getPoints().setAll(points);
 
                 imageView.setClip(polygon);
+            }
+            else if(cell.getItem() instanceof BoundingFreehandShapeView) {
+                final List<Double> points =
+                        ((BoundingFreehandShapeView) cell.getItem()).getMinMaxScaledPoints(scaleWidth, scaleHeight);
+
+                final Path path = new Path();
+                path.setFill(Color.WHITE);
+                path.getElements().add(new MoveTo(points.get(0), points.get(1)));
+
+                for(int i = 2; i != points.size(); i += 2) {
+                    path.getElements().add(new LineTo(points.get(i), points.get(i + 1)));
+                }
+
+                path.getElements().add(new ClosePath());
+                imageView.setClip(path);
             }
 
             cell.getPopOver().show(cell);

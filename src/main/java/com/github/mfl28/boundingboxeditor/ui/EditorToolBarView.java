@@ -74,7 +74,9 @@ public class EditorToolBarView extends ToolBar implements View {
     private static final String RESET_IMAGE_SIZE_ICON_BUTTON_ID = "reset-image-size-icon";
     private static final String RECTANGLE_MODE_BUTTON_TEXT = "Rectangle";
     private static final String POLYGON_MODE_BUTTON_TEXT = "Polygon";
+    private static final String FREEHAND_MODE_BUTTON_TEXT = "Freehand";
     private static final String RECTANGLE_MODE_BUTTON_ICON_ID = "rectangle-mode-button-icon";
+    private static final String FREEHAND_MODE_BUTTON_ICON_ID = "freehand-mode-button-icon";
     private static final String POLYGON_MODE_BUTTON_ICON_ID = "polygon-mode-button-icon";
     private static final String PREDICT_BUTTON_TEXT = "Predict";
     private static final String PREDICT_BUTTON_ID = "predict-button";
@@ -87,6 +89,8 @@ public class EditorToolBarView extends ToolBar implements View {
             createDrawModeButton(RECTANGLE_MODE_BUTTON_TEXT, RECTANGLE_MODE_BUTTON_ICON_ID);
     private final ToggleButton polygonModeButton =
             createDrawModeButton(POLYGON_MODE_BUTTON_TEXT, POLYGON_MODE_BUTTON_ICON_ID);
+    private final ToggleButton freehandModeButton =
+            createDrawModeButton(FREEHAND_MODE_BUTTON_TEXT, FREEHAND_MODE_BUTTON_ICON_ID);
     private final ToggleGroup modeToggleGroup = new ToggleGroup();
 
     private final IconButton resetSizeAndCenterImageButton =
@@ -107,7 +111,7 @@ public class EditorToolBarView extends ToolBar implements View {
     private final Label saturationLabel = new Label();
     private final Button resetAllButton = new Button(RESET_ALL_BUTTON_TEXT);
 
-    private final HBox drawingModeToolBox = new HBox(rectangleModeButton, polygonModeButton);
+    private final HBox drawingModeToolBox = new HBox(rectangleModeButton, polygonModeButton, freehandModeButton);
     private final HBox symmetryBox = new HBox();
     private final HBox boundingShapeToolBox = new HBox(hideBoundingShapesButton, showBoundingShapesButton);
     private final HBox imageSettingsToolBox = new HBox(resetSizeAndCenterImageButton, createImageSettingsButton());
@@ -161,6 +165,10 @@ public class EditorToolBarView extends ToolBar implements View {
 
     public ToggleButton getPolygonModeButton() {
         return polygonModeButton;
+    }
+
+    public ToggleButton getFreehandModeButton() {
+        return freehandModeButton;
     }
 
     public Button getPredictButton() {
@@ -238,6 +246,10 @@ public class EditorToolBarView extends ToolBar implements View {
      */
     Slider getSaturationSlider() {
         return saturationSlider;
+    }
+
+    public ToggleGroup getModeToggleGroup() {
+        return modeToggleGroup;
     }
 
     private MenuButton createImageSettingsButton() {
@@ -328,11 +340,14 @@ public class EditorToolBarView extends ToolBar implements View {
 
         rectangleModeButton.setToggleGroup(modeToggleGroup);
         polygonModeButton.setToggleGroup(modeToggleGroup);
+        freehandModeButton.setToggleGroup(modeToggleGroup);
 
         rectangleModeButton.setTooltip(UiUtils.createTooltip(RECTANGLE_DRAWING_MODE_TOOLTIP_TEXT,
                                                              Controller.KeyCombinations.selectRectangleDrawingMode));
         polygonModeButton.setTooltip(UiUtils.createTooltip(POLYGON_DRAWING_MODE_TOOLTIP_TEXT,
                                                            Controller.KeyCombinations.selectPolygonDrawingMode));
+        //TODO: add freehand tooltip
+
 
         modeToggleGroup.selectToggle(rectangleModeButton);
 

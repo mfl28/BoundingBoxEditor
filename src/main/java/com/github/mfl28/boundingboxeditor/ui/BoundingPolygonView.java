@@ -83,7 +83,6 @@ public class BoundingPolygonView extends Polygon implements
         setManaged(false);
         setFill(Color.TRANSPARENT);
         setId(BOUNDING_POLYGON_ID);
-        setStrokeWidth(2.0);
 
         boundingShapeViewData.getNodeGroup().setManaged(false);
         pseudoClassStateChanged(EDITING_PSEUDO_CLASS, false);

@@ -43,6 +43,9 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.ClosePath;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Rectangle;
 
 import java.io.File;
@@ -85,6 +88,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private boolean boundingBoxDrawingInProgress = false;
     private DrawingMode drawingMode = DrawingMode.BOX;
 
+    private boolean freehandDrawingInProgress = false;
+
     /**
      * Creates a new image-pane UI-element responsible for displaying the currently selected image on which the
      * user can draw bounding-shapes.
@@ -123,7 +128,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
      * Constructs a new {@link BoundingBoxView} object which is initialized from the current coordinates and size of the
      * initializerRectangle member.
      */
-    public void constructAndAddNewBoundingBox() {
+    public void finalizeBoundingBox() {
         final BoundingBoxView newBoundingBox = new BoundingBoxView(selectedCategory.get());
 
         newBoundingBox.setCoordinatesAndSizeFromInitializer(initializerRectangle);
@@ -133,6 +138,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
         currentBoundingShapes.add(newBoundingBox);
         boundingShapeSelectionGroup.selectToggle(newBoundingBox);
         initializerRectangle.setVisible(false);
+
+        boundingBoxDrawingInProgress = false;
     }
 
     /**
@@ -203,6 +210,14 @@ public class EditorImagePaneView extends ScrollPane implements View {
         return boundingBoxDrawingInProgress;
     }
 
+    public boolean isFreehandDrawingInProgress() {
+        return freehandDrawingInProgress;
+    }
+
+    public boolean isDrawingInProgress() {
+        return boundingBoxDrawingInProgress || freehandDrawingInProgress;
+    }
+
     /**
      * Sets a boolean indicating that a bounding box is currently drawn by the user.
      */
@@ -247,6 +262,31 @@ public class EditorImagePaneView extends ScrollPane implements View {
         Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
         selectedBoundingPolygon.appendNode(parentCoordinates.getX(), parentCoordinates.getY());
         selectedBoundingPolygon.setEditing(true);
+    }
+
+    public void initializeBoundingFreehandShape(MouseEvent event) {
+        Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
+
+        BoundingFreehandShapeView boundingFreehandShape = new BoundingFreehandShapeView(selectedCategory.get());
+        boundingFreehandShape.setToggleGroup(boundingShapeSelectionGroup);
+
+        currentBoundingShapes.add(boundingFreehandShape);
+
+
+        boundingFreehandShape.autoScaleWithBounds(imageView.boundsInParentProperty());
+
+        boundingFreehandShape.setVisible(true);
+        boundingShapeSelectionGroup.selectToggle(boundingFreehandShape);
+        boundingFreehandShape.addMoveTo(parentCoordinates.getX(), parentCoordinates.getY());
+        freehandDrawingInProgress = true;
+    }
+
+    public void finalizeFreehandShape() {
+        BoundingFreehandShapeView boundingFreehandShape =
+                (BoundingFreehandShapeView) boundingShapeSelectionGroup.getSelectedToggle();
+
+        boundingFreehandShape.getElements().add(new ClosePath());
+        freehandDrawingInProgress = false;
     }
 
     public void setBoundingPolygonsEditingAndConstructing(boolean editing) {
@@ -419,17 +459,29 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 imageView.setCursor(Cursor.CLOSED_HAND);
             } else if(isImageFullyLoaded()
                     && event.getButton().equals(MouseButton.PRIMARY)
-                    && isCategorySelected()
-                    && drawingMode == DrawingMode.BOX) {
+                    && isCategorySelected()) {
+
                 Point2D clampedEventXY =
                         MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
-                Point2D parentCoordinates = imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
-                                                                    Math.min(clampedEventXY.getY(), dragAnchor.getY()));
 
-                initializerRectangle.setX(parentCoordinates.getX());
-                initializerRectangle.setY(parentCoordinates.getY());
-                initializerRectangle.setWidth(Math.abs(clampedEventXY.getX() - dragAnchor.getX()));
-                initializerRectangle.setHeight(Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
+                if(drawingMode == DrawingMode.BOX) {
+                    Point2D parentCoordinates =
+                            imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
+                                                    Math.min(clampedEventXY.getY(), dragAnchor.getY()));
+
+                    initializerRectangle.setX(parentCoordinates.getX());
+                    initializerRectangle.setY(parentCoordinates.getY());
+                    initializerRectangle.setWidth(Math.abs(clampedEventXY.getX() - dragAnchor.getX()));
+                    initializerRectangle.setHeight(Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
+                } else if(drawingMode == DrawingMode.FREEHAND) {
+                    Point2D parentCoordinates =
+                            imageView.localToParent(clampedEventXY.getX(), clampedEventXY.getY());
+
+                    BoundingFreehandShapeView shape =
+                            (BoundingFreehandShapeView)boundingShapeSelectionGroup.getSelectedToggle();
+
+                    shape.addLineTo(parentCoordinates.getX(), parentCoordinates.getY());
+                }
             }
         });
     }
@@ -505,5 +557,5 @@ public class EditorImagePaneView extends ScrollPane implements View {
         }
     }
 
-    public enum DrawingMode {BOX, POLYGON}
+    public enum DrawingMode {BOX, POLYGON, FREEHAND}
 }

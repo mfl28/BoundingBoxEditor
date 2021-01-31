@@ -90,8 +90,22 @@ public class EditorView extends BorderPane implements View {
 
             if(Boolean.TRUE.equals(newValue)) {
                 editorImagePaneView.setDrawingMode(EditorImagePaneView.DrawingMode.BOX);
-            } else {
+            }
+        });
+
+        editorToolBarView.getPolygonModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
+            editorImagePaneView.setBoundingPolygonsEditingAndConstructing(false);
+
+            if(Boolean.TRUE.equals(newValue)) {
                 editorImagePaneView.setDrawingMode(EditorImagePaneView.DrawingMode.POLYGON);
+            }
+        });
+
+        editorToolBarView.getFreehandModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
+            editorImagePaneView.setBoundingPolygonsEditingAndConstructing(false);
+
+            if(Boolean.TRUE.equals(newValue)) {
+                editorImagePaneView.setDrawingMode(EditorImagePaneView.DrawingMode.FREEHAND);
             }
         });
 
