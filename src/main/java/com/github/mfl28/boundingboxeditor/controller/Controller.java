@@ -102,7 +102,6 @@ public class Controller {
             "You cannot delete a category that has existing bounding-boxes assigned to it.";
 
     private static final String IMAGE_FOLDER_CHOOSER_TITLE = "Choose Image Folder";
-    private static final String[] imageExtensions = {".jpg", ".bmp", ".png"};
     private static final int MAX_DIRECTORY_DEPTH = 1;
     private static final String SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE = "Save Error";
     private static final String NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT =
@@ -1258,8 +1257,7 @@ public class Controller {
         Path path = Paths.get(directory.getPath());
 
         try(Stream<Path> imageFiles = Files.walk(path, MAX_DIRECTORY_DEPTH)) {
-            return imageFiles.filter(file -> Arrays.stream(imageExtensions).anyMatch(file.toString()::endsWith))
-                             .map(file -> new File(file.toString()))
+            return imageFiles.map(file -> new File(file.toString()))
                              .filter(File::isFile)
                              .sorted(Comparator.comparing(File::getName))
                              .collect(Collectors.toList());

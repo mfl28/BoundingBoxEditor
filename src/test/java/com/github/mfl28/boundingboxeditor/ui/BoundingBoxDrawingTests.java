@@ -19,10 +19,15 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
+import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.utils.MathUtils;
 import javafx.geometry.Point2D;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.TableView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -35,6 +40,7 @@ import org.testfx.matcher.control.TableViewMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.testfx.api.FxAssert.verifyThat;
@@ -174,10 +180,44 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         loadImageFolderAndClickKeepCategoriesAndSaveAnnotationOptions(robot, TEST_IMAGE_FOLDER_PATH_2, "No", "No",
                                                                       testinfo);
 
+        final Stage errorReportStage = timeOutGetTopModalStage(robot, "Image loading error report", testinfo);
+        verifyThat(errorReportStage, Matchers.notNullValue(), saveScreenshot(testinfo));
+
+        final String errorReportDialogContentReferenceText = "1 image file could not be loaded.";
+        final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
+        verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText),
+                   saveScreenshot(testinfo));
+
+        verifyThat(errorReportDialog.getExpandableContent(), Matchers.instanceOf(GridPane.class),
+                   saveScreenshot(testinfo));
+        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().get(0),
+                   Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
+        final GridPane errorReportDialogContentPane = (GridPane) errorReportDialog.getExpandableContent();
+
+        verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class),
+                   saveScreenshot(testinfo));
+
+        @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+
+        final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
+
+        verifyThat(errorInfoEntries, Matchers.hasSize(1), saveScreenshot(testinfo));
+
+        final IOErrorInfoEntry referenceErrorInfoEntry1 = new IOErrorInfoEntry("no_image_file.txt",
+                                                                               "Invalid or unsupported image file.");
+
+        verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1), saveScreenshot(testinfo));
+
+        timeOutClickOnButtonInDialogStage(robot, errorReportStage, ButtonType.OK, testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0), saveScreenshot(testinfo));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0), saveScreenshot(testinfo));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(0),
                    saveScreenshot(testinfo));
+
+        verifyThat(mainView.getImageFileListView().getItems(), Matchers.hasSize(5));
 
         verifyThat(mainView.getImageFileListView().getItems()
                            .stream().noneMatch(ImageFileListView.FileInfo::isHasAssignedBoundingShapes),

@@ -26,12 +26,17 @@ import javax.imageio.stream.ImageInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 /**
  * Holds metadata information about an image.
  */
 public class ImageMetaData {
+    private static final List<String> supportedImageFormats = List.of("jpeg", "bmp", "png");
+    private static final String NOT_AN_IMAGE_FILE_ERROR_MESSAGE = "Not an image file.";
+    private static final String UNSUPPORTED_IMAGE_FORMAT_ERROR_MESSAGE = "Unsupported image file format.";
+    private static final String INVALID_OR_UNSUPPORTED_IMAGE_ERROR_MESSAGE = "Invalid or unsupported image file.";
     private final String fileName;
     private ImageMetaDataDetails details;
 
@@ -142,12 +147,22 @@ public class ImageMetaData {
         int numComponents;
         // Source: https://stackoverflow.com/a/1560052
         try(ImageInputStream imageStream = ImageIO.createImageInputStream(imageFile)) {
+            if(imageStream == null) {
+                throw new NotAnImageFileException(NOT_AN_IMAGE_FILE_ERROR_MESSAGE);
+            }
+
             Iterator<ImageReader> readers = ImageIO.getImageReaders(imageStream);
 
             if(readers.hasNext()) {
                 ImageReader reader = readers.next();
                 try {
                     reader.setInput(imageStream);
+
+                    final String imageFormatName = reader.getFormatName().toLowerCase();
+
+                    if(!supportedImageFormats.contains(imageFormatName)) {
+                        throw new UnsupportedImageFileException(UNSUPPORTED_IMAGE_FORMAT_ERROR_MESSAGE);
+                    }
 
                     width = reader.getWidth(0);
                     height = reader.getHeight(0);
@@ -156,7 +171,7 @@ public class ImageMetaData {
                     reader.dispose();
                 }
             } else {
-                throw new ImageMetaDataReadException("Could not read image meta-data.");
+                throw new UnsupportedImageFileException(INVALID_OR_UNSUPPORTED_IMAGE_ERROR_MESSAGE);
             }
         }
 
@@ -202,10 +217,18 @@ public class ImageMetaData {
         }
     }
 
-    public static class ImageMetaDataReadException extends RuntimeException {
+    public static class NotAnImageFileException extends RuntimeException {
+        private static final long serialVersionUID = 5256590447321177896L;
+
+        public NotAnImageFileException(String errorMessage) {
+            super(errorMessage);
+        }
+    }
+
+    public static class UnsupportedImageFileException extends RuntimeException {
         private static final long serialVersionUID = -4143199502921469708L;
 
-        public ImageMetaDataReadException(String errorMessage) {
+        public UnsupportedImageFileException(String errorMessage) {
             super(errorMessage);
         }
     }
