@@ -29,6 +29,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
@@ -110,6 +111,8 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
     private ImageAnnotation parseAnnotationFile(File file) throws SAXException, IOException,
                                                                   ParserConfigurationException {
+        documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
         final Document document = documentBuilderFactory.newDocumentBuilder().parse(file);
         document.normalize();
 

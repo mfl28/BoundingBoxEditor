@@ -28,6 +28,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
@@ -109,7 +110,10 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
     private void createXmlFileFromImageAnnotationDataElement(final ImageAnnotation dataElement)
             throws TransformerException, ParserConfigurationException {
+        documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
         final Document document = documentBuilderFactory.newDocumentBuilder().newDocument();
+
         final Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
