@@ -112,7 +112,7 @@ class TagScrollPaneView extends ScrollPane implements View {
 
             if(oldValue != null) {
                 oldValue.removeListener(tagsListener);
-                tagFlowPane.getChildren().removeIf(node -> node instanceof TagBox);
+                tagFlowPane.getChildren().removeIf(TagBox.class::isInstance);
             }
 
             if(newValue != null) {

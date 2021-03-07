@@ -252,8 +252,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     public void setBoundingPolygonsEditingAndConstructing(boolean editing) {
         currentBoundingShapes.stream()
-                             .filter(viewable -> viewable instanceof BoundingPolygonView)
-                             .map(viewable -> (BoundingPolygonView) viewable)
+                             .filter(BoundingPolygonView.class::isInstance)
+                             .map(BoundingPolygonView.class::cast)
                              .forEach(boundingPolygonView -> {
                                  boundingPolygonView.setEditing(editing);
                                  boundingPolygonView.setConstructing(false);
