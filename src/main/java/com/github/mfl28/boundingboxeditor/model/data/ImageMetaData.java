@@ -36,7 +36,7 @@ public class ImageMetaData {
     private static final List<String> supportedImageFormats = List.of("jpeg", "bmp", "png");
     private static final String NOT_AN_IMAGE_FILE_ERROR_MESSAGE = "Not an image file.";
     private static final String UNSUPPORTED_IMAGE_FORMAT_ERROR_MESSAGE = "Unsupported image file format.";
-    private static final String INVALID_OR_UNSUPPORTED_IMAGE_ERROR_MESSAGE = "Invalid or unsupported image file.";
+    private static final String INVALID_IMAGE_FILE_ERROR_MESSAGE = "Invalid image file.";
     private final String fileName;
     private ImageMetaDataDetails details;
 
@@ -171,7 +171,7 @@ public class ImageMetaData {
                     reader.dispose();
                 }
             } else {
-                throw new UnsupportedImageFileException(INVALID_OR_UNSUPPORTED_IMAGE_ERROR_MESSAGE);
+                throw new UnsupportedImageFileException(INVALID_IMAGE_FILE_ERROR_MESSAGE);
             }
         }
 

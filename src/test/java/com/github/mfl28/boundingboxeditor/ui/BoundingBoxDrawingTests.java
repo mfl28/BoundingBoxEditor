@@ -183,7 +183,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         final Stage errorReportStage = timeOutGetTopModalStage(robot, "Image loading error report", testinfo);
         verifyThat(errorReportStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        final String errorReportDialogContentReferenceText = "1 image file could not be loaded.";
+        final String errorReportDialogContentReferenceText = "2 image files could not be loaded.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText),
                    saveScreenshot(testinfo));
@@ -202,12 +202,15 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
-        verifyThat(errorInfoEntries, Matchers.hasSize(1), saveScreenshot(testinfo));
+        verifyThat(errorInfoEntries, Matchers.hasSize(2), saveScreenshot(testinfo));
 
-        final IOErrorInfoEntry referenceErrorInfoEntry1 = new IOErrorInfoEntry("no_image_file.txt",
-                                                                               "Invalid or unsupported image file.");
+        final IOErrorInfoEntry referenceErrorInfoEntry1 = new IOErrorInfoEntry("cameraman.tif",
+                                                                               "Unsupported image file format.");
+        final IOErrorInfoEntry referenceErrorInfoEntry2 = new IOErrorInfoEntry("no_image_file.txt",
+                                                                               "Invalid image file.");
 
-        verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1), saveScreenshot(testinfo));
+        verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1, referenceErrorInfoEntry2),
+                   saveScreenshot(testinfo));
 
         timeOutClickOnButtonInDialogStage(robot, errorReportStage, ButtonType.OK, testinfo);
         WaitForAsyncUtils.waitForFxEvents();
