@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - master
-      - feature/**
-      - bugfix/**
-      - release/**
     tags:
       - 'v*.*.*'
     paths-ignore:
@@ -147,7 +144,7 @@ jobs:
           name: boundingboxeditor-portable-linux
           path: build/jpackage/BoundingBoxEditor
   Build-and-Test-macOS:
-    runs-on: macOS-latest
+    runs-on: macOS-10.15
     name: Build and Test (macOS)
     steps:
       - name: Git checkout
