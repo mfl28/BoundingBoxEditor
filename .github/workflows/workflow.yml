@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - dev
     tags:
       - 'v*.*.*'
     paths-ignore:
@@ -18,7 +17,6 @@ on:
   pull_request:
     branches:
       - master
-      - dev
 
 env:
   JAVA_VERSION: '14.0.2'
@@ -146,7 +144,7 @@ jobs:
           name: boundingboxeditor-portable-linux
           path: build/jpackage/BoundingBoxEditor
   Build-and-Test-macOS:
-    runs-on: macOS-latest
+    runs-on: macOS-10.15
     name: Build and Test (macOS)
     steps:
       - name: Git checkout
