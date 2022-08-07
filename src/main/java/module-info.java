@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
+ * Copyright (C) 2022 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
  *
  * This file is part of Bounding Box Editor
  *
