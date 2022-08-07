@@ -25,7 +25,6 @@ import com.github.mfl28.boundingboxeditor.ui.View;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.beans.binding.Bindings;
 import javafx.css.PseudoClass;
-import javafx.geometry.Orientation;
 import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -453,14 +452,7 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     }
 
     private void addSubgroupTitleRow(String title, int row) {
-        final Label titleLabel = new Label(title);
-        titleLabel.setId(SUBGROUP_TITLE_LABEL_ID);
-        final Separator separator = new Separator();
-        separator.setOrientation(Orientation.HORIZONTAL);
-        HBox.setHgrow(separator, Priority.ALWAYS);
-
-        final HBox box = new HBox(titleLabel, separator);
-        box.setId(SETTINGS_SUBGROUP_BOX_ID);
+        final HBox box = UiUtils.createSettingsTitleRow(title, SUBGROUP_TITLE_LABEL_ID, SETTINGS_SUBGROUP_BOX_ID);
         box.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
 
         add(box, 0, row, 2, 1);

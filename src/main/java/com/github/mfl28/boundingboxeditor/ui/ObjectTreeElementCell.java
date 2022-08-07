@@ -83,6 +83,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private final MenuItem showAllBoundingShapesMenuItem = createShowAllBoundingShapesMenuItem();
     private final MenuItem addVerticesMenuItem = createRefineMenuItem();
     private final MenuItem deleteVerticesMenuItem = createDeleteVerticesMenuItem();
+    private final MenuItem simplifyMenuItem = createSimplifyMenuItem();
     private final MenuItem changeObjectCategoryMenuItem = createChangeObjectCategoryMenuItem();
     private final SeparatorMenuItem separatorMenuItem = new SeparatorMenuItem();
     private final BooleanProperty draggedOver = new SimpleBooleanProperty(false);
@@ -323,6 +324,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
                 (observable, oldValue, newValue) -> pseudoClassStateChanged(draggedOverPseudoClass, newValue));
         addVerticesMenuItem.setOnAction(event -> ((BoundingPolygonView) getItem()).refine());
         deleteVerticesMenuItem.setOnAction(event -> ((BoundingPolygonView) getItem()).removeEditingVertices());
+        simplifyMenuItem.setOnAction(event -> ((BoundingPolygonView) getItem()).simplify(0.1));
     }
 
     private HBox createContentBox() {
@@ -408,8 +410,17 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(DELETE_VERTICES_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                        UiUtils.createTooltip(DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT,
-                                              Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected));
+                UiUtils.createTooltip(DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT,
+                        Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected));
+        return menuItem;
+    }
+
+    private MenuItem createSimplifyMenuItem() {
+        CustomMenuItem menuItem = new CustomMenuItem(new Label("Simplify"));
+        menuItem.setId("simplify-context-menu");
+
+        Tooltip.install(menuItem.getContent(), UiUtils.createTooltip("Simplify polygon."));
+
         return menuItem;
     }
 
@@ -462,8 +473,12 @@ class ObjectTreeElementCell extends TreeCell<Object> {
                 getItems().add(addVerticesMenuItem);
             }
 
-            if(!getItems().contains(deleteVerticesMenuItem)) {
+            if (!getItems().contains(deleteVerticesMenuItem)) {
                 getItems().add(deleteVerticesMenuItem);
+            }
+            
+            if (!getItems().contains(simplifyMenuItem)) {
+                getItems().add(simplifyMenuItem);
             }
 
             addVerticesMenuItem.disableProperty()
@@ -475,15 +490,21 @@ class ObjectTreeElementCell extends TreeCell<Object> {
                             .or(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
                                                       .getEditingIndices()).greaterThan(
                                     Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
-                                                          .getVertexHandles()).subtract(2))));
+                                                    .getVertexHandles()).subtract(2))));
+                                                          
+            simplifyMenuItem.disableProperty().bind(
+                    Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem()).getVertexHandles())
+                .lessThan(3));
         }
 
         void removePolygonFeatures() {
             getItems().remove(addVerticesMenuItem);
             getItems().remove(deleteVerticesMenuItem);
+            getItems().remove(simplifyMenuItem);
 
             addVerticesMenuItem.disableProperty().unbind();
             deleteVerticesMenuItem.disableProperty().unbind();
+            simplifyMenuItem.disableProperty().unbind();
         }
 
         void addViewFeatures() {

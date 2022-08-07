@@ -22,8 +22,11 @@ import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.utils.MathUtils;
 import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -44,12 +47,12 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.ClosePath;
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Rectangle;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A UI-element responsible for displaying the currently selected image on which the
@@ -78,6 +81,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private final ObservableList<BoundingShapeViewable> currentBoundingShapes = FXCollections.observableArrayList(
             item -> new Observable[]{item.getViewData().objectCategoryProperty()});
     private final ObjectProperty<ObjectCategory> selectedCategory = new SimpleObjectProperty<>(null);
+    private final DoubleProperty simplifyRelativeDistanceTolerance = new SimpleDoubleProperty(0.0);
+    private final BooleanProperty autoSimplifyPolygons = new SimpleBooleanProperty(true);
 
     private final Rectangle initializerRectangle = createInitializerRectangle();
     private final DragAnchor dragAnchor = new DragAnchor();
@@ -122,6 +127,14 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     public void setDrawingMode(DrawingMode drawingMode) {
         this.drawingMode = drawingMode;
+    }
+
+    public DoubleProperty simplifyRelativeDistanceToleranceProperty() {
+        return simplifyRelativeDistanceTolerance;
+    }
+
+    public BooleanProperty autoSimplifyPolygonsProperty() {
+        return autoSimplifyPolygons;
     }
 
     /**
@@ -282,10 +295,46 @@ public class EditorImagePaneView extends ScrollPane implements View {
     }
 
     public void finalizeFreehandShape() {
-        BoundingFreehandShapeView boundingFreehandShape =
-                (BoundingFreehandShapeView) boundingShapeSelectionGroup.getSelectedToggle();
+        BoundingFreehandShapeView boundingFreehandShape = (BoundingFreehandShapeView) boundingShapeSelectionGroup
+                .getSelectedToggle();
 
         boundingFreehandShape.getElements().add(new ClosePath());
+
+        BoundingPolygonView boundingPolygonView = new BoundingPolygonView(
+                boundingFreehandShape.getViewData().getObjectCategory());
+
+        final List<Double> pointsInImage = boundingFreehandShape.getPointsInImage();
+
+        boundingPolygonView.setEditing(true);
+
+        for (int i = 0; i < pointsInImage.size(); i += 2) {
+            boundingPolygonView.appendNode(pointsInImage.get(i), pointsInImage.get(i + 1));
+        }
+
+        if (autoSimplifyPolygons.get()) {
+            boundingPolygonView.simplify(simplifyRelativeDistanceTolerance.get(),
+                    boundingFreehandShape.getViewData().autoScaleBounds().getValue());
+        }
+
+        boundingPolygonView.setToggleGroup(boundingShapeSelectionGroup);
+
+        currentBoundingShapes.remove(boundingFreehandShape);
+
+        ObjectCategoryTreeItem parentTreeItem = (ObjectCategoryTreeItem) boundingFreehandShape.getViewData()
+                .getTreeItem().getParent();
+        parentTreeItem.detachBoundingShapeTreeItemChild(boundingFreehandShape.getViewData().getTreeItem());
+
+        if (parentTreeItem.getChildren().isEmpty()) {
+            parentTreeItem.getParent().getChildren().remove(parentTreeItem);
+        }
+
+        currentBoundingShapes.add(boundingPolygonView);
+
+        boundingPolygonView.autoScaleWithBounds(imageView.boundsInParentProperty());
+        boundingPolygonView.setVisible(true);
+        boundingShapeSelectionGroup.selectToggle(boundingPolygonView);
+        setBoundingPolygonsEditingAndConstructing(false);
+
         freehandDrawingInProgress = false;
     }
 

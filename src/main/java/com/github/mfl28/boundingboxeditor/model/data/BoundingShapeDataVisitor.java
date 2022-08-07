@@ -27,6 +27,4 @@ public interface BoundingShapeDataVisitor<T> {
     T visit(BoundingBoxData boundingBoxData);
 
     T visit(BoundingPolygonData boundingPolygonData);
-
-    T visit(BoundingFreehandShapeData boundingFreehandShapeData);
 }

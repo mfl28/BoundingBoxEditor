@@ -18,7 +18,10 @@
  */
 package com.github.mfl28.boundingboxeditor.utils;
 
+import javafx.geometry.Orientation;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCombination;
@@ -107,5 +110,18 @@ public class UiUtils {
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         dialog.close();
         dialog.getDialogPane().getButtonTypes().remove(ButtonType.CLOSE);
+    }
+
+    public static HBox createSettingsTitleRow(String title, String titleId, String boxId) {
+        final Label titleLabel = new Label(title);
+        titleLabel.setId(titleId);
+        final Separator separator = new Separator();
+        separator.setOrientation(Orientation.HORIZONTAL);
+        HBox.setHgrow(separator, Priority.ALWAYS);
+
+        final HBox box = new HBox(titleLabel, separator);
+        box.setId(boxId);
+
+        return box;
     }
 }

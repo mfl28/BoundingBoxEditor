@@ -216,6 +216,8 @@ public class Controller {
             .setDisplayedSettingsFromPredictorConfig(model.getBoundingBoxPredictorConfig());
         view.getUiSettingsView()
             .setDisplayedSettingsFromUISettingsConfig(view.getUiSettingsConfig());
+        view.getEditorSettingsView()
+            .setDisplayedSettingsFromEditorSettingsConfig(view.getEditorSettingsConfig());
 
         view.displaySettingsDialog(this, stage);
     }
@@ -250,6 +252,8 @@ public class Controller {
             .applyDisplayedSettingsToPredictorConfig(model.getBoundingBoxPredictorConfig());
         view.getUiSettingsView()
             .applyDisplayedSettingsToUISettingsConfig(view.getUiSettingsConfig());
+        view.getEditorSettingsView()
+            .applyDisplayedSettingsToEditorSettingsConfig(view.getEditorSettingsConfig());
 
         if(!inferenceWasEnabled && model.getBoundingBoxPredictorConfig().isInferenceEnabled()) {
             makeClientAvailable();

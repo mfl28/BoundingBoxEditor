@@ -303,7 +303,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                     currentSelectedItem.setHasAssignedBoundingShapes(true);
                 }
 
-                if(c.wasRemoved()) {
+                if (c.wasRemoved()) {
                     editor.getEditorImagePane().removeBoundingShapesFromSceneGroup(c.getRemoved());
 
                     if(editor.getEditorImagePane().getCurrentBoundingShapes().isEmpty() &&

@@ -97,6 +97,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/jakarta.ws.rs/jakarta.ws.rs-api
     implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
+
+    // https://mvnrepository.com/artifact/org.locationtech.jts/jts-core
+    implementation 'org.locationtech.jts:jts-core:1.19.0'
 }
 
 javafx {

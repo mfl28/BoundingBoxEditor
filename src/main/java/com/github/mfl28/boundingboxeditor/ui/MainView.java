@@ -23,6 +23,7 @@ import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
+import com.github.mfl28.boundingboxeditor.ui.settings.EditorSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.settings.InferenceSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.settings.SettingsDialogView;
 import com.github.mfl28.boundingboxeditor.ui.settings.UISettingsView;
@@ -73,8 +74,10 @@ public class MainView extends BorderPane implements View {
     private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
     private final StatusBarView statusBar = new StatusBarView();
     private final UISettingsConfig uiSettingsConfig = new UISettingsConfig();
+    private final EditorSettingsConfig editorSettingsConfig = new EditorSettingsConfig();
     private final InferenceSettingsView inferenceSettingsView = new InferenceSettingsView();
     private final UISettingsView uiSettingsView = new UISettingsView();
+    private final EditorSettingsView editorSettingsView = new EditorSettingsView();
 
 
     /**
@@ -503,6 +506,14 @@ public class MainView extends BorderPane implements View {
         return inferenceSettingsView;
     }
 
+    public EditorSettingsView getEditorSettingsView() {
+        return editorSettingsView;
+    }
+
+    public EditorSettingsConfig getEditorSettingsConfig() {
+        return editorSettingsConfig;
+    }
+
     public UISettingsView getUiSettingsView() {
         return uiSettingsView;
     }
@@ -510,6 +521,7 @@ public class MainView extends BorderPane implements View {
     public void displaySettingsDialog(Controller controller, Window owner) {
         final SettingsDialogView settingsDialog = new SettingsDialogView();
 
+        settingsDialog.addCategoryContentPair("Editor", editorSettingsView);
         settingsDialog.addCategoryContentPair("Inference", inferenceSettingsView);
         settingsDialog.addCategoryContentPair("UI", uiSettingsView);
 
@@ -588,6 +600,10 @@ public class MainView extends BorderPane implements View {
         });
 
         workspaceSplitPane.showObjectPopoverProperty().bind(uiSettingsConfig.showObjectPopoverProperty());
+        workspaceSplitPane.getEditor().getEditorImagePane().autoSimplifyPolygonsProperty()
+                .bind(editorSettingsConfig.autoSimplifyPolygonsProperty());
+        workspaceSplitPane.getEditor().getEditorImagePane().simplifyRelativeDistanceToleranceProperty()
+                .bind(editorSettingsConfig.simplifyRelativeDistanceToleranceProperty());
     }
 
     private static void displayInfoAlert(String title, String header, String content, Node additionalInfoNode,

@@ -18,8 +18,6 @@
  */
 package com.github.mfl28.boundingboxeditor.ui;
 
-import com.github.mfl28.boundingboxeditor.model.data.BoundingFreehandShapeData;
-import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
@@ -38,7 +36,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class BoundingFreehandShapeView extends Path implements View, Toggle,
-                                                               BoundingShapeDataConvertible, BoundingShapeViewable {
+                                                               BoundingShapeViewable {
     private static final String BOUNDING_FREEHAND_SHAPE_ID = "bounding-freehand-shape";
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
@@ -62,19 +60,23 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
         setUpInternalListeners();
     }
 
-    public static BoundingFreehandShapeView fromData(BoundingFreehandShapeData data, double imageWidth,
-                                                     double imageHeight) {
-        BoundingFreehandShapeView boundingFreehandShapeView = new BoundingFreehandShapeView(data.getCategory());
-        boundingFreehandShapeView.pointsInImage = data.getAbsolutePathPoints(imageWidth, imageHeight);
-        boundingFreehandShapeView.getTags().setAll(data.getTags());
+    public List<Double> getPointsInImage() {
+        List<Double> points = new ArrayList<>((getElements().size() - 1) * 2);
 
-        return boundingFreehandShapeView;
-    }
+        for(PathElement pathElement : getElements()) {
+            if(pathElement instanceof MoveTo) {
+                MoveTo moveToElement = (MoveTo) pathElement;
+                points.add(moveToElement.getX());
+                points.add(moveToElement.getY());
+            } else if(pathElement instanceof LineTo) {
+                LineTo lineToElement = (LineTo) pathElement;
 
-    @Override
-    public BoundingShapeData toBoundingShapeData() {
-        return new BoundingFreehandShapeData(boundingShapeViewData.getObjectCategory(),
-                                             boundingShapeViewData.getTags(), getRelativePointsInImageView());
+                points.add(lineToElement.getX());
+                points.add(lineToElement.getY());
+            }
+        }
+
+        return points;
     }
 
     @Override
