@@ -16,12 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Bounding Box Editor. If not, see <http://www.gnu.org/licenses/>.
  */
-buildscript {
-    dependencies {
-        classpath 'com.github.fgiannesini.libsass.gradle.plugin:libsass-gradle-plugin:+'
-    }
-}
-
 plugins {
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.10'
@@ -32,9 +26,8 @@ plugins {
     id 'org.sonarqube' version '3.3'
     id 'org.ysb33r.cloudci' version '3.0.0'
     id 'com.github.hierynomus.license' version '0.15.0'
+    id 'io.miret.etienne.sass' version '1.4.1'
 }
-
-apply plugin: 'com.github.fgiannesini.libsass.gradle.plugin'
 
 group 'com.github.mfl28'
 version '2.3.0'
@@ -145,18 +138,21 @@ jacocoTestReport {
     }
 }
 
-libSassParameters {
-    inputFilePath = "${projectDir}/src/main/resources/stylesheets/scss/styles.scss"
-    outputFilePath = "${projectDir}/src/main/resources/stylesheets/css/styles.css"
-    watchedDirectoryPath = "scss"
-    sourceComments = true
+compileSass {
+    outputDir = project.file ("${buildDir}/resources/main/stylesheets/css")
+    destPath = "."
+    sourceDir = project.file ("${projectDir}/src/main/resources/stylesheets/scss")
+    style = expanded
+    noCharset ()
+    noErrorCss ()
+    sourceMap = none
 }
 
 compileJava {
     options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-requires-automatic'])
 }
 
-compileJava.finalizedBy('compileLibSass')
+compileJava.finalizedBy('compileSass')
 
 application {
     mainModule = "com.github.mfl28.boundingboxeditor"
