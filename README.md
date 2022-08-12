@@ -133,7 +133,7 @@ docker container cp bbeditor:/artifacts .
 * [TestFX](https://github.com/TestFX/TestFX) (used for the tests)
 * [JUnit 5](https://junit.org/junit5/) (used for the tests)
 * [Jacoco](https://www.jacoco.org/jacoco/) (used for creating code coverage results)
-* [LibSass Gradle Plugin](https://github.com/fgiannesini/LibSassGradlePlugin) (used to compile .scss style-files into [JavaFX supported] .css files)
+* [sass-gradle-plugin](https://github.com/EtienneMiret/sass-gradle-plugin) (used to compile .scss style-files into [JavaFX supported] .css files)
 * [Badass JLink Plugin](https://github.com/beryx/badass-jlink-plugin) (used to create modular runtime images of the application)
 * [Gradle Modules Plugin](https://github.com/java9-moduqlarity/gradle-modules-plugin) (used to run the tests on the classpath)
 * [Feather Icons](https://feathericons.com/)
