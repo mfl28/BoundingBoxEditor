@@ -32,8 +32,6 @@ plugins {
 group 'com.github.mfl28'
 version '2.3.0'
 
-sourceCompatibility = 1.11
-
 repositories {
     mavenCentral()
 }
@@ -179,6 +177,9 @@ application {
 
 java {
     modularity.inferModulePath = true
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 
 jlink {
