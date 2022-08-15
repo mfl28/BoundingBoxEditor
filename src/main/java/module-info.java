@@ -29,7 +29,10 @@ module com.github.mfl28.boundingboxeditor {
     requires com.google.gson;
     requires jersey.client;
     requires jersey.common;
-    requires java.ws.rs;
+    requires jakarta.ws.rs;
+    requires jakarta.inject;
+    requires jakarta.annotation;
+    requires jakarta.activation;
     requires javafx.swing;
     requires jersey.media.multipart;
     requires org.jvnet.mimepull;
@@ -39,6 +42,6 @@ module com.github.mfl28.boundingboxeditor {
     opens com.github.mfl28.boundingboxeditor.model.io to javafx.base, com.google.gson;
     opens com.github.mfl28.boundingboxeditor.model.io.results to javafx.base, com.google.gson;
     opens com.github.mfl28.boundingboxeditor.model.io.restclients to javafx.base, com.google.gson;
-    exports com.github.mfl28.boundingboxeditor.model.io.restclients to hk2.locator;
+    exports com.github.mfl28.boundingboxeditor.model.io.restclients to org.glassfish.hk2.locator;
     exports com.github.mfl28.boundingboxeditor to javafx.graphics;
 }
