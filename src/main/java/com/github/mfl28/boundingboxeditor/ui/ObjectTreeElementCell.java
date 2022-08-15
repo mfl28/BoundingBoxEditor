@@ -363,11 +363,11 @@ class ObjectTreeElementCell extends TreeCell<Object> {
 
     @SuppressWarnings("UnnecessaryLambda")
     private ChangeListener<Boolean> createBoundingShapeVisibilityListener() {
-        return ((observable, oldValue, newValue) -> {
+        return (observable, oldValue, newValue) -> {
             if(!Boolean.TRUE.equals(newValue)) {
                 contextMenu.hide();
             }
-        });
+        };
     }
 
     private MenuItem createDeleteBoundingShapeMenuItem() {

@@ -18,7 +18,7 @@
  */
 package com.github.mfl28.boundingboxeditor.model.io.restclients;
 
-import javax.ws.rs.client.Client;
+import jakarta.ws.rs.client.Client;
 import java.io.InputStream;
 import java.security.InvalidParameterException;
 import java.util.List;
