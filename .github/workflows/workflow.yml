@@ -96,8 +96,14 @@ jobs:
           cache: gradle
       - name: Verify Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: java
       - name: Build
         run: ./gradlew --info --stacktrace build -x test
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
       - name: Test setup
         run: |
           sudo apt-get install xvfb fluxbox
