@@ -19,7 +19,8 @@ on:
       - master
 
 env:
-  JAVA_VERSION: '14.0.2'
+  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: 'temurin'
   TEST_SCREEN_WIDTH: '1920'
   TEST_SCREEN_HEIGHT: '1080'
 
@@ -29,19 +30,15 @@ jobs:
     name: Build and Test (Windows)
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Cache Gradle packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
       - name: Verify Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
       - name: Build
@@ -60,7 +57,7 @@ jobs:
           name: failed-test-screenshots-windows
           path: build/test-screenshots
       - name: Publish coverage report
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         env:
           OS: Windows
         with:
@@ -69,12 +66,12 @@ jobs:
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Upload installer (exe)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: boundingboxeditor-installer-windows-exe
           path: build/jpackage/*.exe
       - name: Upload image
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: boundingboxeditor-portable-windows
           path: build/jpackage/BoundingBoxEditor
@@ -88,23 +85,25 @@ jobs:
     name: Build and Test (Linux)
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Cache Gradle packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
       - name: Verify Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: java
       - name: Build
         run: ./gradlew --info --stacktrace build -x test
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
       - name: Test setup
         run: |
           sudo apt-get install xvfb fluxbox
@@ -120,7 +119,7 @@ jobs:
           name: failed-test-screenshots-linux
           path: build/test-screenshots
       - name: Publish coverage report
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         env:
           OS: Linux
         with:
@@ -129,38 +128,35 @@ jobs:
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Upload installer (deb)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: boundingboxeditor-installer-linux-deb
           path: build/jpackage/*.deb
       - name: Upload installer (rpm)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: boundingboxeditor-installer-linux-rpm
           path: build/jpackage/*.rpm
       - name: Upload image
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: boundingboxeditor-portable-linux
           path: build/jpackage/BoundingBoxEditor
+
   Build-and-Test-macOS:
     runs-on: macOS-10.15
     name: Build and Test (macOS)
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Cache Gradle packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
       - name: Verify Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
       - name: Build
@@ -172,7 +168,7 @@ jobs:
         id: test
         run: ./gradlew --info --stacktrace test
       - name: Publish coverage report
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         env:
           OS: macOS
         with:
@@ -181,12 +177,12 @@ jobs:
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Upload installer (dmg)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: boundingboxeditor-installer-macos-dmg
           path: build/jpackage/*.dmg
       - name: Upload image
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: boundingboxeditor-portable-macos
           path: build/jpackage/BoundingBoxEditor.app
@@ -197,7 +193,7 @@ jobs:
     name: Github Release
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Create changelog
@@ -219,7 +215,7 @@ jobs:
           body_text="${body_text//$'\r'/'%0D'}"
           echo "::set-output name=body::$body_text"
       - name: Download all build artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
       - name: Prepare artifacts
         run: |
           sudo apt-get install rename
