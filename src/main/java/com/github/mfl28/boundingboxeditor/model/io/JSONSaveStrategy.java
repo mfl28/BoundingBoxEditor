@@ -53,7 +53,7 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
     @Override
     public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
                                             DoubleProperty progress) {
-        final int totalNrAnnotations = annotations.getImageAnnotations().size();
+        final int totalNrAnnotations = annotations.imageAnnotations().size();
         final AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
 
         final Gson gson = new GsonBuilder()
@@ -62,7 +62,7 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
                                      (JsonSerializer<ImageAnnotationData>) (src, typeOfSrc, context) -> {
                                          JsonArray serializedAnnotations = new JsonArray();
 
-                                         for(ImageAnnotation annotation : src.getImageAnnotations()) {
+                                         for(ImageAnnotation annotation : src.imageAnnotations()) {
                                              serializedAnnotations.add(context.serialize(annotation));
                                              progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() /
                                                                   totalNrAnnotations);

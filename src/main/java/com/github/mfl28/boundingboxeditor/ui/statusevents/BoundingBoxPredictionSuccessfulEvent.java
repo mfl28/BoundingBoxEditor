@@ -33,7 +33,7 @@ public class BoundingBoxPredictionSuccessfulEvent extends StatusEvent {
 
     private static String createMessage(BoundingBoxPredictionResult ioResult) {
         int predictedBoundingBoxes = ioResult.getImageAnnotationData()
-                                             .getCategoryNameToBoundingShapeCountMap()
+                                             .categoryNameToBoundingShapeCountMap()
                                              .values()
                                              .stream()
                                              .reduce(Integer::sum)

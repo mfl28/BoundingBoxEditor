@@ -87,11 +87,11 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         List<IOErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
-        int totalNrOfAnnotations = annotations.getImageAnnotations().size();
+        int totalNrOfAnnotations = annotations.imageAnnotations().size();
         AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
 
 
-        annotations.getImageAnnotations().parallelStream().forEach(annotation -> {
+        annotations.imageAnnotations().parallelStream().forEach(annotation -> {
             try {
                 createXmlFileFromImageAnnotationDataElement(annotation);
             } catch(TransformerException | ParserConfigurationException e) {
@@ -103,7 +103,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         });
 
         return new ImageAnnotationExportResult(
-                annotations.getImageAnnotations().size() - unParsedFileErrorMessages.size(),
+                annotations.imageAnnotations().size() - unParsedFileErrorMessages.size(),
                 unParsedFileErrorMessages
         );
     }

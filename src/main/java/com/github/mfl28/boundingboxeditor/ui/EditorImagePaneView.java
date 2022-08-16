@@ -263,10 +263,6 @@ public class EditorImagePaneView extends ScrollPane implements View {
         return selectedCategory.get() != null;
     }
 
-    public DragAnchor getDragAnchor() {
-        return dragAnchor;
-    }
-
     /**
      * Removes all provided {@link BoundingShapeViewable} objects from the list
      * of current {@link BoundingShapeViewable} objects.

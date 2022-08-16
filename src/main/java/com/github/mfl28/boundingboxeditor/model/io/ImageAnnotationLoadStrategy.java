@@ -52,7 +52,7 @@ public interface ImageAnnotationLoadStrategy {
     }
 
     /**
-     * Loads image-annotation files from the provided directory path into the
+     * Loads image-annotation files from the provided directory path into
      * the program.
      *
      * @param path        the path of the directory containing the image-annotation files

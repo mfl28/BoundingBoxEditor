@@ -45,6 +45,9 @@ dependencies {
         exclude group: 'org.hamcrest'
     }
 
+    // https://mvnrepository.com/artifact/nl.jqno.equalsverifier/equalsverifier
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.10.1'
+
     // Hamcrest https://mvnrepository.com/artifact/org.hamcrest/hamcrest
     testImplementation 'org.hamcrest:hamcrest:2.2'
 

@@ -605,7 +605,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(counts.size(), Matchers.equalTo(1), saveScreenshot(testinfo));
         verifyThat(counts.get("Ship"), Matchers.equalTo(1), saveScreenshot(testinfo));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0), saveScreenshot(testinfo));
-        verifyThat(model.createImageAnnotationData().getImageAnnotations(), Matchers.hasSize(1),
+        verifyThat(model.createImageAnnotationData().imageAnnotations(), Matchers.hasSize(1),
                    saveScreenshot(testinfo));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
@@ -749,7 +749,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().isEmpty(), Matchers.is(true),
                    saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.empty(), saveScreenshot(testinfo));
-        verifyThat(model.createImageAnnotationData().getImageAnnotations(), Matchers.empty(), saveScreenshot(testinfo));
+        verifyThat(model.createImageAnnotationData().imageAnnotations(), Matchers.empty(), saveScreenshot(testinfo));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty(), saveScreenshot(testinfo));
 
         // Should not have changed the status message.
@@ -1189,7 +1189,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3),
                    saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(3), saveScreenshot(testinfo));
-        verifyThat(model.createImageAnnotationData().getImageAnnotations(), Matchers.hasSize(1),
+        verifyThat(model.createImageAnnotationData().imageAnnotations(), Matchers.hasSize(1),
                    saveScreenshot(testinfo));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty(), saveScreenshot(testinfo));
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0),
@@ -1235,7 +1235,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(4),
                    saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(4), saveScreenshot(testinfo));
-        verifyThat(model.createImageAnnotationData().getImageAnnotations(), Matchers.hasSize(2),
+        verifyThat(model.createImageAnnotationData().imageAnnotations(), Matchers.hasSize(2),
                    saveScreenshot(testinfo));
 
         verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingShapes(),

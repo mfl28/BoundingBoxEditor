@@ -82,10 +82,6 @@ public class BoundingShapeViewData {
         this.toggleGroup.set(toggleGroup);
     }
 
-    public boolean isHighlighted() {
-        return highlighted.get();
-    }
-
     /**
      * Sets the highlighted-status of the bounding-box.
      *

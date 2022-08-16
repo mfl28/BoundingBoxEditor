@@ -97,10 +97,6 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         editorsSplitPane.reset();
     }
 
-    public boolean isShowObjectPopover() {
-        return showObjectPopover.get();
-    }
-
     public BooleanProperty showObjectPopoverProperty() {
         return showObjectPopover;
     }

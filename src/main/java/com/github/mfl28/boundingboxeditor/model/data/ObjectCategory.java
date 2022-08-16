@@ -79,7 +79,7 @@ public class ObjectCategory {
             return false;
         }
 
-        return otherCategory.getName().equals(this.getName()) && otherCategory.getColor().equals(this.getColor());
+        return Objects.equals(otherCategory.getName(), this.getName()) && Objects.equals(otherCategory.getColor(), this.getColor());
     }
 
     @Override

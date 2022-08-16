@@ -45,10 +45,6 @@ public class ImageMetaDataLoadingService extends IoService<ImageMetaDataLoadingR
         this.source.set(source);
     }
 
-    public List<File> getImageFiles() {
-        return imageFiles.get();
-    }
-
     public void setImageFiles(List<File> imageFiles) {
         this.imageFiles.set(imageFiles);
     }

@@ -53,7 +53,7 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
                                             DoubleProperty progress) {
         this.saveFolderPath = destination;
-        this.categories = annotations.getCategoryNameToBoundingShapeCountMap().entrySet().stream()
+        this.categories = annotations.categoryNameToBoundingShapeCountMap().entrySet().stream()
                                      .filter(stringIntegerEntry -> stringIntegerEntry.getValue() > 0)
                                      .map(Map.Entry::getKey)
                                      .sorted()
@@ -67,10 +67,10 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
             unParsedFileErrorMessages.add(new IOErrorInfoEntry(OBJECT_DATA_FILE_NAME, e.getMessage()));
         }
 
-        int totalNrOfAnnotations = annotations.getImageAnnotations().size();
+        int totalNrOfAnnotations = annotations.imageAnnotations().size();
         AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
 
-        annotations.getImageAnnotations().parallelStream().forEach(annotation -> {
+        annotations.imageAnnotations().parallelStream().forEach(annotation -> {
             try {
                 createAnnotationFile(annotation);
             } catch(IOException e) {

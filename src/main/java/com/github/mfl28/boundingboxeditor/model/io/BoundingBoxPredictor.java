@@ -38,7 +38,7 @@ import java.util.Map;
 
 public class BoundingBoxPredictor {
     private static final String DEFAULT_IMAGE_STREAM_FORMAT_NAME = "png";
-    private static final String NON_EXISTANT_IMAGE_ERROR_MESSAGE = "Image file does not exist.";
+    private static final String NON_EXISTENT_IMAGE_ERROR_MESSAGE = "Image file does not exist.";
     private final BoundingBoxPredictorClient client;
     private final BoundingBoxPredictorConfig predictorConfig;
     private double predictedImageWidth;
@@ -62,7 +62,7 @@ public class BoundingBoxPredictor {
                                                                   imageMetaData.getImageHeight())) {
                 boundingBoxPredictions = client.predict(inputStream);
             } catch(FileNotFoundException e) {
-                errorInfoEntries.add(new IOErrorInfoEntry(imageFile.getName(), NON_EXISTANT_IMAGE_ERROR_MESSAGE));
+                errorInfoEntries.add(new IOErrorInfoEntry(imageFile.getName(), NON_EXISTENT_IMAGE_ERROR_MESSAGE));
                 return new BoundingBoxPredictionResult(
                         0,
                         errorInfoEntries,
@@ -85,7 +85,7 @@ public class BoundingBoxPredictor {
             imageAnnotation.getBoundingShapeData()
                            .addAll(boundingBoxPredictions.stream()
                                    .filter(prediction ->
-                                           Double.compare(prediction.getScore(),
+                                           Double.compare(prediction.score(),
                                                    predictorConfig
                                                            .getMinimumScore()) >=
                                                    0)
@@ -146,7 +146,7 @@ public class BoundingBoxPredictor {
 
         public BoundingBoxData extract(BoundingBoxPredictionEntry prediction) {
             final Map.Entry<String, List<Double>> boundingBoxCoordinatesEntry =
-                    prediction.getCategoryToBoundingBoxes().entrySet().iterator().next();
+                    prediction.categoryToBoundingBoxes().entrySet().iterator().next();
 
             final String predictedCategory = boundingBoxCoordinatesEntry.getKey();
 

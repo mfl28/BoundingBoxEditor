@@ -35,7 +35,7 @@ import java.util.Objects;
  *
  * @see BoundingShapeData#setParts(List)
  */
-public class BoundingPolygonData extends BoundingShapeData {
+public final class BoundingPolygonData extends BoundingShapeData {
     @SerializedName("polygon")
     private final List<Double> relativePointsInImage;
 
@@ -107,6 +107,10 @@ public class BoundingPolygonData extends BoundingShapeData {
 
         if(relativePointsInImage == that.relativePointsInImage) {
             return true;
+        }
+
+        if((relativePointsInImage == null) || (that.relativePointsInImage == null)) {
+            return false;
         }
 
         if(relativePointsInImage.size() != that.relativePointsInImage.size()) {

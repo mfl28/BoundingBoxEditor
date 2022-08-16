@@ -122,10 +122,6 @@ public class BoundingPolygonView extends Polygon implements
         this.constructing.set(constructing);
     }
 
-    public BooleanProperty constructingProperty() {
-        return constructing;
-    }
-
     @Override
     public ToggleGroup getToggleGroup() {
         return boundingShapeViewData.getToggleGroup();
@@ -601,20 +597,12 @@ public class BoundingPolygonView extends Polygon implements
             this.editing.set(editing);
         }
 
-        public BooleanProperty editingProperty() {
-            return this.editing;
-        }
-
         public boolean isSelected() {
             return selected.get();
         }
 
         public void setSelected(boolean selected) {
             this.selected.set(selected);
-        }
-
-        public BooleanProperty selectedProperty() {
-            return selected;
         }
 
         int getPointIndex() {

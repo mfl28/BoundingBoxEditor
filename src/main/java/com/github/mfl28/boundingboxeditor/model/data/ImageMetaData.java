@@ -32,7 +32,7 @@ import java.util.Objects;
 /**
  * Holds metadata information about an image.
  */
-public class ImageMetaData {
+public final class ImageMetaData {
     private static final List<String> supportedImageFormats = List.of("jpeg", "bmp", "png");
     private static final String NOT_AN_IMAGE_FILE_ERROR_MESSAGE = "Not an image file.";
     private static final String UNSUPPORTED_IMAGE_FORMAT_ERROR_MESSAGE = "Unsupported image file format.";
@@ -67,7 +67,7 @@ public class ImageMetaData {
     public static ImageMetaData fromFile(File imageFile) throws IOException {
         ImageDimensions imageDimensions = readImageDimensionsFromFile(imageFile);
         return new ImageMetaData(imageFile.getName(), imageFile.toPath().getParent().toFile().getName(),
-                                 imageDimensions.getWidth(), imageDimensions.getHeight(), imageDimensions.getDepth());
+                                 imageDimensions.width(), imageDimensions.height(), imageDimensions.depth());
     }
 
     /**
@@ -177,42 +177,30 @@ public class ImageMetaData {
         return new ImageDimensions(width, height, numComponents);
     }
 
-    private static class ImageMetaDataDetails {
-        private final String folderName;
-        @SerializedName("width")
-        private final double imageWidth;
-        @SerializedName("height")
-        private final double imageHeight;
-        @SerializedName("depth")
-        private final int imageDepth;
-
-        ImageMetaDataDetails(String folderName, double imageWidth, double imageHeight, int imageDepth) {
-            this.folderName = folderName;
-            this.imageWidth = imageWidth;
-            this.imageHeight = imageHeight;
-            this.imageDepth = imageDepth;
-        }
+    private record ImageMetaDataDetails(String folderName, @SerializedName("width") double imageWidth,
+                                        @SerializedName("height") double imageHeight,
+                                        @SerializedName("depth") int imageDepth) {
 
         @Override
-        public int hashCode() {
-            return Objects.hash(imageWidth, imageHeight, imageDepth);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if(this == o) {
-                return true;
+            public int hashCode() {
+                return Objects.hash(imageWidth, imageHeight, imageDepth);
             }
 
-            if(!(o instanceof ImageMetaDataDetails that)) {
-                return false;
-            }
+            @Override
+            public boolean equals(Object o) {
+                if(this == o) {
+                    return true;
+                }
 
-            return Double.compare(that.imageWidth, imageWidth) == 0 &&
-                    Double.compare(that.imageHeight, imageHeight) == 0 &&
-                    imageDepth == that.imageDepth;
+                if(!(o instanceof ImageMetaDataDetails that)) {
+                    return false;
+                }
+
+                return Double.compare(that.imageWidth, imageWidth) == 0 &&
+                        Double.compare(that.imageHeight, imageHeight) == 0 &&
+                        imageDepth == that.imageDepth;
+            }
         }
-    }
 
     public static class NotAnImageFileException extends RuntimeException {
         private static final long serialVersionUID = 5256590447321177896L;
@@ -230,27 +218,6 @@ public class ImageMetaData {
         }
     }
 
-    private static class ImageDimensions {
-        private final double width;
-        private final double height;
-        private final int depth;
-
-        ImageDimensions(double width, double height, int depth) {
-            this.width = width;
-            this.height = height;
-            this.depth = depth;
-        }
-
-        double getWidth() {
-            return width;
-        }
-
-        double getHeight() {
-            return height;
-        }
-
-        int getDepth() {
-            return depth;
-        }
+    private record ImageDimensions(double width, double height, int depth) {
     }
 }
