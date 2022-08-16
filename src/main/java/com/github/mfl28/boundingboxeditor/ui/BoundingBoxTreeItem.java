@@ -55,11 +55,9 @@ class BoundingBoxTreeItem extends BoundingShapeTreeItem {
             return true;
         }
 
-        if(!(obj instanceof BoundingBoxTreeItem)) {
+        if(!(obj instanceof BoundingBoxTreeItem other)) {
             return false;
         }
-
-        BoundingBoxTreeItem other = (BoundingBoxTreeItem) obj;
 
         return id == other.id && getValue().equals(other.getValue()) && getChildren().equals(other.getChildren());
     }

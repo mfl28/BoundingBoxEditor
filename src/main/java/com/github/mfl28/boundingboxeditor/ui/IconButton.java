@@ -30,7 +30,7 @@ class IconButton extends Button {
      * Creates a new icon-button.
      *
      * @param iconCssId the css-id-string of the button (in case of {@link IconType}.BACKGROUND) or the
-     *                  id of the {@link Region} containing the icon in case of {@link IconType}.GRAPHIC)
+     *                  id of the {@link Region} containing the icon (in case of {@link IconType}.GRAPHIC)
      * @param iconType  indicates the way the icon should be embedded in the button:
      *                  <ul>
      *                  <li>{@link IconType}.BACKGROUND: the icon will be directly set as the shape of the

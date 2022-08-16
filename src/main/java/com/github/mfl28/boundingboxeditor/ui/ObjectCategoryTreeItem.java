@@ -67,11 +67,9 @@ class ObjectCategoryTreeItem extends TreeItem<Object> implements IconToggleable 
             return true;
         }
 
-        if(!(obj instanceof ObjectCategoryTreeItem)) {
+        if(!(obj instanceof ObjectCategoryTreeItem other)) {
             return false;
         }
-
-        ObjectCategoryTreeItem other = (ObjectCategoryTreeItem) obj;
 
         return objectCategory.equals(other.objectCategory) && getChildren().equals(other.getChildren());
     }
@@ -96,8 +94,8 @@ class ObjectCategoryTreeItem extends TreeItem<Object> implements IconToggleable 
         toggleIcon.setToggledOn(toggledOn);
 
         for(TreeItem<Object> child : getChildren()) {
-            if(child instanceof BoundingShapeTreeItem) {
-                ((BoundingShapeTreeItem) child).setIconToggledOn(toggledOn);
+            if(child instanceof BoundingShapeTreeItem boundingShapeTreeItem) {
+                boundingShapeTreeItem.setIconToggledOn(toggledOn);
             }
         }
     }
@@ -164,8 +162,8 @@ class ObjectCategoryTreeItem extends TreeItem<Object> implements IconToggleable 
                 int numToggledChildrenToRemove = 0;
 
                 for(TreeItem<Object> treeItem : c.getRemoved()) {
-                    if(treeItem instanceof BoundingShapeTreeItem &&
-                            ((BoundingShapeTreeItem) treeItem).isIconToggledOn()) {
+                    if(treeItem instanceof BoundingShapeTreeItem boundingShapeTreeItem &&
+                            boundingShapeTreeItem.isIconToggledOn()) {
                         numToggledChildrenToRemove++;
                     }
                 }
@@ -187,8 +185,8 @@ class ObjectCategoryTreeItem extends TreeItem<Object> implements IconToggleable 
     private void detachChildId(int id) {
         List<TreeItem<Object>> children = getChildren();
         for(int i = id; i < children.size(); ++i) {
-            if(children.get(i) instanceof BoundingShapeTreeItem) {
-                ((BoundingShapeTreeItem) children.get(i)).setId(i);
+            if(children.get(i) instanceof BoundingShapeTreeItem boundingShapeTreeItem) {
+                boundingShapeTreeItem.setId(i);
             }
         }
     }

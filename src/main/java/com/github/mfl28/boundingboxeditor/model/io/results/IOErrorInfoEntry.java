@@ -106,11 +106,9 @@ public class IOErrorInfoEntry {
             return true;
         }
 
-        if(!(o instanceof IOErrorInfoEntry)) {
+        if(!(o instanceof IOErrorInfoEntry that)) {
             return false;
         }
-
-        IOErrorInfoEntry that = (IOErrorInfoEntry) o;
 
         return Objects.equals(sourceName.get(), that.sourceName.get()) &&
                 Objects.equals(errorDescription.get(), that.errorDescription.get());

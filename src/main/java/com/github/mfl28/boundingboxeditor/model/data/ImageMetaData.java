@@ -126,8 +126,7 @@ public class ImageMetaData {
 
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof ImageMetaData) {
-            ImageMetaData other = (ImageMetaData) obj;
+        if(obj instanceof ImageMetaData other) {
             return Objects.equals(fileName, other.fileName) && Objects.equals(details, other.details);
         }
         return false;
@@ -205,11 +204,9 @@ public class ImageMetaData {
                 return true;
             }
 
-            if(!(o instanceof ImageMetaDataDetails)) {
+            if(!(o instanceof ImageMetaDataDetails that)) {
                 return false;
             }
-
-            ImageMetaDataDetails that = (ImageMetaDataDetails) o;
 
             return Double.compare(that.imageWidth, imageWidth) == 0 &&
                     Double.compare(that.imageHeight, imageHeight) == 0 &&

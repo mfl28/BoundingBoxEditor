@@ -43,7 +43,6 @@ import javafx.scene.shape.Rectangle;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Represents the visual (UI)-component of a bounding-box. To the app-user, instances of
@@ -70,7 +69,7 @@ public class BoundingBoxView extends Rectangle implements
      * and movable by the user.
      *
      * @param objectCategory the category this bounding-box will be assigned to
-     *                       into the data component represented by the {@link BoundingBoxData} class)
+     *                       into the data component represented by the {@link BoundingBoxData} class
      */
     public BoundingBoxView(ObjectCategory objectCategory) {
         this.boundingShapeViewData = new BoundingShapeViewData(this, objectCategory);
@@ -142,11 +141,9 @@ public class BoundingBoxView extends Rectangle implements
             return true;
         }
 
-        if(!(obj instanceof BoundingBoxView)) {
+        if(!(obj instanceof BoundingBoxView other)) {
             return false;
         }
-
-        BoundingBoxView other = (BoundingBoxView) obj;
 
         return Objects.equals(boundingShapeViewData, other.boundingShapeViewData)
                 && MathUtils.doubleAlmostEqual(getX(), other.getX()) &&
@@ -243,7 +240,7 @@ public class BoundingBoxView extends Rectangle implements
     private List<ResizeHandle> createResizeHandles() {
         return Arrays.stream(CompassPoint.values())
                      .map(ResizeHandle::new)
-                     .collect(Collectors.toList());
+                     .toList();
     }
 
     private void addMoveFunctionality() {
@@ -392,37 +389,38 @@ public class BoundingBoxView extends Rectangle implements
             visibleProperty().bind(rectangle.visibleProperty().and(rectangle.selectedProperty()));
 
             switch(compassPoint) {
-                case NW:
+                case NW -> {
                     xProperty().bind(rectangleX.subtract(SIDE_LENGTH / 2));
                     yProperty().bind(rectangleY.subtract(SIDE_LENGTH / 2));
-                    break;
-                case N:
+                }
+                case N -> {
                     xProperty().bind(rectangleX.add(rectangleW.subtract(SIDE_LENGTH).divide(2)));
                     yProperty().bind(rectangleY.subtract(SIDE_LENGTH / 2));
-                    break;
-                case NE:
+                }
+                case NE -> {
                     xProperty().bind(rectangleX.add(rectangleW).subtract(SIDE_LENGTH / 2));
                     yProperty().bind(rectangleY.subtract(SIDE_LENGTH / 2));
-                    break;
-                case E:
+                }
+                case E -> {
                     xProperty().bind(rectangleX.add(rectangleW).subtract(SIDE_LENGTH / 2));
                     yProperty().bind(rectangleY.add(rectangleH.subtract(SIDE_LENGTH).divide(2)));
-                    break;
-                case SE:
+                }
+                case SE -> {
                     xProperty().bind(rectangleX.add(rectangleW).subtract(SIDE_LENGTH / 2));
                     yProperty().bind(rectangleY.add(rectangleH).subtract(SIDE_LENGTH / 2));
-                    break;
-                case S:
+                }
+                case S -> {
                     xProperty().bind(rectangleX.add(rectangleW.subtract(SIDE_LENGTH).divide(2)));
                     yProperty().bind(rectangleY.add(rectangleH).subtract(SIDE_LENGTH / 2));
-                    break;
-                case SW:
+                }
+                case SW -> {
                     xProperty().bind(rectangleX.subtract(SIDE_LENGTH / 2));
                     yProperty().bind(rectangleY.add(rectangleH).subtract(SIDE_LENGTH / 2));
-                    break;
-                case W:
+                }
+                case W -> {
                     xProperty().bind(rectangleX.subtract(SIDE_LENGTH / 2));
                     yProperty().bind(rectangleY.add(rectangleH.subtract(SIDE_LENGTH).divide(2)));
+                }
             }
         }
 
@@ -440,30 +438,14 @@ public class BoundingBoxView extends Rectangle implements
             });
 
             switch(compassPoint) {
-                case NW:
-                    setOnMouseDragged(this::handleMouseDraggedNW);
-                    break;
-                case N:
-                    setOnMouseDragged(this::handleMouseDraggedN);
-                    break;
-                case NE:
-                    setOnMouseDragged(this::handleMouseDraggedNE);
-                    break;
-                case E:
-                    setOnMouseDragged(this::handleMouseDraggedE);
-                    break;
-                case SE:
-                    setOnMouseDragged(this::handleMouseDraggedSE);
-                    break;
-                case S:
-                    setOnMouseDragged(this::handleMouseDraggedS);
-                    break;
-                case SW:
-                    setOnMouseDragged(this::handleMouseDraggedSW);
-                    break;
-                case W:
-                    setOnMouseDragged(this::handleMouseDraggedW);
-                    break;
+                case NW -> setOnMouseDragged(this::handleMouseDraggedNW);
+                case N -> setOnMouseDragged(this::handleMouseDraggedN);
+                case NE -> setOnMouseDragged(this::handleMouseDraggedNE);
+                case E -> setOnMouseDragged(this::handleMouseDraggedE);
+                case SE -> setOnMouseDragged(this::handleMouseDraggedSE);
+                case S -> setOnMouseDragged(this::handleMouseDraggedS);
+                case SW -> setOnMouseDragged(this::handleMouseDraggedSW);
+                case W -> setOnMouseDragged(this::handleMouseDraggedW);
             }
         }
 

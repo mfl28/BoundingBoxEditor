@@ -45,7 +45,7 @@ public class ColorUtils {
      * @param color The color
      * @return the hexadecimal representation of the color
      *
-     * Source: https://stackoverflow.com/a/56733608/13302206
+     * Source: <a href="https://stackoverflow.com/a/56733608/13302206">...</a>
      */
     public static String colorToHexString(Color color) {
         return "#" + (format(color.getRed()) + format(color.getGreen()) + format(color.getBlue()))
@@ -53,7 +53,7 @@ public class ColorUtils {
     }
 
     /**
-     * Source: https://stackoverflow.com/a/56733608/13302206
+     * Source: <a href="https://stackoverflow.com/a/56733608/13302206">...</a>
      */
     private static String format(double value) {
         String hexString = Integer.toHexString((int) Math.round(value * 255));

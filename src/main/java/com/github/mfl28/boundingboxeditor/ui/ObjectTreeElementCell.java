@@ -117,8 +117,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             return;
         }
 
-        if(oldCellObject instanceof Shape) {
-            Shape oldItem = (Shape) oldCellObject;
+        if(oldCellObject instanceof Shape oldItem) {
             // Remove the old item's context-menu event-handler.
             oldItem.removeEventHandler(ContextMenuEvent.CONTEXT_MENU_REQUESTED, showContextMenuEventHandler);
             oldItem.visibleProperty().removeListener(boundingShapeVisibilityListener);
@@ -151,13 +150,13 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             // Register the contextMenu with the cell.
             setContextMenu(contextMenu);
 
-            if(newCellObject instanceof Shape) {
+            if(newCellObject instanceof Shape shape) {
                 // Register the contextMenu with the shape associated with the cell. This
                 // allows to display the contextMenu by right-clicking on the shape itself.
-                ((Shape) newCellObject).setOnContextMenuRequested(showContextMenuEventHandler);
+                shape.setOnContextMenuRequested(showContextMenuEventHandler);
                 // The context menu should be hidden when the shape associated with this cell
                 // is hidden.
-                ((Shape) newCellObject).visibleProperty().addListener(boundingShapeVisibilityListener);
+                shape.visibleProperty().addListener(boundingShapeVisibilityListener);
             }
         }
     }
@@ -232,7 +231,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     }
 
     /**
-     * Returns the ImageView associated withe this cell's
+     * Returns the ImageView associated with this cell's
      * popover.
      *
      * @return the imageview
@@ -326,13 +325,13 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         content.setId(TREE_CELL_CONTENT_ID);
         content.setAlignment(Pos.CENTER_LEFT);
 
-        if(treeItem instanceof BoundingShapeTreeItem) {
+        if(treeItem instanceof BoundingShapeTreeItem boundingShapeTreeItem) {
             final BoundingShapeViewData boundingShapeViewData =
                     ((BoundingShapeViewable) treeItem.getValue()).getViewData();
 
             nameText.textProperty().bind(boundingShapeViewData.getObjectCategory()
                                                               .nameProperty().concat(" ")
-                                                              .concat(((BoundingShapeTreeItem) treeItem).getId()));
+                                                              .concat(boundingShapeTreeItem.getId()));
             tagIconRegion.visibleProperty().bind(Bindings.size(boundingShapeViewData.getTags()).greaterThan(0));
             content.getChildren().add(tagIconRegion);
         } else if(treeItem instanceof ObjectCategoryTreeItem) {
@@ -354,9 +353,9 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     @SuppressWarnings("UnnecessaryLambda")
     private EventHandler<ContextMenuEvent> createShowContextMenuEventHandler() {
         return event -> {
-            if(getItem() instanceof Shape
-                    && getItem() instanceof Toggle && ((Toggle) getItem()).isSelected()) {
-                contextMenu.show((Shape) getItem(), event.getScreenX(), event.getScreenY());
+            if(getItem() instanceof Shape shape
+                    && getItem() instanceof Toggle toggle && toggle.isSelected()) {
+                contextMenu.show(shape, event.getScreenX(), event.getScreenY());
             }
         };
     }
@@ -420,16 +419,16 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private void handleHide(ActionEvent event) {
         final TreeItem<Object> treeItem = getTreeItem();
 
-        if(treeItem instanceof IconToggleable) {
-            ((IconToggleable) treeItem).setIconToggledOn(false);
+        if(treeItem instanceof IconToggleable iconToggleable) {
+            iconToggleable.setIconToggledOn(false);
         }
     }
 
     private void handleShow(ActionEvent event) {
         final TreeItem<Object> treeItem = getTreeItem();
 
-        if(treeItem instanceof IconToggleable) {
-            ((IconToggleable) treeItem).setIconToggledOn(true);
+        if(treeItem instanceof IconToggleable iconToggleable) {
+            iconToggleable.setIconToggledOn(true);
         }
     }
 

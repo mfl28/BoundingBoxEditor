@@ -114,7 +114,7 @@ public class EditorToolBarView extends ToolBar implements View {
     private final Button predictButton = new Button(PREDICT_BUTTON_TEXT);
 
     /**
-     * Creates a new tool-bar containing controls to navigate images
+     * Creates a new toolbar containing controls to navigate images
      * and change image and bounding-shape related settings.
      */
     EditorToolBarView() {

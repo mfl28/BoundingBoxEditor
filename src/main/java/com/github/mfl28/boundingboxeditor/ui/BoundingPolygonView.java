@@ -167,11 +167,9 @@ public class BoundingPolygonView extends Polygon implements
             return true;
         }
 
-        if(!(obj instanceof BoundingPolygonView)) {
+        if(!(obj instanceof BoundingPolygonView other)) {
             return false;
         }
-
-        BoundingPolygonView other = (BoundingPolygonView) obj;
 
         if(!Objects.equals(boundingShapeViewData, other.boundingShapeViewData) ||
                 getPoints().size() != other.getPoints().size()) {

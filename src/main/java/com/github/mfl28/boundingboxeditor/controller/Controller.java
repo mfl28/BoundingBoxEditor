@@ -1260,7 +1260,7 @@ public class Controller {
             return imageFiles.map(file -> new File(file.toString()))
                              .filter(File::isFile)
                              .sorted(Comparator.comparing(File::getName))
-                             .collect(Collectors.toList());
+                             .toList();
         }
     }
 

@@ -32,12 +32,11 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Loads rectangular bounding-box annotations in the YOLO-format described at
- * https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885
+ * <a href="https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885">...</a>
  */
 public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     public static final String INVALID_BOUNDING_BOX_COORDINATES_MESSAGE = "Invalid bounding-box coordinates on line ";
@@ -76,8 +75,7 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
         try(Stream<Path> fileStream = Files.walk(path, INCLUDE_SUBDIRECTORIES ? Integer.MAX_VALUE : 1)) {
             List<File> annotationFiles = fileStream
                     .filter(pathItem -> pathItem.getFileName().toString().endsWith(".txt"))
-                    .map(Path::toFile)
-                    .collect(Collectors.toList());
+                    .map(Path::toFile).toList();
 
             int totalNrOfFiles = annotationFiles.size();
             AtomicInteger nrProcessedFiles = new AtomicInteger(0);
@@ -100,7 +98,7 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                                                                         }
                                                                     })
                                                                     .filter(Objects::nonNull)
-                                                                    .collect(Collectors.toList());
+                                                                    .toList();
 
             return new ImageAnnotationImportResult(
                     imageAnnotations.size(),

@@ -38,7 +38,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
@@ -685,7 +684,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                                     return (ImageAnnotation) context.deserialize(jsonElement, ImageAnnotation.class);
                                 })
                                 .filter(Objects::nonNull)
-                                .collect(Collectors.toList());
+                                .toList();
         }
     }
 }

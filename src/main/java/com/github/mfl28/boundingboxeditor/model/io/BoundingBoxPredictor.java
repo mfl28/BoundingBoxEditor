@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class BoundingBoxPredictor {
     private static final String DEFAULT_IMAGE_STREAM_FORMAT_NAME = "png";
@@ -85,13 +84,12 @@ public class BoundingBoxPredictor {
 
             imageAnnotation.getBoundingShapeData()
                            .addAll(boundingBoxPredictions.stream()
-                                                         .filter(prediction ->
-                                                                         Double.compare(prediction.getScore(),
-                                                                                        predictorConfig
-                                                                                                .getMinimumScore()) >=
-                                                                                 0)
-                                                         .map(predictionExtractor::extract)
-                                                         .collect(Collectors.toList()));
+                                   .filter(prediction ->
+                                           Double.compare(prediction.getScore(),
+                                                   predictorConfig
+                                                           .getMinimumScore()) >=
+                                                   0)
+                                   .map(predictionExtractor::extract).toList());
 
             return new BoundingBoxPredictionResult(1, errorInfoEntries,
                                                    new ImageAnnotationData(List.of(imageAnnotation), categoryToCount,

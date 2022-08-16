@@ -97,15 +97,13 @@ public class BoundingPolygonData extends BoundingShapeData {
             return true;
         }
 
-        if(!(o instanceof BoundingPolygonData)) {
+        if(!(o instanceof BoundingPolygonData that)) {
             return false;
         }
 
         if(!super.equals(o)) {
             return false;
         }
-
-        BoundingPolygonData that = (BoundingPolygonData) o;
 
         if(relativePointsInImage == that.relativePointsInImage) {
             return true;
