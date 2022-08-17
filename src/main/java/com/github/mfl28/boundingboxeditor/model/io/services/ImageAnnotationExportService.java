@@ -44,16 +44,8 @@ public class ImageAnnotationExportService extends IoService<ImageAnnotationExpor
         this.destination.setValue(destination);
     }
 
-    public ImageAnnotationSaveStrategy.Type getExportFormat() {
-        return exportFormat.get();
-    }
-
     public void setExportFormat(ImageAnnotationSaveStrategy.Type exportFormat) {
         this.exportFormat.setValue(exportFormat);
-    }
-
-    public ImageAnnotationData getAnnotationData() {
-        return annotationData.get();
     }
 
     public void setAnnotationData(ImageAnnotationData annotationData) {

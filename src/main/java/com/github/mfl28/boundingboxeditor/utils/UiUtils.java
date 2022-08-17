@@ -37,7 +37,7 @@ public class UiUtils {
 
     /***
      * Creates a pane that fills any available horizontal space
-     * in it's parent.
+     * in its parent.
      * @return pane
      */
     public static Pane createHSpacer() {
@@ -85,7 +85,7 @@ public class UiUtils {
      */
     public static TextFormatter<String> createDecimalFormatter() {
         return new TextFormatter<>(change -> {
-            if(change.getText().matches("[0-9]*")) {
+            if(change.getText().matches("\\d*")) {
                 return change;
             }
 
@@ -95,7 +95,7 @@ public class UiUtils {
 
     public static TextFormatter<String> createFloatFormatter() {
         return new TextFormatter<>(change -> {
-            if(!change.getControlNewText().equals(".") && change.getControlNewText().matches("[0-9]*\\.?[0-9]*")) {
+            if(!change.getControlNewText().equals(".") && change.getControlNewText().matches("\\d*\\.?\\d*")) {
                 return change;
             }
 

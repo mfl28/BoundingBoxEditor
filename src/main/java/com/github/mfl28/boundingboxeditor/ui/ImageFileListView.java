@@ -38,7 +38,6 @@ import javafx.scene.layout.VBox;
 
 import java.io.File;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * A UI-element used for displaying and navigating/selecting the loaded image-files.
@@ -85,7 +84,7 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
                     // Triggers loading of the new images into the cache.
                     imageCache.getAll(newValue.stream()
                                               .map(fileInfo -> fileInfo.getFile().toURI().toString())
-                                              .collect(Collectors.toList()));
+                                              .toList());
                 }
             }
         });
@@ -126,11 +125,9 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
                 return true;
             }
 
-            if(!(o instanceof FileInfo)) {
+            if(!(o instanceof FileInfo fileInfo)) {
                 return false;
             }
-
-            FileInfo fileInfo = (FileInfo) o;
 
             return Objects.equals(file, fileInfo.file) &&
                     Objects.equals(hasAssignedBoundingBoxes, fileInfo.hasAssignedBoundingBoxes);

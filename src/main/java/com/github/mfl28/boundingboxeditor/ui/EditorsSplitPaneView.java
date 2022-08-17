@@ -19,7 +19,6 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
-import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.geometry.Orientation;
@@ -99,16 +98,6 @@ public class EditorsSplitPaneView extends SplitPane implements View {
      */
     public TextField getCategoryNameTextField() {
         return categoryNameTextField;
-    }
-
-    /**
-     * Returns the button which allows the user to add a
-     * {@link ObjectCategory}.
-     *
-     * @return the button
-     */
-    public Button getAddCategoryButton() {
-        return addCategoryButton;
     }
 
     /**

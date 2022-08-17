@@ -51,15 +51,6 @@ public class IOErrorInfoEntry {
     }
 
     /**
-     * Set the name of the source of the error.
-     *
-     * @param sourceName the name of the source
-     */
-    public void setSourceName(String sourceName) {
-        this.sourceName.set(sourceName);
-    }
-
-    /**
      * Returns the error source-name property.
      *
      * @return source-name property
@@ -75,15 +66,6 @@ public class IOErrorInfoEntry {
      */
     public String getErrorDescription() {
         return errorDescription.get();
-    }
-
-    /**
-     * Sets a description of the error that occurred.
-     *
-     * @param errorDescription the error-description
-     */
-    public void setErrorDescription(String errorDescription) {
-        this.errorDescription.set(errorDescription);
     }
 
     /**
@@ -106,11 +88,9 @@ public class IOErrorInfoEntry {
             return true;
         }
 
-        if(!(o instanceof IOErrorInfoEntry)) {
+        if(!(o instanceof IOErrorInfoEntry that)) {
             return false;
         }
-
-        IOErrorInfoEntry that = (IOErrorInfoEntry) o;
 
         return Objects.equals(sourceName.get(), that.sourceName.get()) &&
                 Objects.equals(errorDescription.get(), that.errorDescription.get());

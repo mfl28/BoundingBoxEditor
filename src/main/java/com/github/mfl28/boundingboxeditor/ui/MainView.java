@@ -101,7 +101,7 @@ public class MainView extends BorderPane implements View {
     }
 
     /**
-     * Displays a a dialog with 'Yes', 'No' and 'Cancel' buttons and returns the chosen option.
+     * Displays a dialog with 'Yes', 'No' and 'Cancel' buttons and returns the chosen option.
      *
      * @param title   The title of the dialog window
      * @param content The content text of the dialog window
@@ -118,7 +118,7 @@ public class MainView extends BorderPane implements View {
     }
 
     /**
-     * Displays a a dialog with 'Yes', 'No' buttons and returns the chosen option.
+     * Displays a dialog with 'Yes', 'No' buttons and returns the chosen option.
      *
      * @param title   The title of the dialog window
      * @param content The content text of the dialog window
@@ -224,31 +224,22 @@ public class MainView extends BorderPane implements View {
                                        .count();
 
         switch(ioResult.getOperationType()) {
-            case ANNOTATION_IMPORT:
-                displayAnnotationImportInfoAlert(ioResult, errorTable, numErrorEntries, owner);
-                break;
-            case ANNOTATION_SAVING:
-                MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE,
-                                          "There were errors while saving annotations.",
-                                          numErrorEntries + " image-annotation file"
-                                                  + (numErrorEntries > 1 ? "s" : "") + " could not be saved.",
-                                          errorTable, owner);
-                break;
-            case IMAGE_METADATA_LOADING:
-                displayImageMetadataLoadingInfoAlert(ioResult, errorTable, numErrorEntries, owner);
-                break;
-            case BOUNDING_BOX_PREDICTION:
-                MainView.displayInfoAlert("Bounding Box Prediction Error Report",
-                                          "There were errors while performing the prediction",
-                                          "Bounding box predictions for " + numErrorEntries + " image file" +
-                                                  (numErrorEntries > 1 ? "s" : "") + " could not be loaded.",
-                                          errorTable, owner);
-                break;
-            case MODEL_NAME_FETCHING:
-                MainView.displayInfoAlert("Model Fetching Error Report",
-                                          "There were errors while fetching model names from the server",
-                                          null, errorTable, owner);
-                break;
+            case ANNOTATION_IMPORT -> displayAnnotationImportInfoAlert(ioResult, errorTable, numErrorEntries, owner);
+            case ANNOTATION_SAVING -> MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE,
+                    "There were errors while saving annotations.",
+                    numErrorEntries + " image-annotation file"
+                            + (numErrorEntries > 1 ? "s" : "") + " could not be saved.",
+                    errorTable, owner);
+            case IMAGE_METADATA_LOADING ->
+                    displayImageMetadataLoadingInfoAlert(ioResult, errorTable, numErrorEntries, owner);
+            case BOUNDING_BOX_PREDICTION -> MainView.displayInfoAlert("Bounding Box Prediction Error Report",
+                    "There were errors while performing the prediction",
+                    "Bounding box predictions for " + numErrorEntries + " image file" +
+                            (numErrorEntries > 1 ? "s" : "") + " could not be loaded.",
+                    errorTable, owner);
+            case MODEL_NAME_FETCHING -> MainView.displayInfoAlert("Model Fetching Error Report",
+                    "There were errors while fetching model names from the server",
+                    null, errorTable, owner);
         }
     }
 
@@ -532,8 +523,8 @@ public class MainView extends BorderPane implements View {
     public Optional<Window> getSettingsWindow() {
         return Window.getWindows()
                      .stream()
-                     .filter(window -> window instanceof Stage
-                             && ((Stage) window).getTitle().equals(SettingsDialogView.SETTINGS_TITLE))
+                     .filter(window -> window instanceof Stage stage
+                             && stage.getTitle().equals(SettingsDialogView.SETTINGS_TITLE))
                      .findFirst();
     }
 

@@ -315,10 +315,10 @@ public class Model {
                                               IOResult.OperationType operationType) {
         final Map<String, Integer> updatedCategoryNameToBoundingShapeCountMap =
                 createMergedCategoryToBoundingShapeCountMap(
-                        imageAnnotationData.getCategoryNameToBoundingShapeCountMap());
-        updateObjectCategoriesFromData(imageAnnotationData.getCategoryNameToCategoryMap());
+                        imageAnnotationData.categoryNameToBoundingShapeCountMap());
+        updateObjectCategoriesFromData(imageAnnotationData.categoryNameToCategoryMap());
         categoryToAssignedBoundingShapesCount.putAll(updatedCategoryNameToBoundingShapeCountMap);
-        updateImageAnnotations(imageAnnotationData.getImageAnnotations(), operationType);
+        updateImageAnnotations(imageAnnotationData.imageAnnotations(), operationType);
     }
 
     /**
@@ -443,7 +443,7 @@ public class Model {
     }
 
     /**
-     * Returns the the currently set image-files as an unmodifiable list.
+     * Returns the currently set image-files as an unmodifiable list.
      *
      * @return the image-file list
      */

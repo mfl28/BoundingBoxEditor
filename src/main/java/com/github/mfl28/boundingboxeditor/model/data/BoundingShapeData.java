@@ -97,11 +97,9 @@ public abstract class BoundingShapeData {
             return true;
         }
 
-        if(!(o instanceof BoundingShapeData)) {
+        if(!(o instanceof BoundingShapeData that)) {
             return false;
         }
-
-        BoundingShapeData that = (BoundingShapeData) o;
 
         return Objects.equals(category, that.category) &&
                 Objects.equals(tags, that.tags) &&

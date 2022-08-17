@@ -97,10 +97,6 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         editorsSplitPane.reset();
     }
 
-    public boolean isShowObjectPopover() {
-        return showObjectPopover.get();
-    }
-
     public BooleanProperty showObjectPopoverProperty() {
         return showObjectPopover;
     }
@@ -174,9 +170,9 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
         if(treeItem instanceof ObjectCategoryTreeItem) {
             treeItem.getParent().getChildren().remove(treeItem);
-        } else if(treeItem instanceof BoundingShapeTreeItem) {
+        } else if(treeItem instanceof BoundingShapeTreeItem boundingShapeTreeItem) {
             ObjectCategoryTreeItem parentTreeItem = (ObjectCategoryTreeItem) treeItem.getParent();
-            parentTreeItem.detachBoundingShapeTreeItemChild((BoundingShapeTreeItem) treeItem);
+            parentTreeItem.detachBoundingShapeTreeItemChild(boundingShapeTreeItem);
 
             if(parentTreeItem.getChildren().isEmpty()) {
                 parentTreeItem.getParent().getChildren().remove(parentTreeItem);
@@ -259,10 +255,10 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
               .getBoundingShapeSelectionGroup()
               .selectedToggleProperty()
               .addListener((observable, oldValue, newValue) -> {
-                  if(newValue instanceof BoundingShapeViewable) {
+                  if(newValue instanceof BoundingShapeViewable boundingShapeViewable) {
                       getEditorsSplitPane().getObjectTree()
                                            .getSelectionModel()
-                                           .select(((BoundingShapeViewable) newValue).getViewData().getTreeItem());
+                                           .select(boundingShapeViewable.getViewData().getTreeItem());
                   }
               });
 
@@ -519,8 +515,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             imageView.setFitWidth(scaleWidth);
             imageView.setFitHeight(scaleHeight);
 
-            if(cell.getItem() instanceof BoundingPolygonView) {
-                final List<Double> points = ((BoundingPolygonView) cell.getItem())
+            if(cell.getItem() instanceof BoundingPolygonView boundingPolygonView) {
+                final List<Double> points = boundingPolygonView
                         .getMinMaxScaledPoints(scaleWidth, scaleHeight);
 
                 final Polygon polygon = new Polygon();

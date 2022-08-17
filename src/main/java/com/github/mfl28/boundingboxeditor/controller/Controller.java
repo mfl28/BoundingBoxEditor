@@ -68,7 +68,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -533,7 +532,7 @@ public class Controller {
     }
 
     /**
-     * Handles the event of the user committing a object category name edit. Names of categories are allowed
+     * Handles the event of the user committing an object category name edit. Names of categories are allowed
      * to be changed by the user as long as the uniqueness of category-names is not violated, otherwise an error dialog
      * will be displayed and the edit will be reverted.
      *
@@ -1260,7 +1259,7 @@ public class Controller {
             return imageFiles.map(file -> new File(file.toString()))
                              .filter(File::isFile)
                              .sorted(Comparator.comparing(File::getName))
-                             .collect(Collectors.toList());
+                             .toList();
         }
     }
 

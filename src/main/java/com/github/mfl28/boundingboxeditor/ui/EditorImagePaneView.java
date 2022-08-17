@@ -47,7 +47,6 @@ import javafx.scene.shape.Rectangle;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 /**
  * A UI-element responsible for displaying the currently selected image on which the
@@ -165,8 +164,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
      */
     public void setZoomableAndPannable(boolean value) {
         currentBoundingShapes.forEach(viewable -> {
-            if(!(!value && viewable instanceof BoundingPolygonView &&
-                    ((BoundingPolygonView) viewable).isConstructing())) {
+            if(!(!value && viewable instanceof BoundingPolygonView boundingPolygonView &&
+                    boundingPolygonView.isConstructing())) {
                 viewable.getViewData().getBaseShape().setMouseTransparent(value);
             }
         });
@@ -229,8 +228,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
         BoundingPolygonView selectedBoundingPolygon;
 
-        if(!(selectedBoundingShape instanceof BoundingPolygonView &&
-                ((BoundingPolygonView) selectedBoundingShape).isConstructing())) {
+        if(!(selectedBoundingShape instanceof BoundingPolygonView boundingPolygonView &&
+                boundingPolygonView.isConstructing())) {
             selectedBoundingPolygon = new BoundingPolygonView(selectedCategory.get());
             selectedBoundingPolygon.setToggleGroup(boundingShapeSelectionGroup);
             selectedBoundingPolygon.setConstructing(true);
@@ -264,10 +263,6 @@ public class EditorImagePaneView extends ScrollPane implements View {
         return selectedCategory.get() != null;
     }
 
-    public DragAnchor getDragAnchor() {
-        return dragAnchor;
-    }
-
     /**
      * Removes all provided {@link BoundingShapeViewable} objects from the list
      * of current {@link BoundingShapeViewable} objects.
@@ -296,22 +291,20 @@ public class EditorImagePaneView extends ScrollPane implements View {
      */
     void addBoundingShapesToSceneGroup(Collection<? extends BoundingShapeViewable> boundingShapes) {
         boundingShapeSceneGroup.getChildren().addAll(boundingShapes.stream()
-                                                                   .map(viewable -> viewable.getViewData()
-                                                                                            .getNodeGroup())
-                                                                   .collect(Collectors.toList()));
+                .map(viewable -> viewable.getViewData()
+                        .getNodeGroup()).toList());
     }
 
     /**
-     * Removes the provided {@link BoundingShapeViewable} objects from a the boundingShapeSceneGroup which is
+     * Removes the provided {@link BoundingShapeViewable} objects from the boundingShapeSceneGroup which is
      * a node in the scene-graph.
      *
      * @param boundingShapes the objects to remove
      */
     void removeBoundingShapesFromSceneGroup(Collection<? extends BoundingShapeViewable> boundingShapes) {
         boundingShapeSceneGroup.getChildren().removeAll(boundingShapes.stream()
-                                                                      .map(viewable -> viewable.getViewData()
-                                                                                               .getNodeGroup())
-                                                                      .collect(Collectors.toList()));
+                .map(viewable -> viewable.getViewData()
+                        .getNodeGroup()).toList());
     }
 
     /**

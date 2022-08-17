@@ -29,8 +29,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 
-import java.util.stream.Collectors;
-
 /**
  * A UI-element used to display and edit tags associated with a bounding-shape.
  *
@@ -106,7 +104,7 @@ class TagScrollPaneView extends ScrollPane implements View {
         tags.addListener((observable, oldValue, newValue) -> {
             if(oldValue == newValue) {
                 // Listeners have to be updated exactly once after a new tag-list was set. If
-                // the tag-list reference has not changed nothing need to be done.
+                // the tag-list reference has not changed, nothing needs to be done.
                 return;
             }
 
@@ -116,7 +114,7 @@ class TagScrollPaneView extends ScrollPane implements View {
             }
 
             if(newValue != null) {
-                tagFlowPane.getChildren().addAll(0, newValue.stream().map(TagBox::new).collect(Collectors.toList()));
+                tagFlowPane.getChildren().addAll(0, newValue.stream().map(TagBox::new).toList());
                 newValue.addListener(tagsListener);
                 tagInputField.setDisable(false);
             } else {
@@ -157,9 +155,8 @@ class TagScrollPaneView extends ScrollPane implements View {
 
                 if(change.wasAdded()) {
                     tagFlowPane.getChildren().addAll(change.getFrom(),
-                                                     change.getAddedSubList().stream()
-                                                           .map(TagBox::new)
-                                                           .collect(Collectors.toList()));
+                            change.getAddedSubList().stream()
+                                    .map(TagBox::new).toList());
                 }
             }
         };

@@ -31,7 +31,6 @@ import javafx.scene.layout.VBox;
 
 import java.io.File;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * UI-element that contains the controls to view, select and search image-files.
@@ -73,7 +72,7 @@ public class ImageFileExplorerView extends VBox implements View {
         ObservableList<ImageFileListView.FileInfo> imageInfoItems = FXCollections.unmodifiableObservableList(
                 FXCollections.observableList(imageFiles.stream()
                                                        .map(ImageFileListView.FileInfo::new)
-                                                       .collect(Collectors.toList()))
+                                                       .toList())
         );
 
         imageFileListView.setItems(imageInfoItems);

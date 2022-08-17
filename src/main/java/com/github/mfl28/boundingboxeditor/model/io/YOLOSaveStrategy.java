@@ -36,11 +36,10 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * Saves rectangular bounding-box annotations in the YOLO-format described at
- * https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885
+ * <a href="https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885">...</a>
  */
 public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final DecimalFormat DECIMAL_FORMAT =
@@ -54,11 +53,11 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
                                             DoubleProperty progress) {
         this.saveFolderPath = destination;
-        this.categories = annotations.getCategoryNameToBoundingShapeCountMap().entrySet().stream()
+        this.categories = annotations.categoryNameToBoundingShapeCountMap().entrySet().stream()
                                      .filter(stringIntegerEntry -> stringIntegerEntry.getValue() > 0)
                                      .map(Map.Entry::getKey)
                                      .sorted()
-                                     .collect(Collectors.toList());
+                                     .toList();
 
         List<IOErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
@@ -68,10 +67,10 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
             unParsedFileErrorMessages.add(new IOErrorInfoEntry(OBJECT_DATA_FILE_NAME, e.getMessage()));
         }
 
-        int totalNrOfAnnotations = annotations.getImageAnnotations().size();
+        int totalNrOfAnnotations = annotations.imageAnnotations().size();
         AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
 
-        annotations.getImageAnnotations().parallelStream().forEach(annotation -> {
+        annotations.imageAnnotations().parallelStream().forEach(annotation -> {
             try {
                 createAnnotationFile(annotation);
             } catch(IOException e) {
@@ -114,8 +113,8 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
             for(int i = 0; i < boundingShapeDataList.size() - 1; ++i) {
                 BoundingShapeData boundingShapeData = boundingShapeDataList.get(i);
 
-                if(boundingShapeData instanceof BoundingBoxData) {
-                    fileWriter.write(createBoundingBoxDataEntry((BoundingBoxData) boundingShapeData));
+                if(boundingShapeData instanceof BoundingBoxData boundingBoxData) {
+                    fileWriter.write(createBoundingBoxDataEntry(boundingBoxData));
                     fileWriter.newLine();
                 }
             }
@@ -123,8 +122,8 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
             if(!boundingShapeDataList.isEmpty()) {
                 BoundingShapeData lastShapeData = boundingShapeDataList.get(boundingShapeDataList.size() - 1);
 
-                if(lastShapeData instanceof BoundingBoxData) {
-                    fileWriter.write(createBoundingBoxDataEntry((BoundingBoxData) lastShapeData));
+                if(lastShapeData instanceof BoundingBoxData boundingBoxData) {
+                    fileWriter.write(createBoundingBoxDataEntry(boundingBoxData));
                 }
             }
         }

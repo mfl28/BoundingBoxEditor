@@ -36,7 +36,7 @@ import java.util.Objects;
  *
  * @see BoundingShapeData#setParts(List)
  */
-public class BoundingBoxData extends BoundingShapeData {
+public final class BoundingBoxData extends BoundingShapeData {
     @SerializedName("bndbox")
     private final Bounds relativeBoundsInImage;
 
@@ -149,16 +149,19 @@ public class BoundingBoxData extends BoundingShapeData {
         if(this == o) {
             return true;
         }
-        if(!(o instanceof BoundingBoxData)) {
+        if(!(o instanceof BoundingBoxData that)) {
             return false;
         }
         if(!super.equals(o)) {
             return false;
         }
-        BoundingBoxData that = (BoundingBoxData) o;
 
         if(relativeBoundsInImage == that.relativeBoundsInImage) {
             return true;
+        }
+
+        if(relativeBoundsInImage == null || that.relativeBoundsInImage == null) {
+            return false;
         }
 
         return MathUtils.doubleAlmostEqual(relativeBoundsInImage.getMinX(), that.relativeBoundsInImage.getMinX()) &&

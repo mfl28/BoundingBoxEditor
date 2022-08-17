@@ -30,21 +30,12 @@ import javafx.concurrent.Task;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ModelNameFetchService extends IoService<ModelNameFetchResult> {
     private final ObjectProperty<BoundingBoxPredictorClient> client = new SimpleObjectProperty<>(this, "client");
 
-    public BoundingBoxPredictorClient getClient() {
-        return client.get();
-    }
-
     public void setClient(BoundingBoxPredictorClient client) {
         this.client.set(client);
-    }
-
-    public ObjectProperty<BoundingBoxPredictorClient> clientProperty() {
-        return client;
     }
 
     @Override
@@ -64,9 +55,9 @@ public class ModelNameFetchService extends IoService<ModelNameFetchResult> {
                 }
 
                 List<String> models =
-                        modelEntries.stream().map(ModelEntry::getModelName)
+                        modelEntries.stream().map(ModelEntry::modelName)
                                     .filter(modelName -> !modelName.isBlank())
-                                    .collect(Collectors.toList());
+                                    .toList();
 
                 return new ModelNameFetchResult(1, Collections.emptyList(), models);
             }

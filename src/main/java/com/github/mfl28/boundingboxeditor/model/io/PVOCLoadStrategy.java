@@ -39,7 +39,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -74,8 +73,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         try(Stream<Path> fileStream = Files.walk(path, INCLUDE_SUBDIRECTORIES ? Integer.MAX_VALUE : 1)) {
             List<File> annotationFiles = fileStream
                     .filter(pathItem -> pathItem.getFileName().toString().endsWith(".xml"))
-                    .map(Path::toFile)
-                    .collect(Collectors.toList());
+                    .map(Path::toFile).toList();
 
             unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
@@ -99,7 +97,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                                                                         }
                                                                     })
                                                                     .filter(Objects::nonNull)
-                                                                    .collect(Collectors.toList());
+                                                                    .toList();
 
             return new ImageAnnotationImportResult(
                     imageAnnotations.size(),

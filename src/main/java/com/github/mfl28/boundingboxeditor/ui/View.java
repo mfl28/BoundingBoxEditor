@@ -33,13 +33,11 @@ public interface View {
      *
      * @param controller the controller serving as the even-handler
      */
-    default void connectToController(Controller controller) {
-    }
+    default void connectToController(Controller controller) {}
 
     /**
      * Resets the View. Classes implementing the View interface can optionally
      * implement this method to reset their state/data.
      */
-    default void reset() {
-    }
+    default void reset() {}
 }

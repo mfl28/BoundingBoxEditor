@@ -38,7 +38,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
@@ -234,458 +233,382 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                                                        ObjectCategory.class));
     }
 
-    private static class BoundingShapeDataDeserializer implements JsonDeserializer<BoundingShapeData> {
-        private final List<IOErrorInfoEntry> errorInfoEntries;
-        private final AtomicReference<String> currentFileName;
-        private final String annotationFileName;
-
-        public BoundingShapeDataDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
-                                             AtomicReference<String> currentFileName,
-                                             String annotationFileName) {
-            this.errorInfoEntries = errorInfoEntries;
-            this.currentFileName = currentFileName;
-            this.annotationFileName = annotationFileName;
-        }
+    private record BoundingShapeDataDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
+                                                 AtomicReference<String> currentFileName,
+                                                 String annotationFileName) implements JsonDeserializer<BoundingShapeData> {
 
         @Override
-        public BoundingShapeData deserialize(JsonElement json, java.lang.reflect.Type type,
-                                             JsonDeserializationContext context) {
-            final JsonObject jsonObject = json.getAsJsonObject();
+            public BoundingShapeData deserialize(JsonElement json, java.lang.reflect.Type type,
+                                                 JsonDeserializationContext context) {
+                final JsonObject jsonObject = json.getAsJsonObject();
 
-            BoundingShapeData boundingShapeData = null;
+                BoundingShapeData boundingShapeData = null;
 
-            if(jsonObject.has(BOUNDING_BOX_SERIALIZED_NAME)) {
-                boundingShapeData = context.deserialize(json, BoundingBoxData.class);
-            } else if(jsonObject.has(BOUNDING_POLYGON_SERIALIZED_NAME)) {
-                boundingShapeData = context.deserialize(json, BoundingPolygonData.class);
-            } else {
-                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
-                                                          MISSING_BOUNDING_SHAPE_ERROR_MESSAGE +
-                                                                  currentFileName
-                                                                          .get() + "."));
+                if(jsonObject.has(BOUNDING_BOX_SERIALIZED_NAME)) {
+                    boundingShapeData = context.deserialize(json, BoundingBoxData.class);
+                } else if(jsonObject.has(BOUNDING_POLYGON_SERIALIZED_NAME)) {
+                    boundingShapeData = context.deserialize(json, BoundingPolygonData.class);
+                } else {
+                    errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                            MISSING_BOUNDING_SHAPE_ERROR_MESSAGE +
+                                    currentFileName
+                                            .get() + "."));
+                }
+
+                return boundingShapeData;
             }
-
-            return boundingShapeData;
         }
-    }
 
-    private static class ObjectCategoryDeserializer implements JsonDeserializer<ObjectCategory> {
-        private final List<IOErrorInfoEntry> errorInfoEntries;
-        private final AtomicReference<String> currentFileName;
-        private final String annotationFileName;
-
-        public ObjectCategoryDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
-                                          AtomicReference<String> currentFileName,
-                                          String annotationFileName) {
-            this.errorInfoEntries = errorInfoEntries;
-            this.currentFileName = currentFileName;
-            this.annotationFileName = annotationFileName;
-        }
+    private record ObjectCategoryDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
+                                              AtomicReference<String> currentFileName,
+                                              String annotationFileName) implements JsonDeserializer<ObjectCategory> {
 
         @Override
-        public ObjectCategory deserialize(JsonElement json, java.lang.reflect.Type type,
-                                          JsonDeserializationContext context) {
-            final JsonObject jsonObject = json.getAsJsonObject();
+            public ObjectCategory deserialize(JsonElement json, java.lang.reflect.Type type,
+                                              JsonDeserializationContext context) {
+                final JsonObject jsonObject = json.getAsJsonObject();
 
-            if(!jsonObject.has(OBJECT_CATEGORY_NAME_SERIALIZED_NAME)) {
-                errorInfoEntries
-                        .add(new IOErrorInfoEntry(annotationFileName,
-                                                  MISSING_CATEGORY_NAME_ERROR_MESSAGE + currentFileName.get() +
-                                                          "."));
-                return null;
-            }
-
-            final String categoryName = jsonObject.get(OBJECT_CATEGORY_NAME_SERIALIZED_NAME).getAsString();
-
-            Color categoryColor;
-
-            if(jsonObject.has(OBJECT_COLOR_SERIALIZED_NAME)) {
-                try {
-                    categoryColor = Color.web(jsonObject.get(OBJECT_COLOR_SERIALIZED_NAME).getAsString());
-                } catch(IllegalArgumentException | ClassCastException e) {
+                if(!jsonObject.has(OBJECT_CATEGORY_NAME_SERIALIZED_NAME)) {
                     errorInfoEntries
-                            .add(new IOErrorInfoEntry(annotationFileName, INVALID_COLOR_ERROR_MESSAGE +
-                                    IMAGE_ATTRIBUTION_MESSAGE_PART + currentFileName.get() + "."));
+                            .add(new IOErrorInfoEntry(annotationFileName,
+                                    MISSING_CATEGORY_NAME_ERROR_MESSAGE + currentFileName.get() +
+                                            "."));
                     return null;
                 }
-            } else {
-                categoryColor = ColorUtils.createRandomColor();
+
+                final String categoryName = jsonObject.get(OBJECT_CATEGORY_NAME_SERIALIZED_NAME).getAsString();
+
+                Color categoryColor;
+
+                if(jsonObject.has(OBJECT_COLOR_SERIALIZED_NAME)) {
+                    try {
+                        categoryColor = Color.web(jsonObject.get(OBJECT_COLOR_SERIALIZED_NAME).getAsString());
+                    } catch(IllegalArgumentException | ClassCastException e) {
+                        errorInfoEntries
+                                .add(new IOErrorInfoEntry(annotationFileName, INVALID_COLOR_ERROR_MESSAGE +
+                                        IMAGE_ATTRIBUTION_MESSAGE_PART + currentFileName.get() + "."));
+                        return null;
+                    }
+                } else {
+                    categoryColor = ColorUtils.createRandomColor();
+                }
+
+                return new ObjectCategory(categoryName, categoryColor);
             }
-
-            return new ObjectCategory(categoryName, categoryColor);
         }
-    }
 
-    private static class BoundsDeserializer implements JsonDeserializer<Bounds> {
-        private final List<IOErrorInfoEntry> errorInfoEntries;
-        private final AtomicReference<String> currentFileName;
-        private final String annotationFileName;
-
-        public BoundsDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
-                                  AtomicReference<String> currentFileName, String annotationFileName) {
-            this.errorInfoEntries = errorInfoEntries;
-            this.currentFileName = currentFileName;
-            this.annotationFileName = annotationFileName;
-        }
+    private record BoundsDeserializer(List<IOErrorInfoEntry> errorInfoEntries, AtomicReference<String> currentFileName,
+                                      String annotationFileName) implements JsonDeserializer<Bounds> {
 
         @Override
-        public Bounds deserialize(JsonElement json, java.lang.reflect.Type type, JsonDeserializationContext context) {
-            final JsonObject jsonObject = json.getAsJsonObject();
+            public Bounds deserialize(JsonElement json, java.lang.reflect.Type type, JsonDeserializationContext context) {
+                final JsonObject jsonObject = json.getAsJsonObject();
 
-            final Optional<Double> minX = parseCoordinateField(jsonObject, BOUNDS_MIN_X_SERIALIZED_NAME);
+                final Optional<Double> minX = parseCoordinateField(jsonObject, BOUNDS_MIN_X_SERIALIZED_NAME);
 
-            if(minX.isEmpty()) {
-                return null;
+                if(minX.isEmpty()) {
+                    return null;
+                }
+
+                final Optional<Double> minY = parseCoordinateField(jsonObject, BOUNDS_MIN_Y_SERIALIZED_NAME);
+
+                if(minY.isEmpty()) {
+                    return null;
+                }
+
+                final Optional<Double> maxX = parseCoordinateField(jsonObject, BOUNDS_MAX_X_SERIALIZED_NAME);
+
+                if(maxX.isEmpty()) {
+                    return null;
+                }
+
+                final Optional<Double> maxY = parseCoordinateField(jsonObject, BOUNDS_MAX_Y_SERIALIZED_NAME);
+
+                if(maxY.isEmpty()) {
+                    return null;
+                }
+
+                return new BoundingBox(minX.get(), minY.get(), maxX.get() - minX.get(), maxY.get() - minY.get());
             }
 
-            final Optional<Double> minY = parseCoordinateField(jsonObject, BOUNDS_MIN_Y_SERIALIZED_NAME);
+            private Optional<Double> parseCoordinateField(JsonObject jsonObject, String name) {
+                if(!jsonObject.has(name)) {
+                    errorInfoEntries
+                            .add(new IOErrorInfoEntry(annotationFileName,
+                                    MISSING_MESSAGE_PART + name +
+                                            ELEMENT_LOCATION_ERROR_MESSAGE_PART +
+                                            BOUNDING_BOX_SERIALIZED_NAME +
+                                            IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                            currentFileName.get() + "."));
+                    return Optional.empty();
+                }
 
-            if(minY.isEmpty()) {
-                return null;
+                double value;
+
+                try {
+                    value = jsonObject.get(name).getAsDouble();
+                } catch(ClassCastException | NumberFormatException e) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                            INVALID_COORDINATE_ERROR_MESSAGE + name +
+                                    ELEMENT_LOCATION_ERROR_MESSAGE_PART +
+                                    BOUNDING_BOX_SERIALIZED_NAME +
+                                    IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                    currentFileName.get() + "."));
+                    return Optional.empty();
+                }
+
+                if(!MathUtils.isWithin(value, 0.0, 1.0)) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                            INVALID_COORDINATE_ERROR_MESSAGE + name +
+                                    ELEMENT_LOCATION_ERROR_MESSAGE_PART +
+                                    BOUNDING_BOX_SERIALIZED_NAME +
+                                    IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                    currentFileName.get() + "."));
+                    return Optional.empty();
+                }
+
+                return Optional.of(value);
             }
-
-            final Optional<Double> maxX = parseCoordinateField(jsonObject, BOUNDS_MAX_X_SERIALIZED_NAME);
-
-            if(maxX.isEmpty()) {
-                return null;
-            }
-
-            final Optional<Double> maxY = parseCoordinateField(jsonObject, BOUNDS_MAX_Y_SERIALIZED_NAME);
-
-            if(maxY.isEmpty()) {
-                return null;
-            }
-
-            return new BoundingBox(minX.get(), minY.get(), maxX.get() - minX.get(), maxY.get() - minY.get());
         }
 
-        private Optional<Double> parseCoordinateField(JsonObject jsonObject, String name) {
-            if(!jsonObject.has(name)) {
-                errorInfoEntries
-                        .add(new IOErrorInfoEntry(annotationFileName,
-                                                  MISSING_MESSAGE_PART + name +
-                                                          ELEMENT_LOCATION_ERROR_MESSAGE_PART +
-                                                          BOUNDING_BOX_SERIALIZED_NAME +
-                                                          IMAGE_ATTRIBUTION_MESSAGE_PART +
-                                                          currentFileName.get() + "."));
-                return Optional.empty();
-            }
-
-            double value;
-
-            try {
-                value = jsonObject.get(name).getAsDouble();
-            } catch(ClassCastException | NumberFormatException e) {
-                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
-                                                          INVALID_COORDINATE_ERROR_MESSAGE + name +
-                                                                  ELEMENT_LOCATION_ERROR_MESSAGE_PART +
-                                                                  BOUNDING_BOX_SERIALIZED_NAME +
-                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
-                                                                  currentFileName.get() + "."));
-                return Optional.empty();
-            }
-
-            if(!MathUtils.isWithin(value, 0.0, 1.0)) {
-                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
-                                                          INVALID_COORDINATE_ERROR_MESSAGE + name +
-                                                                  ELEMENT_LOCATION_ERROR_MESSAGE_PART +
-                                                                  BOUNDING_BOX_SERIALIZED_NAME +
-                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
-                                                                  currentFileName.get() + "."));
-                return Optional.empty();
-            }
-
-            return Optional.of(value);
-        }
-    }
-
-    private static class ImageMetaDataDeserializer implements JsonDeserializer<ImageMetaData> {
-        private final List<IOErrorInfoEntry> errorInfoEntries;
-        private final String annotationFileName;
-        private final AtomicReference<String> currentFileName;
-        private final Set<String> fileNamesToLoad;
-
-        public ImageMetaDataDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
-                                         String annotationFileName, AtomicReference<String> currentFileName,
-                                         Set<String> fileNamesToLoad) {
-            this.errorInfoEntries = errorInfoEntries;
-            this.annotationFileName = annotationFileName;
-            this.currentFileName = currentFileName;
-            this.fileNamesToLoad = fileNamesToLoad;
-        }
+    private record ImageMetaDataDeserializer(List<IOErrorInfoEntry> errorInfoEntries, String annotationFileName,
+                                             AtomicReference<String> currentFileName,
+                                             Set<String> fileNamesToLoad) implements JsonDeserializer<ImageMetaData> {
 
         @Override
-        public ImageMetaData deserialize(JsonElement json, java.lang.reflect.Type type,
-                                         JsonDeserializationContext context) {
-            final JsonObject jsonObject = json.getAsJsonObject();
+            public ImageMetaData deserialize(JsonElement json, java.lang.reflect.Type type,
+                                             JsonDeserializationContext context) {
+                final JsonObject jsonObject = json.getAsJsonObject();
 
-            if(!jsonObject.has(IMAGE_FILE_NAME_SERIALIZED_NAME)) {
-                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
-                                                          MISSING_IMAGE_FILE_NAME_ERROR_MESSAGE));
-                return null;
+                if(!jsonObject.has(IMAGE_FILE_NAME_SERIALIZED_NAME)) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                            MISSING_IMAGE_FILE_NAME_ERROR_MESSAGE));
+                    return null;
+                }
+
+                final String imageFileName = jsonObject.get(IMAGE_FILE_NAME_SERIALIZED_NAME).getAsString();
+
+                if(!fileNamesToLoad.contains(imageFileName)) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                            "Image " + imageFileName +
+                                    " does not belong to currently loaded image files."));
+                    return null;
+                }
+
+                currentFileName.set(imageFileName);
+
+                return new ImageMetaData(imageFileName);
             }
-
-            final String imageFileName = jsonObject.get(IMAGE_FILE_NAME_SERIALIZED_NAME).getAsString();
-
-            if(!fileNamesToLoad.contains(imageFileName)) {
-                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
-                                                          "Image " + imageFileName +
-                                                                  " does not belong to currently loaded image files."));
-                return null;
-            }
-
-            currentFileName.set(imageFileName);
-
-            return new ImageMetaData(imageFileName);
         }
-    }
 
-    private static class ImageAnnotationDeserializer implements JsonDeserializer<ImageAnnotation> {
-        private final List<IOErrorInfoEntry> errorInfoEntries;
-        private final String annotationFileName;
-
-        public ImageAnnotationDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
-                                           String annotationFileName) {
-            this.errorInfoEntries = errorInfoEntries;
-            this.annotationFileName = annotationFileName;
-        }
+    private record ImageAnnotationDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
+                                               String annotationFileName) implements JsonDeserializer<ImageAnnotation> {
 
         @Override
-        public ImageAnnotation deserialize(JsonElement json, java.lang.reflect.Type type,
-                                           JsonDeserializationContext context) {
-
-            if(!json.getAsJsonObject().has(IMAGE_META_DATA_SERIALIZED_NAME)) {
-                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
-                                                          MISSING_IMAGES_FIELD_ERROR_MESSAGE));
-                return null;
-            }
-
-            final ImageMetaData imageMetaData =
-                    context.deserialize(json.getAsJsonObject().get(IMAGE_META_DATA_SERIALIZED_NAME),
-                                        ImageMetaData.class);
-
-            if(imageMetaData == null) {
-                return null;
-            }
-
-            if(!json.getAsJsonObject().has(BOUNDING_SHAPE_DATA_SERIALIZED_NAME)) {
-                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
-                                                          MISSING_OBJECTS_FIELD_ERROR_MESSAGE
-                                                                  + imageMetaData.getFileName() + "."));
-                return null;
-            }
-
-            final java.lang.reflect.Type boundingShapeDataListType = new TypeToken<List<BoundingShapeData>>() {
-            }.getType();
-            final List<BoundingShapeData> boundingShapeDataList =
-                    context.deserialize(json.getAsJsonObject().get(BOUNDING_SHAPE_DATA_SERIALIZED_NAME),
-                                        boundingShapeDataListType);
-
-            boundingShapeDataList.removeIf(Objects::isNull);
-
-            if(boundingShapeDataList.isEmpty()) {
-                return null;
-            }
-
-            return new ImageAnnotation(imageMetaData, boundingShapeDataList);
-        }
-    }
-
-    private static class BoundingBoxDataDeserializer implements JsonDeserializer<BoundingBoxData> {
-        private final List<IOErrorInfoEntry> errorInfoEntries;
-        private final AtomicReference<String> currentFileName;
-        private final String annotationFileName;
-        private final Map<String, ObjectCategory> nameToObjectCategoryMap;
-        private final Map<String, Integer> boundingShapeCountPerCategory;
-
-        public BoundingBoxDataDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
-                                           AtomicReference<String> currentFileName, String annotationFileName,
-                                           Map<String, ObjectCategory> nameToObjectCategoryMap,
-                                           Map<String, Integer> boundingShapeCountPerCategory) {
-            this.errorInfoEntries = errorInfoEntries;
-            this.currentFileName = currentFileName;
-            this.annotationFileName = annotationFileName;
-            this.nameToObjectCategoryMap = nameToObjectCategoryMap;
-            this.boundingShapeCountPerCategory = boundingShapeCountPerCategory;
-        }
-
-        @Override
-        public BoundingBoxData deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
-                                           JsonDeserializationContext context) {
-            final JsonObject jsonObject = json.getAsJsonObject();
-
-            final Optional<ObjectCategory> parsedObjectCategory =
-                    parseObjectCategory(context, jsonObject, errorInfoEntries,
-                                        BOUNDING_BOX_SERIALIZED_NAME, annotationFileName,
-                                        currentFileName.get());
-
-            if(parsedObjectCategory.isEmpty()) {
-                return null;
-            }
-
-            final Bounds bounds =
-                    context.deserialize(json.getAsJsonObject().get(BOUNDING_BOX_SERIALIZED_NAME), Bounds.class);
-
-            if(bounds == null) {
-                return null;
-            }
-
-            final Optional<List<String>> tags = parseBoundingShapeTags(context, jsonObject, errorInfoEntries,
-                                                                       BOUNDING_BOX_SERIALIZED_NAME, annotationFileName,
-                                                                       currentFileName.get());
-
-            if(tags.isEmpty()) {
-                return null;
-            }
-
-            final Optional<List<BoundingShapeData>> parts = parseBoundingShapeDataParts(context, jsonObject,
-                                                                                        errorInfoEntries,
-                                                                                        BOUNDING_BOX_SERIALIZED_NAME,
-                                                                                        annotationFileName,
-                                                                                        currentFileName.get());
-
-            if(parts.isEmpty()) {
-                return null;
-            }
-
-            final ObjectCategory objectCategory =
-                    nameToObjectCategoryMap.computeIfAbsent(parsedObjectCategory.get().getName(),
-                                                            key -> parsedObjectCategory.get());
-
-            boundingShapeCountPerCategory.merge(objectCategory.getName(), 1, Integer::sum);
-
-            final BoundingBoxData boundingBoxData = new BoundingBoxData(objectCategory, bounds, tags.get());
-            boundingBoxData.setParts(parts.get());
-
-            return boundingBoxData;
-        }
-
-    }
-
-    private static class BoundingPolygonDataDeserializer implements JsonDeserializer<BoundingPolygonData> {
-        private final List<IOErrorInfoEntry> errorInfoEntries;
-        private final AtomicReference<String> currentFileName;
-        private final String annotationFileName;
-        private final Map<String, ObjectCategory> nameToObjectCategoryMap;
-        private final Map<String, Integer> boundingShapeCountPerCategory;
-
-        public BoundingPolygonDataDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
-                                               AtomicReference<String> currentFileName,
-                                               String annotationFileName,
-                                               Map<String, ObjectCategory> nameToObjectCategoryMap,
-                                               Map<String, Integer> boundingShapeCountPerCategory) {
-            this.errorInfoEntries = errorInfoEntries;
-            this.currentFileName = currentFileName;
-            this.annotationFileName = annotationFileName;
-            this.nameToObjectCategoryMap = nameToObjectCategoryMap;
-            this.boundingShapeCountPerCategory = boundingShapeCountPerCategory;
-        }
-
-        @Override
-        public BoundingPolygonData deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
+            public ImageAnnotation deserialize(JsonElement json, java.lang.reflect.Type type,
                                                JsonDeserializationContext context) {
-            final JsonObject jsonObject = json.getAsJsonObject();
 
-            final Optional<ObjectCategory> parsedObjectCategory = parseObjectCategory(context, jsonObject,
-                                                                                      errorInfoEntries,
-                                                                                      BOUNDING_POLYGON_SERIALIZED_NAME,
-                                                                                      annotationFileName,
-                                                                                      currentFileName.get());
-            context.deserialize(json.getAsJsonObject().get(OBJECT_CATEGORY_SERIALIZED_NAME),
-                                ObjectCategory.class);
+                if(!json.getAsJsonObject().has(IMAGE_META_DATA_SERIALIZED_NAME)) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                            MISSING_IMAGES_FIELD_ERROR_MESSAGE));
+                    return null;
+                }
 
-            if(parsedObjectCategory.isEmpty()) {
-                return null;
+                final ImageMetaData imageMetaData =
+                        context.deserialize(json.getAsJsonObject().get(IMAGE_META_DATA_SERIALIZED_NAME),
+                                ImageMetaData.class);
+
+                if(imageMetaData == null) {
+                    return null;
+                }
+
+                if(!json.getAsJsonObject().has(BOUNDING_SHAPE_DATA_SERIALIZED_NAME)) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                            MISSING_OBJECTS_FIELD_ERROR_MESSAGE
+                                    + imageMetaData.getFileName() + "."));
+                    return null;
+                }
+
+                final java.lang.reflect.Type boundingShapeDataListType = new TypeToken<List<BoundingShapeData>>() {
+                }.getType();
+                final List<BoundingShapeData> boundingShapeDataList =
+                        context.deserialize(json.getAsJsonObject().get(BOUNDING_SHAPE_DATA_SERIALIZED_NAME),
+                                boundingShapeDataListType);
+
+                boundingShapeDataList.removeIf(Objects::isNull);
+
+                if(boundingShapeDataList.isEmpty()) {
+                    return null;
+                }
+
+                return new ImageAnnotation(imageMetaData, boundingShapeDataList);
             }
-
-            final java.lang.reflect.Type pointsType = new TypeToken<List<Double>>() {
-            }.getType();
-            List<Double> points;
-
-            try {
-                points = context.deserialize(json.getAsJsonObject().get(BOUNDING_POLYGON_SERIALIZED_NAME), pointsType);
-            } catch(JsonParseException | NumberFormatException e) {
-                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
-                                                          INVALID_COORDINATES_ERROR_MESSAGE +
-                                                                  BOUNDING_POLYGON_SERIALIZED_NAME +
-                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
-                                                                  currentFileName.get() + "."));
-                return null;
-            }
-
-            if(points == null || points.isEmpty() || points.size() % 2 != 0) {
-                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
-                                                          INVALID_COORDINATE_NUMBER_ERROR_MESSAGE +
-                                                                  BOUNDING_POLYGON_SERIALIZED_NAME +
-                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
-                                                                  currentFileName.get() + "."));
-                return null;
-            }
-
-            if(!points.stream().allMatch(value -> MathUtils.isWithin(value, 0.0, 1.0))) {
-                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
-                                                          INVALID_COORDINATES_ERROR_MESSAGE +
-                                                                  BOUNDING_POLYGON_SERIALIZED_NAME +
-                                                                  IMAGE_ATTRIBUTION_MESSAGE_PART +
-                                                                  currentFileName.get() + "."));
-                return null;
-            }
-
-            final Optional<List<String>> tags = parseBoundingShapeTags(context, jsonObject, errorInfoEntries,
-                                                                       BOUNDING_POLYGON_SERIALIZED_NAME,
-                                                                       annotationFileName,
-                                                                       currentFileName.get());
-
-            if(tags.isEmpty()) {
-                return null;
-            }
-
-            final Optional<List<BoundingShapeData>> parts = parseBoundingShapeDataParts(context, jsonObject,
-                                                                                        errorInfoEntries,
-                                                                                        BOUNDING_POLYGON_SERIALIZED_NAME,
-                                                                                        annotationFileName,
-                                                                                        currentFileName.get());
-
-            if(parts.isEmpty()) {
-                return null;
-            }
-
-            final ObjectCategory objectCategory =
-                    nameToObjectCategoryMap.computeIfAbsent(parsedObjectCategory.get().getName(),
-                                                            key -> parsedObjectCategory.get());
-
-            boundingShapeCountPerCategory.merge(objectCategory.getName(), 1, Integer::sum);
-
-            final BoundingPolygonData boundingPolygonData = new BoundingPolygonData(objectCategory, points, tags.get());
-            boundingPolygonData.setParts(parts.get());
-
-            return boundingPolygonData;
         }
-    }
 
-    private static class ImageAnnotationListDeserializer implements JsonDeserializer<List<ImageAnnotation>> {
-        final DoubleProperty progress;
-
-        public ImageAnnotationListDeserializer(DoubleProperty progress) {
-            this.progress = progress;
-        }
+    private record BoundingBoxDataDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
+                                               AtomicReference<String> currentFileName, String annotationFileName,
+                                               Map<String, ObjectCategory> nameToObjectCategoryMap,
+                                               Map<String, Integer> boundingShapeCountPerCategory) implements JsonDeserializer<BoundingBoxData> {
 
         @Override
-        public List<ImageAnnotation> deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
-                                                 JsonDeserializationContext context) {
-            final JsonArray jsonArray = json.getAsJsonArray();
+            public BoundingBoxData deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
+                                               JsonDeserializationContext context) {
+                final JsonObject jsonObject = json.getAsJsonObject();
 
-            int totalNrAnnotations = jsonArray.size();
-            final AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
+                final Optional<ObjectCategory> parsedObjectCategory =
+                        parseObjectCategory(context, jsonObject, errorInfoEntries,
+                                BOUNDING_BOX_SERIALIZED_NAME, annotationFileName,
+                                currentFileName.get());
 
-            return StreamSupport.stream(jsonArray.spliterator(), false)
-                                .map(jsonElement -> {
-                                    progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrAnnotations);
+                if(parsedObjectCategory.isEmpty()) {
+                    return null;
+                }
 
-                                    return (ImageAnnotation) context.deserialize(jsonElement, ImageAnnotation.class);
-                                })
-                                .filter(Objects::nonNull)
-                                .collect(Collectors.toList());
+                final Bounds bounds =
+                        context.deserialize(json.getAsJsonObject().get(BOUNDING_BOX_SERIALIZED_NAME), Bounds.class);
+
+                if(bounds == null) {
+                    return null;
+                }
+
+                final Optional<List<String>> tags = parseBoundingShapeTags(context, jsonObject, errorInfoEntries,
+                        BOUNDING_BOX_SERIALIZED_NAME, annotationFileName,
+                        currentFileName.get());
+
+                if(tags.isEmpty()) {
+                    return null;
+                }
+
+                final Optional<List<BoundingShapeData>> parts = parseBoundingShapeDataParts(context, jsonObject,
+                        errorInfoEntries,
+                        BOUNDING_BOX_SERIALIZED_NAME,
+                        annotationFileName,
+                        currentFileName.get());
+
+                if(parts.isEmpty()) {
+                    return null;
+                }
+
+                final ObjectCategory objectCategory =
+                        nameToObjectCategoryMap.computeIfAbsent(parsedObjectCategory.get().getName(),
+                                key -> parsedObjectCategory.get());
+
+                boundingShapeCountPerCategory.merge(objectCategory.getName(), 1, Integer::sum);
+
+                final BoundingBoxData boundingBoxData = new BoundingBoxData(objectCategory, bounds, tags.get());
+                boundingBoxData.setParts(parts.get());
+
+                return boundingBoxData;
+            }
+
         }
-    }
+
+    private record BoundingPolygonDataDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
+                                                   AtomicReference<String> currentFileName, String annotationFileName,
+                                                   Map<String, ObjectCategory> nameToObjectCategoryMap,
+                                                   Map<String, Integer> boundingShapeCountPerCategory) implements JsonDeserializer<BoundingPolygonData> {
+
+        @Override
+            public BoundingPolygonData deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
+                                                   JsonDeserializationContext context) {
+                final JsonObject jsonObject = json.getAsJsonObject();
+
+                final Optional<ObjectCategory> parsedObjectCategory = parseObjectCategory(context, jsonObject,
+                        errorInfoEntries,
+                        BOUNDING_POLYGON_SERIALIZED_NAME,
+                        annotationFileName,
+                        currentFileName.get());
+                context.deserialize(json.getAsJsonObject().get(OBJECT_CATEGORY_SERIALIZED_NAME),
+                        ObjectCategory.class);
+
+                if(parsedObjectCategory.isEmpty()) {
+                    return null;
+                }
+
+                final java.lang.reflect.Type pointsType = new TypeToken<List<Double>>() {
+                }.getType();
+                List<Double> points;
+
+                try {
+                    points = context.deserialize(json.getAsJsonObject().get(BOUNDING_POLYGON_SERIALIZED_NAME), pointsType);
+                } catch(JsonParseException | NumberFormatException e) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                            INVALID_COORDINATES_ERROR_MESSAGE +
+                                    BOUNDING_POLYGON_SERIALIZED_NAME +
+                                    IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                    currentFileName.get() + "."));
+                    return null;
+                }
+
+                if(points == null || points.isEmpty() || points.size() % 2 != 0) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                            INVALID_COORDINATE_NUMBER_ERROR_MESSAGE +
+                                    BOUNDING_POLYGON_SERIALIZED_NAME +
+                                    IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                    currentFileName.get() + "."));
+                    return null;
+                }
+
+                if(!points.stream().allMatch(value -> MathUtils.isWithin(value, 0.0, 1.0))) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                            INVALID_COORDINATES_ERROR_MESSAGE +
+                                    BOUNDING_POLYGON_SERIALIZED_NAME +
+                                    IMAGE_ATTRIBUTION_MESSAGE_PART +
+                                    currentFileName.get() + "."));
+                    return null;
+                }
+
+                final Optional<List<String>> tags = parseBoundingShapeTags(context, jsonObject, errorInfoEntries,
+                        BOUNDING_POLYGON_SERIALIZED_NAME,
+                        annotationFileName,
+                        currentFileName.get());
+
+                if(tags.isEmpty()) {
+                    return null;
+                }
+
+                final Optional<List<BoundingShapeData>> parts = parseBoundingShapeDataParts(context, jsonObject,
+                        errorInfoEntries,
+                        BOUNDING_POLYGON_SERIALIZED_NAME,
+                        annotationFileName,
+                        currentFileName.get());
+
+                if(parts.isEmpty()) {
+                    return null;
+                }
+
+                final ObjectCategory objectCategory =
+                        nameToObjectCategoryMap.computeIfAbsent(parsedObjectCategory.get().getName(),
+                                key -> parsedObjectCategory.get());
+
+                boundingShapeCountPerCategory.merge(objectCategory.getName(), 1, Integer::sum);
+
+                final BoundingPolygonData boundingPolygonData = new BoundingPolygonData(objectCategory, points, tags.get());
+                boundingPolygonData.setParts(parts.get());
+
+                return boundingPolygonData;
+            }
+        }
+
+    private record ImageAnnotationListDeserializer(
+            DoubleProperty progress) implements JsonDeserializer<List<ImageAnnotation>> {
+
+        @Override
+            public List<ImageAnnotation> deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
+                                                     JsonDeserializationContext context) {
+                final JsonArray jsonArray = json.getAsJsonArray();
+
+                int totalNrAnnotations = jsonArray.size();
+                final AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
+
+                return StreamSupport.stream(jsonArray.spliterator(), false)
+                        .map(jsonElement -> {
+                            progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrAnnotations);
+
+                            return (ImageAnnotation) context.deserialize(jsonElement, ImageAnnotation.class);
+                        })
+                        .filter(Objects::nonNull)
+                        .toList();
+            }
+        }
 }

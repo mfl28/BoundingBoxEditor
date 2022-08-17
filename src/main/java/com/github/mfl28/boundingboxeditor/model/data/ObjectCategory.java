@@ -75,12 +75,11 @@ public class ObjectCategory {
             return true;
         }
 
-        if(!(other instanceof ObjectCategory)) {
+        if(!(other instanceof ObjectCategory otherCategory)) {
             return false;
         }
 
-        final ObjectCategory otherCategory = (ObjectCategory) other;
-        return otherCategory.getName().equals(this.getName()) && otherCategory.getColor().equals(this.getColor());
+        return Objects.equals(otherCategory.getName(), this.getName()) && Objects.equals(otherCategory.getColor(), this.getColor());
     }
 
     @Override

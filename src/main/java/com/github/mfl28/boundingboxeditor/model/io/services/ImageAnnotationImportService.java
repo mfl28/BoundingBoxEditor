@@ -40,20 +40,8 @@ public class ImageAnnotationImportService extends IoService<ImageAnnotationImpor
     private final ObjectProperty<Map<String, ObjectCategory>> categoryNameToCategoryMap =
             new SimpleObjectProperty<>(this, "categoryNameToCategoryMap");
 
-    public Set<String> getImportableFileNames() {
-        return importableFileNames.get();
-    }
-
     public void setImportableFileNames(Set<String> importableFileNames) {
         this.importableFileNames.set(importableFileNames);
-    }
-
-    public ObjectProperty<Set<String>> importableFileNamesProperty() {
-        return importableFileNames;
-    }
-
-    public Map<String, ObjectCategory> getCategoryNameToCategoryMap() {
-        return categoryNameToCategoryMap.get();
     }
 
     public void setCategoryNameToCategoryMap(Map<String, ObjectCategory> categoryNameToCategoryMap) {
@@ -66,10 +54,6 @@ public class ImageAnnotationImportService extends IoService<ImageAnnotationImpor
 
     public void setSource(File source) {
         this.source.set(source);
-    }
-
-    public ImageAnnotationLoadStrategy.Type getImportFormat() {
-        return importFormat.get();
     }
 
     public void setImportFormat(ImageAnnotationLoadStrategy.Type importFormat) {

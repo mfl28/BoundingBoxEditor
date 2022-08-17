@@ -16,7 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with Bounding Box Editor. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.mfl28.boundingboxeditor.model.io.restclients;
+package com.github.mfl28.boundingboxeditor.model.io.results;
 
-public record ModelEntry(String modelName, String modelUrl) {
+import nl.jqno.equalsverifier.EqualsVerifier;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+@Tag("unit")
+class IOErrorInfoEntryTest {
+    @Test
+    void checkEqualsContract() {
+        EqualsVerifier.simple().forClass(IOErrorInfoEntry.class)
+                .withNonnullFields("sourceName", "errorDescription")
+                .verify();
+    }
 }

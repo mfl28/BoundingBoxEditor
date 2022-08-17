@@ -37,10 +37,6 @@ public class BoundingBoxPredictorConfig {
         this.minimumScore.set(minimumScore);
     }
 
-    public DoubleProperty minimumScoreProperty() {
-        return minimumScore;
-    }
-
     public boolean isInferenceEnabled() {
         return inferenceEnabled.get();
     }
@@ -61,20 +57,12 @@ public class BoundingBoxPredictorConfig {
         this.imageResizeWidth.set(imageResizeWidth);
     }
 
-    public IntegerProperty imageResizeWidthProperty() {
-        return imageResizeWidth;
-    }
-
     public int getImageResizeHeight() {
         return imageResizeHeight.get();
     }
 
     public void setImageResizeHeight(int imageResizeHeight) {
         this.imageResizeHeight.set(imageResizeHeight);
-    }
-
-    public IntegerProperty imageResizeHeightProperty() {
-        return imageResizeHeight;
     }
 
     public boolean getImageResizeKeepRatio() {
@@ -85,10 +73,6 @@ public class BoundingBoxPredictorConfig {
         this.imageResizeKeepRatio.set(imageResizeKeepRatio);
     }
 
-    public BooleanProperty imageResizeKeepRatioProperty() {
-        return imageResizeKeepRatio;
-    }
-
     public boolean isResizeImages() {
         return resizeImages.get();
     }
@@ -97,19 +81,11 @@ public class BoundingBoxPredictorConfig {
         this.resizeImages.set(resizeImages);
     }
 
-    public BooleanProperty resizeImagesProperty() {
-        return resizeImages;
-    }
-
     public boolean isMergeCategories() {
         return mergeCategories.get();
     }
 
     public void setMergeCategories(boolean mergeCategories) {
         this.mergeCategories.set(mergeCategories);
-    }
-
-    public BooleanProperty mergeCategoriesProperty() {
-        return mergeCategories;
     }
 }

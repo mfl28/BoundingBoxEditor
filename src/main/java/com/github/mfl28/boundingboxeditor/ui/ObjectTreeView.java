@@ -28,7 +28,6 @@ import javafx.scene.layout.VBox;
 import org.apache.commons.collections4.IteratorUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * The bounding-box tree UI-element. Shows information about the currently existing bounding shape objects
@@ -81,13 +80,13 @@ public class ObjectTreeView extends TreeView<Object> implements View {
                         .flatMap(Collection::stream)
                         .filter(child -> child.getValue() instanceof BoundingShapeDataConvertible)
                         .map(this::treeItemToBoundingShapeData)
-                        .collect(Collectors.toList());
+                        .toList();
     }
 
     /**
      * Sets the toggle-icon-state of all tree-items.
      *
-     * @param toggleState true to to toggle on, otherwise off
+     * @param toggleState true to toggle on, otherwise off
      */
     public void setToggleIconStateForAllTreeItems(boolean toggleState) {
         for(TreeItem<Object> child : getRoot().getChildren()) {
@@ -103,8 +102,8 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     public void setToggleIconStateForSelectedObjectTreeItem(boolean toggleState) {
         final TreeItem<Object> selectedTreeItem = getSelectionModel().getSelectedItem();
 
-        if(selectedTreeItem instanceof IconToggleable) {
-            ((IconToggleable) selectedTreeItem).setIconToggledOn(toggleState);
+        if(selectedTreeItem instanceof IconToggleable iconToggleable) {
+            iconToggleable.setIconToggledOn(toggleState);
         }
     }
 
@@ -119,12 +118,12 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     }
 
     void setToggleIconStateForAllTreeItemsExcept(TreeItem<Object> exemption, boolean toggleState) {
-        if(exemption instanceof IconToggleable) {
-            final boolean selectedItemToggledOn = ((IconToggleable) exemption).isIconToggledOn();
+        if(exemption instanceof IconToggleable iconToggleable) {
+            final boolean selectedItemToggledOn = iconToggleable.isIconToggledOn();
 
             setToggleIconStateForAllTreeItems(toggleState);
 
-            ((IconToggleable) exemption).setIconToggledOn(selectedItemToggledOn);
+            iconToggleable.setIconToggledOn(selectedItemToggledOn);
         }
     }
 
@@ -179,7 +178,7 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         return IteratorUtils.toList(new BoundingShapeTreeItemIterator(getRoot())).stream()
                             .filter(treeItem -> treeItem.getValue() instanceof BoundingShapeViewable)
                             .map(item -> (BoundingShapeViewable) item.getValue())
-                            .collect(Collectors.toList());
+                            .toList();
     }
 
     /**
@@ -200,7 +199,7 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         return IteratorUtils.toList(iterator).stream()
                             .filter(child -> child.getValue() instanceof BoundingShapeViewable)
                             .map(child -> (BoundingShapeViewable) child.getValue())
-                            .collect(Collectors.toList());
+                            .toList();
     }
 
     /**
@@ -262,8 +261,7 @@ public class ObjectTreeView extends TreeView<Object> implements View {
 
     private void setUpInternalListeners() {
         skinProperty().addListener((observable, oldValue, newValue) -> {
-            if(newValue instanceof TreeViewSkin) {
-                var skin = (TreeViewSkin<?>) newValue;
+            if(newValue instanceof TreeViewSkin<?> skin) {
                 var childNodes = skin.getChildren();
 
                 if(childNodes != null && !childNodes.isEmpty()) {
@@ -305,7 +303,7 @@ public class ObjectTreeView extends TreeView<Object> implements View {
                                                     .map(TreeItem::getChildren)
                                                     .flatMap(Collection::stream)
                                                     .map(this::treeItemToBoundingShapeData)
-                                                    .collect(Collectors.toList());
+                                                    .toList();
 
             boundingShapeData.setParts(parts);
         }
@@ -316,10 +314,9 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     private void detachTreeItemFromParent(TreeItem<Object> itemToDetach) {
         TreeItem<Object> itemParent = itemToDetach.getParent();
 
-        if(itemParent instanceof ObjectCategoryTreeItem
-                && itemToDetach instanceof BoundingShapeTreeItem) {
-            ((ObjectCategoryTreeItem) itemParent)
-                    .detachBoundingShapeTreeItemChild((BoundingShapeTreeItem) itemToDetach);
+        if(itemParent instanceof ObjectCategoryTreeItem objectCategoryTreeItem
+                && itemToDetach instanceof BoundingShapeTreeItem boundingShapeTreeItem) {
+            objectCategoryTreeItem.detachBoundingShapeTreeItemChild(boundingShapeTreeItem);
         } else {
             itemParent.getChildren().remove(itemToDetach);
         }
@@ -333,8 +330,8 @@ public class ObjectTreeView extends TreeView<Object> implements View {
     private void attachTreeItemToTarget(TreeItem<Object> treeItemToAttach, TreeItem<Object> targetItem) {
         ObjectCategory draggedItemCategory;
 
-        if(treeItemToAttach instanceof ObjectCategoryTreeItem) {
-            draggedItemCategory = ((ObjectCategoryTreeItem) treeItemToAttach).getObjectCategory();
+        if(treeItemToAttach instanceof ObjectCategoryTreeItem objectCategoryTreeItem) {
+            draggedItemCategory = objectCategoryTreeItem.getObjectCategory();
         } else if(treeItemToAttach instanceof BoundingShapeTreeItem) {
             draggedItemCategory =
                     ((BoundingShapeViewable) treeItemToAttach.getValue()).getViewData().getObjectCategory();
