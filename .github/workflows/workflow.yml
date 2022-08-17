@@ -144,7 +144,7 @@ jobs:
           path: build/jpackage/BoundingBoxEditor
 
   Build-and-Test-macOS:
-    runs-on: macOS-10.15
+    runs-on: macos-latest
     name: Build and Test (macOS)
     steps:
       - name: Git checkout
