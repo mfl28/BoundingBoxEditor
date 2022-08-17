@@ -141,10 +141,16 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         } else {
             setGraphic(createContentBox());
 
-            if(newCellObject instanceof BoundingBoxView) {
-                contextMenu.removePolygonFeatures();
-            } else if(newCellObject instanceof BoundingPolygonView) {
+            if(newCellObject instanceof View) {
+                contextMenu.addViewFeatures();
+            } else {
+                contextMenu.removeViewFeatures();
+            }
+
+            if(newCellObject instanceof BoundingPolygonView) {
                 contextMenu.addPolygonFeatures();
+            } else {
+                contextMenu.removePolygonFeatures();
             }
 
             // Register the contextMenu with the cell.
@@ -433,14 +439,17 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     }
 
     private class ObjectTreeElementContextMenu extends ContextMenu {
+        private static final int CHANGE_OBJECT_CATEGORY_ITEM_POSITION = 5;
+
         ObjectTreeElementContextMenu() {
             super(hideBoundingShapeMenuItem,
                   hideOtherBoundingShapesMenuItem,
                   hideAllBoundingShapesMenuItem,
                   showBoundingShapeMenuItem,
                   showAllBoundingShapesMenuItem,
-                  changeObjectCategoryMenuItem,
                   deleteBoundingShapeMenuItem);
+
+            getItems().add(CHANGE_OBJECT_CATEGORY_ITEM_POSITION, changeObjectCategoryMenuItem);
             setUpInternalListeners();
         }
 
@@ -475,6 +484,15 @@ class ObjectTreeElementCell extends TreeCell<Object> {
 
             addVerticesMenuItem.disableProperty().unbind();
             deleteVerticesMenuItem.disableProperty().unbind();
+        }
+
+        void addViewFeatures() {
+            if(!getItems().contains(changeObjectCategoryMenuItem)) {
+                getItems().add(CHANGE_OBJECT_CATEGORY_ITEM_POSITION, changeObjectCategoryMenuItem);
+            }
+        }
+        void removeViewFeatures() {
+            getItems().remove(changeObjectCategoryMenuItem);
         }
 
         private void setUpInternalListeners() {
