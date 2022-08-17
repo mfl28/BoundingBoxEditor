@@ -7,3 +7,5 @@ coverage:
       default:
         target: auto
         threshold: 5%
+  notify:
+    after_n_builds: 3
