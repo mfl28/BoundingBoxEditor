@@ -323,6 +323,12 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         // Delete Dummy-category-item. This should delete all children recursively.
         robot.rightClickOn(newDummyCategoryTreeItem.getGraphic());
         WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(robot.lookup("Change Category").tryQuery().isEmpty(), Matchers.is(true),
+                saveScreenshot(testinfo));
+        verifyThat(robot.lookup("Add Vertices").tryQuery().isEmpty(), Matchers.is(true),
+                saveScreenshot(testinfo));
+        verifyThat(robot.lookup("Remove Vertices").tryQuery().isEmpty(), Matchers.is(true),
+                saveScreenshot(testinfo));
         timeOutClickOn(robot, "Delete", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         // Now the tree-view should be empty (besides the invisible root-item).
