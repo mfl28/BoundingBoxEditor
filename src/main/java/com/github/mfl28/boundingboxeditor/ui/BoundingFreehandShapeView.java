@@ -21,7 +21,6 @@ package com.github.mfl28.boundingboxeditor.ui;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
-import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Toggle;
@@ -36,7 +35,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class BoundingFreehandShapeView extends Path implements View, Toggle,
-                                                               BoundingShapeViewable {
+        BoundingShapeViewable {
     private static final String BOUNDING_FREEHAND_SHAPE_ID = "bounding-freehand-shape";
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
@@ -46,7 +45,7 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
     private final DoubleProperty yMin = new SimpleDoubleProperty(Double.MAX_VALUE);
     private final DoubleProperty xMax = new SimpleDoubleProperty(0);
     private final DoubleProperty yMax = new SimpleDoubleProperty(0);
-    private List<Double> pointsInImage = Collections.emptyList();
+    private final List<Double> pointsInImage = Collections.emptyList();
 
     public BoundingFreehandShapeView(ObjectCategory category) {
         this.boundingShapeViewData = new BoundingShapeViewData(this, category);
@@ -64,13 +63,10 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
         List<Double> points = new ArrayList<>((getElements().size() - 1) * 2);
 
         for(PathElement pathElement : getElements()) {
-            if(pathElement instanceof MoveTo) {
-                MoveTo moveToElement = (MoveTo) pathElement;
+            if(pathElement instanceof MoveTo moveToElement) {
                 points.add(moveToElement.getX());
                 points.add(moveToElement.getY());
-            } else if(pathElement instanceof LineTo) {
-                LineTo lineToElement = (LineTo) pathElement;
-
+            } else if(pathElement instanceof LineTo lineToElement) {
                 points.add(lineToElement.getX());
                 points.add(lineToElement.getY());
             }
@@ -106,12 +102,12 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
 
     @Override
     public BoundingShapeTreeItem toTreeItem() {
-        return new BoundingFreehandShapeTreeItem(this);
+        return new BoundingPolygonTreeItem(this);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(boundingShapeViewData, pointsInImage);
+        return Objects.hash(boundingShapeViewData, getElements());
     }
 
     @Override
@@ -120,11 +116,9 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
             return true;
         }
 
-        if(!(obj instanceof BoundingFreehandShapeView)) {
+        if(!(obj instanceof BoundingFreehandShapeView other)) {
             return false;
         }
-
-        BoundingFreehandShapeView other = (BoundingFreehandShapeView) obj;
 
         if(!Objects.equals(boundingShapeViewData, other.boundingShapeViewData) ||
                 getElements().size() != other.getElements().size()) {
@@ -174,36 +168,6 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
         updateOutlineBoxFromCoordinates(x, y);
     }
 
-    /**
-     * Returns the currently assigned tags.
-     *
-     * @return the tags
-     */
-    ObservableList<String> getTags() {
-        return boundingShapeViewData.getTags();
-    }
-
-    List<Double> getRelativePointsInImageView() {
-        final Bounds imageViewBounds = boundingShapeViewData.autoScaleBounds().getValue();
-
-        List<Double> points = new ArrayList<>((getElements().size() - 1) * 2);
-
-        for(PathElement pathElement : getElements()) {
-            if(pathElement instanceof MoveTo) {
-                MoveTo moveToElement = (MoveTo) pathElement;
-                points.add((moveToElement.getX() - imageViewBounds.getMinX()) / imageViewBounds.getWidth());
-                points.add((moveToElement.getY() - imageViewBounds.getMinY()) / imageViewBounds.getHeight());
-            } else if(pathElement instanceof LineTo) {
-                LineTo lineToElement = (LineTo) pathElement;
-
-                points.add((lineToElement.getX() - imageViewBounds.getMinX()) / imageViewBounds.getWidth());
-                points.add((lineToElement.getY() - imageViewBounds.getMinY()) / imageViewBounds.getHeight());
-            }
-        }
-
-        return points;
-    }
-
     void autoScaleWithBounds(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
         boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
         addAutoScaleListener();
@@ -214,12 +178,10 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
         final List<Double> points = new ArrayList<>((getElements().size() - 1) * 2);
 
         for(PathElement element : getElements()) {
-            if(element instanceof LineTo) {
-                LineTo lineTo = (LineTo) element;
+            if(element instanceof LineTo lineTo) {
                 points.add((lineTo.getX() - xMin.get()) / (xMax.get() - xMin.get()) * width);
                 points.add((lineTo.getY() - yMin.get()) / (yMax.get() - yMin.get()) * height);
-            } else if(element instanceof MoveTo) {
-                MoveTo moveTo = (MoveTo) element;
+            } else if(element instanceof MoveTo moveTo) {
                 points.add((moveTo.getX() - xMin.get()) / (xMax.get() - xMin.get()) * width);
                 points.add((moveTo.getY() - yMin.get()) / (yMax.get() - yMin.get()) * height);
             }
@@ -232,15 +194,15 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
         Bounds confinementBoundsValue = boundingShapeViewData.autoScaleBounds().getValue();
 
         getElements().setAll(new MoveTo(pointsInImage.get(0) * confinementBoundsValue.getWidth() / imageWidth +
-                                                confinementBoundsValue.getMinX(),
-                                        pointsInImage.get(1) * confinementBoundsValue.getHeight() / imageHeight +
-                                                confinementBoundsValue.getMinY()));
+                confinementBoundsValue.getMinX(),
+                pointsInImage.get(1) * confinementBoundsValue.getHeight() / imageHeight +
+                        confinementBoundsValue.getMinY()));
 
         for(int i = 2; i < pointsInImage.size(); i += 2) {
             getElements().add(new LineTo(pointsInImage.get(i) * confinementBoundsValue.getWidth() / imageWidth +
-                                                 confinementBoundsValue.getMinX(),
-                                         pointsInImage.get(i + 1) * confinementBoundsValue.getHeight() / imageHeight +
-                                                 confinementBoundsValue.getMinY()));
+                    confinementBoundsValue.getMinX(),
+                    pointsInImage.get(i + 1) * confinementBoundsValue.getHeight() / imageHeight +
+                            confinementBoundsValue.getMinY()));
         }
 
         getElements().add(new ClosePath());
@@ -248,14 +210,14 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
 
     private void setUpInternalListeners() {
         fillProperty().bind(Bindings.when(selectedProperty())
-                                    .then(Bindings.createObjectBinding(
-                                            () -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY),
-                                            strokeProperty()))
-                                    .otherwise(Bindings.when(boundingShapeViewData.highlightedProperty())
-                                                       .then(Bindings.createObjectBinding(() -> Color
-                                                               .web(strokeProperty().get().toString(),
-                                                                    HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
-                                                       .otherwise(Color.TRANSPARENT)));
+                .then(Bindings.createObjectBinding(
+                        () -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY),
+                        strokeProperty()))
+                .otherwise(Bindings.when(boundingShapeViewData.highlightedProperty())
+                        .then(Bindings.createObjectBinding(() -> Color
+                                .web(strokeProperty().get().toString(),
+                                        HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
+                        .otherwise(Color.TRANSPARENT)));
 
         boundingShapeViewData.getSelected().addListener((observable, oldValue, newValue) -> {
             if(Boolean.TRUE.equals(newValue)) {
@@ -281,12 +243,10 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
             double yScaleFactor = newValue.getHeight() / oldValue.getHeight();
 
             for(PathElement pathElement : getElements()) {
-                if(pathElement instanceof MoveTo) {
-                    MoveTo moveToElement = (MoveTo) pathElement;
+                if(pathElement instanceof MoveTo moveToElement) {
                     moveToElement.setX(newValue.getMinX() + (moveToElement.getX() - oldValue.getMinX()) * xScaleFactor);
                     moveToElement.setY(newValue.getMinY() + (moveToElement.getY() - oldValue.getMinY()) * yScaleFactor);
-                } else if(pathElement instanceof LineTo) {
-                    LineTo lineToElement = (LineTo) pathElement;
+                } else if(pathElement instanceof LineTo lineToElement) {
                     lineToElement.setX(newValue.getMinX() + (lineToElement.getX() - oldValue.getMinX()) * xScaleFactor);
                     lineToElement.setY(newValue.getMinY() + (lineToElement.getY() - oldValue.getMinY()) * yScaleFactor);
                 }
@@ -303,16 +263,12 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
         double newYMax = 0;
 
         for(PathElement pathElement : getElements()) {
-            if(pathElement instanceof LineTo) {
-                LineTo lineToElement = (LineTo) pathElement;
-
+            if(pathElement instanceof LineTo lineToElement) {
                 newXMin = Math.min(lineToElement.getX(), newXMin);
                 newYMin = Math.min(lineToElement.getY(), newYMin);
                 newXMax = Math.max(lineToElement.getX(), newXMax);
                 newYMax = Math.max(lineToElement.getY(), newYMax);
-            } else if(pathElement instanceof MoveTo) {
-                MoveTo moveToElement = (MoveTo) pathElement;
-
+            } else if(pathElement instanceof MoveTo moveToElement) {
                 newXMin = Math.min(moveToElement.getX(), newXMin);
                 newYMin = Math.min(moveToElement.getY(), newYMin);
                 newXMax = Math.max(moveToElement.getX(), newXMax);

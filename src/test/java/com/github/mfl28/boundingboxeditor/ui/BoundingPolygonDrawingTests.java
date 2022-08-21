@@ -19,11 +19,18 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
+import javafx.css.Match;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
 import javafx.stage.Stage;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.hamcrest.Matchers;
+import org.hamcrest.core.AllOf;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -37,6 +44,7 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
@@ -359,5 +367,131 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                    Matchers.equalTo(false), saveScreenshot(testinfo));
         verifyThat(newBoundingPolygonView.isEditing(), Matchers.equalTo(false), saveScreenshot(testinfo));
         verifyThat(newBoundingPolygonView.isSelected(), Matchers.equalTo(true), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onFreehandDrawing_WhenImageFolderLoaded_ShouldCorrectlyCreatePolygons(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+
+        String testCategoryName = "Test";
+        enterNewCategory(robot, testCategoryName, testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Select polygon drawing mode:
+        timeOutClickOn(robot, "Freehand", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Draw a bounding polygon.
+        Double[] targetImageViewPointRatios = {0.25, 0.25, 0.1, 0.6, 0.4, 0.75, 0.75, 0.3};
+        List<Point2D> screenPoints = IntStream.range(0, targetImageViewPointRatios.length)
+                .filter(i -> i % 2 == 0)
+                .mapToObj(i -> getScreenPointFromImageViewRatios(new Point2D(targetImageViewPointRatios[i], targetImageViewPointRatios[i+1])))
+                .toList();
+
+        robot.moveTo(screenPoints.get(0)).press(MouseButton.PRIMARY);
+
+        WaitForAsyncUtils.waitForFxEvents();
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> mainView.getCurrentBoundingShapes()
+                                .size() == 1 && mainView.getCurrentBoundingShapes().get(0) instanceof BoundingFreehandShapeView),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected number of bounding freehand shapes " +
+                                "not found in " +
+                                TIMEOUT_DURATION_IN_SEC +
+                                " sec."));
+
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1),
+                saveScreenshot(testinfo));
+
+        verifyThat(mainView.getImageFileListView().getSelectionModel()
+                        .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
+                saveScreenshot(testinfo));
+
+        verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingFreehandShapeView.class),
+                saveScreenshot(testinfo));
+
+        final BoundingFreehandShapeView boundingFreehandShapeView = (BoundingFreehandShapeView) mainView.getCurrentBoundingShapes().get(0);
+        verifyThat(boundingFreehandShapeView.getElements(), Matchers.not(Matchers.empty()));
+        verifyThat(boundingFreehandShapeView.getElements().get(0), Matchers.instanceOf(MoveTo.class));
+
+        verifyThat(boundingFreehandShapeView, NodeMatchers.isVisible(), saveScreenshot(testinfo));
+        verifyThat(boundingFreehandShapeView.isSelected(), Matchers.equalTo(true), saveScreenshot(testinfo));
+        verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(),
+                Matchers.equalTo(boundingFreehandShapeView), saveScreenshot(testinfo));
+        verifyThat(mainView.getEditorImagePane().isFreehandDrawingInProgress(), Matchers.equalTo(true));
+
+        int numPathElements = boundingFreehandShapeView.getElements().size();
+
+
+        robot.moveTo(screenPoints.get(1));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(boundingFreehandShapeView.getElements().size(), Matchers.greaterThan(numPathElements));
+        verifyThat(boundingFreehandShapeView.getElements().get(boundingFreehandShapeView.getElements().size() - 1),
+                Matchers.instanceOf(LineTo.class));
+
+        final Rectangle2D relativeOutlineRectangle = boundingFreehandShapeView.getRelativeOutlineRectangle();
+        verifyThat(relativeOutlineRectangle.getMinX(), Matchers.allOf(Matchers.greaterThanOrEqualTo(0.0), Matchers.lessThanOrEqualTo(1.0)));
+        verifyThat(relativeOutlineRectangle.getMaxX(), Matchers.allOf(Matchers.greaterThanOrEqualTo(0.0), Matchers.lessThanOrEqualTo(1.0)));
+        verifyThat(relativeOutlineRectangle.getMinY(), Matchers.allOf(Matchers.greaterThanOrEqualTo(0.0), Matchers.lessThanOrEqualTo(1.0)));
+        verifyThat(relativeOutlineRectangle.getMaxX(), Matchers.allOf(Matchers.greaterThanOrEqualTo(0.0), Matchers.lessThanOrEqualTo(1.0)));
+
+        final List<Double> minMaxPoints = boundingFreehandShapeView.getMinMaxScaledPoints(100, 100);
+        verifyThat(minMaxPoints.stream().allMatch(value -> value >= 0.0 && value <= 100.0), Matchers.is(true));
+
+        robot.moveTo(screenPoints.get(2)).moveTo(screenPoints.get(3)).release(MouseButton.PRIMARY);
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> mainView.getCurrentBoundingShapes()
+                                .size() == 1 && mainView.getCurrentBoundingShapes().get(0) instanceof BoundingPolygonView),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected number of bounding polygons " +
+                                "not found in " +
+                                TIMEOUT_DURATION_IN_SEC +
+                                " sec."));
+
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1),
+                saveScreenshot(testinfo));
+
+        verifyThat(mainView.getImageFileListView().getSelectionModel()
+                        .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
+                saveScreenshot(testinfo));
+
+        verifyThat(mainView.getEditorImagePane().isFreehandDrawingInProgress(), Matchers.equalTo(false));
+
+        verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingPolygonView.class),
+                saveScreenshot(testinfo));
+
+        final BoundingPolygonView drawnBoundingPolygon =
+                (BoundingPolygonView) mainView.getCurrentBoundingShapes().get(0);
+        final List<Double> drawnPointCoordinates = List.of(drawnBoundingPolygon.getPoints().toArray(Double[]::new));
+        verifyThat(drawnPointCoordinates.size(), Matchers.greaterThan(targetImageViewPointRatios.length),
+                saveScreenshot(testinfo));
+        verifyThat(drawnBoundingPolygon, NodeMatchers.isVisible(), saveScreenshot(testinfo));
+        verifyThat(drawnBoundingPolygon.getVertexHandles().stream().allMatch(BoundingPolygonView.VertexHandle::isEditing),
+                Matchers.equalTo(false),
+                saveScreenshot(testinfo));
+        verifyThat(drawnBoundingPolygon.getVertexHandles().stream().allMatch(BoundingPolygonView.VertexHandle::isVisible),
+                Matchers.equalTo(true),
+                saveScreenshot(testinfo));
+        verifyThat(drawnBoundingPolygon.getVertexHandles().stream().allMatch(BoundingPolygonView.VertexHandle::isSelected),
+                Matchers.equalTo(false),
+                saveScreenshot(testinfo));
+        verifyThat(drawnBoundingPolygon.isSelected(), Matchers.equalTo(true), saveScreenshot(testinfo));
+        verifyThat(drawnBoundingPolygon.isConstructing(), Matchers.equalTo(false), saveScreenshot(testinfo));
+        verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(),
+                Matchers.equalTo(drawnBoundingPolygon), saveScreenshot(testinfo));
+
+        mainView.getEditorSettingsConfig().simplifyRelativeDistanceToleranceProperty().set(1.0);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.rightClickOn(drawnBoundingPolygon).clickOn("Simplify");
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(drawnBoundingPolygon.getRelativePointsInImageView().toArray(Double[]::new),
+                ratioListCloseTo(targetImageViewPointRatios), saveScreenshot(testinfo));
     }
 }

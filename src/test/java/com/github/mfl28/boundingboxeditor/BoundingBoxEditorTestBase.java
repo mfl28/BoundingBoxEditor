@@ -142,6 +142,24 @@ public class BoundingBoxEditorTestBase {
         }
     }
 
+    protected void pressMoveReleaseRelativeToImageView(FxRobot robot, MouseButton mousebutton, boolean pressStart, boolean releaseEnd, Point2D... points) {
+        robot.moveTo(getScreenPointFromImageViewRatios(points[0]));
+
+        if(pressStart) {
+            robot.press(mousebutton);
+        }
+
+        for(int i = 1; i < points.length - 1; ++i) {
+            robot.moveTo(getScreenPointFromImageViewRatios(points[i]));
+        }
+
+        robot.moveTo(getScreenPointFromImageViewRatios(points[points.length - 1]));
+
+        if(releaseEnd) {
+            robot.release(mousebutton);
+        }
+    }
+
     protected void enterNewCategory(FxRobot robot, String categoryName, TestInfo testinfo) {
         timeOutClickOn(robot, "#category-input-field", testinfo);
         WaitForAsyncUtils.waitForFxEvents();

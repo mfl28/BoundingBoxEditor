@@ -746,7 +746,9 @@ public class Controller {
                 new Pair<>(KeyCombinations.selectFreehandDrawingMode,
                            event -> view.getEditor().getEditorToolBar().getFreehandModeButton().setSelected(true)),
                 new Pair<>(KeyCombinations.changeSelectedBoundingShapeCategory,
-                           event -> view.initiateCurrentSelectedBoundingBoxCategoryChange())
+                           event -> view.initiateCurrentSelectedBoundingBoxCategoryChange()),
+                new Pair<>(KeyCombinations.simplifyPolygon,
+                           event -> view.simplifyCurrentSelectedBoundingPolygon())
         );
     }
 
@@ -1585,6 +1587,9 @@ public class Controller {
                 new KeyCodeCombination(KeyCode.C, KeyCombination.SHIFT_DOWN);
         public static final KeyCombination hideNonSelectedBoundingShapes =
                 new KeyCodeCombination(KeyCode.H, KeyCombination.SHIFT_DOWN);
+
+        public static final KeyCombination simplifyPolygon =
+                new KeyCodeCombination(KeyCode.S, KeyCombination.SHIFT_DOWN);
 
         private KeyCombinations() {
             throw new IllegalStateException("Key Combination Class");

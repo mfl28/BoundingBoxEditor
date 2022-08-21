@@ -22,12 +22,7 @@ import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.utils.MathUtils;
 import javafx.beans.Observable;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
@@ -52,7 +47,6 @@ import javafx.scene.shape.Rectangle;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * A UI-element responsible for displaying the currently selected image on which the
@@ -89,7 +83,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     private final ProgressIndicator imageLoadingProgressIndicator = new ProgressIndicator();
     private final StackPane contentPane = new StackPane(imageView, boundingShapeSceneGroup,
-                                                        initializerRectangle, imageLoadingProgressIndicator);
+            initializerRectangle, imageLoadingProgressIndicator);
     private boolean boundingBoxDrawingInProgress = false;
     private DrawingMode drawingMode = DrawingMode.BOX;
 
@@ -231,13 +225,6 @@ public class EditorImagePaneView extends ScrollPane implements View {
         return boundingBoxDrawingInProgress || freehandDrawingInProgress;
     }
 
-    /**
-     * Sets a boolean indicating that a bounding box is currently drawn by the user.
-     */
-    public void setBoundingBoxDrawingInProgress(boolean boundingBoxDrawingInProgress) {
-        this.boundingBoxDrawingInProgress = boundingBoxDrawingInProgress;
-    }
-
     public void initializeBoundingRectangle(MouseEvent event) {
         dragAnchor.setFromMouseEvent(event);
         Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
@@ -307,11 +294,11 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
         boundingPolygonView.setEditing(true);
 
-        for (int i = 0; i < pointsInImage.size(); i += 2) {
+        for(int i = 0; i < pointsInImage.size(); i += 2) {
             boundingPolygonView.appendNode(pointsInImage.get(i), pointsInImage.get(i + 1));
         }
 
-        if (autoSimplifyPolygons.get()) {
+        if(autoSimplifyPolygons.get()) {
             boundingPolygonView.simplify(simplifyRelativeDistanceTolerance.get(),
                     boundingFreehandShape.getViewData().autoScaleBounds().getValue());
         }
@@ -324,7 +311,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 .getTreeItem().getParent();
         parentTreeItem.detachBoundingShapeTreeItemChild(boundingFreehandShape.getViewData().getTreeItem());
 
-        if (parentTreeItem.getChildren().isEmpty()) {
+        if(parentTreeItem.getChildren().isEmpty()) {
             parentTreeItem.getParent().getChildren().remove(parentTreeItem);
         }
 
@@ -340,12 +327,12 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     public void setBoundingPolygonsEditingAndConstructing(boolean editing) {
         currentBoundingShapes.stream()
-                             .filter(BoundingPolygonView.class::isInstance)
-                             .map(BoundingPolygonView.class::cast)
-                             .forEach(boundingPolygonView -> {
-                                 boundingPolygonView.setEditing(editing);
-                                 boundingPolygonView.setConstructing(false);
-                             });
+                .filter(BoundingPolygonView.class::isInstance)
+                .map(BoundingPolygonView.class::cast)
+                .forEach(boundingPolygonView -> {
+                    boundingPolygonView.setEditing(editing);
+                    boundingPolygonView.setConstructing(false);
+                });
     }
 
     public boolean isCategorySelected() {
@@ -407,7 +394,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
         Dimension2D dimension = calculateLoadedImageDimensions(width, height);
 
         imageView.setImage(new Image(imageFile.toURI().toString(),
-                                     dimension.getWidth(), dimension.getHeight(), true, true, true));
+                dimension.getWidth(), dimension.getHeight(), true, true, true));
 
         resetImageViewSize();
     }
@@ -516,7 +503,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 if(drawingMode == DrawingMode.BOX) {
                     Point2D parentCoordinates =
                             imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
-                                                    Math.min(clampedEventXY.getY(), dragAnchor.getY()));
+                                    Math.min(clampedEventXY.getY(), dragAnchor.getY()));
 
                     initializerRectangle.setX(parentCoordinates.getX());
                     initializerRectangle.setY(parentCoordinates.getY());
@@ -527,7 +514,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
                             imageView.localToParent(clampedEventXY.getX(), clampedEventXY.getY());
 
                     BoundingFreehandShapeView shape =
-                            (BoundingFreehandShapeView)boundingShapeSelectionGroup.getSelectedToggle();
+                            (BoundingFreehandShapeView) boundingShapeSelectionGroup.getSelectedToggle();
 
                     shape.addLineTo(parentCoordinates.getX(), parentCoordinates.getY());
                 }
@@ -559,9 +546,9 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 Point2D mousePointInImageView = imageView.parentToLocal(event.getX(), event.getY());
 
                 setHvalue((mousePointInImageView.getX() * (zoomFactor - 1) + offsetX)
-                                  / (newContentPaneBounds.getWidth() - viewportBounds.getWidth()));
+                        / (newContentPaneBounds.getWidth() - viewportBounds.getWidth()));
                 setVvalue((mousePointInImageView.getY() * (zoomFactor - 1) + offsetY)
-                                  / (newContentPaneBounds.getHeight() - viewportBounds.getHeight()));
+                        / (newContentPaneBounds.getHeight() - viewportBounds.getHeight()));
 
                 event.consume();
             }

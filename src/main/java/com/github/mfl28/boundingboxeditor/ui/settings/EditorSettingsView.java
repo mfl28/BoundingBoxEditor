@@ -18,29 +18,29 @@
  */
 package com.github.mfl28.boundingboxeditor.ui.settings;
 
-import java.text.DecimalFormat;
-import java.text.ParseException;
-
 import com.github.mfl28.boundingboxeditor.ui.EditorSettingsConfig;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
-
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.util.StringConverter;
 
 public class EditorSettingsView extends GridPane implements ApplyButtonChangeProvider {
     private static final String GRID_PANE_STYLE_CLASS = "grid-pane";
-    private static final String SIMPLIFY_RELATIVE_DISTANCE_TOLERANCE_TEXT = "Distance tolerance";
+    private static final String SIMPLIFY_RELATIVE_DISTANCE_TOLERANCE_TEXT = "Simplification tolerance";
     private static final String SIMPLIFY_RELATIVE_DISTANCE_TOLERANCE_TOOLTIP =
-            "Set the relative distance tolerance for polygon simplification.";
+            "Set tolerance for polygon simplification (lower tolerance means less simplification)";
+    private static final String POLYGONS_ROW_TITLE = "Polygons";
+    private static final String POLYGONS_ROW_TITLE_ID = "subgroup-title-label";
+    private static final String POLYGONS_ROW_BOX_ID = "settings-subgroup-box";
+    private static final String AUTO_SIMPLIFY_LABEL_TEXT = "Auto-simplify freehand-drawn";
+    private static final String AUTO_SIMPLIFY_POPOVER_TEXT = "Automatically simplify polygons created using freehand-drawing";
+
+    private static final String SETTINGS_ENTRY_BOX_STYLE_CLASS = "settings-entry-box";
     private final CheckBox autoSimplifyPolygonsControl = new CheckBox();
-    private final Spinner<Double> simplifyRelativeDistanceTolerance = new Spinner<>(0.0, 1.0, 0.1, 0.05);
+    private final Slider simplifyToleranceControl = new Slider(0.0, 1.0, 0.1);
 
     public EditorSettingsView() {
         getStyleClass().add(GRID_PANE_STYLE_CLASS);
@@ -52,66 +52,75 @@ public class EditorSettingsView extends GridPane implements ApplyButtonChangePro
 
     public void setDisplayedSettingsFromEditorSettingsConfig(EditorSettingsConfig config) {
         autoSimplifyPolygonsControl.setSelected(config.isAutoSimplifyPolygons());
-        simplifyRelativeDistanceTolerance.getValueFactory().setValue(config.getSimplifyRelativeDistanceTolerance());
+        simplifyToleranceControl.setValue(config.getSimplifyRelativeDistanceTolerance());
     }
 
     public void applyDisplayedSettingsToEditorSettingsConfig(EditorSettingsConfig config) {
         config.setAutoSimplifyPolygons(autoSimplifyPolygonsControl.isSelected());
+        config.setSimplifyRelativeDistanceTolerance(simplifyToleranceControl.getValue());
+    }
 
-        if (!autoSimplifyPolygonsControl.isSelected()) {
-            return;
-        }
+    public CheckBox getAutoSimplifyPolygonsControl() {
+        return autoSimplifyPolygonsControl;
+    }
 
-        config.setSimplifyRelativeDistanceTolerance(simplifyRelativeDistanceTolerance.getValue());
+    public Slider getSimplifyToleranceControl() {
+        return simplifyToleranceControl;
     }
 
     @Override
     public void registerPropertyListeners(Button applyButton) {
         autoSimplifyPolygonsControl.selectedProperty().addListener(
                 (observable, oldValue, newValue) -> applyButton.setDisable(false));
-        simplifyRelativeDistanceTolerance.valueProperty()
+        simplifyToleranceControl.valueProperty()
                 .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
     }
 
-    public Spinner<Double> getSimplifyRelativeDistanceToleranceSpinner() {
-        return simplifyRelativeDistanceTolerance;
-    }
-
     private void setUpContent() {
-        add(UiUtils.createSettingsTitleRow("Polygons", "subgroup-title-label", "settings-subgroup-box"), 0, 0, 2, 1);
+        add(UiUtils.createSettingsTitleRow(POLYGONS_ROW_TITLE, POLYGONS_ROW_TITLE_ID, POLYGONS_ROW_BOX_ID),
+                0, 0, 2, 1);
 
-        final Label autoSimplifyPolygonsPopover = new Label("Auto-simplify polygons");
-        Tooltip.install(autoSimplifyPolygonsControl, UiUtils.createTooltip(
-                "Automatically simplify polygons when freehand drawing."));
+        final Label autoSimplifyLabel = new Label(AUTO_SIMPLIFY_LABEL_TEXT);
+        Tooltip.install(autoSimplifyLabel, UiUtils.createTooltip(
+                AUTO_SIMPLIFY_POPOVER_TEXT));
 
-        addRow(1, autoSimplifyPolygonsPopover, autoSimplifyPolygonsControl);
+        addRow(1, autoSimplifyLabel, autoSimplifyPolygonsControl);
 
-        final Label simplifyRelativeDistanceTolerancePopover = new Label(SIMPLIFY_RELATIVE_DISTANCE_TOLERANCE_TEXT);
-        Tooltip.install(simplifyRelativeDistanceTolerancePopover, UiUtils.createTooltip(
+        final Label simplifyToleranceLabel = new Label(SIMPLIFY_RELATIVE_DISTANCE_TOLERANCE_TEXT);
+        Tooltip.install(simplifyToleranceLabel, UiUtils.createTooltip(
                 SIMPLIFY_RELATIVE_DISTANCE_TOLERANCE_TOOLTIP));
 
-        StringConverter<Double> doubleConverter = new StringConverter<Double>() {
-            private final DecimalFormat df = new DecimalFormat("#.##");
+        simplifyToleranceControl.setShowTickMarks(true);
+        simplifyToleranceControl.setShowTickLabels(true);
+        simplifyToleranceControl.setMajorTickUnit(0.5);
+        simplifyToleranceControl.setMinorTickCount(4);
+        simplifyToleranceControl.setSnapToTicks(true);
+        simplifyToleranceControl.setLabelFormatter(new StringConverter<>() {
             @Override
             public String toString(Double object) {
-                if (object == null) {return "";}
-                return df.format(object);}
+                if(object < 0.25) {
+                    return "Low";
+                }
+
+                if(object < 0.75) {
+                    return "Medium";
+                }
+
+                return "High";
+            }
+
             @Override
             public Double fromString(String string) {
-                try {
-                    if (string == null) {return null;}
-                    string = string.trim();
-                    if (string.length() < 1) {return null;}     
-                    return df.parse(string).doubleValue();
-                } catch (ParseException ex) {throw new RuntimeException(ex);}
-                }
-        };
+                return switch(string) {
+                    case "Medium" -> 0.5;
+                    case "High" -> 1.0;
+                    default -> 0.0;
+                };
+            }
+        });
 
-        simplifyRelativeDistanceTolerance.getValueFactory().setConverter(doubleConverter);
-        simplifyRelativeDistanceTolerance.setEditable(true);
-        simplifyRelativeDistanceTolerance.getEditor().setTextFormatter(UiUtils.createFloatFormatter());
-        simplifyRelativeDistanceTolerance.visibleProperty().bind(autoSimplifyPolygonsControl.selectedProperty());
-
-        addRow(2, simplifyRelativeDistanceTolerancePopover, simplifyRelativeDistanceTolerance);
+        final HBox box = new HBox(simplifyToleranceControl);
+        box.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
+        addRow(2, simplifyToleranceLabel, box);
     }
 }

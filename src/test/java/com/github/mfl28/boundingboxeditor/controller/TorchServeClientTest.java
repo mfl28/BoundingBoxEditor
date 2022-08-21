@@ -127,6 +127,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.equalTo(true));
 
+        timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
         robot.clickOn(mainView.getInferenceSettingsView().getInferenceEnabledControl());
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -154,6 +157,10 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getInferenceSettingsView().getInferenceEnabledControl());
@@ -203,7 +210,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
 
         timeOutAssertTopModalStageClosed(robot, "Model Choice", testinfo);
 
-        final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.is(true));
         verifyThat(settingsStage.getScene().getRoot(), Matchers.instanceOf(DialogPane.class));
 
