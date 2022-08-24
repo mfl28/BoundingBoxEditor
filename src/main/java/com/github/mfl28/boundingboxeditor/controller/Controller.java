@@ -586,7 +586,9 @@ public class Controller {
         if(imagePane.isImageFullyLoaded() && event.getButton().equals(MouseButton.PRIMARY)) {
             if(event.isControlDown()) {
                 view.getEditorImageView().setCursor(Cursor.OPEN_HAND);
-            } else if(view.getObjectCategoryTable().isCategorySelected()) {
+            }
+
+            if(view.getObjectCategoryTable().isCategorySelected()) {
                 if(imagePane.getDrawingMode() == EditorImagePaneView.DrawingMode.BOX
                         && imagePane.isBoundingBoxDrawingInProgress()) {
                     imagePane.finalizeBoundingBox();

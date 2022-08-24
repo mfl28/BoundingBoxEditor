@@ -430,14 +430,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(boundingFreehandShapeView.getElements().get(boundingFreehandShapeView.getElements().size() - 1),
                 Matchers.instanceOf(LineTo.class));
 
-        final Rectangle2D relativeOutlineRectangle = boundingFreehandShapeView.getRelativeOutlineRectangle();
-        verifyThat(relativeOutlineRectangle.getMinX(), Matchers.allOf(Matchers.greaterThanOrEqualTo(0.0), Matchers.lessThanOrEqualTo(1.0)));
-        verifyThat(relativeOutlineRectangle.getMaxX(), Matchers.allOf(Matchers.greaterThanOrEqualTo(0.0), Matchers.lessThanOrEqualTo(1.0)));
-        verifyThat(relativeOutlineRectangle.getMinY(), Matchers.allOf(Matchers.greaterThanOrEqualTo(0.0), Matchers.lessThanOrEqualTo(1.0)));
-        verifyThat(relativeOutlineRectangle.getMaxX(), Matchers.allOf(Matchers.greaterThanOrEqualTo(0.0), Matchers.lessThanOrEqualTo(1.0)));
-
-        final List<Double> minMaxPoints = boundingFreehandShapeView.getMinMaxScaledPoints(100, 100);
-        verifyThat(minMaxPoints.stream().allMatch(value -> value >= 0.0 && value <= 100.0), Matchers.is(true));
+        verifyThat(boundingFreehandShapeView.getRelativeOutlineRectangle(), Matchers.nullValue());
 
         robot.moveTo(screenPoints.get(2)).moveTo(screenPoints.get(3)).release(MouseButton.PRIMARY);
 

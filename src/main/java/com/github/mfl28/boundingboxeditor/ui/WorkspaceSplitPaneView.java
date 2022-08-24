@@ -507,6 +507,10 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             final Rectangle2D relativeOutline =
                     ((BoundingShapeViewable) cell.getItem()).getRelativeOutlineRectangle();
 
+            if(relativeOutline == null) {
+                return;
+            }
+
             final Rectangle2D outline = new Rectangle2D(relativeOutline.getMinX() * currentImage.getWidth(),
                     relativeOutline.getMinY() * currentImage.getHeight(),
                     relativeOutline.getWidth() * currentImage.getWidth(),
@@ -536,20 +540,6 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 polygon.getPoints().setAll(points);
 
                 imageView.setClip(polygon);
-            } else if(cell.getItem() instanceof BoundingFreehandShapeView boundingFreehandShapeView) {
-                final List<Double> points =
-                        boundingFreehandShapeView.getMinMaxScaledPoints(scaleWidth, scaleHeight);
-
-                final Path path = new Path();
-                path.setFill(Color.WHITE);
-                path.getElements().add(new MoveTo(points.get(0), points.get(1)));
-
-                for(int i = 2; i != points.size(); i += 2) {
-                    path.getElements().add(new LineTo(points.get(i), points.get(i + 1)));
-                }
-
-                path.getElements().add(new ClosePath());
-                imageView.setClip(path);
             }
 
             cell.getPopOver().show(cell);

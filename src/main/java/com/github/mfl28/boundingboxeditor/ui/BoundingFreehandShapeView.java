@@ -25,12 +25,10 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -41,12 +39,6 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
     private static final double SELECTED_FILL_OPACITY = 0.5;
     private final BoundingShapeViewData boundingShapeViewData;
 
-    private final DoubleProperty xMin = new SimpleDoubleProperty(Double.MAX_VALUE);
-    private final DoubleProperty yMin = new SimpleDoubleProperty(Double.MAX_VALUE);
-    private final DoubleProperty xMax = new SimpleDoubleProperty(0);
-    private final DoubleProperty yMax = new SimpleDoubleProperty(0);
-    private final List<Double> pointsInImage = Collections.emptyList();
-
     public BoundingFreehandShapeView(ObjectCategory category) {
         this.boundingShapeViewData = new BoundingShapeViewData(this, category);
 
@@ -55,6 +47,7 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
         setId(BOUNDING_FREEHAND_SHAPE_ID);
 
         boundingShapeViewData.getNodeGroup().setManaged(false);
+        boundingShapeViewData.getNodeGroup().setViewOrder(0);
 
         setUpInternalListeners();
     }
@@ -83,26 +76,12 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
     @Override
     public void autoScaleWithBoundsAndInitialize(ReadOnlyObjectProperty<Bounds> autoScaleBounds, double imageWidth,
                                                  double imageHeight) {
-        boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
-        initializeFromBoundsInImage(imageWidth, imageHeight);
-        addAutoScaleListener();
+        autoScaleWithBounds(autoScaleBounds);
     }
 
     @Override
     public Rectangle2D getRelativeOutlineRectangle() {
-        final Bounds imageViewBounds = boundingShapeViewData.autoScaleBounds().getValue();
-
-        double relativeXMin = (xMin.get() - imageViewBounds.getMinX()) / imageViewBounds.getWidth();
-        double relativeYMin = (yMin.get() - imageViewBounds.getMinY()) / imageViewBounds.getHeight();
-        double relativeWidth = (xMax.get() - xMin.get()) / imageViewBounds.getWidth();
-        double relativeHeight = (yMax.get() - yMin.get()) / imageViewBounds.getHeight();
-
-        return new Rectangle2D(relativeXMin, relativeYMin, relativeWidth, relativeHeight);
-    }
-
-    @Override
-    public BoundingShapeTreeItem toTreeItem() {
-        return new BoundingPolygonTreeItem(this);
+        return null;
     }
 
     @Override
@@ -126,6 +105,11 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
         }
 
         return Objects.equals(getElements(), other.getElements());
+    }
+
+    @Override
+    public BoundingShapeTreeItem toTreeItem() {
+        return new BoundingPolygonTreeItem(this);
     }
 
     @Override
@@ -160,52 +144,15 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
 
     public void addMoveTo(double x, double y) {
         getElements().add(new MoveTo(x, y));
-        updateOutlineBoxFromCoordinates(x, y);
     }
 
     public void addLineTo(double x, double y) {
         getElements().add(new LineTo(x, y));
-        updateOutlineBoxFromCoordinates(x, y);
     }
 
     void autoScaleWithBounds(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
         boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
         addAutoScaleListener();
-    }
-
-
-    List<Double> getMinMaxScaledPoints(double width, double height) {
-        final List<Double> points = new ArrayList<>((getElements().size() - 1) * 2);
-
-        for(PathElement element : getElements()) {
-            if(element instanceof LineTo lineTo) {
-                points.add((lineTo.getX() - xMin.get()) / (xMax.get() - xMin.get()) * width);
-                points.add((lineTo.getY() - yMin.get()) / (yMax.get() - yMin.get()) * height);
-            } else if(element instanceof MoveTo moveTo) {
-                points.add((moveTo.getX() - xMin.get()) / (xMax.get() - xMin.get()) * width);
-                points.add((moveTo.getY() - yMin.get()) / (yMax.get() - yMin.get()) * height);
-            }
-        }
-
-        return points;
-    }
-
-    private void initializeFromBoundsInImage(double imageWidth, double imageHeight) {
-        Bounds confinementBoundsValue = boundingShapeViewData.autoScaleBounds().getValue();
-
-        getElements().setAll(new MoveTo(pointsInImage.get(0) * confinementBoundsValue.getWidth() / imageWidth +
-                confinementBoundsValue.getMinX(),
-                pointsInImage.get(1) * confinementBoundsValue.getHeight() / imageHeight +
-                        confinementBoundsValue.getMinY()));
-
-        for(int i = 2; i < pointsInImage.size(); i += 2) {
-            getElements().add(new LineTo(pointsInImage.get(i) * confinementBoundsValue.getWidth() / imageWidth +
-                    confinementBoundsValue.getMinX(),
-                    pointsInImage.get(i + 1) * confinementBoundsValue.getHeight() / imageHeight +
-                            confinementBoundsValue.getMinY()));
-        }
-
-        getElements().add(new ClosePath());
     }
 
     private void setUpInternalListeners() {
@@ -224,17 +171,6 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
                 boundingShapeViewData.getHighlighted().set(false);
             }
         });
-
-        setOnMouseEntered(this::handleMouseEntered);
-        setOnMouseExited(this::handleMouseExited);
-        setOnMousePressed(this::handleMousePressed);
-
-
-        boundingShapeViewData.getNodeGroup().viewOrderProperty().bind(
-                Bindings.when(boundingShapeViewData.selectedProperty())
-                        .then(0)
-                        .otherwise(Bindings.min(xMax.subtract(xMin), yMax.subtract(yMin)))
-        );
     }
 
     private void addAutoScaleListener() {
@@ -251,63 +187,6 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
                     lineToElement.setY(newValue.getMinY() + (lineToElement.getY() - oldValue.getMinY()) * yScaleFactor);
                 }
             }
-
-            updateOutlineBox();
         });
-    }
-
-    private void updateOutlineBox() {
-        double newXMin = Double.MAX_VALUE;
-        double newYMin = Double.MAX_VALUE;
-        double newXMax = 0;
-        double newYMax = 0;
-
-        for(PathElement pathElement : getElements()) {
-            if(pathElement instanceof LineTo lineToElement) {
-                newXMin = Math.min(lineToElement.getX(), newXMin);
-                newYMin = Math.min(lineToElement.getY(), newYMin);
-                newXMax = Math.max(lineToElement.getX(), newXMax);
-                newYMax = Math.max(lineToElement.getY(), newYMax);
-            } else if(pathElement instanceof MoveTo moveToElement) {
-                newXMin = Math.min(moveToElement.getX(), newXMin);
-                newYMin = Math.min(moveToElement.getY(), newYMin);
-                newXMax = Math.max(moveToElement.getX(), newXMax);
-                newYMax = Math.max(moveToElement.getY(), newYMax);
-            }
-        }
-
-        xMin.set(newXMin);
-        xMax.set(newXMax);
-        yMin.set(newYMin);
-        yMax.set(newYMax);
-    }
-
-    private void updateOutlineBoxFromCoordinates(double x, double y) {
-        xMin.set(Math.min(xMin.get(), x));
-        xMax.set(Math.max(xMax.get(), x));
-        yMin.set(Math.min(yMin.get(), y));
-        yMax.set(Math.max(yMax.get(), y));
-    }
-
-    private void handleMousePressed(MouseEvent event) {
-        if(!event.isControlDown()) {
-            boundingShapeViewData.getToggleGroup().selectToggle(this);
-
-            event.consume();
-        }
-    }
-
-    private void handleMouseExited(MouseEvent event) {
-        if(!isSelected()) {
-            boundingShapeViewData.setHighlighted(false);
-        }
-    }
-
-    private void handleMouseEntered(MouseEvent event) {
-        if(!isSelected()) {
-            boundingShapeViewData.setHighlighted(true);
-        }
-
-        event.consume();
     }
 }
