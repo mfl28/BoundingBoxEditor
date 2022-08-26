@@ -32,13 +32,13 @@ public class BoundingPolygonTreeItem extends BoundingShapeTreeItem {
     private static final double TOGGLE_ICON_SIDE_LENGTH = 10;
 
     /**
-     * Creates a new tree-item representing a {@link BoundingPolygonView} in a {@link ObjectTreeElementCell} that is part of
+     * Creates a new tree-item representing a polygonal shape in a {@link ObjectTreeElementCell} that is part of
      * a {@link ObjectTreeView}.
      *
-     * @param boundingPolygon the {@link BoundingPolygonView} that should be associated with the tree-item
+     * @param boundingShapeViewable the {@link BoundingShapeViewable} that should be associated with the tree-item
      */
-    BoundingPolygonTreeItem(BoundingPolygonView boundingPolygon) {
-        super(new TogglePolygon(TOGGLE_ICON_SIDE_LENGTH), boundingPolygon);
+    BoundingPolygonTreeItem(BoundingShapeViewable boundingShapeViewable) {
+        super(new TogglePolygon(TOGGLE_ICON_SIDE_LENGTH), boundingShapeViewable);
         setGraphic((TogglePolygon) toggleIcon);
 
         setUpInternalListeners();
@@ -63,7 +63,7 @@ public class BoundingPolygonTreeItem extends BoundingShapeTreeItem {
     }
 
     private void setUpInternalListeners() {
-        ((Shape) toggleIcon).fillProperty().bind(((BoundingPolygonView) getValue()).strokeProperty());
+        ((Shape) toggleIcon).fillProperty().bind(((Shape) getValue()).strokeProperty());
 
         ((Shape) toggleIcon).setOnMouseClicked(event -> {
             setIconToggledOn(!isIconToggledOn());

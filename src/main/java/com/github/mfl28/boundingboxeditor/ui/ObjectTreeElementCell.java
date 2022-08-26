@@ -74,6 +74,9 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private static final String SHOW_MENU_ITEM_TEXT = "Show";
     private static final String SHOW_ALL_CONTEXT_MENU_ID = "show-all-context-menu";
     private static final String SHOW_ALL_MENU_ITEM_TEXT = "Show all";
+    private static final String SIMPLIFY_POLYGON_MENU_ITEM_TEXT = "Simplify";
+    private static final String SIMPLIFY_CONTEXT_MENU_ITEM_ID = "simplify-context-menu";
+    private static final String SIMPLIFY_POLYGON_MENU_ITEM_TOOLTIP_TEXT = "Simplify polygon";
 
     private final MenuItem deleteBoundingShapeMenuItem = createDeleteBoundingShapeMenuItem();
     private final MenuItem hideBoundingShapeMenuItem = createHideBoundingShapeMenuItem();
@@ -83,6 +86,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private final MenuItem showAllBoundingShapesMenuItem = createShowAllBoundingShapesMenuItem();
     private final MenuItem addVerticesMenuItem = createRefineMenuItem();
     private final MenuItem deleteVerticesMenuItem = createDeleteVerticesMenuItem();
+    private final MenuItem simplifyMenuItem = createSimplifyMenuItem();
     private final MenuItem changeObjectCategoryMenuItem = createChangeObjectCategoryMenuItem();
     private final SeparatorMenuItem separatorMenuItem = new SeparatorMenuItem();
     private final BooleanProperty draggedOver = new SimpleBooleanProperty(false);
@@ -156,7 +160,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             // Register the contextMenu with the cell.
             setContextMenu(contextMenu);
 
-            if(newCellObject instanceof Shape shape) {
+            if(newCellObject instanceof Shape shape && !(newCellObject instanceof BoundingFreehandShapeView)) {
                 // Register the contextMenu with the shape associated with the cell. This
                 // allows to display the contextMenu by right-clicking on the shape itself.
                 shape.setOnContextMenuRequested(showContextMenuEventHandler);
@@ -228,6 +232,16 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     }
 
     /**
+     * Returns the menu-item of the context-menu which allows
+     * the user to simplify polygons.
+     *
+     * @return the menu-item
+     */
+    MenuItem getSimplifyMenuItem() {
+        return simplifyMenuItem;
+    }
+
+    /**
      * Returns the popover of this cell.
      *
      * @return the popover
@@ -277,8 +291,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         final CustomMenuItem showAllMenuItem = new CustomMenuItem(new Label(SHOW_ALL_MENU_ITEM_TEXT));
         showAllMenuItem.setId(SHOW_ALL_CONTEXT_MENU_ID);
         Tooltip.install(showAllMenuItem.getContent(),
-                        UiUtils.createTooltip("",
-                                              Controller.KeyCombinations.showAllBoundingShapes));
+                UiUtils.createTooltip("",
+                        Controller.KeyCombinations.showAllBoundingShapes));
         return showAllMenuItem;
     }
 
@@ -286,8 +300,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         final CustomMenuItem showMenuItem = new CustomMenuItem(new Label(SHOW_MENU_ITEM_TEXT));
         showMenuItem.setId(SHOW_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(showMenuItem.getContent(),
-                        UiUtils.createTooltip("",
-                                              Controller.KeyCombinations.showSelectedBoundingShape));
+                UiUtils.createTooltip("",
+                        Controller.KeyCombinations.showSelectedBoundingShape));
         return showMenuItem;
     }
 
@@ -295,8 +309,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         final CustomMenuItem hideAllMenuItem = new CustomMenuItem(new Label(HIDE_ALL_MENU_ITEM_TEXT));
         hideAllMenuItem.setId(HIDE_ALL_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(hideAllMenuItem.getContent(),
-                        UiUtils.createTooltip("",
-                                              Controller.KeyCombinations.hideAllBoundingShapes));
+                UiUtils.createTooltip("",
+                        Controller.KeyCombinations.hideAllBoundingShapes));
         return hideAllMenuItem;
     }
 
@@ -304,8 +318,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         final CustomMenuItem hideOthersMenuItem = new CustomMenuItem(new Label(HIDE_OTHERS_MENU_ITEM_TEXT));
         hideOthersMenuItem.setId(HIDE_OTHERS_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(hideOthersMenuItem.getContent(),
-                        UiUtils.createTooltip("",
-                                              Controller.KeyCombinations.hideNonSelectedBoundingShapes));
+                UiUtils.createTooltip("",
+                        Controller.KeyCombinations.hideNonSelectedBoundingShapes));
         return hideOthersMenuItem;
     }
 
@@ -336,8 +350,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
                     ((BoundingShapeViewable) treeItem.getValue()).getViewData();
 
             nameText.textProperty().bind(boundingShapeViewData.getObjectCategory()
-                                                              .nameProperty().concat(" ")
-                                                              .concat(boundingShapeTreeItem.getId()));
+                    .nameProperty().concat(" ")
+                    .concat(boundingShapeTreeItem.getId()));
             tagIconRegion.visibleProperty().bind(Bindings.size(boundingShapeViewData.getTags()).greaterThan(0));
             content.getChildren().add(tagIconRegion);
         } else if(treeItem instanceof ObjectCategoryTreeItem) {
@@ -379,8 +393,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         CustomMenuItem deleteMenuItem = new CustomMenuItem(new Label(DELETE_BOUNDING_SHAPE_MENU_ITEM_TEXT));
         deleteMenuItem.setId(DELETE_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(deleteMenuItem.getContent(),
-                        UiUtils.createTooltip("",
-                                              Controller.KeyCombinations.deleteSelectedBoundingShape));
+                UiUtils.createTooltip("",
+                        Controller.KeyCombinations.deleteSelectedBoundingShape));
         return deleteMenuItem;
     }
 
@@ -388,8 +402,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         CustomMenuItem hideMenuItem = new CustomMenuItem(new Label(HIDE_BOUNDING_SHAPE_MENU_ITEM_TEXT));
         hideMenuItem.setId(HIDE_BOUNDING_SHAPE_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(hideMenuItem.getContent(),
-                        UiUtils.createTooltip("",
-                                              Controller.KeyCombinations.hideSelectedBoundingShape));
+                UiUtils.createTooltip("",
+                        Controller.KeyCombinations.hideSelectedBoundingShape));
         return hideMenuItem;
     }
 
@@ -398,8 +412,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(REFINE_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                        UiUtils.createTooltip(REFINE_MENU_ITEM_TOOLTIP_TEXT,
-                                              Controller.KeyCombinations.addVerticesToPolygon));
+                UiUtils.createTooltip(REFINE_MENU_ITEM_TOOLTIP_TEXT,
+                        Controller.KeyCombinations.addVerticesToPolygon));
         return menuItem;
     }
 
@@ -408,8 +422,18 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(DELETE_VERTICES_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                        UiUtils.createTooltip(DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT,
-                                              Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected));
+                UiUtils.createTooltip(DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT,
+                        Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected));
+        return menuItem;
+    }
+
+    private MenuItem createSimplifyMenuItem() {
+        CustomMenuItem menuItem = new CustomMenuItem(new Label(SIMPLIFY_POLYGON_MENU_ITEM_TEXT));
+        menuItem.setId(SIMPLIFY_CONTEXT_MENU_ITEM_ID);
+
+        Tooltip.install(menuItem.getContent(), UiUtils.createTooltip(SIMPLIFY_POLYGON_MENU_ITEM_TOOLTIP_TEXT,
+                Controller.KeyCombinations.simplifyPolygon));
+
         return menuItem;
     }
 
@@ -418,7 +442,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(CHANGE_CATEGORY_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                        UiUtils.createTooltip("", Controller.KeyCombinations.changeSelectedBoundingShapeCategory));
+                UiUtils.createTooltip("", Controller.KeyCombinations.changeSelectedBoundingShapeCategory));
         return menuItem;
     }
 
@@ -443,11 +467,11 @@ class ObjectTreeElementCell extends TreeCell<Object> {
 
         ObjectTreeElementContextMenu() {
             super(hideBoundingShapeMenuItem,
-                  hideOtherBoundingShapesMenuItem,
-                  hideAllBoundingShapesMenuItem,
-                  showBoundingShapeMenuItem,
-                  showAllBoundingShapesMenuItem,
-                  deleteBoundingShapeMenuItem);
+                    hideOtherBoundingShapesMenuItem,
+                    hideAllBoundingShapesMenuItem,
+                    showBoundingShapeMenuItem,
+                    showAllBoundingShapesMenuItem,
+                    deleteBoundingShapeMenuItem);
 
             getItems().add(CHANGE_OBJECT_CATEGORY_ITEM_POSITION, changeObjectCategoryMenuItem);
             setUpInternalListeners();
@@ -456,6 +480,10 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         void addPolygonFeatures() {
             if(!getItems().contains(separatorMenuItem)) {
                 getItems().add(separatorMenuItem);
+            }
+
+            if(!getItems().contains(simplifyMenuItem)) {
+                getItems().add(simplifyMenuItem);
             }
 
             if(!getItems().contains(addVerticesMenuItem)) {
@@ -467,23 +495,29 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             }
 
             addVerticesMenuItem.disableProperty()
-                               .bind(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
-                                                           .getEditingIndices()).lessThan(2));
+                    .bind(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
+                            .getEditingIndices()).lessThan(2));
             deleteVerticesMenuItem.disableProperty().bind(
                     Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem()).getEditingIndices())
                             .isEqualTo(0)
                             .or(Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
-                                                      .getEditingIndices()).greaterThan(
+                                    .getEditingIndices()).greaterThan(
                                     Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem())
-                                                          .getVertexHandles()).subtract(2))));
+                                            .getVertexHandles()).subtract(2))));
+
+            simplifyMenuItem.disableProperty().bind(
+                    Bindings.size(((BoundingPolygonView) ObjectTreeElementCell.this.getItem()).getVertexHandles())
+                            .lessThan(3));
         }
 
         void removePolygonFeatures() {
             getItems().remove(addVerticesMenuItem);
             getItems().remove(deleteVerticesMenuItem);
+            getItems().remove(simplifyMenuItem);
 
             addVerticesMenuItem.disableProperty().unbind();
             deleteVerticesMenuItem.disableProperty().unbind();
+            simplifyMenuItem.disableProperty().unbind();
         }
 
         void addViewFeatures() {
@@ -491,6 +525,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
                 getItems().add(CHANGE_OBJECT_CATEGORY_ITEM_POSITION, changeObjectCategoryMenuItem);
             }
         }
+
         void removeViewFeatures() {
             getItems().remove(changeObjectCategoryMenuItem);
         }

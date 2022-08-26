@@ -21,9 +21,11 @@ package com.github.mfl28.boundingboxeditor.controller;
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
 import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorConfig;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
+import com.github.mfl28.boundingboxeditor.ui.settings.EditorSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.settings.InferenceSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.settings.UISettingsView;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
@@ -73,7 +75,7 @@ class SettingsTests extends BoundingBoxEditorTestBase {
 
         @SuppressWarnings("unchecked") final ListView<String> categoriesListView =
                 (ListView<String>) settingsSplitPane.getItems().get(0);
-        verifyThat(categoriesListView.getSelectionModel().getSelectedItem(), Matchers.equalTo("Inference"),
+        verifyThat(categoriesListView.getSelectionModel().getSelectedItem(), Matchers.equalTo("Editor"),
                    saveScreenshot(testinfo));
 
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "UI", testinfo);
@@ -139,8 +141,14 @@ class SettingsTests extends BoundingBoxEditorTestBase {
 
         @SuppressWarnings("unchecked") final ListView<String> categoriesListView =
                 (ListView<String>) settingsSplitPane.getItems().get(0);
-        verifyThat(categoriesListView.getSelectionModel().getSelectedItem(), Matchers.equalTo("Inference"),
+        verifyThat(categoriesListView.getSelectionModel().getSelectedItem(), Matchers.equalTo("Editor"),
                    saveScreenshot(testinfo));
+
+        timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(categoriesListView.getSelectionModel().getSelectedItem(), Matchers.equalTo("Inference"),
+                saveScreenshot(testinfo));
 
         final InferenceSettingsView inferenceSettingsView = mainView.getInferenceSettingsView();
 
@@ -261,6 +269,9 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(settingsStageReopened.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(settingsStageReopened.getScene().getRoot(), Matchers.instanceOf(DialogPane.class));
 
+        timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
         verifyDefaultInferenceSettingsStates(testinfo);
 
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
@@ -324,6 +335,9 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(settingsStage.getScene().getRoot(), Matchers.instanceOf(DialogPane.class));
 
+        timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
         final InferenceSettingsView inferenceSettingsView = mainView.getInferenceSettingsView();
 
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
@@ -375,6 +389,92 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertNoTopModelStage(robot, testinfo);
+    }
+
+    @Test
+    void onEditorSettingsChanged_ShouldCorrectlyApplyChanges(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+
+        timeOutClickOn(robot, "#file-menu", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(settingsStage.getScene().getRoot(), Matchers.instanceOf(DialogPane.class));
+
+        final DialogPane settingsPane = (DialogPane) settingsStage.getScene().getRoot();
+
+        verifyThat(settingsPane.getContent(), Matchers.instanceOf(SplitPane.class),
+                saveScreenshot(testinfo));
+
+        verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(),
+                Matchers.is(true), saveScreenshot(testinfo));
+
+        final SplitPane settingsSplitPane = (SplitPane) settingsPane.getContent();
+        verifyThat(settingsSplitPane.isVisible(), Matchers.is(true), saveScreenshot(testinfo));
+
+        verifyThat(settingsSplitPane.getItems().get(0), Matchers.instanceOf(ListView.class), saveScreenshot(testinfo));
+
+        @SuppressWarnings("unchecked") final ListView<String> categoriesListView =
+                (ListView<String>) settingsSplitPane.getItems().get(0);
+        verifyThat(categoriesListView.getSelectionModel().getSelectedItem(), Matchers.equalTo("Editor"),
+                saveScreenshot(testinfo));
+
+        verifyThat(mainView.getEditorSettingsConfig().isAutoSimplifyPolygons(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(mainView.getEditorSettingsConfig().getSimplifyRelativeDistanceTolerance(), Matchers.equalTo(0.1), saveScreenshot(testinfo));
+
+        final EditorSettingsView editorSettingsView = mainView.getEditorSettingsView();
+        verifyThat(editorSettingsView.isVisible(), Matchers.is(true), saveScreenshot(testinfo));
+
+        final CheckBox autoSimplifyPolygonsControl = editorSettingsView.getAutoSimplifyPolygonsControl();
+
+        verifyThat(autoSimplifyPolygonsControl.isVisible(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(autoSimplifyPolygonsControl.isSelected(), Matchers.is(true), saveScreenshot(testinfo));
+
+        robot.clickOn(autoSimplifyPolygonsControl);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(autoSimplifyPolygonsControl.isSelected(), Matchers.is(false), saveScreenshot(testinfo));
+        verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(false),
+                saveScreenshot(testinfo));
+
+        robot.clickOn(settingsPane.lookupButton(ButtonType.APPLY));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(true),
+                saveScreenshot(testinfo));
+
+        final Slider simplifyToleranceControl = editorSettingsView.getSimplifyToleranceControl();
+
+        verifyThat(simplifyToleranceControl.isVisible(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(simplifyToleranceControl.getValue(), Matchers.equalTo(0.1), saveScreenshot(testinfo));
+
+        robot.moveTo(simplifyToleranceControl.lookup(".thumb")).drag(MouseButton.PRIMARY).moveTo("Medium").drop();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(simplifyToleranceControl.getValue(), Matchers.equalTo(0.5), saveScreenshot(testinfo));
+
+        verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(false),
+                saveScreenshot(testinfo));
+
+        robot.clickOn(settingsPane.lookupButton(ButtonType.APPLY));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(true),
+                saveScreenshot(testinfo));
+
+
+        timeOutClickOnButtonInDialogStage(robot, settingsStage, ButtonType.OK, testinfo);
+
+        timeOutAssertNoTopModelStage(robot, testinfo);
+        verifyThat(settingsStage.isShowing(), Matchers.is(false));
+
+        verifyThat(mainView.getEditorSettingsConfig().isAutoSimplifyPolygons(), Matchers.is(false));
+        verifyThat(mainView.getEditorSettingsConfig().getSimplifyRelativeDistanceTolerance(), Matchers.equalTo(0.5));
     }
 
     private void verifyDefaultInferenceSettingsStates(TestInfo testinfo) {

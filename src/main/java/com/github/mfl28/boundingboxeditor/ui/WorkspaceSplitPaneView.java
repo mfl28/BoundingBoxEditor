@@ -31,7 +31,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Polygon;
+import javafx.scene.shape.*;
 import javafx.scene.transform.Transform;
 import javafx.util.Callback;
 import javafx.util.Duration;
@@ -111,11 +111,11 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         ObjectCategory currentCategory = boundingShapeViewable.getViewData().getObjectCategory();
 
         MainView.displayChoiceDialogAndGetResult(currentCategory,
-                                                 editorsSplitPane.getObjectCategoryTable().getItems(),
-                                                 CHANGE_CATEGORY_DIALOG_TITLE,
-                                                 "Select new category (current: \"" + currentCategory.getName() + "\")",
-                                                 CATEGORY_CHANGE_DIALOG_CONTENT_TEXT,
-                                                 this.getScene().getWindow())
+                        editorsSplitPane.getObjectCategoryTable().getItems(),
+                        CHANGE_CATEGORY_DIALOG_TITLE,
+                        "Select new category (current: \"" + currentCategory.getName() + "\")",
+                        CATEGORY_CHANGE_DIALOG_CONTENT_TEXT,
+                        this.getScene().getWindow())
                 .ifPresent(newChoice -> {
                     if(!Objects.equals(newChoice, currentCategory)) {
                         // Set new object category.
@@ -126,9 +126,13 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                         TreeItem<Object> targetItem = treeItemToMove.getParent().getParent();
                         // Attach tree-item to new target tree-item.
                         editorsSplitPane.getObjectTree()
-                                        .reattachTreeItemToNewTargetTreeItem(treeItemToMove, targetItem);
+                                .reattachTreeItemToNewTargetTreeItem(treeItemToMove, targetItem);
                     }
                 });
+    }
+
+    void simplifyBoundingPolygon(BoundingPolygonView boundingPolygonView) {
+        boundingPolygonView.simplify(editor.getEditorImagePane().simplifyRelativeDistanceToleranceProperty().get());
     }
 
     /**
@@ -166,7 +170,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
      */
     void removeBoundingShapeWithTreeItemRecursively(TreeItem<Object> treeItem) {
         editor.getEditorImagePane()
-              .removeAllFromCurrentBoundingShapes(ObjectTreeView.getBoundingShapesRecursively(treeItem));
+                .removeAllFromCurrentBoundingShapes(ObjectTreeView.getBoundingShapesRecursively(treeItem));
 
         if(treeItem instanceof ObjectCategoryTreeItem) {
             treeItem.getParent().getChildren().remove(treeItem);
@@ -216,67 +220,67 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
     private void setUpEditorSplitPaneListeners() {
         editorsSplitPane.getObjectTree()
-                        .getSelectionModel()
-                        .selectedItemProperty()
-                        .addListener((observable, oldValue, newValue) -> {
-                            ObjectTreeView objectTreeView = getEditorsSplitPane().getObjectTree();
+                .getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldValue, newValue) -> {
+                    ObjectTreeView objectTreeView = getEditorsSplitPane().getObjectTree();
 
-                            if(oldValue instanceof ObjectCategoryTreeItem) {
-                                for(TreeItem<Object> child : oldValue.getChildren()) {
-                                    ((BoundingShapeTreeItem) child).setHighlightShape(false);
-                                }
-                            }
+                    if(oldValue instanceof ObjectCategoryTreeItem) {
+                        for(TreeItem<Object> child : oldValue.getChildren()) {
+                            ((BoundingShapeTreeItem) child).setHighlightShape(false);
+                        }
+                    }
 
-                            if(newValue instanceof ObjectCategoryTreeItem) {
-                                getEditor().getEditorImagePane()
-                                           .getBoundingShapeSelectionGroup().selectToggle(null);
+                    if(newValue instanceof ObjectCategoryTreeItem) {
+                        getEditor().getEditorImagePane()
+                                .getBoundingShapeSelectionGroup().selectToggle(null);
 
-                                for(TreeItem<Object> child : newValue.getChildren()) {
-                                    ((BoundingShapeTreeItem) child).setHighlightShape(true);
-                                }
-                            } else if(newValue instanceof BoundingShapeTreeItem) {
-                                objectTreeView.keepTreeItemInView(newValue);
-                                getEditor().getEditorImagePane()
-                                           .getBoundingShapeSelectionGroup().selectToggle((Toggle) newValue.getValue());
-                            } else if(newValue == null) {
-                                getEditor().getEditorImagePane().getBoundingShapeSelectionGroup().selectToggle(null);
-                            }
-                        });
+                        for(TreeItem<Object> child : newValue.getChildren()) {
+                            ((BoundingShapeTreeItem) child).setHighlightShape(true);
+                        }
+                    } else if(newValue instanceof BoundingShapeTreeItem) {
+                        objectTreeView.keepTreeItemInView(newValue);
+                        getEditor().getEditorImagePane()
+                                .getBoundingShapeSelectionGroup().selectToggle((Toggle) newValue.getValue());
+                    } else if(newValue == null) {
+                        getEditor().getEditorImagePane().getBoundingShapeSelectionGroup().selectToggle(null);
+                    }
+                });
     }
 
     private void setUpEditorListeners() {
         editor.getEditorImagePane().setOnMousePressed(event -> {
-            if(event.getButton().equals(MouseButton.SECONDARY)) {
+            if(event.getButton().equals(MouseButton.SECONDARY) && !getEditor().getEditorImagePane().isDrawingInProgress()) {
                 getEditorsSplitPane().getObjectTree().getSelectionModel().clearSelection();
             }
         });
 
         editor.getEditorImagePane()
-              .getBoundingShapeSelectionGroup()
-              .selectedToggleProperty()
-              .addListener((observable, oldValue, newValue) -> {
-                  if(newValue instanceof BoundingShapeViewable boundingShapeViewable) {
-                      getEditorsSplitPane().getObjectTree()
-                                           .getSelectionModel()
-                                           .select(boundingShapeViewable.getViewData().getTreeItem());
-                  }
-              });
+                .getBoundingShapeSelectionGroup()
+                .selectedToggleProperty()
+                .addListener((observable, oldValue, newValue) -> {
+                    if(newValue instanceof BoundingShapeViewable boundingShapeViewable) {
+                        getEditorsSplitPane().getObjectTree()
+                                .getSelectionModel()
+                                .select(boundingShapeViewable.getViewData().getTreeItem());
+                    }
+                });
 
         editor.getEditorImagePane().getCurrentBoundingShapes()
-              .addListener(new CurrentBoundingShapeListChangeListener());
+                .addListener(new CurrentBoundingShapeListChangeListener());
 
         editor.getEditorImagePane().selectedCategoryProperty()
-              .bind(editorsSplitPane.getObjectCategoryTable().getSelectionModel().selectedItemProperty());
+                .bind(editorsSplitPane.getObjectCategoryTable().getSelectionModel().selectedItemProperty());
 
         editor.getEditorToolBar().getShowBoundingShapesButton().setOnAction(event ->
-                                                                                    editorsSplitPane.getObjectTree()
-                                                                                                    .setToggleIconStateForAllTreeItems(
-                                                                                                            true));
+                editorsSplitPane.getObjectTree()
+                        .setToggleIconStateForAllTreeItems(
+                                true));
 
         editor.getEditorToolBar().getHideBoundingShapesButton().setOnAction(event ->
-                                                                                    editorsSplitPane.getObjectTree()
-                                                                                                    .setToggleIconStateForAllTreeItems(
-                                                                                                            false));
+                editorsSplitPane.getObjectTree()
+                        .setToggleIconStateForAllTreeItems(
+                                false));
     }
 
     private void setObjectTreeCellFactory() {
@@ -288,8 +292,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         public void onChanged(Change<? extends BoundingShapeViewable> c) {
             while(c.next()) {
                 final ImageFileListView.FileInfo currentSelectedItem = imageFileExplorer.getImageFileListView()
-                                                                                        .getSelectionModel()
-                                                                                        .getSelectedItem();
+                        .getSelectionModel()
+                        .getSelectedItem();
 
                 if(c.wasAdded()) {
                     List<? extends BoundingShapeViewable> addedItems = c.getAddedSubList();
@@ -338,6 +342,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             applyOnHideAllBoundingShapesMenuItemListener(cell);
             applyOnHideOtherBoundingShapesMenuItemListener(cell);
             applyOnShowAllBoundingShapesMenuItemListener(cell);
+            applySimplifyPolygonMenuItemListener(cell);
 
             return cell;
         }
@@ -351,7 +356,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         private void applyOnHideOtherBoundingShapesMenuItemListener(ObjectTreeElementCell cell) {
             cell.getHideOtherBoundingShapesMenuItem().setOnAction(
                     event -> getEditorsSplitPane().getObjectTree()
-                                                  .setToggleIconStateForAllTreeItemsExcept(cell.getTreeItem(), false));
+                            .setToggleIconStateForAllTreeItemsExcept(cell.getTreeItem(), false));
         }
 
         private void applyOnHideAllBoundingShapesMenuItemListener(ObjectTreeElementCell cell) {
@@ -371,6 +376,14 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             cell.getChangeObjectCategoryMenuItem().setOnAction(event -> {
                 if(!cell.isEmpty()) {
                     initiateObjectCategoryChange(((BoundingShapeViewable) cell.getItem()));
+                }
+            });
+        }
+
+        private void applySimplifyPolygonMenuItemListener(ObjectTreeElementCell cell) {
+            cell.getSimplifyMenuItem().setOnAction(event -> {
+                if(!cell.isEmpty() && cell.getItem() instanceof BoundingPolygonView boundingPolygonView) {
+                    simplifyBoundingPolygon(boundingPolygonView);
                 }
             });
         }
@@ -494,10 +507,14 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             final Rectangle2D relativeOutline =
                     ((BoundingShapeViewable) cell.getItem()).getRelativeOutlineRectangle();
 
+            if(relativeOutline == null) {
+                return;
+            }
+
             final Rectangle2D outline = new Rectangle2D(relativeOutline.getMinX() * currentImage.getWidth(),
-                                                        relativeOutline.getMinY() * currentImage.getHeight(),
-                                                        relativeOutline.getWidth() * currentImage.getWidth(),
-                                                        relativeOutline.getHeight() * currentImage.getHeight());
+                    relativeOutline.getMinY() * currentImage.getHeight(),
+                    relativeOutline.getWidth() * currentImage.getWidth(),
+                    relativeOutline.getHeight() * currentImage.getHeight());
 
             imageView.setViewport(outline);
 

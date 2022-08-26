@@ -23,6 +23,7 @@ import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
+import com.github.mfl28.boundingboxeditor.ui.settings.EditorSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.settings.InferenceSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.settings.SettingsDialogView;
 import com.github.mfl28.boundingboxeditor.ui.settings.UISettingsView;
@@ -73,8 +74,10 @@ public class MainView extends BorderPane implements View {
     private final WorkspaceSplitPaneView workspaceSplitPane = new WorkspaceSplitPaneView();
     private final StatusBarView statusBar = new StatusBarView();
     private final UISettingsConfig uiSettingsConfig = new UISettingsConfig();
+    private final EditorSettingsConfig editorSettingsConfig = new EditorSettingsConfig();
     private final InferenceSettingsView inferenceSettingsView = new InferenceSettingsView();
     private final UISettingsView uiSettingsView = new UISettingsView();
+    private final EditorSettingsView editorSettingsView = new EditorSettingsView();
 
 
     /**
@@ -110,9 +113,9 @@ public class MainView extends BorderPane implements View {
     public static ButtonBar.ButtonData displayYesNoCancelDialogAndGetResult(String title, String content,
                                                                             Window owner) {
         Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
-                                 content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
-                                 new ButtonType("No", ButtonBar.ButtonData.NO),
-                                 new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
+                content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
+                new ButtonType("No", ButtonBar.ButtonData.NO),
+                new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
         setupAndShowDialog(dialog, title, content, owner);
         return dialog.getResult().getButtonData();
     }
@@ -126,8 +129,8 @@ public class MainView extends BorderPane implements View {
      */
     public static ButtonBar.ButtonData displayYesNoDialogAndGetResult(String title, String content, Window owner) {
         Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
-                                 content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
-                                 new ButtonType("No", ButtonBar.ButtonData.NO));
+                content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
+                new ButtonType("No", ButtonBar.ButtonData.NO));
         setupAndShowDialog(dialog, title, content, owner);
         return dialog.getResult().getButtonData();
     }
@@ -219,9 +222,9 @@ public class MainView extends BorderPane implements View {
         errorTable.sort();
 
         long numErrorEntries = ioResult.getErrorTableEntries().stream()
-                                       .map(IOErrorInfoEntry::getSourceName)
-                                       .distinct()
-                                       .count();
+                .map(IOErrorInfoEntry::getSourceName)
+                .distinct()
+                .count();
 
         switch(ioResult.getOperationType()) {
             case ANNOTATION_IMPORT -> displayAnnotationImportInfoAlert(ioResult, errorTable, numErrorEntries, owner);
@@ -275,7 +278,7 @@ public class MainView extends BorderPane implements View {
     public static void displayExceptionDialog(Throwable throwable, Window owner) {
         ExceptionDialog exceptionDialog = new ExceptionDialog(throwable);
         exceptionDialog.getDialogPane().getStylesheets()
-                       .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+                .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) exceptionDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
         exceptionDialog.initOwner(owner);
         exceptionDialog.showAndWait();
@@ -294,7 +297,7 @@ public class MainView extends BorderPane implements View {
 
     public static void applyDialogStyle(Dialog<?> dialog) {
         dialog.getDialogPane().getStylesheets()
-              .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
+                .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
         ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
     }
 
@@ -355,8 +358,8 @@ public class MainView extends BorderPane implements View {
 
         boundingShapes.forEach(viewable -> {
             viewable.autoScaleWithBoundsAndInitialize(getEditorImageView().boundsInParentProperty(),
-                                                      annotation.getImageMetaData().getImageWidth(),
-                                                      annotation.getImageMetaData().getImageHeight());
+                    annotation.getImageMetaData().getImageWidth(),
+                    annotation.getImageMetaData().getImageHeight());
             viewable.getViewData().setToggleGroup(boundingShapeSelectionGroup);
         });
 
@@ -410,6 +413,15 @@ public class MainView extends BorderPane implements View {
 
         if(selectedTreeItem instanceof BoundingShapeTreeItem) {
             workspaceSplitPane.initiateObjectCategoryChange((BoundingShapeViewable) selectedTreeItem.getValue());
+        }
+    }
+
+    public void simplifyCurrentSelectedBoundingPolygon() {
+        final TreeItem<Object> selectedTreeItem = getObjectTree().getSelectionModel().getSelectedItem();
+
+        if(selectedTreeItem instanceof BoundingShapeTreeItem boundingShapeTreeItem &&
+                boundingShapeTreeItem.getValue() instanceof BoundingPolygonView boundingPolygonView) {
+            workspaceSplitPane.simplifyBoundingPolygon(boundingPolygonView);
         }
     }
 
@@ -503,6 +515,14 @@ public class MainView extends BorderPane implements View {
         return inferenceSettingsView;
     }
 
+    public EditorSettingsView getEditorSettingsView() {
+        return editorSettingsView;
+    }
+
+    public EditorSettingsConfig getEditorSettingsConfig() {
+        return editorSettingsConfig;
+    }
+
     public UISettingsView getUiSettingsView() {
         return uiSettingsView;
     }
@@ -510,6 +530,7 @@ public class MainView extends BorderPane implements View {
     public void displaySettingsDialog(Controller controller, Window owner) {
         final SettingsDialogView settingsDialog = new SettingsDialogView();
 
+        settingsDialog.addCategoryContentPair("Editor", editorSettingsView);
         settingsDialog.addCategoryContentPair("Inference", inferenceSettingsView);
         settingsDialog.addCategoryContentPair("UI", uiSettingsView);
 
@@ -522,21 +543,21 @@ public class MainView extends BorderPane implements View {
 
     public Optional<Window> getSettingsWindow() {
         return Window.getWindows()
-                     .stream()
-                     .filter(window -> window instanceof Stage stage
-                             && stage.getTitle().equals(SettingsDialogView.SETTINGS_TITLE))
-                     .findFirst();
+                .stream()
+                .filter(window -> window instanceof Stage stage
+                        && stage.getTitle().equals(SettingsDialogView.SETTINGS_TITLE))
+                .findFirst();
     }
 
     private static void displayImageMetadataLoadingInfoAlert(IOResult ioResult, TableView<IOErrorInfoEntry> errorTable,
                                                              long numErrorEntries, Window owner) {
         if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
             MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
-                                      "The folder does not contain any valid image files.", errorTable, owner);
+                    "The folder does not contain any valid image files.", errorTable, owner);
         } else {
             MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
-                                      numErrorEntries + " image file" + (numErrorEntries > 1 ? "s" : "") +
-                                              " could not be loaded.", errorTable, owner);
+                    numErrorEntries + " image file" + (numErrorEntries > 1 ? "s" : "") +
+                            " could not be loaded.", errorTable, owner);
         }
     }
 
@@ -544,14 +565,14 @@ public class MainView extends BorderPane implements View {
                                                          long numErrorEntries, Window owner) {
         if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
             MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
-                                      "There were errors while loading annotations.",
-                                      "The source does not contain any valid annotations.", errorTable, owner);
+                    "There were errors while loading annotations.",
+                    "The source does not contain any valid annotations.", errorTable, owner);
         } else {
             MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
-                                      "There were errors while loading annotations.",
-                                      "Some bounding boxes could not be loaded from " + numErrorEntries +
-                                              " image-annotation"
-                                              + (numErrorEntries > 1 ? "s" : "") + ".", errorTable, owner);
+                    "There were errors while loading annotations.",
+                    "Some bounding boxes could not be loaded from " + numErrorEntries +
+                            " image-annotation"
+                            + (numErrorEntries > 1 ? "s" : "") + ".", errorTable, owner);
         }
     }
 
@@ -588,6 +609,10 @@ public class MainView extends BorderPane implements View {
         });
 
         workspaceSplitPane.showObjectPopoverProperty().bind(uiSettingsConfig.showObjectPopoverProperty());
+        workspaceSplitPane.getEditor().getEditorImagePane().autoSimplifyPolygonsProperty()
+                .bind(editorSettingsConfig.autoSimplifyPolygonsProperty());
+        workspaceSplitPane.getEditor().getEditorImagePane().simplifyRelativeDistanceToleranceProperty()
+                .bind(editorSettingsConfig.simplifyRelativeDistanceToleranceProperty());
     }
 
     private static void displayInfoAlert(String title, String header, String content, Node additionalInfoNode,

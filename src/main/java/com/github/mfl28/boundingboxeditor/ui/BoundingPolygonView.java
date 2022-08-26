@@ -40,8 +40,14 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Represents the visual (UI)-component of a bounding-polygon.
@@ -52,12 +58,14 @@ import java.util.*;
  * @see View
  */
 public class BoundingPolygonView extends Polygon implements
-                                                 View, Toggle, BoundingShapeDataConvertible, BoundingShapeViewable {
+        View, Toggle, BoundingShapeDataConvertible, BoundingShapeViewable {
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
+    private static final double MAX_SIMPLIFICATION_TOLERANCE = 0.005;
     private static final String BOUNDING_POLYGON_ID = "bounding-polygon";
     private static final String EDITING_PSEUDO_CLASS_NAME = "editing";
     private static final PseudoClass EDITING_PSEUDO_CLASS = PseudoClass.getPseudoClass(EDITING_PSEUDO_CLASS_NAME);
+    private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
     private final BoundingShapeViewData boundingShapeViewData;
 
@@ -72,7 +80,8 @@ public class BoundingPolygonView extends Polygon implements
     private List<Double> pointsInImage = Collections.emptyList();
 
     /**
-     * Creates a new bounding-shape UI-element, which takes the shape of a rectangle that is resizable
+     * Creates a new bounding-shape UI-element, which takes the shape of a rectangle
+     * that is resizable
      * and movable by the user.
      *
      * @param objectCategory the category this bounding-shape will be assigned to
@@ -83,7 +92,6 @@ public class BoundingPolygonView extends Polygon implements
         setManaged(false);
         setFill(Color.TRANSPARENT);
         setId(BOUNDING_POLYGON_ID);
-        setStrokeWidth(2.0);
 
         boundingShapeViewData.getNodeGroup().setManaged(false);
         pseudoClassStateChanged(EDITING_PSEUDO_CLASS, false);
@@ -91,11 +99,15 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     /**
-     * Creates a new {@link BoundingPolygonView} object from stored bounding-shape data. This function is called
-     * when bounding-shape data stored in the model-component should be transformed to the visual bounding-shape
+     * Creates a new {@link BoundingPolygonView} object from stored bounding-shape
+     * data. This function is called
+     * when bounding-shape data stored in the model-component should be transformed
+     * to the visual bounding-shape
      * component which is displayed to the user.
      *
-     * @param boundingPolygonData the stored {@link BoundingPolygonData} object used to construct the new {@link BoundingPolygonView} object
+     * @param boundingPolygonData the stored {@link BoundingPolygonData} object used
+     *                            to construct the new {@link BoundingPolygonView}
+     *                            object
      * @return the new {@link BoundingPolygonView} object
      */
     public static BoundingPolygonView fromData(BoundingPolygonData boundingPolygonData, double imageWidth,
@@ -108,6 +120,41 @@ public class BoundingPolygonView extends Polygon implements
 
     public void appendNode(double x, double y) {
         vertexHandles.add(new VertexHandle(x, y, getPoints().size()));
+    }
+
+    public void simplify(double distanceToleranceRatio) {
+        simplify(distanceToleranceRatio, getViewData().autoScaleBounds().getValue());
+    }
+
+    public void simplify(double distanceToleranceRatio, Bounds relativeBounds) {
+        if(vertexHandles.size() < 3) {
+            return;
+        }
+
+        List<Coordinate> coordinates = vertexHandles
+                .stream()
+                .map(vertexHandle -> new Coordinate(
+                        (vertexHandle.getCenterX() - relativeBounds.getMinX()) / relativeBounds.getWidth(),
+                        (vertexHandle.getCenterY() - relativeBounds.getMinY()) / relativeBounds.getHeight()))
+                .collect(Collectors.toList());
+
+        coordinates.add(coordinates.get(0));
+
+        org.locationtech.jts.geom.Polygon geomPolygon = GEOMETRY_FACTORY
+                .createPolygon(coordinates.toArray(Coordinate[]::new));
+
+        Geometry geom = TopologyPreservingSimplifier.simplify(geomPolygon,
+                distanceToleranceRatio * MAX_SIMPLIFICATION_TOLERANCE);
+
+        vertexHandles.forEach(t -> t.setEditing(true));
+        vertexHandles.removeIf(VertexHandle::isEditing);
+
+        final Coordinate[] coordinatesSimplified = geom.getCoordinates();
+
+        IntStream.range(0, coordinatesSimplified.length - 1)
+                .forEach(i -> appendNode(
+                        coordinatesSimplified[i].x * relativeBounds.getWidth() + relativeBounds.getMinX(),
+                        coordinatesSimplified[i].y * relativeBounds.getHeight() + relativeBounds.getMinY()));
     }
 
     public ObjectCategory getObjectCategory() {
@@ -194,15 +241,16 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     /**
-     * Extracts a {@link BoundingPolygonData} object used to store the 'blueprint' of this {@link BoundingPolygonView}
+     * Extracts a {@link BoundingPolygonData} object used to store the 'blueprint'
+     * of this {@link BoundingPolygonView}
      * object and returns it.
      *
-     * @return the {@link  BoundingPolygonData} object
+     * @return the {@link BoundingPolygonData} object
      */
     @Override
     public BoundingShapeData toBoundingShapeData() {
         return new BoundingPolygonData(boundingShapeViewData.getObjectCategory(),
-                                       getRelativePointsInImageView(), boundingShapeViewData.getTags());
+                getRelativePointsInImageView(), boundingShapeViewData.getTags());
     }
 
     @Override
@@ -211,8 +259,10 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     /**
-     * Anchors the {@link BoundingPolygonView} object to and automatically scales it with the provided {@link Bounds}-property.
-     * Initializes the {@link BoundingPolygonView} with the correctly scaled size relative to the current size of the
+     * Anchors the {@link BoundingPolygonView} object to and automatically scales it
+     * with the provided {@link Bounds}-property.
+     * Initializes the {@link BoundingPolygonView} with the correctly scaled size
+     * relative to the current size of the
      * value of the autoScaleBounds-property.
      *
      * @param autoScaleBounds the bounds-property to scale with
@@ -243,10 +293,12 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     /**
-     * Anchors the {@link BoundingPolygonView} object to and automatically scales it with the
+     * Anchors the {@link BoundingPolygonView} object to and automatically scales it
+     * with the
      * provided {@link Bounds}-property.
      *
-     * @param autoScaleBounds the auto-scale-bounds property used to anchor this {@link BoundingPolygonView} object
+     * @param autoScaleBounds the auto-scale-bounds property used to anchor this
+     *                        {@link BoundingPolygonView} object
      */
     void autoScaleWithBounds(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
         boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
@@ -311,14 +363,15 @@ public class BoundingPolygonView extends Polygon implements
 
     private void setUpInternalListeners() {
         fillProperty().bind(Bindings.when(selectedProperty())
-                                    .then(Bindings.createObjectBinding(
-                                            () -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY),
-                                            strokeProperty()))
-                                    .otherwise(Bindings.when(boundingShapeViewData.highlightedProperty())
-                                                       .then(Bindings.createObjectBinding(() -> Color
-                                                               .web(strokeProperty().get().toString(),
-                                                                    HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
-                                                       .otherwise(Color.TRANSPARENT)));
+                .then(Bindings.createObjectBinding(
+                        () -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY),
+                        strokeProperty()))
+                .otherwise(Bindings.when(boundingShapeViewData.highlightedProperty())
+                        .then(Bindings.createObjectBinding(() -> Color
+                                        .web(strokeProperty().get().toString(),
+                                                HIGHLIGHTED_FILL_OPACITY),
+                                strokeProperty()))
+                        .otherwise(Color.TRANSPARENT)));
 
         vertexHandles.addListener(this::handleVertexHandlesChanged);
 
@@ -361,8 +414,7 @@ public class BoundingPolygonView extends Polygon implements
         boundingShapeViewData.getNodeGroup().viewOrderProperty().bind(
                 Bindings.when(boundingShapeViewData.selectedProperty())
                         .then(0)
-                        .otherwise(Bindings.min(xMax.subtract(xMin), yMax.subtract(yMin)))
-        );
+                        .otherwise(Bindings.min(xMax.subtract(xMin), yMax.subtract(yMin))));
     }
 
     private void updateOutlineBox() {
@@ -393,9 +445,10 @@ public class BoundingPolygonView extends Polygon implements
 
         for(int i = 0; i < pointsInImage.size(); i += 2) {
             vertexHandles.add(new VertexHandle(pointsInImage.get(i) * confinementBoundsValue.getWidth() / imageWidth +
-                                                       confinementBoundsValue.getMinX(),
-                                               pointsInImage.get(i + 1) * confinementBoundsValue.getHeight() /
-                                                       imageHeight + confinementBoundsValue.getMinY(), i));
+                    confinementBoundsValue.getMinX(),
+                    pointsInImage.get(i + 1) * confinementBoundsValue.getHeight() /
+                            imageHeight + confinementBoundsValue.getMinY(),
+                    i));
         }
     }
 
@@ -571,8 +624,8 @@ public class BoundingPolygonView extends Polygon implements
         private static final String VERTEX_HANDLE_ID = "vertex-handle";
         private static final String EDITING_PSEUDO_CLASS_NAME = "editing";
         private static final double BRIGHTNESS_BLACK_SWITCH_THRESHOLD = 0.75;
-        private final PseudoClass editingPseudoClass =
-                PseudoClass.getPseudoClass(VertexHandle.EDITING_PSEUDO_CLASS_NAME);
+        private final PseudoClass editingPseudoClass = PseudoClass
+                .getPseudoClass(VertexHandle.EDITING_PSEUDO_CLASS_NAME);
         private final BooleanProperty editing = createEditingProperty();
         private final DragAnchor dragAnchor = new DragAnchor();
         private final BooleanProperty selected = new SimpleBooleanProperty(false);
@@ -622,10 +675,10 @@ public class BoundingPolygonView extends Polygon implements
 
             setOnMouseDragged(mouseEvent -> {
                 if(mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
-                    Point2D newXY =
-                            new Point2D(mouseEvent.getX() - dragAnchor.getX(), mouseEvent.getY() - dragAnchor.getY());
-                    Point2D newXYConfined =
-                            MathUtils.clampWithinBounds(newXY, boundingShapeViewData.autoScaleBounds().getValue());
+                    Point2D newXY = new Point2D(mouseEvent.getX() - dragAnchor.getX(),
+                            mouseEvent.getY() - dragAnchor.getY());
+                    Point2D newXYConfined = MathUtils.clampWithinBounds(newXY,
+                            boundingShapeViewData.autoScaleBounds().getValue());
 
                     setCenterX(newXYConfined.getX());
                     setCenterY(newXYConfined.getY());
@@ -642,10 +695,8 @@ public class BoundingPolygonView extends Polygon implements
         }
 
         private void handleVertexSelected() {
-            int lowNeighborIndex =
-                    Math.floorMod(pointIndex.get() - 2, BoundingPolygonView.this.getPoints().size());
-            int highNeighborIndex =
-                    Math.floorMod(pointIndex.get() + 2, BoundingPolygonView.this.getPoints().size());
+            int lowNeighborIndex = Math.floorMod(pointIndex.get() - 2, BoundingPolygonView.this.getPoints().size());
+            int highNeighborIndex = Math.floorMod(pointIndex.get() + 2, BoundingPolygonView.this.getPoints().size());
 
             if(isEditing()) {
                 handleVertexEditSelect(lowNeighborIndex, highNeighborIndex);
@@ -663,7 +714,8 @@ public class BoundingPolygonView extends Polygon implements
                 if((BoundingPolygonView.this.editingIndices.contains(lowNeighborIndex)
                         && !BoundingPolygonView.this.editingIndices.contains(highNeighborIndex)) ||
                         (BoundingPolygonView.this.editingIndices.contains(highNeighborIndex)
-                                && !BoundingPolygonView.this.editingIndices.contains(lowNeighborIndex)) ||
+                                && !BoundingPolygonView.this.editingIndices.contains(lowNeighborIndex))
+                        ||
                         BoundingPolygonView.this.editingIndices.size() == 1) {
                     setEditing(false);
                     BoundingPolygonView.this.editingIndices.remove(pointIndex.get());
@@ -684,47 +736,44 @@ public class BoundingPolygonView extends Polygon implements
 
             if(BoundingPolygonView.this.editingIndices.contains(lowNeighborIndex)
                     && BoundingPolygonView.this.editingIndices.contains(highNeighborIndex)
-                    && BoundingPolygonView.this.editingIndices.size() !=
-                    BoundingPolygonView.this.vertexHandles.size() - 1) {
+                    && BoundingPolygonView.this.editingIndices.size() != BoundingPolygonView.this.vertexHandles.size()
+                    - 1) {
                 BoundingPolygonView.this.setEditing(false);
             }
         }
 
         private void setUpInternalListeners() {
             fillProperty().bind(Bindings.when(selected)
-                                        .then(Bindings.createObjectBinding(() -> Color
-                                                                                   .web(BoundingPolygonView.this.strokeProperty().get().toString(), 1.0)
-                                                                                   .brighter(),
-                                                                           BoundingPolygonView.this.strokeProperty()))
-                                        .otherwise(Bindings.createObjectBinding(() -> Color
-                                                                                        .web(BoundingPolygonView.this.strokeProperty().get().toString(), 1.0),
-                                                                                BoundingPolygonView.this
-                                                                                        .strokeProperty())));
+                    .then(Bindings.createObjectBinding(() -> Color
+                                    .web(BoundingPolygonView.this.strokeProperty().get().toString(), 1.0)
+                                    .brighter(),
+                            BoundingPolygonView.this.strokeProperty()))
+                    .otherwise(Bindings.createObjectBinding(() -> Color
+                                    .web(BoundingPolygonView.this.strokeProperty().get().toString(), 1.0),
+                            BoundingPolygonView.this
+                                    .strokeProperty())));
 
             visibleProperty().bind(BoundingPolygonView.this.visibleProperty()
-                                                           .and(BoundingPolygonView.this.selectedProperty()
-                                                                                        .or(BoundingPolygonView.this
-                                                                                                    .editingProperty())));
+                    .and(BoundingPolygonView.this.selectedProperty()
+                            .or(BoundingPolygonView.this
+                                    .editingProperty())));
 
-            centerXProperty().addListener((observableValue, oldNumber, newNumber) ->
-                                                  BoundingPolygonView.this.getPoints().set(pointIndex.get(),
-                                                                                           newNumber.doubleValue())
-            );
+            centerXProperty().addListener((observableValue, oldNumber, newNumber) -> BoundingPolygonView.this
+                    .getPoints().set(pointIndex.get(),
+                            newNumber.doubleValue()));
 
-            centerYProperty().addListener((observableValue, oldNumber, newNumber) ->
-                                                  BoundingPolygonView.this.getPoints().set(pointIndex.get() + 1,
-                                                                                           newNumber.doubleValue())
-            );
+            centerYProperty().addListener((observableValue, oldNumber, newNumber) -> BoundingPolygonView.this
+                    .getPoints().set(pointIndex.get() + 1,
+                            newNumber.doubleValue()));
 
             strokeProperty().bind(Bindings.when(editing)
-                                          .then(Bindings.createObjectBinding(() -> ((Color) getFill())
-                                                                                     .getBrightness() >
-                                                                                     BRIGHTNESS_BLACK_SWITCH_THRESHOLD
-                                                                                     ? Color.BLACK :
-                                                                                     Color.WHITE,
-                                                                             fillProperty()))
-                                          .otherwise(Bindings.createObjectBinding(() -> ((Color) getFill()),
-                                                                                  fillProperty())));
+                    .then(Bindings.createObjectBinding(() -> ((Color) getFill())
+                                    .getBrightness() > BRIGHTNESS_BLACK_SWITCH_THRESHOLD
+                                    ? Color.BLACK
+                                    : Color.WHITE,
+                            fillProperty()))
+                    .otherwise(Bindings.createObjectBinding(() -> ((Color) getFill()),
+                            fillProperty())));
         }
 
         private BooleanProperty createEditingProperty() {

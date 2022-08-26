@@ -443,6 +443,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-shape: $polygon-mode-icon;
 }
 
+#freehand-mode-button-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $shape-icon;
+}
+
 #toggle-square {
     -fx-opacity: 0.3;
 
@@ -468,6 +474,11 @@ $base-separator-line-color: derive($base-background-color, -15%);
     &:editing {
         -fx-stroke-width: 3px;
     }
+}
+
+#bounding-freehand-shape {
+    -fx-stroke-width: 3px;
+    -fx-stroke-line-join: round;
 }
 
 #expand-tree-items-icon {
@@ -645,13 +656,17 @@ $base-separator-line-color: derive($base-background-color, -15%);
     }
 
     & .thumb {
-        -fx-background-color: derive($base-highlight-light-color, +20%);
+        -fx-background-color: $base-alt-accent-color;
         -fx-effect: none;
 
         &:hover,
         &:pressed {
-            -fx-background-color: $base-alt-highlight-color;
+            -fx-background-color: derive($base-highlight-light-color, +20%);
         }
+    }
+
+    & .axis {
+        -fx-tick-label-fill: $base-font-color;
     }
 }
 
@@ -1149,6 +1164,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
 
         & .mark {
             -fx-background-color: transparent;
+            -fx-shape: $check-icon;
         }
 
         &:selected {

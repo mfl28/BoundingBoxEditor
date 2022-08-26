@@ -216,6 +216,8 @@ public class Controller {
             .setDisplayedSettingsFromPredictorConfig(model.getBoundingBoxPredictorConfig());
         view.getUiSettingsView()
             .setDisplayedSettingsFromUISettingsConfig(view.getUiSettingsConfig());
+        view.getEditorSettingsView()
+            .setDisplayedSettingsFromEditorSettingsConfig(view.getEditorSettingsConfig());
 
         view.displaySettingsDialog(this, stage);
     }
@@ -250,6 +252,8 @@ public class Controller {
             .applyDisplayedSettingsToPredictorConfig(model.getBoundingBoxPredictorConfig());
         view.getUiSettingsView()
             .applyDisplayedSettingsToUISettingsConfig(view.getUiSettingsConfig());
+        view.getEditorSettingsView()
+            .applyDisplayedSettingsToEditorSettingsConfig(view.getEditorSettingsConfig());
 
         if(!inferenceWasEnabled && model.getBoundingBoxPredictorConfig().isInferenceEnabled()) {
             makeClientAvailable();
@@ -479,8 +483,8 @@ public class Controller {
      * @param event the short-cut key-event
      */
     public void onRegisterSceneKeyPressed(KeyEvent event) {
-        // While the user is drawing a bounding box, all key-events will be ignored.
-        if(view.getEditorImagePane().isBoundingBoxDrawingInProgress()) {
+        // While the user is drawing a shape, all key-events will be ignored.
+        if(view.getEditorImagePane().isDrawingInProgress()) {
             event.consume();
             return;
         }
@@ -582,10 +586,16 @@ public class Controller {
         if(imagePane.isImageFullyLoaded() && event.getButton().equals(MouseButton.PRIMARY)) {
             if(event.isControlDown()) {
                 view.getEditorImageView().setCursor(Cursor.OPEN_HAND);
-            } else if(view.getObjectCategoryTable().isCategorySelected() &&
-                    imagePane.isBoundingBoxDrawingInProgress()) {
-                imagePane.constructAndAddNewBoundingBox();
-                imagePane.setBoundingBoxDrawingInProgress(false);
+            }
+
+            if(view.getObjectCategoryTable().isCategorySelected()) {
+                if(imagePane.getDrawingMode() == EditorImagePaneView.DrawingMode.BOX
+                        && imagePane.isBoundingBoxDrawingInProgress()) {
+                    imagePane.finalizeBoundingBox();
+                } else if(imagePane.getDrawingMode() == EditorImagePaneView.DrawingMode.FREEHAND
+                        && imagePane.isFreehandDrawingInProgress()) {
+                    imagePane.finalizeFreehandShape();
+                }
             }
         }
     }
@@ -606,6 +616,8 @@ public class Controller {
                     imagePaneView.initializeBoundingRectangle(event);
                 } else if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
                     imagePaneView.initializeBoundingPolygon(event);
+                } else if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.FREEHAND) {
+                    imagePaneView.initializeBoundingFreehandShape(event);
                 }
             } else if(event.getButton().equals(MouseButton.SECONDARY)
                     && imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
@@ -733,8 +745,12 @@ public class Controller {
                            event -> view.getEditor().getEditorToolBar().getRectangleModeButton().setSelected(true)),
                 new Pair<>(KeyCombinations.selectPolygonDrawingMode,
                            event -> view.getEditor().getEditorToolBar().getPolygonModeButton().setSelected(true)),
+                new Pair<>(KeyCombinations.selectFreehandDrawingMode,
+                           event -> view.getEditor().getEditorToolBar().getFreehandModeButton().setSelected(true)),
                 new Pair<>(KeyCombinations.changeSelectedBoundingShapeCategory,
-                           event -> view.initiateCurrentSelectedBoundingBoxCategoryChange())
+                           event -> view.initiateCurrentSelectedBoundingBoxCategoryChange()),
+                new Pair<>(KeyCombinations.simplifyPolygon,
+                           event -> view.simplifyCurrentSelectedBoundingPolygon())
         );
     }
 
@@ -1563,6 +1579,8 @@ public class Controller {
                 new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination selectPolygonDrawingMode =
                 new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
+        public static final KeyCombination selectFreehandDrawingMode =
+                new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination removeEditingVerticesWhenBoundingPolygonSelected =
                 new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_DOWN);
         public static final KeyCombination addVerticesToPolygon =
@@ -1571,6 +1589,9 @@ public class Controller {
                 new KeyCodeCombination(KeyCode.C, KeyCombination.SHIFT_DOWN);
         public static final KeyCombination hideNonSelectedBoundingShapes =
                 new KeyCodeCombination(KeyCode.H, KeyCombination.SHIFT_DOWN);
+
+        public static final KeyCombination simplifyPolygon =
+                new KeyCodeCombination(KeyCode.S, KeyCombination.SHIFT_DOWN);
 
         private KeyCombinations() {
             throw new IllegalStateException("Key Combination Class");
