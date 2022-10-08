@@ -386,20 +386,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         verifyThat(comboBox, ComboBoxMatchers.hasSelectedItem(dummyCategory), saveScreenshot(testinfo));
 
-        robot.clickOn(comboBox);
-        WaitForAsyncUtils.waitForFxEvents();
-
-        Assertions.assertDoesNotThrow(
-                () -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS, comboBox::isShowing),
-                () -> saveScreenshotAndReturnMessage(testinfo,
-                                                     "Combo-box not shown within " + TIMEOUT_DURATION_IN_SEC + " " +
-                                                             "sec."));
-        WaitForAsyncUtils.waitForFxEvents();
-
-        robot.type(KeyCode.UP);
-        WaitForAsyncUtils.waitForFxEvents();
-
-        robot.type(KeyCode.ENTER);
+        robot.interact(() -> comboBox.getSelectionModel().select(testCategory));
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(comboBox, ComboBoxMatchers.hasSelectedItem(testCategory), saveScreenshot(testinfo));
