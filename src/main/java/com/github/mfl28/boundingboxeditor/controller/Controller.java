@@ -180,7 +180,7 @@ public class Controller {
     private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
     private final BooleanProperty navigateNextKeyPressed = new SimpleBooleanProperty(false);
     private final IoMetaData ioMetaData = new IoMetaData();
-    private final List<KeyCombinationEventHandler> keyCombinationHandlers = createKeyCombinationHandlers();
+    final List<KeyCombinationEventHandler> keyCombinationHandlers = createKeyCombinationHandlers();
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
     Thread directoryWatcher;
