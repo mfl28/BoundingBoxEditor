@@ -35,7 +35,7 @@ Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://ho
 </p>
 
 ## Main Features
-* Create rectangular and polygonal bounding box annotations for objects in images
+* Create rectangular and polygonal ("vertices-clicking" and "freehand-drawing" modes) bounding box annotations for objects in images
 * Export and import  rectangular and polygonal bounding box annotations to and from JSON and XML files (using [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format)
 * Export and import rectangular bounding box annotations using the [YOLO](https://pjreddie.com/darknet/yolo/) format
 * Connect your own [Torch Serve](https://pytorch.org/serve/) prediction endpoint and use bounding box predictions as annotation hints
@@ -52,17 +52,11 @@ Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://ho
 Download the latest release installer or portable image (no installation required) of *Bounding Box Editor* for your operating system from the links below. These files were created using the
 [jpackage](https://openjdk.java.net/jeps/343) packaging tool, the [Badass JLink Gradle plugin](https://github.com/beryx/badass-jlink-plugin) and [github-actions](.github/workflows/workflow.yml).
 
-| OS            | Installer | Portable |
-| ------------- | --------- | -------- |
-| Linux | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor_2.3.0-1_amd64.deb), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-2.3.0-1.x86_64.rpm)  | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-linux.zip)|
-| macOS | [dmg](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-2.3.0.dmg)          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-macos.zip) |
-| Windows | [exe](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-2.3.0.exe)      | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-windows.zip) | 
-
-> **Note for Linux users with Hi-DPI screens**  
-> Currently JavaFX does not follow the system-wide scale settings in some Linux distributions (see e.g. bug reports [here](https://bugs.openjdk.java.net/browse/JDK-8248126) and [here](https://bugs.openjdk.java.net/browse/JDK-8238077)). The easiest way to set the desired scaling manually is by setting the `GDK_SCALE` variable when starting the application from the terminal, for example:
-> ```bash 
-> GDK_SCALE=2x ./boundingboxeditor
-> ``` 
+| OS            | Installer                                                                                                                                                                                                                       | Portable |
+| ------------- |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| -------- |
+| Linux | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor_2.4.0-1_amd64.deb), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-2.4.0-1.x86_64.rpm) | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-linux.zip)|
+| macOS | [dmg](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-2.4.0.dmg)                                                                                                                          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-macos.zip) |
+| Windows | [exe](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-2.4.0.exe)                                                                                                                          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-windows.zip) | 
 
 ### Alternative installation methods
 #### Windows ([chocolatey package](https://chocolatey.org/packages/boundingboxeditor))
