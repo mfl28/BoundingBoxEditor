@@ -18,5 +18,43 @@
  */
 package com.github.mfl28.boundingboxeditor.model.io.restclients;
 
-public record ModelEntry(String modelName, String modelUrl) {
+import java.util.Objects;
+
+public final class ModelEntry {
+    private final String modelName;
+    private final String modelUrl;
+
+    public ModelEntry(String modelName, String modelUrl) {
+        this.modelName = modelName;
+        this.modelUrl = modelUrl;
+    }
+
+    public String modelName() {
+        return modelName;
+    }
+
+    public String modelUrl() {
+        return modelUrl;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == this) {
+            return true;
+        }
+
+        if(obj == null || obj.getClass() != this.getClass()) {
+            return false;
+        }
+
+        ModelEntry that = (ModelEntry) obj;
+
+        return Objects.equals(this.modelName, that.modelName) &&
+                Objects.equals(this.modelUrl, that.modelUrl);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(modelName, modelUrl);
+    }
 }
