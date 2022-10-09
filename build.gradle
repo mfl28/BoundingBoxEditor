@@ -197,6 +197,12 @@ jlink {
 
     forceMerge 'jakarta'
 
+    mergedModule {
+        additive = true
+        uses 'jakarta.ws.rs.client.ClientBuilder'
+        uses 'jakarta.ws.rs.ext.RuntimeDelegate'
+    }
+
     imageZip = project.file("${buildDir}/distributions/boundingboxeditor-${javafx.platform.classifier}.zip")
 
     jpackage {

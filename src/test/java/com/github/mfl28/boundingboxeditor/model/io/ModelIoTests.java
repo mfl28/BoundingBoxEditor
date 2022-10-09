@@ -21,8 +21,11 @@ package com.github.mfl28.boundingboxeditor.model.io;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingBoxData;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingPolygonData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictionEntry;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.ModelEntry;
 import javafx.geometry.BoundingBox;
 import javafx.scene.paint.Color;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -106,7 +109,15 @@ class ModelIoTests {
                                                                                                     15.0),
                                                                            Collections.emptyList());
         Assertions.assertNotEquals(boundingPolygonData1, boundingPolygonData4);
-
     }
 
+    @Test
+    void checkRestModelEntryEqualityContract() {
+        EqualsVerifier.simple().forClass(ModelEntry.class).verify();
+    }
+
+    @Test
+    void checkRestBoundingBoxPredictionEntryEqualityContract() {
+        EqualsVerifier.simple().forClass(BoundingBoxPredictionEntry.class).verify();
+    }
 }
