@@ -19,8 +19,11 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
+import javafx.application.Platform;
+import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
 import javafx.scene.control.MenuItem;
-import javafx.scene.input.KeyCode;
+import javafx.scene.input.*;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
@@ -30,6 +33,12 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
 import org.testfx.util.WaitForAsyncUtils;
+
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -46,6 +55,36 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     void onMenuItemsClicked_ShouldCorrectlyApplyVisibilityAndShowDialogueWindows(FxRobot robot, TestInfo testinfo) {
         verifyNodeVisibilities(testinfo);
         verifyMenuBarFunctionality(robot, testinfo);
+    }
+
+    @Test
+    void onDragFolderIntoView_ShouldCorrectlyImportImageFiles(FxRobot robot, TestInfo testInfo) {
+        EventHandler<? super MouseEvent> dragDetectedHandler = mainView.getOnDragDetected();
+        try {
+            Map<DataFormat, Object> dataMap = new HashMap<>();
+            dataMap.put(DataFormat.FILES, List.of(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_3).getFile())));
+
+            setDummyMainViewDragDetector(dataMap);
+
+            robot.moveTo(getScreenPointFromRatios(mainView, new Point2D(0.5, 0.25)))
+                    .press(MouseButton.PRIMARY).drag(mainView, MouseButton.PRIMARY).dropTo(mainView).release(MouseButton.PRIMARY);
+            WaitForAsyncUtils.waitForFxEvents();
+
+            waitUntilCurrentImageIsLoaded(testInfo);
+
+            verifyThat(model.getImageFileNameSet(), Matchers.containsInAnyOrder(
+                    "rachel-hisko-rEM3cK8F1pk-unsplash.jpg",
+                    "wexor-tmg-L-2p8fapOA8-unsplash.jpg"));
+        } finally {
+            mainView.setOnDragDetected(dragDetectedHandler);
+        }
+    }
+
+    private void setDummyMainViewDragDetector(Map<DataFormat, Object> content) {
+        mainView.setOnDragDetected(event -> {
+            Dragboard dragboard = mainView.startDragAndDrop(TransferMode.LINK);
+            dragboard.setContent(content);
+        });
     }
 
     private void verifyMenuBarFunctionality(FxRobot robot, TestInfo testinfo) {

@@ -385,7 +385,8 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         Double[] targetImageViewPointRatios = {0.25, 0.25, 0.1, 0.6, 0.4, 0.75, 0.75, 0.3};
         List<Point2D> screenPoints = IntStream.range(0, targetImageViewPointRatios.length)
                 .filter(i -> i % 2 == 0)
-                .mapToObj(i -> getScreenPointFromImageViewRatios(new Point2D(targetImageViewPointRatios[i], targetImageViewPointRatios[i+1])))
+                .mapToObj(i -> getScreenPointFromRatios(mainView.getEditorImageView(),
+                        new Point2D(targetImageViewPointRatios[i], targetImageViewPointRatios[i+1])))
                 .toList();
 
         robot.moveTo(screenPoints.get(0)).press(MouseButton.PRIMARY);
