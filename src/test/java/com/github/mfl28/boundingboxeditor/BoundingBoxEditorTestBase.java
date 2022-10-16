@@ -128,8 +128,8 @@ public class BoundingBoxEditorTestBase {
     }
 
     protected void moveRelativeToImageView(FxRobot robot, Point2D startPointRatios, Point2D endPointRatios) {
-        Point2D startPoint = getScreenPointFromImageViewRatios(startPointRatios);
-        Point2D endPoint = getScreenPointFromImageViewRatios(endPointRatios);
+        Point2D startPoint = getScreenPointFromRatios(mainView.getEditorImageView(), startPointRatios);
+        Point2D endPoint = getScreenPointFromRatios(mainView.getEditorImageView(), endPointRatios);
 
         robot.moveTo(startPoint)
              .press(MouseButton.PRIMARY)
@@ -139,7 +139,7 @@ public class BoundingBoxEditorTestBase {
 
     protected void moveAndClickRelativeToImageView(FxRobot robot, MouseButton mousebutton, Point2D... points) {
         for(Point2D point : points) {
-            robot.moveTo(getScreenPointFromImageViewRatios(point)).clickOn(mousebutton);
+            robot.moveTo(getScreenPointFromRatios(mainView.getEditorImageView(), point)).clickOn(mousebutton);
         }
     }
 
@@ -223,11 +223,8 @@ public class BoundingBoxEditorTestBase {
               .forEach(Thread::interrupt);
     }
 
-    protected Point2D getScreenPointFromImageViewRatios(Point2D ratios) {
-        final ImageView imageView = mainView.getEditorImageView();
-        final Bounds imageViewScreenBounds = imageView.localToScreen(imageView.getBoundsInLocal());
-
-        return PointQueryUtils.atPositionFactors(imageViewScreenBounds, ratios);
+    protected Point2D getScreenPointFromRatios(Node node, Point2D ratios) {
+        return PointQueryUtils.atPositionFactors(node.localToScreen(node.getBoundsInLocal()), ratios);
     }
 
     protected Point2D getParentPointFromImageViewRatios(Point2D ratios) {

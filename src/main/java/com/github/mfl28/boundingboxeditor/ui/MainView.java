@@ -35,6 +35,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
@@ -306,6 +307,15 @@ public class MainView extends BorderPane implements View {
         header.connectToController(controller);
         workspaceSplitPane.connectToController(controller);
         inferenceSettingsView.connectToController(controller);
+
+        setOnDragDropped(event -> {
+            if(event.getDragboard().hasFiles()) {
+                controller.initiateImageFolderLoading(event.getDragboard().getFiles().get(0));
+                event.setDropCompleted(true);
+            }
+
+            event.consume();
+        });
     }
 
     @Override
@@ -613,6 +623,16 @@ public class MainView extends BorderPane implements View {
                 .bind(editorSettingsConfig.autoSimplifyPolygonsProperty());
         workspaceSplitPane.getEditor().getEditorImagePane().simplifyRelativeDistanceToleranceProperty()
                 .bind(editorSettingsConfig.simplifyRelativeDistanceToleranceProperty());
+
+        setOnDragOver(event -> {
+            if(event.getDragboard().hasFiles()
+                    && event.getDragboard().getFiles().size() == 1
+                    && event.getDragboard().getFiles().get(0).isDirectory()) {
+                event.acceptTransferModes(TransferMode.LINK);
+            }
+
+            event.consume();
+        });
     }
 
     private static void displayInfoAlert(String title, String header, String content, Node additionalInfoNode,
