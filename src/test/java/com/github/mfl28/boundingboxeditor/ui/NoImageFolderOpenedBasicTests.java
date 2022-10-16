@@ -19,7 +19,6 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
-import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.control.MenuItem;
@@ -33,7 +32,6 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
 import org.testfx.util.WaitForAsyncUtils;
-
 
 import java.io.File;
 import java.util.HashMap;
@@ -75,6 +73,65 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
             verifyThat(model.getImageFileNameSet(), Matchers.containsInAnyOrder(
                     "rachel-hisko-rEM3cK8F1pk-unsplash.jpg",
                     "wexor-tmg-L-2p8fapOA8-unsplash.jpg"));
+        } finally {
+            mainView.setOnDragDetected(dragDetectedHandler);
+        }
+    }
+
+    @Test
+    void onDragMultipleFoldersIntoView_ShouldDoNothing(FxRobot robot) {
+        EventHandler<? super MouseEvent> dragDetectedHandler = mainView.getOnDragDetected();
+        try {
+            Map<DataFormat, Object> dataMap = new HashMap<>();
+            dataMap.put(DataFormat.FILES, List.of(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()),
+                    new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_2).getFile())));
+
+            setDummyMainViewDragDetector(dataMap);
+
+            robot.moveTo(getScreenPointFromRatios(mainView, new Point2D(0.5, 0.25)))
+                    .press(MouseButton.PRIMARY).drag(mainView, MouseButton.PRIMARY).dropTo(mainView).release(MouseButton.PRIMARY);
+            WaitForAsyncUtils.waitForFxEvents();
+
+            verifyThat(model.getImageFileNameSet(), Matchers.empty());
+        } finally {
+            mainView.setOnDragDetected(dragDetectedHandler);
+        }
+    }
+
+
+    @Test
+    void onDragNonFolderFileIntoView_ShouldDoNothing(FxRobot robot) {
+        EventHandler<? super MouseEvent> dragDetectedHandler = mainView.getOnDragDetected();
+        try {
+            Map<DataFormat, Object> dataMap = new HashMap<>();
+            dataMap.put(DataFormat.FILES, List.of(
+                    new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1 + "/austin-neill-685084-unsplash.jpg").getFile())));
+
+            setDummyMainViewDragDetector(dataMap);
+
+            robot.moveTo(getScreenPointFromRatios(mainView, new Point2D(0.5, 0.25)))
+                    .press(MouseButton.PRIMARY).drag(mainView, MouseButton.PRIMARY).dropTo(mainView).release(MouseButton.PRIMARY);
+            WaitForAsyncUtils.waitForFxEvents();
+
+            verifyThat(model.getImageFileNameSet(), Matchers.empty());
+        } finally {
+            mainView.setOnDragDetected(dragDetectedHandler);
+        }
+    }
+
+    @Test
+    void onEmptyDragIntoView_ShouldDoNothing(FxRobot robot) {
+        EventHandler<? super MouseEvent> dragDetectedHandler = mainView.getOnDragDetected();
+        try {
+            Map<DataFormat, Object> dataMap = new HashMap<>();
+
+            setDummyMainViewDragDetector(dataMap);
+
+            robot.moveTo(getScreenPointFromRatios(mainView, new Point2D(0.5, 0.25)))
+                    .press(MouseButton.PRIMARY).drag(mainView, MouseButton.PRIMARY).dropTo(mainView).release(MouseButton.PRIMARY);
+            WaitForAsyncUtils.waitForFxEvents();
+
+            verifyThat(model.getImageFileNameSet(), Matchers.empty());
         } finally {
             mainView.setOnDragDetected(dragDetectedHandler);
         }
@@ -148,19 +205,19 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         MenuItem fitWindowItem = getSubMenuItem(robot, "View", "Maximize Images");
         assertTrue(fitWindowItem.isVisible(),
-                   () -> saveScreenshotAndReturnMessage(testinfo, "Maximize images item not " +
-                           "visible"));
+                () -> saveScreenshotAndReturnMessage(testinfo, "Maximize images item not " +
+                        "visible"));
         assertTrue(fitWindowItem.isDisable(),
-                   () -> saveScreenshotAndReturnMessage(testinfo, "Maximize images item not " +
-                           "disabled"));
+                () -> saveScreenshotAndReturnMessage(testinfo, "Maximize images item not " +
+                        "disabled"));
 
         MenuItem imageExplorerItem = getSubMenuItem(robot, "View", "Show Images Panel");
         assertTrue(imageExplorerItem.isVisible(),
-                   () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
-                           "visible"));
+                () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
+                        "visible"));
         assertTrue(imageExplorerItem.isDisable(),
-                   () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
-                           "disabled"));
+                () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
+                        "disabled"));
     }
 
     private void verifyNodeVisibilities(TestInfo testinfo) {
