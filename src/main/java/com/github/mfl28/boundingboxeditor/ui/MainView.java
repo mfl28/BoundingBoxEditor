@@ -309,9 +309,7 @@ public class MainView extends BorderPane implements View {
         inferenceSettingsView.connectToController(controller);
 
         setOnDragDropped(event -> {
-            if(event.getDragboard().hasFiles()
-                    && event.getDragboard().getFiles().size() == 1
-                    && event.getDragboard().getFiles().get(0).isDirectory()) {
+            if(event.getDragboard().hasFiles()) {
                 controller.initiateImageFolderLoading(event.getDragboard().getFiles().get(0));
                 event.setDropCompleted(true);
             }
