@@ -123,12 +123,12 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         appendHeaderFromImageAnnotationDataElement(document, annotationElement, dataElement);
 
         dataElement.getBoundingShapeData().forEach(boundingShape ->
-                                                           annotationElement.appendChild(
-                                                                   createXmlElementFromBoundingShapeData(document,
-                                                                                                         BOUNDING_SHAPE_ENTRY_ELEMENT_NAME,
-                                                                                                         boundingShape,
-                                                                                                         dataElement
-                                                                                                                 .getImageMetaData()))
+                annotationElement.appendChild(
+                        createXmlElementFromBoundingShapeData(document,
+                                BOUNDING_SHAPE_ENTRY_ELEMENT_NAME,
+                                boundingShape,
+                                dataElement
+                                        .getImageMetaData()))
         );
 
         DOMSource domSource = new DOMSource(document);
@@ -138,7 +138,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         File outputFile =
                 saveFolderPath.resolve(annotationFileNameBase + ANNOTATION_FILENAME_EXTENSION + FILE_EXTENSION)
-                              .toFile();
+                        .toFile();
 
         StreamResult streamResult = new StreamResult(outputFile);
 
@@ -155,9 +155,9 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         root.appendChild(sizeElement);
 
         sizeElement
-                .appendChild(createDoubleValueElement(document, IMAGE_WIDTH_ELEMENT_NAME, dataElement.getImageWidth()));
+                .appendChild(createDoubleValueElement(document, IMAGE_WIDTH_ELEMENT_NAME, dataElement.getOrientedImageWidth()));
         sizeElement.appendChild(
-                createDoubleValueElement(document, IMAGE_HEIGHT_ELEMENT_NAME, dataElement.getImageHeight()));
+                createDoubleValueElement(document, IMAGE_HEIGHT_ELEMENT_NAME, dataElement.getOrientedImageHeight()));
         sizeElement.appendChild(
                 createIntegerValueElement(document, IMAGE_DEPTH_ELEMENT_NAME, dataElement.getImageDepth()));
     }
@@ -203,19 +203,19 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
             element.appendChild(actionsElement);
 
             actionTags.forEach(action ->
-                                       actionsElement.appendChild(createIntegerValueElement(document, action, 1)));
+                    actionsElement.appendChild(createIntegerValueElement(document, action, 1)));
         }
 
         // Add coordinates:
-        element.appendChild(boundingShapeData.accept(new XmlElementVisitor(document, imageMetaData.getImageWidth(),
-                                                                           imageMetaData.getImageHeight())));
+        element.appendChild(boundingShapeData.accept(new XmlElementVisitor(document, imageMetaData.getOrientedWidth(),
+                imageMetaData.getOrientedHeight())));
 
         // Add parts:
         boundingShapeData.getParts().forEach(part ->
-                                                     element.appendChild(createXmlElementFromBoundingShapeData(document,
-                                                                                                               BOUNDING_SHAPE_PART_NAME,
-                                                                                                               part,
-                                                                                                               imageMetaData))
+                element.appendChild(createXmlElementFromBoundingShapeData(document,
+                        BOUNDING_SHAPE_PART_NAME,
+                        part,
+                        imageMetaData))
         );
 
         return element;

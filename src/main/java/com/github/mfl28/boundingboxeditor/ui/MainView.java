@@ -21,6 +21,7 @@ package com.github.mfl28.boundingboxeditor.ui;
 import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
+import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
 import com.github.mfl28.boundingboxeditor.ui.settings.EditorSettingsView;
@@ -30,6 +31,7 @@ import com.github.mfl28.boundingboxeditor.ui.settings.UISettingsView;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -46,6 +48,9 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.controlsfx.dialog.ExceptionDialog;
 
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -342,14 +347,12 @@ public class MainView extends BorderPane implements View {
     }
 
     /**
-     * Updates the displayed image in the main image-pane from a provided image-{@link File}.
+     * Updates the displayed image in the main image-pane from a provided {@link ImageMetaData}.
      *
-     * @param imageFile the file of the new image
-     * @param width     the width of image corresponding to the file
-     * @param height    the height of the image corresponding to the file
+     * @param imageMetaData The meta data of the image to show.
      */
-    public void updateImageFromFile(final File imageFile, double width, double height) {
-        workspaceSplitPane.getEditor().getEditorImagePane().updateImageFromFile(imageFile, width, height);
+    public void updateImageFromMetaData(ImageMetaData imageMetaData) {
+        workspaceSplitPane.getEditor().getEditorImagePane().updateImageFromMetaData(imageMetaData);
     }
 
     /**
@@ -558,6 +561,7 @@ public class MainView extends BorderPane implements View {
                         && stage.getTitle().equals(SettingsDialogView.SETTINGS_TITLE))
                 .findFirst();
     }
+
 
     private static void displayImageMetadataLoadingInfoAlert(IOResult ioResult, TableView<IOErrorInfoEntry> errorTable,
                                                              long numErrorEntries, Window owner) {

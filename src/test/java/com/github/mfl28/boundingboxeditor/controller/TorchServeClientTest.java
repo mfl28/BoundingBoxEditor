@@ -25,6 +25,15 @@ import com.github.mfl28.boundingboxeditor.model.io.restclients.ModelEntry;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.TorchServeRestClient;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.google.gson.JsonSyntaxException;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import javafx.application.Platform;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
@@ -47,14 +56,6 @@ import org.testfx.matcher.control.ComboBoxMatchers;
 import org.testfx.matcher.control.TextInputControlMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.GenericType;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import java.io.File;
 import java.net.ConnectException;
 import java.util.ArrayList;
@@ -111,7 +112,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
-        controller.loadImageFiles(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()));
+        controller.loadImageFiles(new File(getClass().getResource(TEST_EXIF_IMAGE_FOLDER_PATH).getFile()));
     }
 
     @Test
@@ -223,7 +224,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         verifyThat(settingsStage.isShowing(), Matchers.is(false), saveScreenshot(testinfo));
 
         verifyThat(mainView.getEditor().getEditorToolBar().getPredictButton().isVisible(), Matchers.is(true),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyInferenceConnectionErrorHandling(robot, testinfo);
         verifyInferenceProcessingErrorHandling(robot, testinfo);
@@ -231,7 +232,73 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         verifyInferenceEntityReadingErrorHandling(robot, testinfo);
         verifyInferenceJsonSyntaxErrorHandling(robot, testinfo);
         verifyInferenceNoBoundingBoxPredictionsReceivedHandling(robot, testinfo);
-        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo);
+
+        List<BoundingBoxPredictionEntry> testPredictions = new ArrayList<>();
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("foo", List.of(100.0, 100.0, 200.0, 200.0)),
+                0.7));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("foo", List.of(250.0, 250.0, 300.0, 275.0)),
+                0.9));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("bar", List.of(50.0, 100.0, 150.0, 175.0)),
+                0.3));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("bar", List.of(75.0, 150.0, 225.0, 275.0)),
+                0.8));
+
+        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 2, 1);
+
+        Platform.runLater(() -> mainView.getImageFileListView().getSelectionModel().select(5));
+
+        WaitForAsyncUtils.waitForFxEvents();
+        waitUntilCurrentImageIsLoaded(testinfo);
+        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 4, 2);
+
+        Platform.runLater(() -> mainView.getImageFileListView().getSelectionModel().select(6));
+
+        WaitForAsyncUtils.waitForFxEvents();
+        waitUntilCurrentImageIsLoaded(testinfo);
+
+        timeOutClickOn(robot, "#file-menu", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.clickOn(mainView.getInferenceSettingsView().getResizeImagesControl());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.clickOn(((DialogPane) settingsStage.getScene().getRoot()).lookupButton(ButtonType.OK));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertNoTopModelStage(robot, testinfo);
+
+        testPredictions = new ArrayList<>();
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("foo", List.of(10.0, 10.0, 20.0, 20.0)),
+                0.7));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("foo", List.of(25.0, 25.0, 30.0, 27.0)),
+                0.9));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("bar", List.of(5.0, 10.0, 15.0, 17.0)),
+                0.3));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("bar", List.of(7.0, 15.0, 22.0, 27.0)),
+                0.8));
+
+        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 6, 3);
+
+        Platform.runLater(() -> mainView.getImageFileListView().getSelectionModel().select(1));
+
+        WaitForAsyncUtils.waitForFxEvents();
+        waitUntilCurrentImageIsLoaded(testinfo);
+
+        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 8, 4);
     }
 
 
@@ -245,9 +312,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
-                               "There were errors while performing the prediction",
-                               "Torch serve",
-                               "Could not connect to inference server.");
+                "There were errors while performing the prediction",
+                "Torch serve",
+                "Could not connect to inference server.");
 
         reset(mockInferenceInvocationBuilder);
     }
@@ -261,9 +328,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
-                               "There were errors while performing the prediction",
-                               "Torch serve",
-                               "Could not get prediction from inference server.");
+                "There were errors while performing the prediction",
+                "Torch serve",
+                "Could not get prediction from inference server.");
 
         reset(mockInferenceInvocationBuilder);
     }
@@ -278,9 +345,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
-                               "There were errors while performing the prediction",
-                               "Torch serve",
-                               "Could not get prediction from inference server. Reason: Not Found");
+                "There were errors while performing the prediction",
+                "Torch serve",
+                "Could not get prediction from inference server. Reason: Not Found");
 
         reset(mockInferenceInvocationBuilder);
         reset(mockPredictionResponse);
@@ -289,7 +356,8 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
     private void verifyInferenceEntityReadingErrorHandling(FxRobot robot, TestInfo testinfo) {
         when(mockInferenceInvocationBuilder.post(Mockito.any())).thenReturn(mockPredictionResponse);
         when(mockPredictionResponse.getStatusInfo()).thenReturn(Response.Status.OK);
-        when(mockPredictionResponse.readEntity(new GenericType<List<BoundingBoxPredictionEntry>>() {}))
+        when(mockPredictionResponse.readEntity(new GenericType<List<BoundingBoxPredictionEntry>>() {
+        }))
                 .thenThrow(new ProcessingException("bar"));
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
@@ -298,9 +366,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
-                               "There were errors while performing the prediction",
-                               "Torch serve",
-                               "Could not get prediction from inference server.");
+                "There were errors while performing the prediction",
+                "Torch serve",
+                "Could not get prediction from inference server.");
 
         reset(mockInferenceInvocationBuilder);
         reset(mockPredictionResponse);
@@ -309,7 +377,8 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
     private void verifyInferenceJsonSyntaxErrorHandling(FxRobot robot, TestInfo testinfo) {
         when(mockInferenceInvocationBuilder.post(Mockito.any())).thenReturn(mockPredictionResponse);
         when(mockPredictionResponse.getStatusInfo()).thenReturn(Response.Status.OK);
-        when(mockPredictionResponse.readEntity(new GenericType<List<BoundingBoxPredictionEntry>>() {}))
+        when(mockPredictionResponse.readEntity(new GenericType<List<BoundingBoxPredictionEntry>>() {
+        }))
                 .thenThrow(new JsonSyntaxException("bar"));
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
@@ -318,9 +387,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
-                               "There were errors while performing the prediction",
-                               "Torch serve",
-                               "Invalid inference server response format for resource \"predictions\".");
+                "There were errors while performing the prediction",
+                "Torch serve",
+                "Invalid inference server response format for resource \"predictions\".");
 
         reset(mockInferenceInvocationBuilder);
         reset(mockPredictionResponse);
@@ -330,7 +399,8 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
     private void verifyInferenceNoBoundingBoxPredictionsReceivedHandling(FxRobot robot, TestInfo testinfo) {
         when(mockInferenceInvocationBuilder.post(Mockito.any())).thenReturn(mockPredictionResponse);
         when(mockPredictionResponse.getStatusInfo()).thenReturn(Response.Status.OK);
-        when(mockPredictionResponse.readEntity(new GenericType<List<BoundingBoxPredictionEntry>>() {}))
+        when(mockPredictionResponse.readEntity(new GenericType<List<BoundingBoxPredictionEntry>>() {
+        }))
                 .thenReturn(new ArrayList<>());
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
@@ -339,8 +409,8 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully predicted 0 bounding boxes for 1 image in"),
-                   saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully predicted 0 bounding boxes for 1 image in"),
+                saveScreenshot(testinfo));
 
         verifyThat(model.getObjectCategories().size(), Matchers.equalTo(1));
         verifyThat(mainView.getObjectCategoryTable().getItems().size(), Matchers.equalTo(1));
@@ -349,25 +419,12 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         reset(mockPredictionResponse);
     }
 
-    private void verifyInferenceBoundingBoxPredictionsReceivedHandling(FxRobot robot, TestInfo testinfo) {
+    private void verifyInferenceBoundingBoxPredictionsReceivedHandling(FxRobot robot, TestInfo testinfo, List<BoundingBoxPredictionEntry> testPredictions, int expectedFooCount, int expectedBarCount) {
         when(mockInferenceInvocationBuilder.post(Mockito.any())).thenReturn(mockPredictionResponse);
         when(mockPredictionResponse.getStatusInfo()).thenReturn(Response.Status.OK);
 
-        final List<BoundingBoxPredictionEntry> testPredictions = new ArrayList<>();
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("foo", List.of(100.0, 100.0, 200.0, 200.0)),
-                0.7));
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("foo", List.of(250.0, 250.0, 300.0, 275.0)),
-                0.9));
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("bar", List.of(50.0, 100.0, 150.0, 175.0)),
-                0.3));
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("bar", List.of(75.0, 150.0, 225.0, 275.0)),
-                0.8));
-
-        when(mockPredictionResponse.readEntity(new GenericType<List<BoundingBoxPredictionEntry>>() {}))
+        when(mockPredictionResponse.readEntity(new GenericType<List<BoundingBoxPredictionEntry>>() {
+        }))
                 .thenReturn(testPredictions);
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -377,13 +434,13 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully predicted 3 bounding boxes for 1 image in"),
-                   saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully predicted 3 bounding boxes for 1 image in"),
+                saveScreenshot(testinfo));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(3));
         verifyThat(mainView.getObjectCategoryTable().getItems().size(), Matchers.equalTo(2));
         verifyThat(model.getCategoryNameToCategoryMap().size(), Matchers.equalTo(2));
-        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("Foo"), Matchers.equalTo(2));
-        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("bar"), Matchers.equalTo(1));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("Foo"), Matchers.equalTo(expectedFooCount));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("bar"), Matchers.equalTo(expectedBarCount));
 
         reset(mockInferenceInvocationBuilder);
         reset(mockPredictionResponse);
@@ -410,9 +467,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Model Fetching Error Report",
-                               "There were errors while fetching model names from the server",
-                               "Torch serve",
-                               "Could not connect to management server.");
+                "There were errors while fetching model names from the server",
+                "Torch serve",
+                "Could not connect to management server.");
 
         WaitForAsyncUtils.waitForFxEvents();
         resetAllMocks();
@@ -440,9 +497,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Model Fetching Error Report",
-                               "There were errors while fetching model names from the server",
-                               "Torch serve",
-                               "Could not fetch models from management server.");
+                "There were errors while fetching model names from the server",
+                "Torch serve",
+                "Could not fetch models from management server.");
 
         WaitForAsyncUtils.waitForFxEvents();
         resetAllMocks();
@@ -470,9 +527,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Model Fetching Error Report",
-                               "There were errors while fetching model names from the server",
-                               "Torch serve",
-                               "Could not fetch models from management server. Reason: Not Found");
+                "There were errors while fetching model names from the server",
+                "Torch serve",
+                "Could not fetch models from management server. Reason: Not Found");
 
         WaitForAsyncUtils.waitForFxEvents();
         resetAllMocks();
@@ -502,9 +559,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Model Fetching Error Report",
-                               "There were errors while fetching model names from the server",
-                               "Torch serve",
-                               "Invalid management server response format for resource \"models\".");
+                "There were errors while fetching model names from the server",
+                "Torch serve",
+                "Invalid management server response format for resource \"models\".");
 
         WaitForAsyncUtils.waitForFxEvents();
         resetAllMocks();
@@ -534,9 +591,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Model Fetching Error Report",
-                               "There were errors while fetching model names from the server",
-                               "Torch serve",
-                               "Could not fetch models from management server.");
+                "There were errors while fetching model names from the server",
+                "Torch serve",
+                "Could not fetch models from management server.");
 
         WaitForAsyncUtils.waitForFxEvents();
         resetAllMocks();
@@ -589,8 +646,8 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
             when(mockModelInvocationBuilder.get()).thenReturn(mockModelResponse);
             final TorchServeRestClient.ModelsWrapper modelsWrapper =
                     new TorchServeRestClient.ModelsWrapper(List.of(new ModelEntry("foo-model", "foo-model-url"),
-                                                                   new ModelEntry("bar-model", "bar-model-url"),
-                                                                   new ModelEntry("   ", "blank-url")));
+                            new ModelEntry("bar-model", "bar-model-url"),
+                            new ModelEntry("   ", "blank-url")));
             when(mockModelResponse.getStatusInfo()).thenReturn(Response.Status.OK);
             when(mockModelResponse.readEntity(TorchServeRestClient.ModelsWrapper.class)).thenReturn(modelsWrapper);
             controller.makeClientAvailable();
@@ -605,24 +662,24 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         final DialogPane modelSelectionDialog = (DialogPane) modelSelectionDialogStage.getScene().getRoot();
 
         verifyThat(modelSelectionDialog.getHeaderText(), Matchers.equalTo("Choose the model used for performing " +
-                                                                                  "predictions."));
+                "predictions."));
         verifyThat(modelSelectionDialog.getContentText(), Matchers.equalTo("Model:"));
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> robot.from(modelSelectionDialog)
-                                                                                 .lookup(".combo-box").tryQuery()
-                                                                                 .isPresent()),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Expected combo-box not found within " +
-                                                                                   TIMEOUT_DURATION_IN_SEC +
-                                                                                   " sec."));
+                        () -> robot.from(modelSelectionDialog)
+                                .lookup(".combo-box").tryQuery()
+                                .isPresent()),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected combo-box not found within " +
+                                TIMEOUT_DURATION_IN_SEC +
+                                " sec."));
         WaitForAsyncUtils.waitForFxEvents();
 
         final ComboBox<ObjectCategory> comboBox =
                 robot.from(modelSelectionDialog).lookup(".combo-box").queryComboBox();
 
         verifyThat(comboBox, ComboBoxMatchers.containsExactlyItemsInOrder("foo-model", "bar-model"),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
         verifyThat(comboBox, ComboBoxMatchers.hasSelectedItem("foo-model"), saveScreenshot(testinfo));
 
         timeOutClickOnButtonInDialogStage(robot, modelSelectionDialogStage, ButtonType.OK, testinfo);
@@ -631,7 +688,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertTopModalStageClosed(robot, "Model Choice", testinfo);
 
         verifyThat(mainView.getInferenceSettingsView().getSelectedModelLabel().getText(),
-                   Matchers.equalTo("foo-model"));
+                Matchers.equalTo("foo-model"));
 
         resetAllMocks();
     }
@@ -642,14 +699,14 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         verifyThat(errorReportStage.isShowing(), Matchers.is(true));
 
         verifyThat(((DialogPane) errorReportStage.getScene().getRoot()).getHeaderText(),
-                   Matchers.equalTo(headerText));
+                Matchers.equalTo(headerText));
 
         final List<IOErrorInfoEntry> errorInfoEntries =
                 timeOutGetErrorInfoEntriesFromStage(errorReportStage, testinfo);
         verifyThat(errorInfoEntries, Matchers.hasSize(1));
         verifyThat(errorInfoEntries.get(0).getSourceName(), Matchers.equalTo(errorInfoEntrySource));
         verifyThat(errorInfoEntries.get(0).getErrorDescription(),
-                   Matchers.equalTo(errorInfoEntryDescription));
+                Matchers.equalTo(errorInfoEntryDescription));
 
         timeOutClickOnButtonInDialogStage(robot, errorReportStage, ButtonType.OK, testinfo);
     }
@@ -659,21 +716,21 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getInferenceSettingsView().getManagementAddressField())
-             .write(MANAGEMENT_SERVER);
+                .write(MANAGEMENT_SERVER);
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getInferenceSettingsView().getManagementAddressField(),
-                   TextInputControlMatchers.hasText(MANAGEMENT_SERVER), saveScreenshot(testinfo));
+                TextInputControlMatchers.hasText(MANAGEMENT_SERVER), saveScreenshot(testinfo));
 
         mainView.getInferenceSettingsView().getManagementPortField().clear();
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getInferenceSettingsView().getManagementPortField())
-             .write(MANAGEMENT_PORT);
+                .write(MANAGEMENT_PORT);
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getInferenceSettingsView().getManagementPortField(),
-                   TextInputControlMatchers.hasText(MANAGEMENT_PORT), saveScreenshot(testinfo));
+                TextInputControlMatchers.hasText(MANAGEMENT_PORT), saveScreenshot(testinfo));
     }
 
     private void setUpAndVerifyInferenceServerSettings(FxRobot robot, TestInfo testinfo) {
@@ -681,25 +738,25 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getInferenceSettingsView().getInferenceAddressField())
-             .write(INFERENCE_SERVER);
+                .write(INFERENCE_SERVER);
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getInferenceSettingsView().getInferenceAddressField(),
-                   TextInputControlMatchers.hasText(INFERENCE_SERVER), saveScreenshot(testinfo));
+                TextInputControlMatchers.hasText(INFERENCE_SERVER), saveScreenshot(testinfo));
 
         mainView.getInferenceSettingsView().getInferencePortField().clear();
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getInferenceSettingsView().getInferencePortField())
-             .write(INFERENCE_PORT);
+                .write(INFERENCE_PORT);
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getInferenceSettingsView().getInferencePortField(),
-                   TextInputControlMatchers.hasText(INFERENCE_PORT), saveScreenshot(testinfo));
+                TextInputControlMatchers.hasText(INFERENCE_PORT), saveScreenshot(testinfo));
     }
 
     private void resetAllMocks() {
         reset(mockClientBuilder, mockClient, mockManagementTarget,
-              mockModelsTarget, mockModelInvocationBuilder, mockModelResponse);
+                mockModelsTarget, mockModelInvocationBuilder, mockModelResponse);
     }
 }

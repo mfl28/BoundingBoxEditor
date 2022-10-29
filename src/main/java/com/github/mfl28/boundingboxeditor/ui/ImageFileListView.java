@@ -20,9 +20,12 @@ package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.github.mfl28.boundingboxeditor.utils.ImageUtils;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.BooleanPropertyBase;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -36,7 +39,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-import java.io.File;
 import java.util.Objects;
 
 /**
@@ -83,7 +85,7 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
                 if(newValue != null && newValue.size() <= IMAGE_CACHE_SIZE) {
                     // Triggers loading of the new images into the cache.
                     imageCache.getAll(newValue.stream()
-                                              .map(fileInfo -> fileInfo.getFile().toURI().toString())
+                                              .map(FileInfo::getFileUrl)
                                               .toList());
                 }
             }
@@ -91,15 +93,27 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
     }
 
     public static class FileInfo {
-        private final File file;
+        private final String fileUrl;
+        private final String fileName;
         private final BooleanProperty hasAssignedBoundingBoxes = new SimpleBooleanProperty(false);
+        private final int orientation;
 
-        public FileInfo(File file) {
-            this.file = file;
+        public FileInfo(String fileUrl, String fileName, int orientation) {
+            this.fileUrl = fileUrl;
+            this.fileName = fileName;
+            this.orientation = orientation;
         }
 
-        public File getFile() {
-            return file;
+        public String getFileUrl() {
+            return fileUrl;
+        }
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public int getOrientation() {
+            return orientation;
         }
 
         public boolean isHasAssignedBoundingShapes() {
@@ -116,7 +130,7 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
 
         @Override
         public int hashCode() {
-            return Objects.hash(file, hasAssignedBoundingBoxes);
+            return Objects.hash(fileUrl, fileName, hasAssignedBoundingBoxes);
         }
 
         @Override
@@ -129,7 +143,7 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
                 return false;
             }
 
-            return Objects.equals(file, fileInfo.file) &&
+            return Objects.equals(fileUrl, fileInfo.fileUrl) && Objects.equals(fileName, fileInfo.fileName) &&
                     Objects.equals(hasAssignedBoundingBoxes, fileInfo.hasAssignedBoundingBoxes);
         }
     }
@@ -140,6 +154,7 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
         private final PseudoClass hasAssignedBoundingBoxesClass =
                 PseudoClass.getPseudoClass(HAS_ASSIGNED_BOUNDING_BOXES_CLASS_NAME);
         private final ImageView imageView = new ImageView();
+        private String currentImageUrl = null;
 
         private final BooleanProperty hasAssignedBoundingBoxes = new BooleanPropertyBase(true) {
             @Override
@@ -183,22 +198,43 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
                 hasAssignedBoundingBoxes.unbind();
             } else {
                 Image currentImage = imageView.getImage();
-                String fileURI = item.getFile().toURI().toString();
+                String fileURI = item.getFileUrl();
                 // Invalidate cache-object and cancel image-loading in case of a currently loading, not-selected image,
                 // that is not the same as the updated image.
-                if(currentImage != null && !currentImage.getUrl().equals(fileURI)
+                if(currentImage != null && !currentImageUrl.equals(fileURI)
                         && !isSelected() && currentImage.getProgress() != 1.0) {
-                    imageCache.invalidate(currentImage.getUrl());
+                    imageCache.invalidate(currentImageUrl);
                     currentImage.cancel();
                 }
                 // If this cell's ImageView does not contain an image or contains an image different to the
                 // image corresponding to this update's file, then update the image (i.e. set the image and start background-loading).
-                if(currentImage == null || !currentImage.getUrl().equals(fileURI)) {
+                if(currentImage == null || !currentImageUrl.equals(fileURI)) {
                     setGraphic(imageView);
-                    imageView.setImage(imageCache.get(fileURI));
-                }
-                setText(item.getFile().getName());
 
+                    Image newImage = imageCache.get(fileURI);
+
+                    if(item.getOrientation() != 1) {
+                        if(newImage.getProgress() == 1) {
+                            imageView.setImage(ImageUtils.reorientImage(newImage, item.getOrientation()));
+                        } else {
+                            ChangeListener<Number> progressListener = new ChangeListener<>() {
+                                @Override
+                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                                    if(newValue.intValue() == 1) {
+                                        imageView.setImage(ImageUtils.reorientImage(newImage, item.getOrientation()));
+                                        newImage.progressProperty().removeListener(this);
+                                    }
+                                }
+                            };
+
+                            newImage.progressProperty().addListener(progressListener);
+                        }
+                    } else {
+                        imageView.setImage(newImage);
+                    }
+                }
+                setText(item.getFileName());
+                currentImageUrl = item.getFileUrl();
                 hasAssignedBoundingBoxes.bind(item.hasAssignedBoundingBoxesProperty());
             }
         }

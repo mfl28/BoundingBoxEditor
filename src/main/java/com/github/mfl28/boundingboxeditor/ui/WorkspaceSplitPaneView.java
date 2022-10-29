@@ -311,8 +311,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                     editor.getEditorImagePane().removeBoundingShapesFromSceneGroup(c.getRemoved());
 
                     if(editor.getEditorImagePane().getCurrentBoundingShapes().isEmpty() &&
-                            editor.getEditorImagePane().getCurrentImage().getUrl().equals(
-                                    currentSelectedItem.getFile().toURI().toString())
+                            editor.getEditorImagePane().getCurrentImageUrl().equals(
+                                    currentSelectedItem.getFileUrl())
                     ) {
                         currentSelectedItem.setHasAssignedBoundingShapes(false);
                     }
@@ -325,6 +325,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         private static final int MAX_POPOVER_SIDE_LENGTH = 250;
         private final PauseTransition popoverDelayTransition = new PauseTransition(Duration.seconds(0.8));
         private TreeItem<Object> draggedItem;
+        private String currentImageUrl;
 
         @Override
         public TreeCell<Object> call(TreeView<Object> treeView) {
@@ -497,11 +498,13 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
         private void handlePopoverTimerFinished(ObjectTreeElementCell cell) {
             final Image currentImage = getEditor().getEditorImagePane().getCurrentImage();
+            final String currentEditorImageUrl = getEditor().getEditorImagePane().getCurrentImageUrl();
             final ImageView imageView = cell.getPopOverImageView();
 
             if(imageView.getImage() == null
-                    || !imageView.getImage().getUrl().equals(currentImage.getUrl())) {
+                    || !Objects.equals(currentImageUrl, currentEditorImageUrl)) {
                 imageView.setImage(currentImage);
+                currentImageUrl = currentEditorImageUrl;
             }
 
             final Rectangle2D relativeOutline =

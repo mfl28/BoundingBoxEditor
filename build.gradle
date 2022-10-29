@@ -100,6 +100,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.locationtech.jts/jts-core
     implementation 'org.locationtech.jts:jts-core:1.19.0'
+
+    // https://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor
+    implementation 'com.drewnoakes:metadata-extractor:2.18.0'
 }
 
 javafx {

@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
+import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.utils.MathUtils;
 import javafx.beans.Observable;
@@ -62,8 +63,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String IMAGE_PANE_ID = "image-pane-view";
     private static final String INITIALIZER_RECTANGLE_ID = "bounding-rectangle";
-    private static final int MAXIMUM_IMAGE_WIDTH = 3200;
-    private static final int MAXIMUM_IMAGE_HEIGHT = 2000;
+    private static final int MAXIMUM_IMAGE_WIDTH = 3072;
+    private static final int MAXIMUM_IMAGE_HEIGHT = 3072;
     private static final double ZOOM_SCALE_DELTA = 0.05;
 
     private final ImageView imageView = new ImageView();
@@ -88,6 +89,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private DrawingMode drawingMode = DrawingMode.BOX;
 
     private boolean freehandDrawingInProgress = false;
+    private String currentImageUrl = null;
 
     /**
      * Creates a new image-pane UI-element responsible for displaying the currently selected image on which the
@@ -384,19 +386,34 @@ public class EditorImagePaneView extends ScrollPane implements View {
     }
 
     /**
-     * Updates the displayed image from a provided image-{@link File}.
+     * Updates the displayed image from a provided {@link ImageMetaData} object.
      *
-     * @param imageFile the file of the new image
-     * @param width     the width of the new image
-     * @param height    the height of the new image
+     * @param imageMetaData Metadata of the image to load.
      */
-    void updateImageFromFile(File imageFile, double width, double height) {
-        Dimension2D dimension = calculateLoadedImageDimensions(width, height);
+    void updateImageFromMetaData(ImageMetaData imageMetaData) {
+        Dimension2D dimension = calculateLoadedImageDimensions(imageMetaData.getImageWidth(), imageMetaData.getImageHeight());
 
-        imageView.setImage(new Image(imageFile.toURI().toString(),
+        imageView.setImage(new Image(imageMetaData.getFileUrl(),
                 dimension.getWidth(), dimension.getHeight(), true, true, true));
 
+        currentImageUrl = imageMetaData.getFileUrl();
+
         resetImageViewSize();
+    }
+
+    /**
+     * Updates the currently shown image.
+     * @param image The image to show.
+     * @param url The URL of the corresponding image file.
+     */
+    public void updateImage(Image image, String url) {
+        imageView.setImage(image);
+        currentImageUrl = url;
+        resetImageViewSize();
+    }
+
+    public String getCurrentImageUrl() {
+        return currentImageUrl;
     }
 
     /**

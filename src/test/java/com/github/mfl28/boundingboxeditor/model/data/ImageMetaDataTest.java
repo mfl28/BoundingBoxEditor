@@ -36,4 +36,19 @@ class ImageMetaDataTest {
         final ImageMetaData imageMetaData = new ImageMetaData("test");
         Assertions.assertEquals("[]", imageMetaData.getDimensionsString());
     }
+
+    @Test
+    void onGetOrientedDimensions_ShouldTakeOrientationIntoAccount() {
+        for(int i = 1; i <= 8; ++i) {
+            ImageMetaData imageMetaData = new ImageMetaData("test", "testDir", "./test/testDir", 100, 50, 3, i);
+
+            if(i < 5) {
+                Assertions.assertEquals(100, imageMetaData.getOrientedWidth());
+                Assertions.assertEquals(50, imageMetaData.getOrientedHeight());
+            } else {
+                Assertions.assertEquals(100, imageMetaData.getOrientedHeight());
+                Assertions.assertEquals(50, imageMetaData.getOrientedWidth());
+            }
+        }
+    }
 }

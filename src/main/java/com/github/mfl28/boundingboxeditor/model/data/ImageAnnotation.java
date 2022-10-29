@@ -94,21 +94,12 @@ public class ImageAnnotation {
     }
 
     /**
-     * Returns the width of the annotated image.
-     *
-     * @return the width of the image
-     */
-    public double getImageWidth() {
-        return imageMetaData.getImageWidth();
-    }
-
-    /**
-     * Returns the height of the annotated image.
+     * Returns the height of the oriented annotated image.
      *
      * @return the height of the image
      */
-    public double getImageHeight() {
-        return imageMetaData.getImageHeight();
+    public double getOrientedImageHeight() {
+        return imageMetaData.getOrientedHeight();
     }
 
     /**
@@ -118,6 +109,15 @@ public class ImageAnnotation {
      */
     public int getImageDepth() {
         return imageMetaData.getImageDepth();
+    }
+
+    /**
+     * Returns the width of the oriented annotated image.
+     *
+     * @return the width of the image
+     */
+    public double getOrientedImageWidth() {
+        return imageMetaData.getOrientedWidth();
     }
 
     /**

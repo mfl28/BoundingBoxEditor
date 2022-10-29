@@ -20,6 +20,7 @@ package com.github.mfl28.boundingboxeditor.model.io;
 
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotationData;
+import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationExportResult;
@@ -49,6 +50,12 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String BOUNDS_MIN_Y_SERIALIZED_NAME = "minY";
     private static final String BOUNDS_MAX_X_SERIALIZED_NAME = "maxX";
     private static final String BOUNDS_MAX_Y_SERIALIZED_NAME = "maxY";
+    private static final String FILE_NAME_SERIALIZED_NAM = "fileName";
+    private static final String FOLDER_NAME_SERIALIZED_NAME = "folderName";
+    private static final String WIDTH_SERIALIZED_NAME = "width";
+    private static final String HEIGHT_SERIALIZED_NAME = "height";
+    private static final String DEPTH_SERIALIZED_NAME = "depth";
+    private static final String DETAILS_SERIALIZED_NAME = "details";
 
     @Override
     public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
@@ -59,28 +66,43 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
         final Gson gson = new GsonBuilder()
                 .setPrettyPrinting()
                 .registerTypeAdapter(ImageAnnotationData.class,
-                                     (JsonSerializer<ImageAnnotationData>) (src, typeOfSrc, context) -> {
-                                         JsonArray serializedAnnotations = new JsonArray();
+                        (JsonSerializer<ImageAnnotationData>) (src, typeOfSrc, context) -> {
+                            JsonArray serializedAnnotations = new JsonArray();
 
-                                         for(ImageAnnotation annotation : src.imageAnnotations()) {
-                                             serializedAnnotations.add(context.serialize(annotation));
-                                             progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() /
-                                                                  totalNrAnnotations);
-                                         }
+                            for(ImageAnnotation annotation : src.imageAnnotations()) {
+                                serializedAnnotations.add(context.serialize(annotation));
+                                progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() /
+                                        totalNrAnnotations);
+                            }
 
-                                         return serializedAnnotations;
-                                     })
+                            return serializedAnnotations;
+                        })
                 .registerTypeAdapter(ObjectCategory.class,
-                                     (JsonSerializer<ObjectCategory>) (src, typeOfSrc, context) -> {
-                                         JsonObject categoryObject = new JsonObject();
-                                         categoryObject.add(OBJECT_CATEGORY_SERIALIZED_NAME,
-                                                            context.serialize(src.getName()));
-                                         categoryObject.add(OBJECT_COLOR_SERIALIZED_NAME,
-                                                            context.serialize(
-                                                                    ColorUtils.colorToHexString(src.getColor())));
+                        (JsonSerializer<ObjectCategory>) (src, typeOfSrc, context) -> {
+                            JsonObject categoryObject = new JsonObject();
+                            categoryObject.add(OBJECT_CATEGORY_SERIALIZED_NAME,
+                                    context.serialize(src.getName()));
+                            categoryObject.add(OBJECT_COLOR_SERIALIZED_NAME,
+                                    context.serialize(
+                                            ColorUtils.colorToHexString(src.getColor())));
 
-                                         return categoryObject;
-                                     })
+                            return categoryObject;
+                        })
+                .registerTypeAdapter(ImageMetaData.class,
+                        (JsonSerializer<ImageMetaData>) (src, typeOfSrc, context) -> {
+                            JsonObject imageMetaDataObject = new JsonObject();
+                            imageMetaDataObject.add(FILE_NAME_SERIALIZED_NAM, context.serialize(src.getFileName()));
+
+                            JsonObject imageMetaDataDetailsObject = new JsonObject();
+                            imageMetaDataDetailsObject.add(FOLDER_NAME_SERIALIZED_NAME, context.serialize(src.getFolderName()));
+                            imageMetaDataDetailsObject.add(WIDTH_SERIALIZED_NAME, context.serialize(src.getOrientedWidth()));
+                            imageMetaDataDetailsObject.add(HEIGHT_SERIALIZED_NAME, context.serialize(src.getOrientedHeight()));
+                            imageMetaDataDetailsObject.add(DEPTH_SERIALIZED_NAME, context.serialize(src.getImageDepth()));
+
+                            imageMetaDataObject.add(DETAILS_SERIALIZED_NAME, imageMetaDataDetailsObject);
+
+                            return imageMetaDataObject;
+                        })
                 .registerTypeHierarchyAdapter(Bounds.class, (JsonSerializer<Bounds>) (src, typeOfSrc, context) -> {
                     JsonObject boundsObject = new JsonObject();
                     boundsObject.add(BOUNDS_MIN_X_SERIALIZED_NAME, context.serialize(src.getMinX()));

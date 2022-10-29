@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
+import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -29,7 +30,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-import java.io.File;
 import java.util.List;
 
 /**
@@ -64,14 +64,16 @@ public class ImageFileExplorerView extends VBox implements View {
     }
 
     /**
-     * Sets the image-files to display in the {@link ImageFileListView} member.
+     * Sets the image-meta-data of the images to display.
      *
-     * @param imageFiles the list of image-files
+     * @param imageMetaData the list of image-meta data elements
      */
-    public void setImageFiles(List<File> imageFiles) {
+    public void setImageMetaData(List<ImageMetaData> imageMetaData) {
         ObservableList<ImageFileListView.FileInfo> imageInfoItems = FXCollections.unmodifiableObservableList(
-                FXCollections.observableList(imageFiles.stream()
-                                                       .map(ImageFileListView.FileInfo::new)
+                FXCollections.observableList(imageMetaData.stream()
+                                                       .map(imageMetaDataElement -> new ImageFileListView.FileInfo(imageMetaDataElement.getFileUrl(),
+                                                               imageMetaDataElement.getFileName(),
+                                                               imageMetaDataElement.getOrientation()))
                                                        .toList())
         );
 
@@ -122,7 +124,7 @@ public class ImageFileExplorerView extends VBox implements View {
         imageFileSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null) {
                 imageFileListView.getItems().stream()
-                                 .filter(item -> item.getFile().getName().startsWith(newValue))
+                                 .filter(item -> item.getFileName().startsWith(newValue))
                                  .findAny()
                                  .ifPresent(item -> {
                                      // We have to temporarily set a fixed cell size, otherwise

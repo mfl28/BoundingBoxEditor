@@ -81,23 +81,23 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             AtomicInteger nrProcessedFiles = new AtomicInteger(0);
 
             List<ImageAnnotation> imageAnnotations = annotationFiles.parallelStream()
-                                                                    .map(file -> {
-                                                                        progress.set(1.0 * nrProcessedFiles
-                                                                                .incrementAndGet() / totalNrOfFiles);
+                    .map(file -> {
+                        progress.set(1.0 * nrProcessedFiles
+                                .incrementAndGet() / totalNrOfFiles);
 
-                                                                        try {
-                                                                            return parseAnnotationFile(file);
-                                                                        } catch(SAXException | IOException | InvalidAnnotationFormatException
-                                                                                | ParserConfigurationException | AnnotationToNonExistentImageException e) {
-                                                                            unParsedFileErrorMessages
-                                                                                    .add(new IOErrorInfoEntry(
-                                                                                            file.getName(),
-                                                                                            e.getMessage()));
-                                                                            return null;
-                                                                        }
-                                                                    })
-                                                                    .filter(Objects::nonNull)
-                                                                    .toList();
+                        try {
+                            return parseAnnotationFile(file);
+                        } catch(SAXException | IOException | InvalidAnnotationFormatException
+                                | ParserConfigurationException | AnnotationToNonExistentImageException e) {
+                            unParsedFileErrorMessages
+                                    .add(new IOErrorInfoEntry(
+                                            file.getName(),
+                                            e.getMessage()));
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
 
             return new ImageAnnotationImportResult(
                     imageAnnotations.size(),
@@ -108,7 +108,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private ImageAnnotation parseAnnotationFile(File file) throws SAXException, IOException,
-                                                                  ParserConfigurationException {
+            ParserConfigurationException {
         documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
         documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
         final Document document = documentBuilderFactory.newDocumentBuilder().parse(file);
@@ -139,7 +139,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         double height = parseDoubleElement(document, "height");
         int depth = parseIntElement(document, "depth");
 
-        return new ImageMetaData(fileName, folderName, width, height, depth);
+        return new ImageMetaData(fileName, folderName, null, width, height, depth);
     }
 
     private List<BoundingShapeData> parseBoundingShapeData(Document document, String filename,
@@ -197,8 +197,8 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         boxDataParseResult.validateCoordinates(imageMetaData);
 
         ObjectCategory category = categoryNameToCategoryMap.computeIfAbsent(boxDataParseResult.getCategoryName(),
-                                                                            key -> new ObjectCategory(key, ColorUtils
-                                                                                    .createRandomColor()));
+                key -> new ObjectCategory(key, ColorUtils
+                        .createRandomColor()));
 
         boundingShapeCountPerCategory.merge(category.getName(), 1, Integer::sum);
 
@@ -206,18 +206,18 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
         if(boxDataParseResult.isBoundingBox()) {
             boundingShapeData = new BoundingBoxData(category,
-                                                    boxDataParseResult.getMinX() / imageMetaData.getImageWidth(),
-                                                    boxDataParseResult.getMinY() / imageMetaData.getImageHeight(),
-                                                    boxDataParseResult.getMaxX() / imageMetaData.getImageWidth(),
-                                                    boxDataParseResult.getMaxY() / imageMetaData.getImageHeight(),
-                                                    boxDataParseResult.getTags());
+                    boxDataParseResult.getMinX() / imageMetaData.getImageWidth(),
+                    boxDataParseResult.getMinY() / imageMetaData.getImageHeight(),
+                    boxDataParseResult.getMaxX() / imageMetaData.getImageWidth(),
+                    boxDataParseResult.getMaxY() / imageMetaData.getImageHeight(),
+                    boxDataParseResult.getTags());
         } else {
             boundingShapeData = new BoundingPolygonData(category,
-                                                        BoundingPolygonData.absoluteToRelativePoints(
-                                                                boxDataParseResult.getPoints(),
-                                                                imageMetaData.getImageWidth(),
-                                                                imageMetaData.getImageHeight()),
-                                                        boxDataParseResult.getTags());
+                    BoundingPolygonData.absoluteToRelativePoints(
+                            boxDataParseResult.getPoints(),
+                            imageMetaData.getImageWidth(),
+                            imageMetaData.getImageHeight()),
+                    boxDataParseResult.getTags());
         }
 
         // Now parse parts.
