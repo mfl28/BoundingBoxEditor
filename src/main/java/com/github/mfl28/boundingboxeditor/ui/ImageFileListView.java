@@ -210,32 +210,33 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
                 // image corresponding to this update's file, then update the image (i.e. set the image and start background-loading).
                 if(currentImage == null || !currentImageUrl.equals(fileURI)) {
                     setGraphic(imageView);
-
-                    Image newImage = imageCache.get(fileURI);
-
-                    if(item.getOrientation() != 1) {
-                        if(newImage.getProgress() == 1) {
-                            imageView.setImage(ImageUtils.reorientImage(newImage, item.getOrientation()));
-                        } else {
-                            ChangeListener<Number> progressListener = new ChangeListener<>() {
-                                @Override
-                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                                    if(newValue.intValue() == 1) {
-                                        imageView.setImage(ImageUtils.reorientImage(newImage, item.getOrientation()));
-                                        newImage.progressProperty().removeListener(this);
-                                    }
-                                }
-                            };
-
-                            newImage.progressProperty().addListener(progressListener);
-                        }
-                    } else {
-                        imageView.setImage(newImage);
-                    }
+                    updateCellImage(item, imageCache.get(fileURI));
                 }
                 setText(item.getFileName());
                 currentImageUrl = item.getFileUrl();
                 hasAssignedBoundingBoxes.bind(item.hasAssignedBoundingBoxesProperty());
+            }
+        }
+
+        private void updateCellImage(FileInfo item, Image newImage) {
+            if(item.getOrientation() != 1) {
+                if(newImage.getProgress() == 1) {
+                    imageView.setImage(ImageUtils.reorientImage(newImage, item.getOrientation()));
+                } else {
+                    ChangeListener<Number> progressListener = new ChangeListener<>() {
+                        @Override
+                        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                            if(newValue.intValue() == 1) {
+                                imageView.setImage(ImageUtils.reorientImage(newImage, item.getOrientation()));
+                                newImage.progressProperty().removeListener(this);
+                            }
+                        }
+                    };
+
+                    newImage.progressProperty().addListener(progressListener);
+                }
+            } else {
+                imageView.setImage(newImage);
             }
         }
     }

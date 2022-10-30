@@ -31,7 +31,6 @@ import com.github.mfl28.boundingboxeditor.ui.settings.UISettingsView;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -48,9 +47,6 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.controlsfx.dialog.ExceptionDialog;
 
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;

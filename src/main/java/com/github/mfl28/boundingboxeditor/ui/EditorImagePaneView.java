@@ -45,7 +45,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.ClosePath;
 import javafx.scene.shape.Rectangle;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
