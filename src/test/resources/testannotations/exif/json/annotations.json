@@ -1,0 +1,191 @@
+[
+  {
+    "image": {
+      "fileName": "2.jpg",
+      "details": {
+        "folderName": "ExifJpeg",
+        "width": 40.0,
+        "height": 80.0,
+        "depth": 3
+      }
+    },
+    "objects": [
+      {
+        "bndbox": {
+          "minX": 0.24948,
+          "minY": 0.199584,
+          "maxX": 0.49896,
+          "maxY": 0.399168
+        },
+        "category": {
+          "name": "test",
+          "color": "#0000FF"
+        },
+        "tags": [],
+        "parts": []
+      }
+    ]
+  },
+  {
+    "image": {
+      "fileName": "3.jpg",
+      "details": {
+        "folderName": "ExifJpeg",
+        "width": 40.0,
+        "height": 80.0,
+        "depth": 3
+      }
+    },
+    "objects": [
+      {
+        "bndbox": {
+          "minX": 0.24948,
+          "minY": 0.199584,
+          "maxX": 0.49896,
+          "maxY": 0.399168
+        },
+        "category": {
+          "name": "test",
+          "color": "#0000FF"
+        },
+        "tags": [],
+        "parts": []
+      }
+    ]
+  },
+  {
+    "image": {
+      "fileName": "4.jpg",
+      "details": {
+        "folderName": "ExifJpeg",
+        "width": 40.0,
+        "height": 80.0,
+        "depth": 3
+      }
+    },
+    "objects": [
+      {
+        "bndbox": {
+          "minX": 0.24948,
+          "minY": 0.199584,
+          "maxX": 0.49896,
+          "maxY": 0.399168
+        },
+        "category": {
+          "name": "test",
+          "color": "#0000FF"
+        },
+        "tags": [],
+        "parts": []
+      }
+    ]
+  },
+  {
+    "image": {
+      "fileName": "6.jpg",
+      "details": {
+        "folderName": "ExifJpeg",
+        "width": 40.0,
+        "height": 80.0,
+        "depth": 3
+      }
+    },
+    "objects": [
+      {
+        "bndbox": {
+          "minX": 0.24948,
+          "minY": 0.199584,
+          "maxX": 0.49896,
+          "maxY": 0.399168
+        },
+        "category": {
+          "name": "test",
+          "color": "#0000FF"
+        },
+        "tags": [],
+        "parts": []
+      }
+    ]
+  },
+  {
+    "image": {
+      "fileName": "7.jpg",
+      "details": {
+        "folderName": "ExifJpeg",
+        "width": 40.0,
+        "height": 80.0,
+        "depth": 3
+      }
+    },
+    "objects": [
+      {
+        "bndbox": {
+          "minX": 0.24948,
+          "minY": 0.199584,
+          "maxX": 0.49896,
+          "maxY": 0.399168
+        },
+        "category": {
+          "name": "test",
+          "color": "#0000FF"
+        },
+        "tags": [],
+        "parts": []
+      }
+    ]
+  },
+  {
+    "image": {
+      "fileName": "5.jpg",
+      "details": {
+        "folderName": "ExifJpeg",
+        "width": 40.0,
+        "height": 80.0,
+        "depth": 3
+      }
+    },
+    "objects": [
+      {
+        "bndbox": {
+          "minX": 0.24948,
+          "minY": 0.199584,
+          "maxX": 0.49896,
+          "maxY": 0.399168
+        },
+        "category": {
+          "name": "test",
+          "color": "#0000FF"
+        },
+        "tags": [],
+        "parts": []
+      }
+    ]
+  },
+  {
+    "image": {
+      "fileName": "1.jpg",
+      "details": {
+        "folderName": "ExifJpeg",
+        "width": 40.0,
+        "height": 80.0,
+        "depth": 3
+      }
+    },
+    "objects": [
+      {
+        "bndbox": {
+          "minX": 0.24948,
+          "minY": 0.199584,
+          "maxX": 0.49896,
+          "maxY": 0.399168
+        },
+        "category": {
+          "name": "test",
+          "color": "#0000FF"
+        },
+        "tags": [],
+        "parts": []
+      }
+    ]
+  }
+]

@@ -157,9 +157,9 @@ public class Model {
         String fileName = imageFileNameToFile.get(fileIndex);
 
         ImageAnnotation imageAnnotation = imageFileNameToAnnotation.getOrDefault(fileName,
-                                                                                 new ImageAnnotation(
-                                                                                         imageFileNameToMetaData
-                                                                                                 .get(fileName)));
+                new ImageAnnotation(
+                        imageFileNameToMetaData
+                                .get(fileName)));
 
         if(!boundingShapeData.isEmpty()) {
             if(!imageAnnotation.getBoundingShapeData().equals(boundingShapeData)) {
@@ -191,7 +191,7 @@ public class Model {
                                        IOResult.OperationType operationType) {
         boolean noCurrentAnnotations =
                 imageFileNameToAnnotation.values().stream()
-                                         .allMatch(imageAnnotation -> imageAnnotation.getBoundingShapeData().isEmpty());
+                        .allMatch(imageAnnotation -> imageAnnotation.getBoundingShapeData().isEmpty());
         boolean boundingShapesAdded = false;
 
         for(final ImageAnnotation annotation : imageAnnotations) {
@@ -219,27 +219,27 @@ public class Model {
 
     public ImageMetaData getCurrentImageMetaData() {
         return imageFileNameToMetaData.computeIfAbsent(getCurrentImageFileName(),
-                                                       key -> {
-                                                           ImageMetaData newMetaData;
+                key -> {
+                    ImageMetaData newMetaData;
 
-                                                           try {
-                                                               newMetaData =
-                                                                       ImageMetaData.fromFile(getCurrentImageFile());
-                                                           } catch(IOException e) {
-                                                               throw new UncheckedIOException(e);
-                                                           }
+                    try {
+                        newMetaData =
+                                ImageMetaData.fromFile(getCurrentImageFile());
+                    } catch(IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
 
-                                                           ImageAnnotation currentImageAnnotation =
-                                                                   getCurrentImageAnnotation();
+                    ImageAnnotation currentImageAnnotation =
+                            getCurrentImageAnnotation();
 
-                                                           if(currentImageAnnotation != null &&
-                                                                   !currentImageAnnotation.getImageMetaData()
-                                                                                          .hasDetails()) {
-                                                               currentImageAnnotation.setImageMetaData(newMetaData);
-                                                           }
+                    if(currentImageAnnotation != null &&
+                            !currentImageAnnotation.getImageMetaData()
+                                    .hasDetails()) {
+                        currentImageAnnotation.setImageMetaData(newMetaData);
+                    }
 
-                                                           return newMetaData;
-                                                       });
+                    return newMetaData;
+                });
     }
 
     /**
@@ -303,7 +303,7 @@ public class Model {
      */
     public ImageAnnotationData createImageAnnotationData() {
         return new ImageAnnotationData(imageFileNameToAnnotation.values(), categoryToAssignedBoundingShapesCount,
-                                       getCategoryNameToCategoryMap());
+                getCategoryNameToCategoryMap());
     }
 
     /**
@@ -451,10 +451,14 @@ public class Model {
         return Collections.unmodifiableList(imageFileNameToFile.valueList());
     }
 
+    public List<ImageMetaData> getImageMetaDataList() {
+        return imageFileNameToFile.valueList().stream().map(file -> imageFileNameToMetaData.get(file.getName())).toList();
+    }
+
     public void setImageFiles(Collection<File> imageFiles) {
         imageFileNameToFile = ListOrderedMap.listOrderedMap(imageFiles.parallelStream()
-                                                                      .collect(LinkedHashMap::new, (map, item) -> map
-                                                                              .put(item.getName(), item), Map::putAll));
+                .collect(LinkedHashMap::new, (map, item) -> map
+                        .put(item.getName(), item), Map::putAll));
 
         nrImageFiles.set(imageFileNameToFile.size());
         fileIndex.set(0);
@@ -491,20 +495,20 @@ public class Model {
 
     public Map<String, ObjectCategory> getCategoryNameToCategoryMap() {
         return objectCategories.stream()
-                               .collect(Collectors.toMap(ObjectCategory::getName, Function.identity()));
+                .collect(Collectors.toMap(ObjectCategory::getName, Function.identity()));
     }
 
     private Map<String, Integer> createMergedCategoryToBoundingShapeCountMap(Map<String, Integer> toMerge) {
         return Stream.of(categoryToAssignedBoundingShapesCount, toMerge)
-                     .map(Map::entrySet)
-                     .flatMap(Collection::stream)
-                     .collect(
-                             Collectors.toMap(
-                                     Map.Entry::getKey,
-                                     Map.Entry::getValue,
-                                     Integer::sum
-                             )
-                     );
+                .map(Map::entrySet)
+                .flatMap(Collection::stream)
+                .collect(
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                Map.Entry::getValue,
+                                Integer::sum
+                        )
+                );
     }
 
     private void updateObjectCategoriesFromData(Map<String, ObjectCategory> categoryNameToCategoryMap) {

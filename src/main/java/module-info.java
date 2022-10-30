@@ -37,6 +37,7 @@ module com.github.mfl28.boundingboxeditor {
     requires jersey.media.multipart;
     requires org.jvnet.mimepull;
     requires org.locationtech.jts;
+    requires metadata.extractor;
 
     opens com.github.mfl28.boundingboxeditor.model to javafx.base, com.google.gson;
     opens com.github.mfl28.boundingboxeditor.model.data to javafx.base, com.google.gson;

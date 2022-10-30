@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<annotation>
+    <folder>ExifJpeg</folder>
+    <filename>2.jpg</filename>
+    <size>
+        <width>40</width>
+        <height>80</height>
+        <depth>3</depth>
+    </size>
+    <object>
+        <name>test</name>
+        <difficult>0</difficult>
+        <occluded>0</occluded>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <bndbox>
+            <xmin>9.98</xmin>
+            <xmax>19.96</xmax>
+            <ymin>15.97</ymin>
+            <ymax>31.93</ymax>
+        </bndbox>
+    </object>
+</annotation>

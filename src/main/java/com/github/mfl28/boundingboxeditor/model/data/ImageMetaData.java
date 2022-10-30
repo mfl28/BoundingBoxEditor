@@ -18,6 +18,11 @@
  */
 package com.github.mfl28.boundingboxeditor.model.data;
 
+import com.drew.imaging.jpeg.JpegMetadataReader;
+import com.drew.imaging.jpeg.JpegProcessingException;
+import com.drew.metadata.MetadataException;
+import com.drew.metadata.exif.ExifDirectoryBase;
+import com.drew.metadata.exif.ExifIFD0Directory;
 import com.google.gson.annotations.SerializedName;
 
 import javax.imageio.ImageIO;
@@ -25,6 +30,7 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -37,6 +43,7 @@ public final class ImageMetaData {
     private static final String NOT_AN_IMAGE_FILE_ERROR_MESSAGE = "Not an image file.";
     private static final String UNSUPPORTED_IMAGE_FORMAT_ERROR_MESSAGE = "Unsupported image file format.";
     private static final String INVALID_IMAGE_FILE_ERROR_MESSAGE = "Invalid image file.";
+    private static final String JPEG_READ_ERROR_MESSAGE = "Cannot read JPEG metadata.";
     private final String fileName;
     private ImageMetaDataDetails details;
 
@@ -49,9 +56,14 @@ public final class ImageMetaData {
      * @param imageHeight the height of the image
      * @param imageDepth  the depth (= number of channels) of the image
      */
-    public ImageMetaData(String fileName, String folderName, double imageWidth, double imageHeight, int imageDepth) {
+    public ImageMetaData(String fileName, String folderName, String url, double imageWidth, double imageHeight, int imageDepth) {
         this.fileName = fileName;
-        this.details = new ImageMetaDataDetails(folderName, imageWidth, imageHeight, imageDepth);
+        this.details = new ImageMetaDataDetails(folderName, url, imageWidth, imageHeight, imageDepth, 1);
+    }
+
+    public ImageMetaData(String fileName, String folderName, String url, double imageWidth, double imageHeight, int imageDepth, int orientation) {
+        this.fileName = fileName;
+        this.details = new ImageMetaDataDetails(folderName, url, imageWidth, imageHeight, imageDepth, orientation);
     }
 
     public ImageMetaData(String fileName) {
@@ -67,7 +79,8 @@ public final class ImageMetaData {
     public static ImageMetaData fromFile(File imageFile) throws IOException {
         ImageDimensions imageDimensions = readImageDimensionsFromFile(imageFile);
         return new ImageMetaData(imageFile.getName(), imageFile.toPath().getParent().toFile().getName(),
-                                 imageDimensions.width(), imageDimensions.height(), imageDimensions.depth());
+                imageFile.toURI().toString(),
+                imageDimensions.width(), imageDimensions.height(), imageDimensions.depth(), imageDimensions.orientation());
     }
 
     /**
@@ -79,6 +92,14 @@ public final class ImageMetaData {
         return details.imageWidth;
     }
 
+    public double getOrientedWidth() {
+        if(details.orientation >= 5) {
+            return getImageHeight();
+        }
+
+        return getImageWidth();
+    }
+
     /**
      * Returns the height of the image.
      *
@@ -88,6 +109,14 @@ public final class ImageMetaData {
         return details.imageHeight;
     }
 
+    public double getOrientedHeight() {
+        if(details.orientation >= 5) {
+            return getImageWidth();
+        }
+
+        return getImageHeight();
+    }
+
     /**
      * Returns the depth (= number of channels) of the image.
      *
@@ -95,6 +124,10 @@ public final class ImageMetaData {
      */
     public int getImageDepth() {
         return details.imageDepth;
+    }
+
+    public int getOrientation() {
+        return details.orientation;
     }
 
     /**
@@ -113,6 +146,10 @@ public final class ImageMetaData {
      */
     public String getFolderName() {
         return details.folderName;
+    }
+
+    public String getFileUrl() {
+        return details.url;
     }
 
     public boolean hasDetails() {
@@ -137,14 +174,15 @@ public final class ImageMetaData {
             return "[]";
         }
 
-        return "[" + (int) getImageWidth() + " x " + (int) getImageHeight() + "]";
+        return "[" + (int) getOrientedWidth() + " x " + (int) getOrientedHeight() + "]";
     }
 
     private static ImageDimensions readImageDimensionsFromFile(File imageFile) throws IOException {
         double width;
         double height;
         int numComponents;
-        // Source: https://stackoverflow.com/a/1560052
+        int orientation = 1;
+
         try(ImageInputStream imageStream = ImageIO.createImageInputStream(imageFile)) {
             if(imageStream == null) {
                 throw new NotAnImageFileException(NOT_AN_IMAGE_FILE_ERROR_MESSAGE);
@@ -166,6 +204,18 @@ public final class ImageMetaData {
                     width = reader.getWidth(0);
                     height = reader.getHeight(0);
                     numComponents = reader.getRawImageType(0).getNumComponents();
+
+                    if(imageFormatName.equals("jpeg")) {
+                        try {
+                            final ExifIFD0Directory exifDirectory = JpegMetadataReader.readMetadata(imageFile).getFirstDirectoryOfType(ExifIFD0Directory.class);
+
+                            if(exifDirectory != null && exifDirectory.containsTag(ExifDirectoryBase.TAG_ORIENTATION)) {
+                                orientation = exifDirectory.getInt(ExifDirectoryBase.TAG_ORIENTATION);
+                            }
+                        } catch(JpegProcessingException | MetadataException | IOException exception) {
+                            throw new UnsupportedImageFileException(JPEG_READ_ERROR_MESSAGE);
+                        }
+                    }
                 } finally {
                     reader.dispose();
                 }
@@ -174,35 +224,17 @@ public final class ImageMetaData {
             }
         }
 
-        return new ImageDimensions(width, height, numComponents);
+        return new ImageDimensions(width, height, numComponents, orientation);
     }
 
-    private record ImageMetaDataDetails(String folderName, @SerializedName("width") double imageWidth,
+    private record ImageMetaDataDetails(String folderName, String url, @SerializedName("width") double imageWidth,
                                         @SerializedName("height") double imageHeight,
-                                        @SerializedName("depth") int imageDepth) {
-
-        @Override
-            public int hashCode() {
-                return Objects.hash(imageWidth, imageHeight, imageDepth);
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                if(this == o) {
-                    return true;
-                }
-
-                if(!(o instanceof ImageMetaDataDetails that)) {
-                    return false;
-                }
-
-                return Double.compare(that.imageWidth, imageWidth) == 0 &&
-                        Double.compare(that.imageHeight, imageHeight) == 0 &&
-                        imageDepth == that.imageDepth;
-            }
-        }
+                                        @SerializedName("depth") int imageDepth,
+                                        int orientation) {
+    }
 
     public static class NotAnImageFileException extends RuntimeException {
+        @Serial
         private static final long serialVersionUID = 5256590447321177896L;
 
         public NotAnImageFileException(String errorMessage) {
@@ -211,6 +243,7 @@ public final class ImageMetaData {
     }
 
     public static class UnsupportedImageFileException extends RuntimeException {
+        @Serial
         private static final long serialVersionUID = -4143199502921469708L;
 
         public UnsupportedImageFileException(String errorMessage) {
@@ -218,6 +251,6 @@ public final class ImageMetaData {
         }
     }
 
-    private record ImageDimensions(double width, double height, int depth) {
+    private record ImageDimensions(double width, double height, int depth, int orientation) {
     }
 }

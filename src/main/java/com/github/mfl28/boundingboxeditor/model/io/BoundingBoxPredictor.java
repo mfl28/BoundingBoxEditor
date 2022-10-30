@@ -24,6 +24,7 @@ import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredic
 import com.github.mfl28.boundingboxeditor.model.io.results.BoundingBoxPredictionResult;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
+import com.github.mfl28.boundingboxeditor.utils.ImageUtils;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -57,9 +58,7 @@ public class BoundingBoxPredictor {
 
             final List<BoundingBoxPredictionEntry> boundingBoxPredictions;
 
-            try(final InputStream inputStream = createInputStream(imageFile,
-                                                                  imageMetaData.getImageWidth(),
-                                                                  imageMetaData.getImageHeight())) {
+            try(final InputStream inputStream = createInputStream(imageFile, imageMetaData)) {
                 boundingBoxPredictions = client.predict(inputStream);
             } catch(FileNotFoundException e) {
                 errorInfoEntries.add(new IOErrorInfoEntry(imageFile.getName(), NON_EXISTENT_IMAGE_ERROR_MESSAGE));
@@ -80,45 +79,50 @@ public class BoundingBoxPredictor {
             final ImageAnnotation imageAnnotation = new ImageAnnotation(imageMetaData);
 
             final PredictionExtractor predictionExtractor = new PredictionExtractor(existingCategoryNameToCategoryMap,
-                                                                                    categoryToCount);
+                    categoryToCount);
 
             imageAnnotation.getBoundingShapeData()
-                           .addAll(boundingBoxPredictions.stream()
-                                   .filter(prediction ->
-                                           Double.compare(prediction.score(),
-                                                   predictorConfig
-                                                           .getMinimumScore()) >=
-                                                   0)
-                                   .map(predictionExtractor::extract).toList());
+                    .addAll(boundingBoxPredictions.stream()
+                            .filter(prediction ->
+                                    Double.compare(prediction.score(),
+                                            predictorConfig
+                                                    .getMinimumScore()) >=
+                                            0)
+                            .map(predictionExtractor::extract).toList());
 
             return new BoundingBoxPredictionResult(1, errorInfoEntries,
-                                                   new ImageAnnotationData(List.of(imageAnnotation), categoryToCount,
-                                                                           existingCategoryNameToCategoryMap));
+                    new ImageAnnotationData(List.of(imageAnnotation), categoryToCount,
+                            existingCategoryNameToCategoryMap));
         });
     }
 
-    private InputStream createInputStream(File imageFile, double originalImageWidth,
-                                          double originalImageHeight) throws IOException {
+    private InputStream createInputStream(File imageFile, ImageMetaData imageMetaData) throws IOException {
         if(shouldResize()) {
-            final Image image = new Image(imageFile.toURI().toString(),
-                                          predictorConfig.getImageResizeWidth(),
-                                          predictorConfig.getImageResizeHeight(),
-                                          predictorConfig.getImageResizeKeepRatio(),
-                                          true,
-                                          false);
+            Image image = new Image(
+                    imageFile.toURI().toString(),
+                    imageMetaData.getOrientation() < 5 ? predictorConfig.getImageResizeWidth() : predictorConfig.getImageResizeHeight(),
+                    imageMetaData.getOrientation() < 5 ? predictorConfig.getImageResizeHeight() : predictorConfig.getImageResizeWidth(),
+                    predictorConfig.getImageResizeKeepRatio(),
+                    true,
+                    false);
+
+            if(imageMetaData.getOrientation() != 1) {
+                image = ImageUtils.reorientImage(image, imageMetaData.getOrientation());
+            }
 
             predictedImageWidth = image.getWidth();
             predictedImageHeight = image.getHeight();
 
-            final BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
-
-            try(final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                ImageIO.write(bufferedImage, DEFAULT_IMAGE_STREAM_FORMAT_NAME, outputStream);
-                return new ByteArrayInputStream(outputStream.toByteArray());
-            }
+            return imageToInputStream(image);
         } else {
-            predictedImageWidth = originalImageWidth;
-            predictedImageHeight = originalImageHeight;
+            predictedImageWidth = imageMetaData.getOrientedWidth();
+            predictedImageHeight = imageMetaData.getOrientedHeight();
+
+            if(imageMetaData.getOrientation() != 1) {
+                final Image image = new Image(imageFile.toURI().toString(), false);
+                return imageToInputStream(ImageUtils.reorientImage(image, imageMetaData.getOrientation()));
+            }
+
             return new FileInputStream(imageFile);
         }
     }
@@ -126,6 +130,15 @@ public class BoundingBoxPredictor {
     private boolean shouldResize() {
         return predictorConfig.isResizeImages() &&
                 !(predictorConfig.getImageResizeWidth() == 0 && predictorConfig.getImageResizeHeight() == 0);
+    }
+
+    private InputStream imageToInputStream(Image image) throws IOException {
+        final BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+
+        try(final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            ImageIO.write(bufferedImage, DEFAULT_IMAGE_STREAM_FORMAT_NAME, outputStream);
+            return new ByteArrayInputStream(outputStream.toByteArray());
+        }
     }
 
     private class PredictionExtractor {
@@ -155,7 +168,7 @@ public class BoundingBoxPredictor {
             if(predictorConfig.isMergeCategories()) {
                 objectCategory = mergedCategoryNameToCategoryMap.computeIfAbsent(predictedCategory, key -> {
                     final ObjectCategory newCategory = new ObjectCategory(predictedCategory,
-                                                                          ColorUtils.createRandomColor());
+                            ColorUtils.createRandomColor());
                     existingCategoryNameToCategoryMap.put(predictedCategory, newCategory);
                     return newCategory;
                 });
