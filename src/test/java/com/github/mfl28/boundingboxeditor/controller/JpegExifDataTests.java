@@ -19,11 +19,10 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
+import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
 import javafx.application.Platform;
-import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -67,40 +66,15 @@ class JpegExifDataTests extends BoundingBoxEditorTestBase {
         final Image reference = mainView.getCurrentImage();
         verifyThat(reference.getUrl(), Matchers.endsWith("0.jpg"), saveScreenshot(testInfo));
 
-        enterNewCategoryWithColor(robot, "test", Color.BLUE, testInfo);
-        WaitForAsyncUtils.waitForFxEvents();
+        for(int i = 1; i <= 8; ++i) {
+            loadNextImageAndCompareToReference(i + ".jpg", reference, testInfo, robot);
+        }
 
-        loadNextImageAndCompareToReference("1.jpg", reference, testInfo, robot);
-        moveRelativeToImageView(robot, new Point2D(0.25, 0.2), new Point2D(0.5, 0.4));
+        Platform.runLater(() -> controller
+                .initiateAnnotationImport(new File(getClass().getResource("/testannotations/exif/json/annotations.json").getFile()),
+                        ImageAnnotationLoadStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
-
-        loadNextImageAndCompareToReference("2.jpg", reference, testInfo, robot);
-        moveRelativeToImageView(robot, new Point2D(0.25, 0.2), new Point2D(0.5, 0.4));
-        WaitForAsyncUtils.waitForFxEvents();
-
-        loadNextImageAndCompareToReference("3.jpg", reference, testInfo, robot);
-        moveRelativeToImageView(robot, new Point2D(0.25, 0.2), new Point2D(0.5, 0.4));
-        WaitForAsyncUtils.waitForFxEvents();
-
-        loadNextImageAndCompareToReference("4.jpg", reference, testInfo, robot);
-        moveRelativeToImageView(robot, new Point2D(0.25, 0.2), new Point2D(0.5, 0.4));
-        WaitForAsyncUtils.waitForFxEvents();
-
-        loadNextImageAndCompareToReference("5.jpg", reference, testInfo, robot);
-        moveRelativeToImageView(robot, new Point2D(0.25, 0.2), new Point2D(0.5, 0.4));
-        WaitForAsyncUtils.waitForFxEvents();
-
-        loadNextImageAndCompareToReference("6.jpg", reference, testInfo, robot);
-        moveRelativeToImageView(robot, new Point2D(0.25, 0.2), new Point2D(0.5, 0.4));
-        WaitForAsyncUtils.waitForFxEvents();
-
-        loadNextImageAndCompareToReference("7.jpg", reference, testInfo, robot);
-        moveRelativeToImageView(robot, new Point2D(0.25, 0.2), new Point2D(0.5, 0.4));
-        WaitForAsyncUtils.waitForFxEvents();
-
-        loadNextImageAndCompareToReference("8.jpg", reference, testInfo, robot);
-        moveRelativeToImageView(robot, new Point2D(0.25, 0.2), new Point2D(0.5, 0.4));
-        WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testInfo);
 
         final Path jsonOutputDir = Files.createDirectory(tempDir.resolve("json"));
         final Path jsonReferenceDir = new File(getClass().getResource("/testannotations/exif/json").getFile()).toPath();
