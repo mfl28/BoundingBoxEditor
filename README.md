@@ -14,8 +14,8 @@
   <a href="https://sonarcloud.io/dashboard?id=mfl28_BoundingBoxEditor">
     <img src="https://sonarcloud.io/api/project_badges/measure?project=mfl28_BoundingBoxEditor&metric=alert_status" alt="Quality Gate Status">
   </a>
-  <a href="https://lgtm.com/projects/g/mfl28/BoundingBoxEditor/context:java">
-    <img src="https://img.shields.io/lgtm/grade/java/g/mfl28/BoundingBoxEditor.svg?logo=lgtm&logoWidth=18" alt="Language Grade: Java">
+  <a href="https://github.com/mfl28/BoundingBoxEditor/actions/workflows/codeql.yml">
+    <img src="https://github.com/mfl28/BoundingBoxEditor/actions/workflows/codeql.yml/badge.svg" alt="CodeQL">
   </a>
   <img src="https://img.shields.io/github/downloads/mfl28/boundingboxeditor/total" alt="Github all releases">
   <a href="https://github.com/mfl28/BoundingBoxEditor/releases/latest">
@@ -134,14 +134,6 @@ docker container cp bbeditor:/artifacts .
 * [Feather Icons](https://feathericons.com/)
 * [Nord Color-Palette](https://github.com/arcticicestudio/nord)
 * [Unsplash](https://unsplash.com/) (used as source for test- & demo-images)
-
-<p align=center>
-<a href=https://www.jetbrains.com/?from=BoundingBoxEditor>
-<img src=https://upload.wikimedia.org/wikipedia/commons/1/1a/JetBrains_Logo_2016.svg>
-</a>
-</p>
-<p align=center>Special thanks to <a href=https://www.jetbrains.com/?from=BoundingBoxEditor> JetBrains</a> for supporting this project with an Open Source license to their developer tools!
-</p>
 
 ## License
 This project is licensed under GPL v3. See [LICENSE](LICENSE).
