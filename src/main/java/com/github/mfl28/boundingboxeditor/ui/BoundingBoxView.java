@@ -54,7 +54,7 @@ import java.util.Objects;
  * @see View
  */
 public class BoundingBoxView extends Rectangle implements
-        View, Toggle, BoundingShapeDataConvertible, BoundingShapeViewable {
+                                               View, Toggle, BoundingShapeDataConvertible, BoundingShapeViewable {
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
     private static final String BOUNDING_BOX_VIEW_ID = "bounding-rectangle";
@@ -173,7 +173,7 @@ public class BoundingBoxView extends Rectangle implements
     @Override
     public BoundingShapeData toBoundingShapeData() {
         return new BoundingBoxData(boundingShapeViewData.getObjectCategory(),
-                getRelativeBoundsInImageView(), boundingShapeViewData.getTags());
+                                   getRelativeBoundsInImageView(), boundingShapeViewData.getTags());
     }
 
     @Override
@@ -200,7 +200,7 @@ public class BoundingBoxView extends Rectangle implements
     public Rectangle2D getRelativeOutlineRectangle() {
         final Bounds relativeBounds = getRelativeBoundsInImageView();
         return new Rectangle2D(relativeBounds.getMinX(), relativeBounds.getMinY(), relativeBounds.getWidth(),
-                relativeBounds.getHeight());
+                               relativeBounds.getHeight());
     }
 
     @Override
@@ -242,8 +242,8 @@ public class BoundingBoxView extends Rectangle implements
 
     private List<ResizeHandle> createResizeHandles() {
         return Arrays.stream(CompassPoint.values())
-                .map(ResizeHandle::new)
-                .toList();
+                     .map(ResizeHandle::new)
+                     .toList();
     }
 
     private void addMoveFunctionality() {
@@ -297,14 +297,14 @@ public class BoundingBoxView extends Rectangle implements
         );
 
         fillProperty().bind(Bindings.when(boundingShapeViewData.selectedProperty())
-                .then(Bindings.createObjectBinding(
-                        () -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY),
-                        strokeProperty()))
-                .otherwise(Bindings.when(boundingShapeViewData.getHighlighted())
-                        .then(Bindings.createObjectBinding(() -> Color
-                                .web(strokeProperty().get().toString(),
-                                        HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
-                        .otherwise(Color.TRANSPARENT)));
+                                    .then(Bindings.createObjectBinding(
+                                            () -> Color.web(strokeProperty().get().toString(), SELECTED_FILL_OPACITY),
+                                            strokeProperty()))
+                                    .otherwise(Bindings.when(boundingShapeViewData.getHighlighted())
+                                                       .then(Bindings.createObjectBinding(() -> Color
+                                                               .web(strokeProperty().get().toString(),
+                                                                    HIGHLIGHTED_FILL_OPACITY), strokeProperty()))
+                                                       .otherwise(Color.TRANSPARENT)));
 
         boundingShapeViewData.getSelected().addListener((observable, oldValue, newValue) -> {
             if(Boolean.TRUE.equals(newValue)) {
@@ -316,8 +316,8 @@ public class BoundingBoxView extends Rectangle implements
     private Bounds constructCurrentMoveBounds() {
         final Bounds confinementBoundsValue = boundingShapeViewData.autoScaleBounds().getValue();
         return new BoundingBox(confinementBoundsValue.getMinX(), confinementBoundsValue.getMinY(),
-                confinementBoundsValue.getWidth() - getWidth(),
-                confinementBoundsValue.getHeight() - getHeight());
+                               confinementBoundsValue.getWidth() - getWidth(),
+                               confinementBoundsValue.getHeight() - getHeight());
     }
 
     private Bounds getRelativeBoundsInImageView() {
@@ -342,7 +342,7 @@ public class BoundingBoxView extends Rectangle implements
             constructionAnchorLocal.setCoordinates(
                     constructionAnchorLocal.getX() * newValue.getWidth() / oldValue.getWidth(),
                     constructionAnchorLocal.getY() * newValue.getHeight() / oldValue.getHeight()
-            );
+                    );
         });
     }
 
@@ -354,9 +354,9 @@ public class BoundingBoxView extends Rectangle implements
         Bounds confinementBoundsValue = boundingShapeViewData.autoScaleBounds().getValue();
 
         setX(boundsInImage.getMinX() * confinementBoundsValue.getWidth() / imageWidth +
-                confinementBoundsValue.getMinX());
+                     confinementBoundsValue.getMinX());
         setY(boundsInImage.getMinY() * confinementBoundsValue.getHeight() / imageHeight +
-                confinementBoundsValue.getMinY());
+                     confinementBoundsValue.getMinY());
         setWidth(boundsInImage.getWidth() * confinementBoundsValue.getWidth() / imageWidth);
         setHeight(boundsInImage.getHeight() * confinementBoundsValue.getHeight() / imageHeight);
     }
@@ -461,8 +461,8 @@ public class BoundingBoxView extends Rectangle implements
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(parentBounds.getMinX(), parentBounds.getMinY(),
-                        getRectangleMaxX() - parentBounds.getMinX(),
-                        getRectangleMaxY() - parentBounds.getMinY());
+                                                      getRectangleMaxX() - parentBounds.getMinX(),
+                                                      getRectangleMaxY() - parentBounds.getMinY());
 
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
@@ -480,8 +480,8 @@ public class BoundingBoxView extends Rectangle implements
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), parentBounds.getMinY(),
-                        BoundingBoxView.this.getWidth(),
-                        getRectangleMaxY() - parentBounds.getMinY());
+                                                      BoundingBoxView.this.getWidth(),
+                                                      getRectangleMaxY() - parentBounds.getMinY());
 
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
@@ -497,8 +497,8 @@ public class BoundingBoxView extends Rectangle implements
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), parentBounds.getMinY(),
-                        parentBounds.getMaxX() - BoundingBoxView.this.getX(),
-                        getRectangleMaxY() - parentBounds.getMinY());
+                                                      parentBounds.getMaxX() - BoundingBoxView.this.getX(),
+                                                      getRectangleMaxY() - parentBounds.getMinY());
 
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
@@ -515,8 +515,8 @@ public class BoundingBoxView extends Rectangle implements
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), BoundingBoxView.this.getY(),
-                        parentBounds.getMaxX() - BoundingBoxView.this.getX(),
-                        BoundingBoxView.this.getHeight());
+                                                      parentBounds.getMaxX() - BoundingBoxView.this.getX(),
+                                                      BoundingBoxView.this.getHeight());
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
 
@@ -530,8 +530,8 @@ public class BoundingBoxView extends Rectangle implements
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), BoundingBoxView.this.getY(),
-                        parentBounds.getMaxX() - BoundingBoxView.this.getX(),
-                        parentBounds.getMaxY() - BoundingBoxView.this.getY());
+                                                      parentBounds.getMaxX() - BoundingBoxView.this.getX(),
+                                                      parentBounds.getMaxY() - BoundingBoxView.this.getY());
 
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
@@ -547,8 +547,8 @@ public class BoundingBoxView extends Rectangle implements
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(BoundingBoxView.this.getX(), BoundingBoxView.this.getY(),
-                        BoundingBoxView.this.getWidth(),
-                        parentBounds.getMaxY() - BoundingBoxView.this.getY());
+                                                      BoundingBoxView.this.getWidth(),
+                                                      parentBounds.getMaxY() - BoundingBoxView.this.getY());
 
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
@@ -563,8 +563,8 @@ public class BoundingBoxView extends Rectangle implements
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(parentBounds.getMinX(), BoundingBoxView.this.getY(),
-                        getRectangleMaxX() - parentBounds.getMinX(),
-                        parentBounds.getMaxY() - BoundingBoxView.this.getY());
+                                                      getRectangleMaxX() - parentBounds.getMinX(),
+                                                      parentBounds.getMaxY() - BoundingBoxView.this.getY());
 
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
@@ -581,8 +581,8 @@ public class BoundingBoxView extends Rectangle implements
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 final Bounds parentBounds = BoundingBoxView.this.boundingShapeViewData.autoScaleBounds().getValue();
                 final Bounds bounds = new BoundingBox(parentBounds.getMinX(), BoundingBoxView.this.getY(),
-                        getRectangleMaxX() - parentBounds.getMinX(),
-                        BoundingBoxView.this.getHeight());
+                                                      getRectangleMaxX() - parentBounds.getMinX(),
+                                                      BoundingBoxView.this.getHeight());
 
                 final Point2D eventXY = new Point2D(event.getX(), event.getY());
                 final Point2D clampedEventXY = MathUtils.clampWithinBounds(eventXY, bounds);
