@@ -489,7 +489,7 @@ public class Controller {
             return;
         }
 
-        if(event.isShortcutDown()) {
+        if(event.getCode() == KeyCode.CONTROL || event.getCode() == KeyCode.META) {
             view.getEditorImagePane().setZoomableAndPannable(true);
         }
 

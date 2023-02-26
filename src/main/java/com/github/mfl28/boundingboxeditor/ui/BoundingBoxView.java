@@ -58,10 +58,9 @@ public class BoundingBoxView extends Rectangle implements
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
     private static final String BOUNDING_BOX_VIEW_ID = "bounding-rectangle";
-
     private final BoundingShapeViewData boundingShapeViewData;
-
     private final DragAnchor dragAnchor = new DragAnchor();
+    private final DragAnchor constructionAnchorLocal = new DragAnchor();
     private Bounds boundsInImage;
 
     /**
@@ -98,6 +97,10 @@ public class BoundingBoxView extends Rectangle implements
         boundingBox.setBoundsInImage(boundingBoxData.getAbsoluteBoundsInImage(imageWidth, imageHeight));
         boundingBox.getTags().setAll(boundingBoxData.getTags());
         return boundingBox;
+    }
+
+    public DragAnchor getConstructionAnchorLocal() {
+        return constructionAnchorLocal;
     }
 
     @Override
@@ -335,6 +338,11 @@ public class BoundingBoxView extends Rectangle implements
 
             setX(newValue.getMinX() + (getX() - oldValue.getMinX()) * newValue.getWidth() / oldValue.getWidth());
             setY(newValue.getMinY() + (getY() - oldValue.getMinY()) * newValue.getHeight() / oldValue.getHeight());
+
+            constructionAnchorLocal.setCoordinates(
+                    constructionAnchorLocal.getX() * newValue.getWidth() / oldValue.getWidth(),
+                    constructionAnchorLocal.getY() * newValue.getHeight() / oldValue.getHeight()
+                    );
         });
     }
 

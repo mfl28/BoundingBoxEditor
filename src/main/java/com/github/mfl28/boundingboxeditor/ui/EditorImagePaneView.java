@@ -41,9 +41,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.ClosePath;
-import javafx.scene.shape.Rectangle;
 
 import java.util.Collection;
 import java.util.List;
@@ -61,7 +59,6 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private static final double IMAGE_PADDING = 0;
     private static final double ZOOM_MIN_WINDOW_RATIO = 0.25;
     private static final String IMAGE_PANE_ID = "image-pane-view";
-    private static final String INITIALIZER_RECTANGLE_ID = "bounding-rectangle";
     private static final int MAXIMUM_IMAGE_WIDTH = 3072;
     private static final int MAXIMUM_IMAGE_HEIGHT = 3072;
     private static final double ZOOM_SCALE_DELTA = 0.05;
@@ -77,13 +74,9 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private final ObjectProperty<ObjectCategory> selectedCategory = new SimpleObjectProperty<>(null);
     private final DoubleProperty simplifyRelativeDistanceTolerance = new SimpleDoubleProperty(0.0);
     private final BooleanProperty autoSimplifyPolygons = new SimpleBooleanProperty(true);
-
-    private final Rectangle initializerRectangle = createInitializerRectangle();
-    private final DragAnchor dragAnchor = new DragAnchor();
-
     private final ProgressIndicator imageLoadingProgressIndicator = new ProgressIndicator();
     private final StackPane contentPane = new StackPane(imageView, boundingShapeSceneGroup,
-            initializerRectangle, imageLoadingProgressIndicator);
+            imageLoadingProgressIndicator);
     private boolean boundingBoxDrawingInProgress = false;
     private DrawingMode drawingMode = DrawingMode.BOX;
 
@@ -133,20 +126,9 @@ public class EditorImagePaneView extends ScrollPane implements View {
     }
 
     /**
-     * Constructs a new {@link BoundingBoxView} object which is initialized from the current coordinates and size of the
-     * initializerRectangle member.
+     * Finalizes the currently drawn {@link BoundingBoxView}.
      */
     public void finalizeBoundingBox() {
-        final BoundingBoxView newBoundingBox = new BoundingBoxView(selectedCategory.get());
-
-        newBoundingBox.setCoordinatesAndSizeFromInitializer(initializerRectangle);
-        newBoundingBox.autoScaleWithBounds(imageView.boundsInParentProperty());
-        newBoundingBox.setToggleGroup(boundingShapeSelectionGroup);
-
-        currentBoundingShapes.add(newBoundingBox);
-        boundingShapeSelectionGroup.selectToggle(newBoundingBox);
-        initializerRectangle.setVisible(false);
-
         boundingBoxDrawingInProgress = false;
     }
 
@@ -227,15 +209,22 @@ public class EditorImagePaneView extends ScrollPane implements View {
     }
 
     public void initializeBoundingRectangle(MouseEvent event) {
-        dragAnchor.setFromMouseEvent(event);
         Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
 
-        initializerRectangle.setX(parentCoordinates.getX());
-        initializerRectangle.setY(parentCoordinates.getY());
-        initializerRectangle.setWidth(0);
-        initializerRectangle.setHeight(0);
-        initializerRectangle.setStroke(selectedCategory.getValue().getColor());
-        initializerRectangle.setVisible(true);
+        BoundingBoxView boundingBoxView = new BoundingBoxView(selectedCategory.get());
+        boundingBoxView.getConstructionAnchorLocal().setFromMouseEvent(event);
+        boundingBoxView.setToggleGroup(boundingShapeSelectionGroup);
+
+        boundingBoxView.setX(parentCoordinates.getX());
+        boundingBoxView.setY(parentCoordinates.getY());
+        boundingBoxView.setWidth(0);
+        boundingBoxView.setHeight(0);
+
+        currentBoundingShapes.add(boundingBoxView);
+
+        boundingBoxView.autoScaleWithBounds(imageView.boundsInParentProperty());
+        boundingShapeSelectionGroup.selectToggle(boundingBoxView);
+
         boundingBoxDrawingInProgress = true;
     }
 
@@ -402,8 +391,9 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     /**
      * Updates the currently shown image.
+     *
      * @param image The image to show.
-     * @param url The URL of the corresponding image file.
+     * @param url   The URL of the corresponding image file.
      */
     public void updateImage(Image image, String url) {
         imageView.setImage(image);
@@ -507,35 +497,50 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     private void setUpImageViewListeners() {
         imageView.setOnMouseDragged(event -> {
-            if(isImageFullyLoaded() && event.isControlDown()) {
-                imageView.setCursor(Cursor.CLOSED_HAND);
-            } else if(isImageFullyLoaded()
-                    && event.getButton().equals(MouseButton.PRIMARY)
-                    && isCategorySelected()) {
+            if(isImageFullyLoaded()) {
+                if(event.isControlDown()) {
+                    imageView.setCursor(Cursor.CLOSED_HAND);
+                }
 
-                Point2D clampedEventXY =
-                        MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
+                if(isDrawingInProgress() &&
+                        event.getButton().equals(MouseButton.PRIMARY) &&
+                        isCategorySelected()) {
+                    final Point2D clampedEventXY =
+                            MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
 
-                if(drawingMode == DrawingMode.BOX) {
-                    Point2D parentCoordinates =
-                            imageView.localToParent(Math.min(clampedEventXY.getX(), dragAnchor.getX()),
-                                    Math.min(clampedEventXY.getY(), dragAnchor.getY()));
-
-                    initializerRectangle.setX(parentCoordinates.getX());
-                    initializerRectangle.setY(parentCoordinates.getY());
-                    initializerRectangle.setWidth(Math.abs(clampedEventXY.getX() - dragAnchor.getX()));
-                    initializerRectangle.setHeight(Math.abs(clampedEventXY.getY() - dragAnchor.getY()));
-                } else if(drawingMode == DrawingMode.FREEHAND) {
-                    Point2D parentCoordinates =
-                            imageView.localToParent(clampedEventXY.getX(), clampedEventXY.getY());
-
-                    BoundingFreehandShapeView shape =
-                            (BoundingFreehandShapeView) boundingShapeSelectionGroup.getSelectedToggle();
-
-                    shape.addLineTo(parentCoordinates.getX(), parentCoordinates.getY());
+                    if(drawingMode == DrawingMode.BOX) {
+                        updateCurrentBoundingBoxFromMouseDrag(clampedEventXY);
+                    } else if(drawingMode == DrawingMode.FREEHAND) {
+                        updateCurrentFreehandShapeFromMouseDrag(clampedEventXY);
+                    }
                 }
             }
         });
+    }
+
+    private void updateCurrentFreehandShapeFromMouseDrag(Point2D clampedEventXY) {
+        Point2D parentCoordinates =
+                imageView.localToParent(clampedEventXY.getX(), clampedEventXY.getY());
+
+        BoundingFreehandShapeView shape =
+                (BoundingFreehandShapeView) boundingShapeSelectionGroup.getSelectedToggle();
+
+        shape.addLineTo(parentCoordinates.getX(), parentCoordinates.getY());
+    }
+
+    private void updateCurrentBoundingBoxFromMouseDrag(Point2D clampedEventXY) {
+        BoundingBoxView boundingBoxView =
+                (BoundingBoxView) boundingShapeSelectionGroup.getSelectedToggle();
+
+        DragAnchor constructionAnchor = boundingBoxView.getConstructionAnchorLocal();
+        Point2D parentCoordinates =
+                imageView.localToParent(Math.min(clampedEventXY.getX(), constructionAnchor.getX()),
+                        Math.min(clampedEventXY.getY(), constructionAnchor.getY()));
+
+        boundingBoxView.setX(parentCoordinates.getX());
+        boundingBoxView.setY(parentCoordinates.getY());
+        boundingBoxView.setWidth(Math.abs(clampedEventXY.getX() - constructionAnchor.getX()));
+        boundingBoxView.setHeight(Math.abs(clampedEventXY.getY() - constructionAnchor.getY()));
     }
 
     private void setUpContentPaneListeners() {
@@ -590,15 +595,6 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     private double getMaxAllowedImageHeight() {
         return Math.max(0, getHeight() - 2 * IMAGE_PADDING);
-    }
-
-    private Rectangle createInitializerRectangle() {
-        Rectangle initializer = new Rectangle();
-        initializer.setManaged(false);
-        initializer.setVisible(false);
-        initializer.setFill(Color.TRANSPARENT);
-        initializer.setId(INITIALIZER_RECTANGLE_ID);
-        return initializer;
     }
 
     private Dimension2D calculateLoadedImageDimensions(double width, double height) {
