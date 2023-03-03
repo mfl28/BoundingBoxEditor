@@ -33,6 +33,7 @@ import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.transform.Transform;
+import javafx.stage.Screen;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
@@ -322,7 +323,8 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     }
 
     private class ObjectTreeElementCellFactory implements Callback<TreeView<Object>, TreeCell<Object>> {
-        private static final int MAX_POPOVER_SIDE_LENGTH = 250;
+        private static final double POPOVER_SCREEN_RATIO = 0.25;
+        private static final double MIN_RELATIVE_SIDE_LENGTH = 0.0001;
         private final PauseTransition popoverDelayTransition = new PauseTransition(Duration.seconds(0.8));
         private TreeItem<Object> draggedItem;
         private String currentImageUrl;
@@ -510,7 +512,9 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             final Rectangle2D relativeOutline =
                     ((BoundingShapeViewable) cell.getItem()).getRelativeOutlineRectangle();
 
-            if(relativeOutline == null) {
+            if(relativeOutline == null
+                    || relativeOutline.getWidth() < MIN_RELATIVE_SIDE_LENGTH
+                    || relativeOutline.getHeight() < MIN_RELATIVE_SIDE_LENGTH) {
                 return;
             }
 
@@ -524,11 +528,15 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             double scaleWidth;
             double scaleHeight;
 
+            final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+            final double sideLength = POPOVER_SCREEN_RATIO * Math.min(
+                    screenBounds.getWidth(), screenBounds.getHeight());
+
             if(outline.getWidth() > outline.getHeight()) {
-                scaleWidth = Math.min(outline.getWidth(), MAX_POPOVER_SIDE_LENGTH);
+                scaleWidth = sideLength;
                 scaleHeight = outline.getHeight() * scaleWidth / outline.getWidth();
             } else {
-                scaleHeight = Math.min(outline.getHeight(), MAX_POPOVER_SIDE_LENGTH);
+                scaleHeight = sideLength;
                 scaleWidth = outline.getWidth() * scaleHeight / outline.getHeight();
             }
 
