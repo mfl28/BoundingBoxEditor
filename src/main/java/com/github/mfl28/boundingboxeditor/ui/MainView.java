@@ -217,7 +217,7 @@ public class MainView extends BorderPane implements View {
 
         errorDescriptionColumn.setCellValueFactory(new PropertyValueFactory<>("errorDescription"));
         errorDescriptionColumn.setSortable(false);
-        errorTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        errorTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         errorTable.setItems(FXCollections.observableArrayList(ioResult.getErrorTableEntries()));
         errorTable.getSortOrder().add(errorSourceColumn);
