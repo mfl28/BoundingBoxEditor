@@ -84,9 +84,9 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
 
                 if(newValue != null && newValue.size() <= IMAGE_CACHE_SIZE) {
                     // Triggers loading of the new images into the cache.
-                    imageCache.getAll(newValue.stream()
-                                              .map(FileInfo::getFileUrl)
-                                              .toList());
+                    var unused = imageCache.getAll(newValue.stream()
+                            .map(FileInfo::getFileUrl)
+                            .toList());
                 }
             }
         });
