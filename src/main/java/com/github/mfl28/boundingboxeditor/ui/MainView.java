@@ -550,6 +550,11 @@ public class MainView extends BorderPane implements View {
         settingsDialog.showAndWait();
     }
 
+
+    public static void displayTextInfoDialog(String title, String header, String content, Window owner) {
+        displayInfoAlert(title, header, content, null, owner);
+    }
+
     public Optional<Window> getSettingsWindow() {
         return Window.getWindows()
                 .stream()
@@ -646,14 +651,16 @@ public class MainView extends BorderPane implements View {
         ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
         alert.initOwner(owner);
 
-        GridPane.setVgrow(additionalInfoNode, Priority.ALWAYS);
-        GridPane.setHgrow(additionalInfoNode, Priority.ALWAYS);
+        if(additionalInfoNode != null) {
+            GridPane.setVgrow(additionalInfoNode, Priority.ALWAYS);
+            GridPane.setHgrow(additionalInfoNode, Priority.ALWAYS);
 
-        GridPane expandableContent = new GridPane();
-        expandableContent.setMaxWidth(Double.MAX_VALUE);
-        expandableContent.add(additionalInfoNode, 0, 0);
+            GridPane expandableContent = new GridPane();
+            expandableContent.setMaxWidth(Double.MAX_VALUE);
+            expandableContent.add(additionalInfoNode, 0, 0);
 
-        alert.getDialogPane().setExpandableContent(expandableContent);
+            alert.getDialogPane().setExpandableContent(expandableContent);
+        }
         alert.showAndWait();
     }
 

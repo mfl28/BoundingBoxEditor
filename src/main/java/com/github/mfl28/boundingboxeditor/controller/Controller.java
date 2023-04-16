@@ -43,6 +43,7 @@ import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.github.mfl28.boundingboxeditor.utils.ImageUtils;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -84,6 +85,10 @@ import java.util.stream.Stream;
 public class Controller {
     private static final String PROGRAM_NAME = "Bounding Box Editor";
     private static final String PROGRAM_NAME_EXTENSION_SEPARATOR = " - ";
+    private static final String GITHUB_WIKI_URL = "https://github.com/mfl28/BoundingBoxEditor/wiki";
+    private static final String PROGRAM_VERSION = "2.5.0";
+    private static final String PROGRAM_LICENSE = "GPL-3.0";
+    private static final String PROGRAM_IDENTIFIER = PROGRAM_NAME + " " + PROGRAM_VERSION;
     private static final String OPEN_FOLDER_ERROR_DIALOG_TITLE = "Image Folder Loading Error";
     private static final String OPEN_FOLDER_ERROR_DIALOG_HEADER = "The selected folder is not a valid image folder.";
     private static final String SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE = "Save Image Annotations to Folder";
@@ -172,6 +177,7 @@ public class Controller {
     private final BoundingBoxPredictorService boundingBoxPredictorService = new BoundingBoxPredictorService();
     private final ModelNameFetchService modelNameFetchService = new ModelNameFetchService();
     private final Stage stage;
+    private final HostServices hostServices;
     private final MainView view = new MainView();
     private final Model model = new Model();
     private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener =
@@ -193,9 +199,11 @@ public class Controller {
      *
      * @param mainStage the stage that represents the top level container of all used ui-elements
      */
-    public Controller(final Stage mainStage) {
+    public Controller(final Stage mainStage, final HostServices hostServices) {
         stage = mainStage;
-        stage.setTitle(PROGRAM_NAME);
+        this.hostServices = hostServices;
+
+        stage.setTitle(PROGRAM_IDENTIFIER);
         stage.getIcons().add(MainView.APPLICATION_ICON);
         stage.setOnCloseRequest(event -> {
             onRegisterExitAction();
@@ -648,6 +656,19 @@ public class Controller {
         view.getInferenceSettingsView()
                 .setDisplayedSettingsFromPredictorConfig(model.getBoundingBoxPredictorConfig());
         view.getInferenceSettingsView().setAllFieldsValid();
+    }
+
+    public void onRegisterDocumentationAction() {
+        hostServices.showDocument(GITHUB_WIKI_URL);
+    }
+
+    public void onRegisterAboutAction() {
+        MainView.displayTextInfoDialog(
+                "About " + PROGRAM_NAME,
+                PROGRAM_NAME,
+                "Version: " + PROGRAM_VERSION +
+                "\nLicense: " + PROGRAM_LICENSE,
+                stage);
     }
 
     void makeClientAvailable() {
@@ -1304,7 +1325,7 @@ public class Controller {
 
     private void updateStageTitle() {
         ImageMetaData currentImageMetaData = model.getCurrentImageMetaData();
-        stage.setTitle(PROGRAM_NAME + PROGRAM_NAME_EXTENSION_SEPARATOR
+    stage.setTitle(PROGRAM_IDENTIFIER + PROGRAM_NAME_EXTENSION_SEPARATOR
                 + model.getCurrentImageFilePath() + " " + currentImageMetaData.getDimensionsString());
     }
 
@@ -1526,7 +1547,7 @@ public class Controller {
         imagePane.removeAllCurrentBoundingShapes();
         view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
 
-        stage.setTitle(PROGRAM_NAME);
+        stage.setTitle(PROGRAM_IDENTIFIER);
 
         ObjectCategoryTableView objectCategoryTableView = view.getObjectCategoryTable();
         objectCategoryTableView.getItems().clear();

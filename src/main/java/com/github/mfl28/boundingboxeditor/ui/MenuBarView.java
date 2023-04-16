@@ -67,6 +67,12 @@ class MenuBarView extends MenuBar implements View {
     private static final String SETTINGS_TEXT = "Se_ttings";
     private static final String SETTINGS_ICON_ID = "settings-icon";
     private static final String FILE_SETTINGS_MENU_ITEM_ID = "file-settings-menu-item";
+    private static final String HELP_MENU_TEXT = "_Help";
+    private static final String HELP_MENU_ID = "help-menu";
+    private static final String DOCUMENTATION_TEXT = "_Documentation";
+    private static final String ABOUT_TEXT = "_About";
+    private static final String DOCUMENTATION_MENU_ITEM_ID = "documentation-menu-item";
+    private static final String ABOUT_MENU_ITEM_ID = "about-menu-item";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
     private final Menu fileExportAnnotationsMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
@@ -83,12 +89,14 @@ class MenuBarView extends MenuBar implements View {
     private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT, createIconRegion(EXIT_ICON_ID));
     private final CheckMenuItem viewMaximizeImagesItem = new CheckMenuItem(MAXIMIZE_IMAGES_TEXT);
     private final CheckMenuItem viewShowImagesPanelItem = new CheckMenuItem(SHOW_IMAGE_FILE_EXPLORER_TEXT);
+    private final MenuItem documentationMenuItem = new MenuItem(DOCUMENTATION_TEXT);
+    private final MenuItem aboutMenuItem = new MenuItem(ABOUT_TEXT);
 
     /**
      * Creates a new menu-bar UI-element.
      */
     MenuBarView() {
-        getMenus().addAll(createFileMenu(), createViewMenu());
+        getMenus().addAll(createFileMenu(), createViewMenu(), createHelpMenu());
         setId(MAIN_MENU_BAR_ID);
         viewShowImagesPanelItem.setSelected(true);
         viewMaximizeImagesItem.setSelected(true);
@@ -132,6 +140,8 @@ class MenuBarView extends MenuBar implements View {
                                                        ImageAnnotationLoadStrategy.Type.JSON));
         fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
         settingsMenuItem.setOnAction(action -> controller.onRegisterSettingsAction());
+        documentationMenuItem.setOnAction(action -> controller.onRegisterDocumentationAction());
+        aboutMenuItem.setOnAction(action -> controller.onRegisterAboutAction());
     }
 
     /**
@@ -197,6 +207,21 @@ class MenuBarView extends MenuBar implements View {
         viewShowImagesPanelItem.setId(VIEW_SHOW_IMAGES_PANEL_MENU_ITEM_ID);
 
         return viewMenu;
+    }
+
+    private Menu createHelpMenu() {
+        Menu helpMenu = new Menu(HELP_MENU_TEXT);
+        helpMenu.setId(HELP_MENU_ID);
+
+        helpMenu.getItems().addAll(
+                documentationMenuItem,
+                aboutMenuItem
+        );
+
+        documentationMenuItem.setId(DOCUMENTATION_MENU_ITEM_ID);
+        aboutMenuItem.setId(ABOUT_MENU_ITEM_ID);
+
+        return helpMenu;
     }
 
     private Region createIconRegion(String cssId) {

@@ -205,7 +205,7 @@ public class BoundingBoxEditorTestBase {
     @Start
     protected void onStart(Stage stage) {
         Platform.setImplicitExit(false);
-        controller = new Controller(stage);
+        controller = new Controller(stage, null);
         mainView = controller.getView();
         model = controller.getModel();
         // To make sure that the window is on top of all other windows at the start.

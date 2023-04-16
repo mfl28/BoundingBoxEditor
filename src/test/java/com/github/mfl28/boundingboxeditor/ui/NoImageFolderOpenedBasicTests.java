@@ -218,6 +218,39 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertTrue(imageExplorerItem.isDisable(),
                 () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
                         "disabled"));
+
+
+        timeOutClickOn(robot, "#help-menu", testinfo);
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        MenuItem documentationItem = getSubMenuItem(robot, "Help", "Documentation");
+        assertTrue(documentationItem.isVisible(),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Documentation item not " +
+                        "visible"));
+        assertFalse(documentationItem.isDisable(),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Documentation item not " +
+                        "enabled"));
+
+        MenuItem aboutItem = getSubMenuItem(robot, "Help", "About");
+        assertTrue(aboutItem.isVisible(),
+                () -> saveScreenshotAndReturnMessage(testinfo, "About item not " +
+                        "visible"));
+        assertFalse(aboutItem.isDisable(),
+                () -> saveScreenshotAndReturnMessage(testinfo, "About item not " +
+                        "enabled"));
+
+        timeOutClickOn(robot, "#help-menu", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "#about-menu-item", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Stage aboutStage = timeOutGetTopModalStage(robot, "About Bounding Box Editor", testinfo);
+        verifyThat(aboutStage, Matchers.notNullValue(), saveScreenshot(testinfo));
+
+        timeOutLookUpInStageAndClickOn(robot, aboutStage, "OK", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertTopModalStageClosed(robot, "About Bounding Box Editor", testinfo);
     }
 
     private void verifyNodeVisibilities(TestInfo testinfo) {
