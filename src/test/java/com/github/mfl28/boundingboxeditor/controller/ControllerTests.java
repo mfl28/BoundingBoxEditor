@@ -1048,7 +1048,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
-        verifyThat(controller.getStage().getTitle(), Matchers.startsWith("Bounding Box Editor - "),
+        verifyThat(controller.getStage().getTitle(), Matchers.matchesRegex("^Bounding Box Editor \\d\\.\\d\\.\\d - .*$"),
                    saveScreenshot(testinfo));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),

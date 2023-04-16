@@ -49,7 +49,7 @@ public class BoundingBoxEditorApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        final Controller controller = new Controller(primaryStage);
+        final Controller controller = new Controller(primaryStage, getHostServices());
         final Scene scene = createSceneFromParent(controller.getView());
 
         scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
