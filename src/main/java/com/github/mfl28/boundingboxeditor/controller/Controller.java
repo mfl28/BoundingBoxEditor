@@ -86,7 +86,7 @@ public class Controller {
     private static final String PROGRAM_NAME = "Bounding Box Editor";
     private static final String PROGRAM_NAME_EXTENSION_SEPARATOR = " - ";
     private static final String GITHUB_WIKI_URL = "https://github.com/mfl28/BoundingBoxEditor/wiki";
-    private static final String PROGRAM_VERSION = "2.5.0";
+    private static final String PROGRAM_VERSION = "2.5.1";
     private static final String PROGRAM_LICENSE = "GPL-3.0";
     private static final String PROGRAM_IDENTIFIER = PROGRAM_NAME + " " + PROGRAM_VERSION;
     private static final String OPEN_FOLDER_ERROR_DIALOG_TITLE = "Image Folder Loading Error";
