@@ -566,10 +566,21 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 Bounds newContentPaneBounds = contentPane.getBoundsInLocal();
                 Point2D mousePointInImageView = imageView.parentToLocal(event.getX(), event.getY());
 
-                setHvalue((mousePointInImageView.getX() * (zoomFactor - 1) + offsetX)
-                        / (newContentPaneBounds.getWidth() - viewportBounds.getWidth()));
-                setVvalue((mousePointInImageView.getY() * (zoomFactor - 1) + offsetY)
-                        / (newContentPaneBounds.getHeight() - viewportBounds.getHeight()));
+                if ((newContentPaneBounds.getWidth() - viewportBounds.getWidth()) == 0) {
+                    setHvalue(0);
+                }
+                else {
+                    setHvalue((mousePointInImageView.getX() * (zoomFactor - 1) + offsetX)
+                            / (newContentPaneBounds.getWidth() - viewportBounds.getWidth()));
+                }
+
+                if ((newContentPaneBounds.getHeight() - viewportBounds.getHeight()) == 0) {
+                    setVvalue(0);
+                }
+                else {
+                    setVvalue((mousePointInImageView.getY() * (zoomFactor - 1) + offsetY)
+                            / (newContentPaneBounds.getHeight() - viewportBounds.getHeight()));
+                }
 
                 event.consume();
             }
