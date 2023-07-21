@@ -549,19 +549,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 Bounds contentPaneBounds = contentPane.getLayoutBounds();
                 Bounds viewportBounds = getViewportBounds();
 
-                double hvalue = getHvalue();
-                double vvalue = getVvalue();
-
-                if (Double.isNaN(hvalue)) {
-                    hvalue = getHmin();
-                }
-
-                if (Double.isNaN(vvalue)) {
-                    vvalue = getVmin();
-                }
-
-                double offsetX = hvalue * (contentPaneBounds.getWidth() - viewportBounds.getWidth());
-                double offsetY = vvalue * (contentPaneBounds.getHeight() - viewportBounds.getHeight());
+                double offsetX = getHvalue() * (contentPaneBounds.getWidth() - viewportBounds.getWidth());
+                double offsetY = getVvalue() * (contentPaneBounds.getHeight() - viewportBounds.getHeight());
 
                 double minimumFitWidth = Math.min(ZOOM_MIN_WINDOW_RATIO * getWidth(), imageView.getImage().getWidth());
                 double minimumFitHeight =
@@ -577,10 +566,21 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 Bounds newContentPaneBounds = contentPane.getBoundsInLocal();
                 Point2D mousePointInImageView = imageView.parentToLocal(event.getX(), event.getY());
 
-                setHvalue((mousePointInImageView.getX() * (zoomFactor - 1) + offsetX)
-                        / (newContentPaneBounds.getWidth() - viewportBounds.getWidth()));
-                setVvalue((mousePointInImageView.getY() * (zoomFactor - 1) + offsetY)
-                        / (newContentPaneBounds.getHeight() - viewportBounds.getHeight()));
+                if ((newContentPaneBounds.getWidth() - viewportBounds.getWidth()) == 0) {
+                    setHvalue(0);
+                }
+                else {
+                    setHvalue((mousePointInImageView.getX() * (zoomFactor - 1) + offsetX)
+                            / (newContentPaneBounds.getWidth() - viewportBounds.getWidth()));
+                }
+
+                if ((newContentPaneBounds.getHeight() - viewportBounds.getHeight()) == 0) {
+                    setVvalue(0);
+                }
+                else {
+                    setVvalue((mousePointInImageView.getY() * (zoomFactor - 1) + offsetY)
+                            / (newContentPaneBounds.getHeight() - viewportBounds.getHeight()));
+                }
 
                 event.consume();
             }
