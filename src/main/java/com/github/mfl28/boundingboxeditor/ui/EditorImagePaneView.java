@@ -549,8 +549,19 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 Bounds contentPaneBounds = contentPane.getLayoutBounds();
                 Bounds viewportBounds = getViewportBounds();
 
-                double offsetX = getHvalue() * (contentPaneBounds.getWidth() - viewportBounds.getWidth());
-                double offsetY = getVvalue() * (contentPaneBounds.getHeight() - viewportBounds.getHeight());
+                double hvalue = getHvalue();
+                double vvalue = getVvalue();
+
+                if (Double.isNaN(hvalue)) {
+                    hvalue = getHmin();
+                }
+
+                if (Double.isNaN(vvalue)) {
+                    vvalue = getVmin();
+                }
+
+                double offsetX = hvalue * (contentPaneBounds.getWidth() - viewportBounds.getWidth());
+                double offsetY = vvalue * (contentPaneBounds.getHeight() - viewportBounds.getHeight());
 
                 double minimumFitWidth = Math.min(ZOOM_MIN_WINDOW_RATIO * getWidth(), imageView.getImage().getWidth());
                 double minimumFitHeight =
