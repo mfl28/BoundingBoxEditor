@@ -436,6 +436,7 @@ public class Controller {
             MainView.displayErrorAlert(CATEGORY_INPUT_ERROR_DIALOG_TITLE,
                     INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT, stage);
             view.getObjectCategoryInputField().clear();
+            view.getEditorImagePane().requestFocus();
             return;
         }
 
@@ -443,6 +444,7 @@ public class Controller {
             MainView.displayErrorAlert(CATEGORY_INPUT_ERROR_DIALOG_TITLE,
                     "The category \"" + categoryName + "\" already exists.", stage);
             view.getObjectCategoryInputField().clear();
+            view.getEditorImagePane().requestFocus();
             return;
         }
 
@@ -457,6 +459,7 @@ public class Controller {
 
         view.getObjectCategoryInputField().clear();
         view.getObjectCategoryColorPicker().setValue(ColorUtils.createRandomColor());
+        view.getEditorImagePane().requestFocus();
     }
 
     /**
