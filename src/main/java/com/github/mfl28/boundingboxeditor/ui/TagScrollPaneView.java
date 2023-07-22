@@ -99,6 +99,7 @@ class TagScrollPaneView extends ScrollPane implements View {
                 tags.get().add(text);
                 tagInputField.clear();
             }
+            requestFocus();
         });
 
         tags.addListener((observable, oldValue, newValue) -> {

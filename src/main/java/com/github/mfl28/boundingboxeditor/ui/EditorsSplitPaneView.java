@@ -285,6 +285,8 @@ public class EditorsSplitPaneView extends SplitPane implements View {
             }
         });
 
+        categorySearchField.setOnAction(event -> requestFocus());
+
         expandTreeItemsButton.setOnAction(event -> objectTree.expandAllTreeItems());
 
         collapseTreeItemsButton.setOnAction(event ->

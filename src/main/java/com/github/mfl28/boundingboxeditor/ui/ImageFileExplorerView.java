@@ -143,5 +143,7 @@ public class ImageFileExplorerView extends VBox implements View {
                 imageFileSearchField.setText(null);
             }
         });
+
+        imageFileSearchField.setOnAction(event -> requestFocus());
     }
 }
