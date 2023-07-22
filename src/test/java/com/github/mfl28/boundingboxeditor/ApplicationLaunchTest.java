@@ -21,6 +21,7 @@ package com.github.mfl28.boundingboxeditor;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -30,8 +31,9 @@ import org.testfx.framework.junit5.ApplicationTest;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
+@Tag("ui")
 @ExtendWith(ApplicationExtension.class)
-public class ApplicationLaunchTest {
+class ApplicationLaunchTest {
     @BeforeEach
     void setup() throws Exception {
         ApplicationTest.launch(BoundingBoxEditorApp.class);
