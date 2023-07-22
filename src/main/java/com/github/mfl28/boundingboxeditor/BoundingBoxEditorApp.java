@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
+import com.github.mfl28.boundingboxeditor.ui.MainView;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -49,14 +50,17 @@ public class BoundingBoxEditorApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        final Controller controller = new Controller(primaryStage, getHostServices());
-        final Scene scene = createSceneFromParent(controller.getView());
+        final MainView view = new MainView();
+        final Scene scene = createSceneFromParent(view);
 
         scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
+        primaryStage.setScene(scene);
+
+        final Controller controller = new Controller(primaryStage, view, getHostServices());
+
         scene.setOnKeyPressed(controller::onRegisterSceneKeyPressed);
         scene.setOnKeyReleased(controller::onRegisterSceneKeyReleased);
 
-        primaryStage.setScene(scene);
         primaryStage.show();
     }
 
