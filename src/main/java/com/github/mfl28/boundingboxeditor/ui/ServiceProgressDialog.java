@@ -35,13 +35,9 @@ public class ServiceProgressDialog extends ProgressDialog implements ProgressVie
     }
 
     @Override
-    public Window getParentWindow() {
-        return parentWindow.get();
-    }
-
-    @Override
-    public void setParentWindow(Window parentWindow) {
+    public void setOwnerParentWindow(Window parentWindow) {
         this.parentWindow.set(parentWindow);
+        initOwner(parentWindow);
     }
 
     @Override

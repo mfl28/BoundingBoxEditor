@@ -21,9 +21,8 @@ package com.github.mfl28.boundingboxeditor.ui;
 import javafx.stage.Window;
 
 public interface ProgressViewer {
-    Window getParentWindow();
 
-    void setParentWindow(Window parentWindow);
+    void setOwnerParentWindow(Window parentWindow);
 
     void hideProgress();
 }

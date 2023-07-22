@@ -291,8 +291,6 @@ public class MainView extends BorderPane implements View {
         final ServiceProgressDialog progressDialog = new ServiceProgressDialog(service);
         progressDialog.setTitle(title);
         progressDialog.setHeaderText(header);
-        ((Stage) progressDialog.getDialogPane().getScene().getWindow()).setAlwaysOnTop(true);
-
 
         return progressDialog;
     }

@@ -178,7 +178,7 @@ public class Controller {
     private final ModelNameFetchService modelNameFetchService = new ModelNameFetchService();
     private final Stage stage;
     private final HostServices hostServices;
-    private final MainView view = new MainView();
+    private final MainView view;
     private final Model model = new Model();
     private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener =
             createBoundingShapeCountPerCategoryListener();
@@ -199,8 +199,9 @@ public class Controller {
      *
      * @param mainStage the stage that represents the top level container of all used ui-elements
      */
-    public Controller(final Stage mainStage, final HostServices hostServices) {
+    public Controller(final Stage mainStage, final MainView view, final HostServices hostServices) {
         stage = mainStage;
+        this.view = view;
         this.hostServices = hostServices;
 
         stage.setTitle(PROGRAM_IDENTIFIER);
@@ -372,8 +373,11 @@ public class Controller {
         view.getInferenceSettingsView().applyDisplayedSettingsToPredictorClientConfig(clientConfig);
         makeClientAvailable();
         modelNameFetchService.setClient(BoundingBoxPredictorClient.create(client, clientConfig));
+        modelNameFetchService.setProgressViewer(MainView.createServiceProgressDialog(modelNameFetchService,
+                FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
+                FETCHING_MODELS_PROGRESS_DIALOG_HEADER));
         modelNameFetchService.getProgressViewer()
-                .setParentWindow(view.getSettingsWindow().orElse(stage));
+                .setOwnerParentWindow(view.getSettingsWindow().orElse(stage));
         modelNameFetchService.restart();
     }
 
@@ -841,7 +845,7 @@ public class Controller {
                 MainView.createServiceProgressDialog(annotationExportService,
                         SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
                         SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
-        annotationExportProgressDialog.setParentWindow(stage);
+        annotationExportProgressDialog.setOwnerParentWindow(stage);
         annotationExportService.setProgressViewer(annotationExportProgressDialog);
         annotationExportService.setOnSucceeded(this::onAnnotationExportSucceeded);
         annotationExportService.setOnFailed(this::onIoServiceFailed);
@@ -850,7 +854,7 @@ public class Controller {
                 MainView.createServiceProgressDialog(annotationImportService,
                         LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
                         LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER);
-        annotationImportProgressDialog.setParentWindow(stage);
+        annotationImportProgressDialog.setOwnerParentWindow(stage);
         annotationImportService.setProgressViewer(annotationImportProgressDialog);
         annotationImportService.setOnSucceeded(this::onAnnotationImportSucceeded);
         annotationImportService.setOnFailed(this::onIoServiceFailed);
@@ -859,7 +863,7 @@ public class Controller {
                 MainView.createServiceProgressDialog(imageMetaDataLoadingService,
                         IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE,
                         IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER);
-        imageMetaDataLoadingProgressDialog.setParentWindow(stage);
+        imageMetaDataLoadingProgressDialog.setOwnerParentWindow(stage);
         imageMetaDataLoadingService.setProgressViewer(imageMetaDataLoadingProgressDialog);
         imageMetaDataLoadingService.setOnSucceeded(this::onImageMetaDataLoadingSucceeded);
         imageMetaDataLoadingService.setOnFailed(this::onIoServiceFailed);
@@ -868,14 +872,11 @@ public class Controller {
                 MainView.createServiceProgressDialog(boundingBoxPredictorService,
                         BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE,
                         BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
-        predictorProgressDialog.setParentWindow(stage);
+        predictorProgressDialog.setOwnerParentWindow(stage);
         boundingBoxPredictorService.setProgressViewer(predictorProgressDialog);
         boundingBoxPredictorService.setOnSucceeded(this::onBoundingBoxPredictionSucceeded);
         boundingBoxPredictorService.setOnFailed(this::onIoServiceFailed);
 
-        modelNameFetchService.setProgressViewer(MainView.createServiceProgressDialog(modelNameFetchService,
-                FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
-                FETCHING_MODELS_PROGRESS_DIALOG_HEADER));
         modelNameFetchService.setOnFailed(this::onIoServiceFailed);
         modelNameFetchService.setOnSucceeded(this::onModelNameFetchingSucceeded);
     }

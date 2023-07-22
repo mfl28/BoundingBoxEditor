@@ -205,17 +205,18 @@ public class BoundingBoxEditorTestBase {
     @Start
     protected void onStart(Stage stage) {
         Platform.setImplicitExit(false);
-        controller = new Controller(stage, null);
-        mainView = controller.getView();
+        mainView = new MainView();
+
+        final Scene scene = createSceneFromParent(mainView);
+        scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
+        stage.setScene(scene);
+
+        controller = new Controller(stage, mainView, null);
         model = controller.getModel();
         // To make sure that the window is on top of all other windows at the start.
         stage.setAlwaysOnTop(true);
         stage.setMaximized(Boolean.getBoolean(FULL_SCREEN_TESTS_SYSTEM_PROPERTY_NAME));
 
-        final Scene scene = createSceneFromParent(mainView);
-        scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
-
-        stage.setScene(scene);
         stage.show();
         // To allow for correct testing of dialog windows (which should be in front of the main stage)
         // switch the top-positioning of the main stage off after it is shown.
