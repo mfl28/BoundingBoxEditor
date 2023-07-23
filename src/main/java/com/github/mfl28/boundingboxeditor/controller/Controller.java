@@ -509,7 +509,7 @@ public class Controller {
         }
 
         keyCombinationHandlers.stream()
-                .filter(keyCombinationHandler -> keyCombinationHandler.getKeyCombination().match(event) && keyCombinationHandler.hasOnPressedHandler())
+                .filter(keyCombinationHandler -> keyCombinationHandler.handlesPressed(event))
                 .findFirst()
                 .ifPresent(keyCombinationEventHandler -> keyCombinationEventHandler.onPressed(event));
     }
@@ -525,7 +525,7 @@ public class Controller {
         }
 
         keyCombinationHandlers.stream()
-                .filter(keyCombinationHandler -> keyCombinationHandler.getKeyCombination().match(event) && keyCombinationHandler.hasOnReleasedHandler())
+                .filter(keyCombinationHandler -> keyCombinationHandler.handlesReleased(event))
                 .findFirst()
                 .ifPresent(keyCombinationEventHandler -> keyCombinationEventHandler.onReleased(event));
     }
@@ -674,7 +674,7 @@ public class Controller {
                 "About " + PROGRAM_NAME,
                 PROGRAM_NAME,
                 "Version: " + PROGRAM_VERSION +
-                "\nLicense: " + PROGRAM_LICENSE,
+                        "\nLicense: " + PROGRAM_LICENSE,
                 stage);
     }
 
@@ -739,10 +739,16 @@ public class Controller {
 
     private List<KeyCombinationEventHandler> createKeyCombinationHandlers() {
         return List.of(
+                new KeyCombinationEventHandler(KeyCombination.NO_MATCH, null,
+                        event -> {
+                            navigatePreviousKeyPressed.set(false);
+                            navigateNextKeyPressed.set(false);
+                        },
+                        event -> KeyCombinations.navigationReleaseKeyCodes.contains(event.getCode())),
                 new KeyCombinationEventHandler(KeyCombinations.navigateNext,
-                        event -> handleNavigateNextKeyPressed(), event -> navigateNextKeyPressed.set(false)),
+                        event -> handleNavigateNextKeyPressed(), null),
                 new KeyCombinationEventHandler(KeyCombinations.navigatePrevious,
-                        event -> handleNavigatePreviousKeyPressed(), event -> navigatePreviousKeyPressed.set(false)),
+                        event -> handleNavigatePreviousKeyPressed(), null),
                 new SingleFireKeyCombinationEventHandler(KeyCombinations.deleteSelectedBoundingShape,
                         event -> view.removeSelectedTreeItemAndChildren(), null),
                 new SingleFireKeyCombinationEventHandler(KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected,
@@ -1329,7 +1335,7 @@ public class Controller {
 
     private void updateStageTitle() {
         ImageMetaData currentImageMetaData = model.getCurrentImageMetaData();
-    stage.setTitle(PROGRAM_IDENTIFIER + PROGRAM_NAME_EXTENSION_SEPARATOR
+        stage.setTitle(PROGRAM_IDENTIFIER + PROGRAM_NAME_EXTENSION_SEPARATOR
                 + model.getCurrentImageFilePath() + " " + currentImageMetaData.getDimensionsString());
     }
 
@@ -1589,6 +1595,8 @@ public class Controller {
                 KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination navigatePrevious = new KeyCodeCombination(KeyCode.A,
                 KeyCombination.SHORTCUT_DOWN);
+
+        public static final List<KeyCode> navigationReleaseKeyCodes = List.of(KeyCode.A, KeyCode.D, KeyCode.CONTROL, KeyCode.META);
         public static final KeyCombination showAllBoundingShapes =
                 new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
         public static final KeyCombination hideAllBoundingShapes =

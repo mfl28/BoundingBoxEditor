@@ -22,16 +22,37 @@ import javafx.event.EventHandler;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
+import java.util.function.Function;
+
 public class KeyCombinationEventHandler {
     private final KeyCombination keyCombination;
     private final EventHandler<KeyEvent> onPressedHandler;
     private final EventHandler<KeyEvent> onReleasedHandler;
+    private final Function<KeyEvent, Boolean> releaseMatcher;
 
-    public KeyCombinationEventHandler(KeyCombination keyCombination, EventHandler<KeyEvent> onPressedHandler, EventHandler<KeyEvent> onReleasedHandler) {
+    public KeyCombinationEventHandler(
+            KeyCombination keyCombination,
+            EventHandler<KeyEvent> onPressedHandler,
+            EventHandler<KeyEvent> onReleasedHandler,
+            Function<KeyEvent, Boolean> releaseMatcher) {
         this.keyCombination = keyCombination;
         this.onPressedHandler = onPressedHandler;
         this.onReleasedHandler = onReleasedHandler;
+        this.releaseMatcher = releaseMatcher;
     }
+
+    public KeyCombinationEventHandler(
+            KeyCombination keyCombination,
+            EventHandler<KeyEvent> onPressedHandler,
+            EventHandler<KeyEvent> onReleasedHandler) {
+        this(
+                keyCombination,
+                onPressedHandler,
+                onReleasedHandler,
+                null
+        );
+    }
+
 
     public KeyCombination getKeyCombination() {
         return keyCombination;
@@ -55,5 +76,25 @@ public class KeyCombinationEventHandler {
         if(this.onReleasedHandler != null) {
             this.onReleasedHandler.handle(event);
         }
+    }
+
+    public boolean matchPressed(KeyEvent event) {
+        return keyCombination.match(event);
+    }
+
+    public boolean matchReleased(KeyEvent event) {
+        if(releaseMatcher != null) {
+            return releaseMatcher.apply(event);
+        } else {
+            return keyCombination.match(event);
+        }
+    }
+
+    public boolean handlesPressed(KeyEvent event) {
+        return hasOnPressedHandler() && matchPressed(event);
+    }
+
+    public boolean handlesReleased(KeyEvent event) {
+        return hasOnReleasedHandler() && matchReleased(event);
     }
 }

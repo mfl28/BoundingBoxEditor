@@ -24,6 +24,7 @@ import com.github.mfl28.boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
@@ -57,6 +58,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
 
         verifyThat(controller.keyCombinationHandlers.stream().map(KeyCombinationEventHandler::getKeyCombination).toList(),
                 Matchers.containsInAnyOrder(
+                        KeyCombination.NO_MATCH,
                         Controller.KeyCombinations.navigateNext, Controller.KeyCombinations.navigatePrevious,
                         Controller.KeyCombinations.showAllBoundingShapes, Controller.KeyCombinations.hideAllBoundingShapes,
                         Controller.KeyCombinations.showSelectedBoundingShape, Controller.KeyCombinations.hideSelectedBoundingShape,
@@ -69,8 +71,12 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                         Controller.KeyCombinations.hideNonSelectedBoundingShapes, Controller.KeyCombinations.simplifyPolygon
                 ));
 
-        testNavigateNextKeyEvent(testinfo);
-        testNavigatePreviousKeyEvent(testinfo);
+        testNavigateNextKeyEvent(testinfo, true, true, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");
+        testNavigatePreviousKeyEvent(testinfo, true, true, "rachel-hisko-rEM3cK8F1pk-unsplash.jpg");
+        testNavigateNextKeyEvent(testinfo, false, true, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");
+        testNavigatePreviousKeyEvent(testinfo, false, true, "rachel-hisko-rEM3cK8F1pk-unsplash.jpg");
+        testNavigateNextKeyEvent(testinfo, true, false, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");
+        testNavigatePreviousKeyEvent(testinfo, true, false, "rachel-hisko-rEM3cK8F1pk-unsplash.jpg");
         testSelectFreehandDrawingModeKeyEvent();
         testSelectRectangleModeKeyEvent();
         testFocusCategorySearchFieldKeyEvent();
@@ -307,34 +313,38 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         verifyThat(controller.getView().getEditor().getEditorToolBar().getFreehandModeButton().isSelected(), Matchers.is(true));
     }
 
-    private void testNavigatePreviousKeyEvent(TestInfo testinfo) {
+    private void testNavigatePreviousKeyEvent(TestInfo testinfo, boolean keyReleased, boolean ctrlReleased, String expectedTargetImageName) {
         KeyEvent navigatePreviousPressedEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.A, false, true, false, false);
 
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(navigatePreviousPressedEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
-        KeyEvent navigatePreviousReleasedEvent = new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.A, false, true, false, false);
+        KeyEvent navigatePreviousReleasedEvent = new KeyEvent(KeyEvent.KEY_RELEASED, "", "",
+                keyReleased ? KeyCode.A : KeyCode.CONTROL, false, ctrlReleased, false, false);
         Platform.runLater(() -> controller.onRegisterSceneKeyReleased(navigatePreviousReleasedEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
         waitUntilCurrentImageIsLoaded(testinfo);
 
-        verifyThat(model.getCurrentImageFile().getName(), Matchers.equalTo("rachel-hisko-rEM3cK8F1pk-unsplash.jpg"));
+        verifyThat(model.getCurrentImageFile().getName(), Matchers.equalTo(
+                expectedTargetImageName));
     }
 
-    private void testNavigateNextKeyEvent(TestInfo testinfo) {
+    private void testNavigateNextKeyEvent(TestInfo testinfo, boolean keyReleased, boolean ctrlReleased, String expectedTargetImageName) {
         KeyEvent navigateNextPressedEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.D, false, true, false, false);
 
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(navigateNextPressedEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
-        KeyEvent navigateNextReleasedEvent = new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.D, false, true, false, false);
+        KeyEvent navigateNextReleasedEvent = new KeyEvent(KeyEvent.KEY_RELEASED, "", "",
+                keyReleased ? KeyCode.D : KeyCode.CONTROL, false, ctrlReleased, false, false);
         Platform.runLater(() -> controller.onRegisterSceneKeyReleased(navigateNextReleasedEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
         waitUntilCurrentImageIsLoaded(testinfo);
 
-        verifyThat(model.getCurrentImageFile().getName(), Matchers.equalTo("wexor-tmg-L-2p8fapOA8-unsplash.jpg"));
+        verifyThat(model.getCurrentImageFile().getName(), Matchers.equalTo(
+                expectedTargetImageName));
     }
 
 }
