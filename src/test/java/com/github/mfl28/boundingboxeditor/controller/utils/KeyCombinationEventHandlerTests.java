@@ -21,6 +21,7 @@ package com.github.mfl28.boundingboxeditor.controller.utils;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,8 @@ class KeyCombinationEventHandlerTests {
     @Test
     void checkKeyCombinationEventHandlerWithNonNullHandlers() {
         KeyCodeCombination testCombination = new KeyCodeCombination(KeyCode.A, KeyCombination.SHIFT_DOWN);
+        KeyEvent trueEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.A, true, false, false, false);
+        KeyEvent falseEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.B, true, false, false, false);
 
         AtomicInteger numPressedHandled = new AtomicInteger();
         AtomicInteger numReleasedHandled = new AtomicInteger();
@@ -45,6 +48,10 @@ class KeyCombinationEventHandlerTests {
         Assertions.assertTrue(keyCombinationEventHandler.hasOnPressedHandler());
         Assertions.assertTrue(keyCombinationEventHandler.hasOnReleasedHandler());
         Assertions.assertEquals(keyCombinationEventHandler.getKeyCombination(), testCombination);
+        Assertions.assertTrue(keyCombinationEventHandler.handlesPressed(trueEvent));
+        Assertions.assertTrue(keyCombinationEventHandler.handlesReleased(trueEvent));
+        Assertions.assertFalse(keyCombinationEventHandler.handlesPressed(falseEvent));
+    Assertions.assertFalse(keyCombinationEventHandler.handlesReleased(falseEvent));
 
         keyCombinationEventHandler.onPressed(null);
         Assertions.assertEquals(1, numPressedHandled.get());
@@ -59,6 +66,8 @@ class KeyCombinationEventHandlerTests {
     @Test
     void checkKeyCombinationEventHandlerWithNullHandlers() {
         KeyCodeCombination testCombination = new KeyCodeCombination(KeyCode.A, KeyCombination.SHIFT_DOWN);
+        KeyEvent trueEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.A, true, false, false, false);
+        KeyEvent falseEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.B, true, false, false, false);
 
         KeyCombinationEventHandler keyCombinationEventHandler = new KeyCombinationEventHandler(
                 testCombination, null, null
@@ -67,9 +76,36 @@ class KeyCombinationEventHandlerTests {
         Assertions.assertFalse(keyCombinationEventHandler.hasOnPressedHandler());
         Assertions.assertFalse(keyCombinationEventHandler.hasOnReleasedHandler());
         Assertions.assertEquals(keyCombinationEventHandler.getKeyCombination(), testCombination);
+        Assertions.assertFalse(keyCombinationEventHandler.handlesPressed(trueEvent));
+        Assertions.assertFalse(keyCombinationEventHandler.handlesReleased(trueEvent));
+        Assertions.assertFalse(keyCombinationEventHandler.handlesPressed(falseEvent));
+        Assertions.assertFalse(keyCombinationEventHandler.handlesReleased(falseEvent));
+
 
         keyCombinationEventHandler.onPressed(null);
         keyCombinationEventHandler.onReleased(null);
+    }
+
+    @Test
+    void checkKeyCombinationEventHandlerWithNonNullReleaseMatcher() {
+        KeyCodeCombination testCombination = new KeyCodeCombination(KeyCode.A, KeyCombination.SHIFT_DOWN);
+        KeyEvent trueEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.A, true, false, false, false);
+        KeyEvent falseEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.B, true, false, false, false);
+
+        AtomicInteger numPressedHandled = new AtomicInteger();
+        AtomicInteger numReleasedHandled = new AtomicInteger();
+
+        KeyCombinationEventHandler keyCombinationEventHandler = new KeyCombinationEventHandler(
+                testCombination,
+                event -> numPressedHandled.addAndGet(1),
+                event -> numReleasedHandled.addAndGet(1),
+                event -> event.getCode() == KeyCode.B
+        );
+
+        Assertions.assertTrue(keyCombinationEventHandler.handlesPressed(trueEvent));
+        Assertions.assertFalse(keyCombinationEventHandler.handlesReleased(trueEvent));
+        Assertions.assertFalse(keyCombinationEventHandler.handlesPressed(falseEvent));
+        Assertions.assertTrue(keyCombinationEventHandler.handlesReleased(falseEvent));
     }
 
     @Test
