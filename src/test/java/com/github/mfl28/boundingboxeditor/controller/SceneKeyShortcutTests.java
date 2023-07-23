@@ -257,7 +257,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testSelectPolygonModeKeyEvent() {
-        KeyEvent selectPolygonModeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.P, false, true,false, false);
+        KeyEvent selectPolygonModeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DIGIT2, false, true,false, false);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(selectPolygonModeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -298,7 +298,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testSelectRectangleModeKeyEvent() {
-        KeyEvent selectRectangleModeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.K, false, true,false, false);
+        KeyEvent selectRectangleModeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DIGIT1, false, true,false, false);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(selectRectangleModeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -306,7 +306,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testSelectFreehandDrawingModeKeyEvent() {
-        KeyEvent selectFreehandDrawingModeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.S, false, true,false, false);
+        KeyEvent selectFreehandDrawingModeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DIGIT3, false, true,false, false);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(selectFreehandDrawingModeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 

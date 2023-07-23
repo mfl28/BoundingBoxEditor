@@ -78,7 +78,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
 
         // Select polygon drawing mode:
-        timeOutClickOn(robot, "Polygon", testinfo);
+        timeOutClickOn(robot, "#polygon-mode-button-icon", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         // Draw a bounding polygon.
@@ -291,7 +291,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         // Change drawing mode while construction is in progress.
-        timeOutClickOn(robot, "Rectangle", testinfo);
+        timeOutClickOn(robot, "#rectangle-mode-button-icon", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(1), saveScreenshot(testinfo));
@@ -378,7 +378,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         // Select polygon drawing mode:
-        timeOutClickOn(robot, "Freehand", testinfo);
+        timeOutClickOn(robot, "#freehand-mode-button-icon", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
         // Draw a bounding polygon.

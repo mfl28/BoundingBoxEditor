@@ -697,6 +697,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-background-color: $base-background-light-color;
 }
 
+#drawing-mode-toolbox {
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+    -fx-border-color: $base-alt-accent-color;
+}
+
 #bounding-box-explorer-top-panel {
     -fx-spacing: 10px;
 }
