@@ -72,9 +72,6 @@ public class EditorToolBarView extends ToolBar implements View {
     private static final String SHOW_BOUNDING_BOXES_ICON_BUTTON_ID = "show-bounding-boxes-icon";
     private static final String HIDE_BOUNDING_BOXES_ICON_BUTTON_ID = "hide-bounding-boxes-icon";
     private static final String RESET_IMAGE_SIZE_ICON_BUTTON_ID = "reset-image-size-icon";
-    private static final String RECTANGLE_MODE_BUTTON_TEXT = "Rectangle";
-    private static final String POLYGON_MODE_BUTTON_TEXT = "Polygon";
-    private static final String FREEHAND_MODE_BUTTON_TEXT = "Freehand";
     private static final String RECTANGLE_MODE_BUTTON_ICON_ID = "rectangle-mode-button-icon";
     private static final String FREEHAND_MODE_BUTTON_ICON_ID = "freehand-mode-button-icon";
     private static final String POLYGON_MODE_BUTTON_ICON_ID = "polygon-mode-button-icon";
@@ -82,17 +79,18 @@ public class EditorToolBarView extends ToolBar implements View {
     private static final String PREDICT_BUTTON_ID = "predict-button";
     private static final String FREEHAND_DRAWING_MODE = "Select Freehand Drawing-Mode";
     private static final String FREEHAND_DRAWING_MODE_TOOLTIP_TEXT = FREEHAND_DRAWING_MODE;
+    private static final String DRAWING_MODE_TOOLBOX_ID = "drawing-mode-toolbox";
 
     private final IconButton showBoundingShapesButton =
             new IconButton(SHOW_BOUNDING_BOXES_ICON_BUTTON_ID, IconButton.IconType.BACKGROUND);
     private final IconButton hideBoundingShapesButton =
             new IconButton(HIDE_BOUNDING_BOXES_ICON_BUTTON_ID, IconButton.IconType.BACKGROUND);
     private final ToggleButton rectangleModeButton =
-            createDrawModeButton(RECTANGLE_MODE_BUTTON_TEXT, RECTANGLE_MODE_BUTTON_ICON_ID);
+            createDrawModeButton("", RECTANGLE_MODE_BUTTON_ICON_ID);
     private final ToggleButton polygonModeButton =
-            createDrawModeButton(POLYGON_MODE_BUTTON_TEXT, POLYGON_MODE_BUTTON_ICON_ID);
+            createDrawModeButton("", POLYGON_MODE_BUTTON_ICON_ID);
     private final ToggleButton freehandModeButton =
-            createDrawModeButton(FREEHAND_MODE_BUTTON_TEXT, FREEHAND_MODE_BUTTON_ICON_ID);
+            createDrawModeButton("", FREEHAND_MODE_BUTTON_ICON_ID);
     private final ToggleGroup modeToggleGroup = new ToggleGroup();
 
     private final IconButton resetSizeAndCenterImageButton =
@@ -300,7 +298,7 @@ public class EditorToolBarView extends ToolBar implements View {
                 button.textFillProperty()));
 
         button.setGraphic(icon);
-        button.setContentDisplay(ContentDisplay.RIGHT);
+        button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
 
         button.setFocusTraversable(false);
         button.setPickOnBounds(true);
@@ -351,6 +349,8 @@ public class EditorToolBarView extends ToolBar implements View {
         modeToggleGroup.selectToggle(rectangleModeButton);
 
         predictButton.setId(PREDICT_BUTTON_ID);
+
+        drawingModeToolBox.setId(DRAWING_MODE_TOOLBOX_ID);
     }
 
     private void setUpInternalListeners() {

@@ -1618,11 +1618,11 @@ public class Controller {
                 new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
         public static final KeyCombination deleteSelectedBoundingShape = new KeyCodeCombination(KeyCode.DELETE);
         public static final KeyCombination selectRectangleDrawingMode =
-                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN);
+                new KeyCodeCombination(KeyCode.DIGIT1, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination selectPolygonDrawingMode =
-                new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
+                new KeyCodeCombination(KeyCode.DIGIT2, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination selectFreehandDrawingMode =
-                new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN);
+                new KeyCodeCombination(KeyCode.DIGIT3, KeyCombination.SHORTCUT_DOWN);
         public static final KeyCombination removeEditingVerticesWhenBoundingPolygonSelected =
                 new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_DOWN);
         public static final KeyCombination addVerticesToPolygon =
