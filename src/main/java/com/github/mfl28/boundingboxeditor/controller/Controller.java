@@ -1302,7 +1302,7 @@ public class Controller {
 
         try(Stream<Path> imageFiles = Files.walk(path, MAX_DIRECTORY_DEPTH)) {
             return imageFiles.map(file -> new File(file.toString()))
-                    .filter(File::isFile)
+                    .filter(file -> file.isFile() && !file.isHidden())
                     .sorted(Comparator.comparing(File::getName))
                     .toList();
         }
