@@ -2,12 +2,12 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>boundingboxeditor</id>
-    <version>2.5.1</version>
+    <version>2.6.0</version>
     <owners>Markus Fleischhacker</owners>
     <title>Bounding Box Editor</title>
     <authors>Markus Fleischhacker</authors>
     <projectUrl>https://github.com/mfl28/BoundingBoxEditor</projectUrl>
-    <iconUrl>https://cdn.jsdelivr.net/gh/mfl28/BoundingBoxEditor@2.5.1/src/main/resources/icons/app_icon.png</iconUrl>
+    <iconUrl>https://cdn.jsdelivr.net/gh/mfl28/BoundingBoxEditor@2.6.0/src/main/resources/icons/app_icon.png</iconUrl>
     <copyright>2023 Markus Fleischhacker</copyright>
     <licenseUrl>https://github.com/mfl28/BoundingBoxEditor/blob/master/LICENSE</licenseUrl>
     <projectSourceUrl>https://github.com/mfl28/BoundingBoxEditor</projectSourceUrl>
@@ -15,7 +15,7 @@
     <summary>Graphical image annotation application</summary>
     <description>This is an image annotation desktop application that allows you to easily create and edit ground-truth labels for object detection and segmentation models.</description>
     <tags>boundingboxeditor 64-bit gui image annotation</tags>
-    <releaseNotes>https://github.com/mfl28/BoundingBoxEditor/releases/tag/v2.5.1</releaseNotes>
+    <releaseNotes>https://github.com/mfl28/BoundingBoxEditor/releases/tag/v2.6.0</releaseNotes>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />
