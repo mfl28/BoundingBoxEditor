@@ -26,6 +26,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.util.HashMap;
@@ -57,6 +58,7 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
 
         setDialogPane(dialogPane);
         setResizable(true);
+        dialogPane.setMinHeight(Region.USE_PREF_SIZE);
 
         setUpInternalListeners();
     }
