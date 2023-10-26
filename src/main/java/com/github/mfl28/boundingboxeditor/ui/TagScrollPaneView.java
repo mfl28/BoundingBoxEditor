@@ -97,8 +97,8 @@ class TagScrollPaneView extends ScrollPane implements View {
             // Empty or already existing tags are not added to the list of tags.
             if(!text.isEmpty() && !tags.get().contains(text)) {
                 tags.get().add(text);
-                tagInputField.clear();
             }
+            tagInputField.clear();
             requestFocus();
         });
 

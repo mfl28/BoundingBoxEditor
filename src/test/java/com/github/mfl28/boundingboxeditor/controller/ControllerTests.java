@@ -157,9 +157,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
-             .press(KeyCode.CONTROL)
+             .press(KeyCode.SHORTCUT)
              .scroll(-30)
-             .release(KeyCode.CONTROL);
+             .release(KeyCode.SHORTCUT);
 
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
@@ -285,9 +285,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
-             .press(KeyCode.CONTROL)
+             .press(KeyCode.SHORTCUT)
              .scroll(-30)
-             .release(KeyCode.CONTROL);
+             .release(KeyCode.SHORTCUT);
 
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
@@ -419,9 +419,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
-             .press(KeyCode.CONTROL)
+             .press(KeyCode.SHORTCUT)
              .scroll(-30)
-             .release(KeyCode.CONTROL);
+             .release(KeyCode.SHORTCUT);
 
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),

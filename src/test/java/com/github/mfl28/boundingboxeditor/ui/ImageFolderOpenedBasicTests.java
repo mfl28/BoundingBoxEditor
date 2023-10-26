@@ -322,11 +322,6 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
-        // Flush text-field manually
-        TextField textField = robot.lookup("#category-input-field").query();
-        textField.setText("");
-        WaitForAsyncUtils.waitForFxEvents();
-
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(1), saveScreenshot(testinfo));
 
         // Renaming a category

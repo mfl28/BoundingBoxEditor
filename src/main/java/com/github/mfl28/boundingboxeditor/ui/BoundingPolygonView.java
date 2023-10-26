@@ -594,7 +594,7 @@ public class BoundingPolygonView extends Polygon implements
     }
 
     private void handleMousePressed(MouseEvent event) {
-        if(!event.isControlDown()) {
+        if(!event.isShortcutDown()) {
             boundingShapeViewData.getToggleGroup().selectToggle(this);
 
             if(event.isShiftDown() && event.getButton().equals(MouseButton.MIDDLE)) {

@@ -504,7 +504,7 @@ public class Controller {
             return;
         }
 
-        if(event.getCode() == KeyCode.CONTROL || event.getCode() == KeyCode.META) {
+        if(event.isShortcutDown()) {
             view.getEditorImagePane().setZoomableAndPannable(true);
         }
 
@@ -520,7 +520,7 @@ public class Controller {
      * @param event the short-cut key-event
      */
     public void onRegisterSceneKeyReleased(KeyEvent event) {
-        if(event.getCode() == KeyCode.CONTROL || event.getCode() == KeyCode.META) {
+        if(!event.isShortcutDown()) {
             view.getEditorImagePane().setZoomableAndPannable(false);
         }
 
@@ -597,7 +597,7 @@ public class Controller {
         final EditorImagePaneView imagePane = view.getEditorImagePane();
 
         if(imagePane.isImageFullyLoaded() && event.getButton().equals(MouseButton.PRIMARY)) {
-            if(event.isControlDown()) {
+            if(event.isShortcutDown()) {
                 view.getEditorImageView().setCursor(Cursor.OPEN_HAND);
             }
 
@@ -622,7 +622,7 @@ public class Controller {
         EditorImagePaneView imagePaneView = view.getEditorImagePane();
 
         if(imagePaneView.isImageFullyLoaded()
-                && !event.isControlDown()
+                && !event.isShortcutDown()
                 && imagePaneView.isCategorySelected()) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
                 if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.BOX) {
@@ -744,7 +744,7 @@ public class Controller {
                             navigatePreviousKeyPressed.set(false);
                             navigateNextKeyPressed.set(false);
                         },
-                        event -> KeyCombinations.navigationReleaseKeyCodes.contains(event.getCode())),
+                        event -> KeyCombinations.navigationReleaseKeyCodes.contains(event.getCode()) || !event.isShortcutDown()),
                 new KeyCombinationEventHandler(KeyCombinations.navigateNext,
                         event -> handleNavigateNextKeyPressed(), null),
                 new KeyCombinationEventHandler(KeyCombinations.navigatePrevious,
@@ -1596,7 +1596,8 @@ public class Controller {
         public static final KeyCombination navigatePrevious = new KeyCodeCombination(KeyCode.A,
                 KeyCombination.SHORTCUT_DOWN);
 
-        public static final List<KeyCode> navigationReleaseKeyCodes = List.of(KeyCode.A, KeyCode.D, KeyCode.CONTROL, KeyCode.META);
+        public static final List<KeyCode> navigationReleaseKeyCodes = List.of(
+                KeyCode.A, KeyCode.D);
         public static final KeyCombination showAllBoundingShapes =
                 new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
         public static final KeyCombination hideAllBoundingShapes =

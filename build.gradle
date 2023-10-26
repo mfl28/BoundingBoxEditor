@@ -41,7 +41,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
 
     // TestFx UI TesTing // https://mvnrepository.com/artifact/org.testfx/testfx-junit5
-    testImplementation('org.testfx:testfx-junit5:4.0.16-alpha') {
+    testImplementation('org.testfx:testfx-junit5:4.0.17') {
         exclude group: 'org.hamcrest'
     }
 
@@ -106,7 +106,7 @@ dependencies {
 }
 
 javafx {
-    version = '20'
+    version = '21.0.1'
     modules = ['javafx.controls', 'javafx.swing']
 }
 

@@ -264,7 +264,7 @@ public class BoundingBoxView extends Rectangle implements
         });
 
         setOnMousePressed(event -> {
-            if(!event.isControlDown()) {
+            if(!event.isShortcutDown()) {
                 boundingShapeViewData.getToggleGroup().selectToggle(this);
 
                 if(event.getButton().equals(MouseButton.PRIMARY)) {
@@ -276,7 +276,7 @@ public class BoundingBoxView extends Rectangle implements
         });
 
         setOnMouseDragged(event -> {
-            if(!event.isControlDown()) {
+            if(!event.isShortcutDown()) {
                 if(event.getButton().equals(MouseButton.PRIMARY)) {
                     Point2D newXY = new Point2D(event.getX() - dragAnchor.getX(), event.getY() - dragAnchor.getY());
                     Point2D newXYConfined = MathUtils.clampWithinBounds(newXY, constructCurrentMoveBounds());

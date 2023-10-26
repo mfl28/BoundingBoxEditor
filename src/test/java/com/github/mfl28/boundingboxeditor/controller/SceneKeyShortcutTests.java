@@ -22,11 +22,9 @@ import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
 import com.github.mfl28.boundingboxeditor.controller.utils.KeyCombinationEventHandler;
 import com.github.mfl28.boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
+import javafx.event.EventType;
 import javafx.geometry.Point2D;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
+import javafx.scene.input.*;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -154,15 +152,15 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         double originalFitHeight = mainView.getEditorImageView().getFitHeight();
 
         robot.moveTo(mainView.getEditorImageView())
-                .press(KeyCode.CONTROL)
+                .press(KeyCode.SHORTCUT)
                 .scroll(-30)
-                .release(KeyCode.CONTROL);
+                .release(KeyCode.SHORTCUT);
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getEditorImageView().getFitWidth(), Matchers.not(Matchers.equalTo(originalFitWidth)));
         verifyThat(mainView.getEditorImageView().getFitHeight(), Matchers.not(Matchers.equalTo(originalFitHeight)));
 
-        KeyEvent resetImageViewSizeKeyEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.R, false, true,false, false);
+        KeyEvent resetImageViewSizeKeyEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.resetSizeAndCenterImage, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(resetImageViewSizeKeyEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -171,7 +169,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testRemoveCurrentlySelectedBoundingShapeKeyEvent() {
-        KeyEvent removeSelectedShapeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DELETE, false, false,false, false);
+        KeyEvent removeSelectedShapeEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.deleteSelectedBoundingShape, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(removeSelectedShapeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -179,7 +177,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testHideNonSelectedShapesKeyEvent(BoundingPolygonView polygon, BoundingPolygonView polygon2) {
-        KeyEvent hideNonSelectedShapesEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.H, true, false,false, false);
+        KeyEvent hideNonSelectedShapesEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.hideNonSelectedBoundingShapes, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(hideNonSelectedShapesEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -188,7 +186,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testInitiateCategoryChangeKeyEvent(TestInfo testinfo, FxRobot robot) {
-        KeyEvent categoryChangeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.C, true, false,false, false);
+        KeyEvent categoryChangeEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.changeSelectedBoundingShapeCategory, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(categoryChangeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -201,7 +199,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
 
     private void testSimplifySelectedPolygonKeyEvent(BoundingPolygonView polygon) {
         int numVertices = polygon.getPoints().size() / 2;
-        KeyEvent simplifySelectedPolygonEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.S, true, false,false, false);
+        KeyEvent simplifySelectedPolygonEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.simplifyPolygon, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(simplifySelectedPolygonEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -213,7 +211,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         robot.clickOn("#vertex-handle", MouseButton.MIDDLE);
         WaitForAsyncUtils.waitForFxEvents();
 
-        KeyEvent removeEditingVerticesEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DELETE, true, false,false, false);
+        KeyEvent removeEditingVerticesEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(removeEditingVerticesEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -221,7 +219,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testShowAllBoundingShapesKeyEvent(BoundingPolygonView polygon) {
-        KeyEvent showAllBoundingShapeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.V, false, true,true, false);
+        KeyEvent showAllBoundingShapeEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.showAllBoundingShapes, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(showAllBoundingShapeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -230,7 +228,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testHideAllBoundingShapesKeyEvent(BoundingPolygonView polygon) {
-        KeyEvent hideAllBoundingShapeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.H, false, true,true, false);
+        KeyEvent hideAllBoundingShapeEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.hideAllBoundingShapes, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(hideAllBoundingShapeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -239,7 +237,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testShowSelectedBoundingShapeKeyEvent(BoundingPolygonView polygon) {
-        KeyEvent showSelectedBoundingShapeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.V, false, true,false, false);
+        KeyEvent showSelectedBoundingShapeEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.showSelectedBoundingShape, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(showSelectedBoundingShapeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -248,7 +246,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testHideSelectedBoundingShapeKeyEvent(BoundingPolygonView polygon) {
-        KeyEvent hideSelectedBoundingShapeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.H, false, true,false, false);
+        KeyEvent hideSelectedBoundingShapeEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.hideSelectedBoundingShape, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(hideSelectedBoundingShapeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -257,7 +255,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testSelectPolygonModeKeyEvent() {
-        KeyEvent selectPolygonModeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DIGIT2, false, true,false, false);
+        KeyEvent selectPolygonModeEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.selectPolygonDrawingMode, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(selectPolygonModeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -265,7 +263,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testFocusTagTextFieldKeyEvent() {
-        KeyEvent focusTagTextFieldEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.T, false, true,false, false);
+        KeyEvent focusTagTextFieldEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.focusTagTextField, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(focusTagTextFieldEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -274,7 +272,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testFocusCategoryNameTextFieldKeyEvent() {
-        KeyEvent focusCategoryNameTextField = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.N, false, true,false, false);
+        KeyEvent focusCategoryNameTextField = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.focusCategoryNameTextField, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(focusCategoryNameTextField));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -282,7 +280,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testFocusFileSearchKeyEvent() {
-        KeyEvent focusFileSearchFieldEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F, false, true,true, false);
+        KeyEvent focusFileSearchFieldEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.focusFileSearchField, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(focusFileSearchFieldEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -290,7 +288,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testFocusCategorySearchFieldKeyEvent() {
-        KeyEvent focusCategorySearchFieldEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F, false, true,false, false);
+        KeyEvent focusCategorySearchFieldEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.focusCategorySearchField, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(focusCategorySearchFieldEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -298,7 +296,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testSelectRectangleModeKeyEvent() {
-        KeyEvent selectRectangleModeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DIGIT1, false, true,false, false);
+        KeyEvent selectRectangleModeEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.selectRectangleDrawingMode, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(selectRectangleModeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -306,7 +304,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testSelectFreehandDrawingModeKeyEvent() {
-        KeyEvent selectFreehandDrawingModeEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DIGIT3, false, true,false, false);
+        KeyEvent selectFreehandDrawingModeEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.selectFreehandDrawingMode, KeyEvent.KEY_PRESSED);
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(selectFreehandDrawingModeEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -314,13 +312,20 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testNavigatePreviousKeyEvent(TestInfo testinfo, boolean keyReleased, boolean ctrlReleased, String expectedTargetImageName) {
-        KeyEvent navigatePreviousPressedEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.A, false, true, false, false);
+        KeyEvent navigatePreviousPressedEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.navigatePrevious, KeyEvent.KEY_PRESSED);
+        KeyEvent navigatePreviousReleasedEventTemplate = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.navigatePrevious, KeyEvent.KEY_RELEASED);
+
+        KeyEvent navigatePreviousReleasedEvent = new KeyEvent(
+                navigatePreviousReleasedEventTemplate.getEventType(), navigatePreviousReleasedEventTemplate.getCharacter(),
+                navigatePreviousReleasedEventTemplate.getText(),
+                !keyReleased ? (navigatePreviousReleasedEventTemplate.isControlDown() ? KeyCode.CONTROL : KeyCode.COMMAND) : navigatePreviousReleasedEventTemplate.getCode(),
+                navigatePreviousReleasedEventTemplate.isShiftDown(),
+                navigatePreviousReleasedEventTemplate.isControlDown() && !ctrlReleased,
+                navigatePreviousReleasedEventTemplate.isAltDown(), navigatePreviousReleasedEventTemplate.isMetaDown() && !ctrlReleased);
 
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(navigatePreviousPressedEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
-        KeyEvent navigatePreviousReleasedEvent = new KeyEvent(KeyEvent.KEY_RELEASED, "", "",
-                keyReleased ? KeyCode.A : KeyCode.CONTROL, false, ctrlReleased, false, false);
         Platform.runLater(() -> controller.onRegisterSceneKeyReleased(navigatePreviousReleasedEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -331,13 +336,19 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     private void testNavigateNextKeyEvent(TestInfo testinfo, boolean keyReleased, boolean ctrlReleased, String expectedTargetImageName) {
-        KeyEvent navigateNextPressedEvent = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.D, false, true, false, false);
+        KeyEvent navigateNextPressedEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.navigateNext, KeyEvent.KEY_PRESSED);
+        KeyEvent navigateNextReleasedEventTemplate = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.navigateNext, KeyEvent.KEY_RELEASED);
+
+        KeyEvent navigateNextReleasedEvent = new KeyEvent(
+                navigateNextReleasedEventTemplate.getEventType(), navigateNextReleasedEventTemplate.getCharacter(), navigateNextReleasedEventTemplate.getText(),
+                !keyReleased ? (navigateNextReleasedEventTemplate.isControlDown() ? KeyCode.CONTROL : KeyCode.COMMAND) : navigateNextReleasedEventTemplate.getCode(),
+                navigateNextReleasedEventTemplate.isShiftDown(),
+                navigateNextReleasedEventTemplate.isControlDown() && !ctrlReleased,
+                navigateNextReleasedEventTemplate.isAltDown(), navigateNextReleasedEventTemplate.isMetaDown() && !ctrlReleased);
 
         Platform.runLater(() -> controller.onRegisterSceneKeyPressed(navigateNextPressedEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
-        KeyEvent navigateNextReleasedEvent = new KeyEvent(KeyEvent.KEY_RELEASED, "", "",
-                keyReleased ? KeyCode.D : KeyCode.CONTROL, false, ctrlReleased, false, false);
         Platform.runLater(() -> controller.onRegisterSceneKeyReleased(navigateNextReleasedEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -347,4 +358,18 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                 expectedTargetImageName));
     }
 
+    private KeyEvent buildKeyEventFromCombination(KeyCodeCombination keyCombination, EventType<KeyEvent> eventType) {
+        KeyEvent eventWindowLinux = new KeyEvent(eventType, "", "", keyCombination.getCode(), keyCombination.getShift() == KeyCombination.ModifierValue.DOWN,
+                keyCombination.getShortcut() == KeyCombination.ModifierValue.DOWN, keyCombination.getAlt() == KeyCombination.ModifierValue.DOWN,
+                false);
+        KeyEvent eventMac = new KeyEvent(eventType, "", "", keyCombination.getCode(), keyCombination.getShift() == KeyCombination.ModifierValue.DOWN,
+                false, keyCombination.getAlt() == KeyCombination.ModifierValue.DOWN,
+                keyCombination.getShortcut() == KeyCombination.ModifierValue.DOWN);
+
+        if (keyCombination.match(eventWindowLinux)) {
+            return eventWindowLinux;
+        }
+
+        return eventMac;
+    }
 }
