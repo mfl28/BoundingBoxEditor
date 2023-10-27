@@ -24,6 +24,7 @@ import com.github.mfl28.boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
 import javafx.event.EventType;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.input.*;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
@@ -150,6 +151,27 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     private void testResetImageViewSizeKeyEvent(FxRobot robot) {
         double originalFitWidth = mainView.getEditorImageView().getFitWidth();
         double originalFitHeight = mainView.getEditorImageView().getFitHeight();
+
+        robot.moveTo(mainView.getEditorImageView())
+                .scroll(-30);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getEditorImageView().getFitWidth(), Matchers.equalTo(originalFitWidth));
+        verifyThat(mainView.getEditorImageView().getFitHeight(), Matchers.equalTo(originalFitHeight));
+
+        robot.moveTo(mainView.getEditorImageView())
+                .press(KeyCode.SHORTCUT)
+                .press(MouseButton.PRIMARY)
+                        .moveBy(10, 10);
+
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getEditorImageView().getCursor(), Matchers.equalTo(Cursor.CLOSED_HAND));
+
+        robot.release(MouseButton.PRIMARY).release(KeyCode.SHORTCUT);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getEditorImageView().getCursor(), Matchers.equalTo(Cursor.OPEN_HAND));
 
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
