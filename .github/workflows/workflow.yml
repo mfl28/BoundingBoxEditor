@@ -163,9 +163,6 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
       - name: Build
         run: ./gradlew --info --stacktrace build -x test
-      - name: Test setup
-        run: |
-          "/Library/Application Support/VMware Tools/vmware-resolutionSet" $TEST_SCREEN_WIDTH $TEST_SCREEN_HEIGHT
       - name: Test
         id: test
         run: ./gradlew --info --stacktrace test

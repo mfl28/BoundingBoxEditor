@@ -498,7 +498,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private void setUpImageViewListeners() {
         imageView.setOnMouseDragged(event -> {
             if(isImageFullyLoaded()) {
-                if(event.isControlDown()) {
+                if(event.isShortcutDown()) {
                     imageView.setCursor(Cursor.CLOSED_HAND);
                 }
 
@@ -545,7 +545,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     private void setUpContentPaneListeners() {
         contentPane.setOnScroll(event -> {
-            if(isImageFullyLoaded() && event.isControlDown()) {
+            if(isImageFullyLoaded() && event.isShortcutDown()) {
                 Bounds contentPaneBounds = contentPane.getLayoutBounds();
                 Bounds viewportBounds = getViewportBounds();
 
