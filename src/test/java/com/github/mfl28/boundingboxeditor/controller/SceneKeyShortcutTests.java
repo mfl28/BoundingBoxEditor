@@ -44,6 +44,7 @@ import static org.testfx.api.FxAssert.verifyThat;
 
 @Tag("ui")
 class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
+
     @Start
     void start(Stage stage) {
         super.onStart(stage);
@@ -67,7 +68,8 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                         Controller.KeyCombinations.selectRectangleDrawingMode, Controller.KeyCombinations.selectPolygonDrawingMode,
                         Controller.KeyCombinations.selectFreehandDrawingMode, Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected,
                         Controller.KeyCombinations.changeSelectedBoundingShapeCategory,
-                        Controller.KeyCombinations.hideNonSelectedBoundingShapes, Controller.KeyCombinations.simplifyPolygon
+                        Controller.KeyCombinations.hideNonSelectedBoundingShapes, Controller.KeyCombinations.simplifyPolygon,
+                        Controller.KeyCombinations.saveBoundingShapeAsImage
                 ));
 
         testNavigateNextKeyEvent(testinfo, true, true, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");
@@ -144,8 +146,20 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         verifyThat(polygon2, NodeMatchers.isVisible());
 
         testHideNonSelectedShapesKeyEvent(polygon, polygon2);
+        testSaveCurrentlySelectedBoundingShapeKeyEvent(robot, testinfo);
         testRemoveCurrentlySelectedBoundingShapeKeyEvent();
         testResetImageViewSizeKeyEvent(robot);
+    }
+
+    private void testSaveCurrentlySelectedBoundingShapeKeyEvent(FxRobot robot, TestInfo testInfo) {
+        KeyEvent saveCurrentlySelectedBoundingShapeAsImageEvent = buildKeyEventFromCombination(
+                (KeyCodeCombination) Controller.KeyCombinations.saveBoundingShapeAsImage, KeyEvent.KEY_PRESSED);
+        Platform.runLater(() -> controller.onRegisterSceneKeyPressed(saveCurrentlySelectedBoundingShapeAsImageEvent));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.push(KeyCode.ESCAPE);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertNoTopModelStage(robot, testInfo);
     }
 
     private void testResetImageViewSizeKeyEvent(FxRobot robot) {

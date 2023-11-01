@@ -744,7 +744,9 @@ public class Controller {
                             navigatePreviousKeyPressed.set(false);
                             navigateNextKeyPressed.set(false);
                         },
-                        event -> KeyCombinations.navigationReleaseKeyCodes.contains(event.getCode()) || !event.isShortcutDown()),
+                        event -> (navigateNextKeyPressed.get() || navigatePreviousKeyPressed.get()) &&
+                                (KeyCombinations.navigationReleaseKeyCodes.contains(event.getCode()) || !event.isShortcutDown())
+                        ),
                 new KeyCombinationEventHandler(KeyCombinations.navigateNext,
                         event -> handleNavigateNextKeyPressed(), null),
                 new KeyCombinationEventHandler(KeyCombinations.navigatePrevious,
@@ -782,8 +784,10 @@ public class Controller {
                 new SingleFireKeyCombinationEventHandler(KeyCombinations.changeSelectedBoundingShapeCategory,
                         event -> view.initiateCurrentSelectedBoundingBoxCategoryChange(), null),
                 new SingleFireKeyCombinationEventHandler(KeyCombinations.simplifyPolygon,
-                        event -> view.simplifyCurrentSelectedBoundingPolygon(), null)
-        );
+                        event -> view.simplifyCurrentSelectedBoundingPolygon(), null),
+                new SingleFireKeyCombinationEventHandler(KeyCombinations.saveBoundingShapeAsImage,
+                        event -> view.saveCurrentSelectedBoundingShapeAsImage(), null)
+                );
     }
 
     private void onBoundingBoxPredictionSucceeded(WorkerStateEvent event) {
@@ -1635,6 +1639,8 @@ public class Controller {
 
         public static final KeyCombination simplifyPolygon =
                 new KeyCodeCombination(KeyCode.S, KeyCombination.SHIFT_DOWN);
+        public static final KeyCombination saveBoundingShapeAsImage =
+                new KeyCodeCombination(KeyCode.I, KeyCombination.SHIFT_DOWN);
 
         private KeyCombinations() {
             throw new IllegalStateException("Key Combination Class");

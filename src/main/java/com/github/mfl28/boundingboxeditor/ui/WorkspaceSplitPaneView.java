@@ -24,6 +24,7 @@ import javafx.animation.PauseTransition;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ListChangeListener;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
@@ -33,10 +34,19 @@ import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.transform.Transform;
+import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.util.Callback;
 import javafx.util.Duration;
+import org.apache.commons.io.FilenameUtils;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
@@ -130,6 +140,60 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                                 .reattachTreeItemToNewTargetTreeItem(treeItemToMove, targetItem);
                     }
                 });
+    }
+
+    void initiateSaveAsImage(BoundingShapeViewable boundingShapeViewable, int itemId) {
+        final Rectangle2D relativeOutline =
+                boundingShapeViewable.getRelativeOutlineRectangle();
+
+        if(relativeOutline == null
+                || relativeOutline.getWidth() < ObjectTreeElementCellFactory.MIN_RELATIVE_SIDE_LENGTH
+                || relativeOutline.getHeight() < ObjectTreeElementCellFactory.MIN_RELATIVE_SIDE_LENGTH) {
+            MainView.displayErrorAlert("Image Saving Error", "Bounding shape region is too small.",
+                    this.getScene().getWindow());
+            return;
+        }
+
+        final String currentEditorImageUrl = getEditor().getEditorImagePane().getCurrentImageUrl();
+
+        StringBuilder filenameBuilder = new StringBuilder();
+
+        try {
+            filenameBuilder.append(FilenameUtils.getBaseName(
+                    Paths.get(new URI(currentEditorImageUrl).getPath()).getFileName().toString()));
+            filenameBuilder.append("_");
+        } catch (URISyntaxException ignored) {
+        }
+
+        filenameBuilder.append(boundingShapeViewable.getViewData().getObjectCategory().getName());
+        filenameBuilder.append("_");
+        filenameBuilder.append(itemId);
+        filenameBuilder.append(".png");
+
+        File outputFile = MainView.displayFileChooserAndGetChoice(
+                "Save as Image", this.getScene().getWindow(), null,
+                filenameBuilder.toString(), new FileChooser.ExtensionFilter("PNG files", "*.png"),
+                MainView.FileChooserType.SAVE);
+
+        if (outputFile == null) {
+            return;
+        }
+
+        final Image currentImage = getEditor().getEditorImagePane().getCurrentImage();
+        final ImageView imageView = new ImageView(currentImage);
+
+        clipImageview(boundingShapeViewable, relativeOutline, currentImage, imageView, null);
+
+        final SnapshotParameters parameters = new SnapshotParameters();
+        parameters.setFill(Color.TRANSPARENT);
+
+        BufferedImage bufferedImage = SwingFXUtils.fromFXImage(imageView.snapshot(parameters, null), null);
+        try {
+            ImageIO.write(bufferedImage, "png", outputFile);
+        } catch (IOException e) {
+            MainView.displayErrorAlert("Image Saving Error", "Could not write image.",
+                    this.getScene().getWindow());
+        }
     }
 
     void simplifyBoundingPolygon(BoundingPolygonView boundingPolygonView) {
@@ -346,6 +410,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             applyOnHideOtherBoundingShapesMenuItemListener(cell);
             applyOnShowAllBoundingShapesMenuItemListener(cell);
             applySimplifyPolygonMenuItemListener(cell);
+            applySaveAsImageMenuItemListener(cell);
 
             return cell;
         }
@@ -378,7 +443,15 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         private void applyChangeObjectCategoryMenuItemListener(ObjectTreeElementCell cell) {
             cell.getChangeObjectCategoryMenuItem().setOnAction(event -> {
                 if(!cell.isEmpty()) {
-                    initiateObjectCategoryChange(((BoundingShapeViewable) cell.getItem()));
+                    initiateObjectCategoryChange((BoundingShapeViewable) cell.getItem());
+                }
+            });
+        }
+
+        private void applySaveAsImageMenuItemListener(ObjectTreeElementCell cell) {
+            cell.getSaveAsImageMenuItem().setOnAction(event -> {
+                if(!cell.isEmpty() &&  !(cell.getTreeItem() instanceof ObjectCategoryTreeItem)) {
+                    initiateSaveAsImage((BoundingShapeViewable) cell.getItem(), ((BoundingShapeTreeItem) cell.getTreeItem()).getId());
                 }
             });
         }
@@ -518,40 +591,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 return;
             }
 
-            final Rectangle2D outline = new Rectangle2D(relativeOutline.getMinX() * currentImage.getWidth(),
-                    relativeOutline.getMinY() * currentImage.getHeight(),
-                    relativeOutline.getWidth() * currentImage.getWidth(),
-                    relativeOutline.getHeight() * currentImage.getHeight());
-
-            imageView.setViewport(outline);
-
-            double scaleWidth;
-            double scaleHeight;
-
-            final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-            final double sideLength = POPOVER_SCREEN_RATIO * Math.min(
-                    screenBounds.getWidth(), screenBounds.getHeight());
-
-            if(outline.getWidth() > outline.getHeight()) {
-                scaleWidth = sideLength;
-                scaleHeight = outline.getHeight() * scaleWidth / outline.getWidth();
-            } else {
-                scaleHeight = sideLength;
-                scaleWidth = outline.getWidth() * scaleHeight / outline.getHeight();
-            }
-
-            imageView.setFitWidth(scaleWidth);
-            imageView.setFitHeight(scaleHeight);
-
-            if(cell.getItem() instanceof BoundingPolygonView boundingPolygonView) {
-                final List<Double> points = boundingPolygonView
-                        .getMinMaxScaledPoints(scaleWidth, scaleHeight);
-
-                final Polygon polygon = new Polygon();
-                polygon.getPoints().setAll(points);
-
-                imageView.setClip(polygon);
-            }
+            clipImageview((BoundingShapeViewable) cell.getItem(), relativeOutline, currentImage, imageView, POPOVER_SCREEN_RATIO);
 
             cell.getPopOver().show(cell);
         }
@@ -565,6 +605,45 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 cell.getPopOver().hide();
                 popoverDelayTransition.stop();
             });
+        }
+    }
+
+    private static void clipImageview(BoundingShapeViewable boundingShapeViewable, Rectangle2D relativeOutline, Image image, ImageView imageView, Double screenRatio) {
+        final Rectangle2D outline = new Rectangle2D(relativeOutline.getMinX() * image.getWidth(),
+                relativeOutline.getMinY() * image.getHeight(),
+                relativeOutline.getWidth() * image.getWidth(),
+                relativeOutline.getHeight() * image.getHeight());
+
+        imageView.setViewport(outline);
+
+        double scaleWidth = outline.getWidth();
+        double scaleHeight = outline.getHeight();
+
+        if(screenRatio != null) {
+            final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+            final double sideLength = screenRatio * Math.min(
+                    screenBounds.getWidth(), screenBounds.getHeight());
+
+            if(outline.getWidth() > outline.getHeight()) {
+                scaleWidth = sideLength;
+                scaleHeight = outline.getHeight() * scaleWidth / outline.getWidth();
+            } else {
+                scaleHeight = sideLength;
+                scaleWidth = outline.getWidth() * scaleHeight / outline.getHeight();
+            }
+
+            imageView.setFitWidth(scaleWidth);
+            imageView.setFitHeight(scaleHeight);
+        }
+
+        if(boundingShapeViewable instanceof BoundingPolygonView boundingPolygonView) {
+            final List<Double> points = boundingPolygonView
+                    .getMinMaxScaledPoints(scaleWidth, scaleHeight);
+
+            final Polygon polygon = new Polygon();
+            polygon.getPoints().setAll(points);
+
+            imageView.setClip(polygon);
         }
     }
 }

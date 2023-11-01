@@ -64,6 +64,9 @@ dependencies {
     // Commons Lang https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     implementation 'org.apache.commons:commons-lang3:3.13.0'
 
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    implementation 'commons-io:commons-io:2.15.0'
+
     // ControlsFX https://mvnrepository.com/artifact/org.controlsfx/controlsfx
     implementation('org.controlsfx:controlsfx:11.1.2') {
         exclude group: 'org.openjfx'
