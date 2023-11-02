@@ -44,9 +44,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
@@ -156,29 +153,18 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
         final String currentEditorImageUrl = getEditor().getEditorImagePane().getCurrentImageUrl();
 
-        StringBuilder filenameBuilder = new StringBuilder();
+        String baseFilename = FilenameUtils.getBaseName(currentEditorImageUrl);
+        baseFilename = baseFilename != null ? baseFilename + "_" : "";
 
-        try {
-            URI uri = new URI(currentEditorImageUrl);
-            String filePath = uri.getPath();
+        final String outputFilename = baseFilename +
+                boundingShapeViewable.getViewData().getObjectCategory().getName() +
+                "_" +
+                itemId +
+                ".png";
 
-            if (filePath == null) {
-                filePath = uri.getSchemeSpecificPart();
-            }
-
-            filenameBuilder.append(FilenameUtils.getBaseName(filePath));
-            filenameBuilder.append("_");
-        } catch (URISyntaxException ignored) {
-        }
-
-        filenameBuilder.append(boundingShapeViewable.getViewData().getObjectCategory().getName());
-        filenameBuilder.append("_");
-        filenameBuilder.append(itemId);
-        filenameBuilder.append(".png");
-
-        File outputFile = MainView.displayFileChooserAndGetChoice(
+        final File outputFile = MainView.displayFileChooserAndGetChoice(
                 "Save as Image", this.getScene().getWindow(), null,
-                filenameBuilder.toString(), new FileChooser.ExtensionFilter("PNG files", "*.png"),
+                outputFilename, new FileChooser.ExtensionFilter("PNG files", "*.png"),
                 MainView.FileChooserType.SAVE);
 
         if (outputFile == null) {
