@@ -159,8 +159,14 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         StringBuilder filenameBuilder = new StringBuilder();
 
         try {
-            filenameBuilder.append(FilenameUtils.getBaseName(
-                    Paths.get(new URI(currentEditorImageUrl).getPath()).getFileName().toString()));
+            URI uri = new URI(currentEditorImageUrl);
+            String filePath = uri.getPath();
+
+            if (filePath == null) {
+                filePath = uri.getSchemeSpecificPart();
+            }
+
+            filenameBuilder.append(FilenameUtils.getBaseName(filePath));
             filenameBuilder.append("_");
         } catch (URISyntaxException ignored) {
         }
