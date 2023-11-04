@@ -52,9 +52,7 @@ import javafx.collections.ListChangeListener;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.scene.Cursor;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
@@ -497,14 +495,16 @@ public class Controller {
      * @param event the short-cut key-event
      */
     public void onRegisterSceneKeyPressed(KeyEvent event) {
-        // While the user is drawing a shape, all key-events will be ignored.
         if(view.getEditorImagePane().isDrawingInProgress()) {
-            event.consume();
             return;
         }
 
         if(event.isShortcutDown()) {
             view.getEditorImagePane().setZoomableAndPannable(true);
+        }
+
+        if(event.getTarget() instanceof TextInputControl) {
+            return;
         }
 
         keyCombinationHandlers.stream()
@@ -519,8 +519,16 @@ public class Controller {
      * @param event the short-cut key-event
      */
     public void onRegisterSceneKeyReleased(KeyEvent event) {
+        if(view.getEditorImagePane().isDrawingInProgress()) {
+            return;
+        }
+
         if(!event.isShortcutDown()) {
             view.getEditorImagePane().setZoomableAndPannable(false);
+        }
+
+        if(event.getTarget() instanceof TextInputControl) {
+            return;
         }
 
         keyCombinationHandlers.stream()

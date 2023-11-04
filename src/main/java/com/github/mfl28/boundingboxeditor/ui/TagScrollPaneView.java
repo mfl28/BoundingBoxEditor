@@ -26,6 +26,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 
@@ -100,6 +101,13 @@ class TagScrollPaneView extends ScrollPane implements View {
             }
             tagInputField.clear();
             requestFocus();
+        });
+
+        tagInputField.setOnKeyReleased(event -> {
+            if(event.getCode() == KeyCode.ESCAPE) {
+                requestFocus();
+                event.consume();
+            }
         });
 
         tags.addListener((observable, oldValue, newValue) -> {

@@ -20,7 +20,6 @@ package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
-import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
@@ -29,16 +28,14 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import org.hamcrest.Matchers;
 import org.hamcrest.io.FileMatchers;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockedConstruction;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
@@ -49,12 +46,12 @@ import org.testfx.util.WaitForAsyncUtils;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static org.mockito.Mockito.verify;
 import static org.testfx.api.FxAssert.verifyThat;
-import static org.mockito.ArgumentMatchers.*;
 
 @Tag("ui")
 class ObjectTreeTests extends BoundingBoxEditorTestBase {
@@ -446,51 +443,34 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(false), saveScreenshot(testinfo));
     }
 
-    @Nested
-    @ExtendWith(MockitoExtension.class)
-    class TestSaveAsImage extends BoundingBoxEditorTestBase {
-        @Mock
-        MockedStatic<MainView> mockedMainView;
+    @Test
+    void onBoundingShapeSaveAsImageRequested_ShouldWriteImageFile(FxRobot robot, TestInfo testinfo, @TempDir Path tempDirectory) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        enterNewCategory(robot, "Dummy", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
 
-        @Start
-        void start(Stage stage) {
-            super.onStart(stage);
-            controller.loadImageFiles(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()));
-            mockedMainView = Mockito.mockStatic(MainView.class);
-        }
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
+        WaitForAsyncUtils.waitForFxEvents();
+        final String expectedFilename = "austin-neill-685084-unsplash_Dummy_1.png";
 
-        @Test
-        void test1(FxRobot robot, TestInfo testinfo, @TempDir Path tempDirectory) {
-            waitUntilCurrentImageIsLoaded(testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
-            enterNewCategory(robot, "Dummy", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
+        final AtomicReference<MockedConstruction<FileChooser>> mockedFileChooser = createMockedFileChooser(
+                tempDirectory.resolve(expectedFilename).toFile());
 
-            moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
-            WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mockedFileChooser.get(), Matchers.notNullValue());
 
+        try {
             robot.rightClickOn("Dummy 1");
             WaitForAsyncUtils.waitForFxEvents();
             timeOutClickOn(robot, "Save as Image...", testinfo);
             WaitForAsyncUtils.waitForFxEvents();
 
-            // Per default, mocked displayFileChooserAndGetChoice returns null:
-            verifyThat(Objects.requireNonNull(tempDirectory.toFile().listFiles()).length, Matchers.equalTo(0));
+            verifyThat(mockedFileChooser.get().constructed().size(), Matchers.equalTo(1));
+            verify(mockedFileChooser.get().constructed().get(0)).setInitialFileName(expectedFilename);
 
-            Platform.runLater(() ->
-                mockedMainView.when(() -> MainView.displayFileChooserAndGetChoice(
-                    eq("Save as Image"), any(Window.class), eq(null), anyString(),
-                    any(FileChooser.ExtensionFilter.class), eq(MainView.FileChooserType.SAVE))
-                    ).thenAnswer(invocation -> tempDirectory.resolve(invocation.getArgument(3, String.class)).toFile())
-            );
-            WaitForAsyncUtils.waitForFxEvents();
-
-            robot.rightClickOn("Dummy 1");
-            WaitForAsyncUtils.waitForFxEvents();
-            timeOutClickOn(robot, "Save as Image...", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
-
-            verifyThat(tempDirectory.resolve("austin-neill-685084-unsplash_Dummy_1.png").toFile(), FileMatchers.anExistingFile());
+            verifyThat(tempDirectory.resolve(expectedFilename).toFile(), FileMatchers.anExistingFile());
+        } finally {
+            mockedFileChooser.get().close();
         }
     }
 }
