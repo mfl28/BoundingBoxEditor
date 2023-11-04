@@ -87,7 +87,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         testFocusCategorySearchFieldKeyEvent(robot);
         testFocusFileSearchKeyEvent(robot);
         testFocusCategoryNameTextFieldKeyEvent(robot);
-        testFocusTagTextFieldKeyEvent();
+        testFocusTagTextFieldKeyEventWhenNoBoundingShapeSelected();
         testSelectPolygonModeKeyEvent();
 
         // Draw a bounding polygon.
@@ -117,6 +117,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         verifyThat(polygon.isSelected(), Matchers.is(true));
         verifyThat(polygon, NodeMatchers.isVisible());
 
+        testFocusTagTextFieldKeyEventWhenBoundingShapeSelected(robot);
         testHideSelectedBoundingShapeKeyEvent(polygon);
         testShowSelectedBoundingShapeKeyEvent(polygon);
         testHideAllBoundingShapesKeyEvent(polygon);
@@ -309,13 +310,28 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         verifyThat(controller.getView().getEditor().getEditorToolBar().getPolygonModeButton().isSelected(), Matchers.is(true));
     }
 
-    private void testFocusTagTextFieldKeyEvent() {
+    private void testFocusTagTextFieldKeyEventWhenNoBoundingShapeSelected() {
         KeyEvent focusTagTextFieldEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.focusTagTextField, KeyEvent.KEY_RELEASED);
         Platform.runLater(() -> controller.onRegisterSceneKeyReleased(focusTagTextFieldEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
         // No bounding-shapes are selected, therefore tag text-field should be disabled.
         verifyThat(controller.getView().getTagInputField().isFocused(), Matchers.is(false));
+    }
+
+    private void testFocusTagTextFieldKeyEventWhenBoundingShapeSelected(FxRobot robot) {
+        KeyEvent focusTagTextFieldEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.focusTagTextField, KeyEvent.KEY_RELEASED);
+        Platform.runLater(() -> controller.onRegisterSceneKeyReleased(focusTagTextFieldEvent));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // No bounding-shapes are selected, therefore tag text-field should be disabled.
+        verifyThat(controller.getView().getTagInputField().isFocused(), Matchers.is(true));
+
+        robot.push(KeyCode.ESCAPE);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(controller.getView().getTagInputField().isFocused(), Matchers.is(false));
+        verifyThat(controller.getView().getTagInputField().getText(), Matchers.nullValue());
     }
 
     private void testFocusCategoryNameTextFieldKeyEvent(FxRobot robot) {

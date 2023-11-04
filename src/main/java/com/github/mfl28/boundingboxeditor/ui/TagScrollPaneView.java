@@ -99,8 +99,13 @@ class TagScrollPaneView extends ScrollPane implements View {
             if(!text.isEmpty() && !tags.get().contains(text)) {
                 tags.get().add(text);
             }
-            tagInputField.clear();
             requestFocus();
+        });
+
+        tagInputField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if(!Boolean.TRUE.equals(newValue)) {
+                tagInputField.setText(null);
+            }
         });
 
         tagInputField.setOnKeyReleased(event -> {

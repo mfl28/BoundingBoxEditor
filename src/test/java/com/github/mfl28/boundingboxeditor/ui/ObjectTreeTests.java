@@ -472,5 +472,23 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         } finally {
             mockedFileChooser.get().close();
         }
+
+        robot.rightClickOn("Dummy 1");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Delete", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));
+
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.25, 0.25));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.rightClickOn("Dummy 1");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Save as Image...", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertDialogOpenedAndGetStage(robot, "Image Saving Error", "Bounding shape region is too small.",
+                testinfo);
     }
 }
