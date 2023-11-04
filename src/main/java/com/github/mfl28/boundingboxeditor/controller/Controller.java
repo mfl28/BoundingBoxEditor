@@ -19,7 +19,6 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.controller.utils.KeyCombinationEventHandler;
-import com.github.mfl28.boundingboxeditor.controller.utils.SingleFireKeyCombinationEventHandler;
 import com.github.mfl28.boundingboxeditor.model.Model;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
@@ -53,9 +52,7 @@ import javafx.collections.ListChangeListener;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.scene.Cursor;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
@@ -498,14 +495,16 @@ public class Controller {
      * @param event the short-cut key-event
      */
     public void onRegisterSceneKeyPressed(KeyEvent event) {
-        // While the user is drawing a shape, all key-events will be ignored.
         if(view.getEditorImagePane().isDrawingInProgress()) {
-            event.consume();
             return;
         }
 
         if(event.isShortcutDown()) {
             view.getEditorImagePane().setZoomableAndPannable(true);
+        }
+
+        if(event.getTarget() instanceof TextInputControl) {
+            return;
         }
 
         keyCombinationHandlers.stream()
@@ -520,8 +519,16 @@ public class Controller {
      * @param event the short-cut key-event
      */
     public void onRegisterSceneKeyReleased(KeyEvent event) {
+        if(view.getEditorImagePane().isDrawingInProgress()) {
+            return;
+        }
+
         if(!event.isShortcutDown()) {
             view.getEditorImagePane().setZoomableAndPannable(false);
+        }
+
+        if(event.getTarget() instanceof TextInputControl) {
+            return;
         }
 
         keyCombinationHandlers.stream()
@@ -744,46 +751,50 @@ public class Controller {
                             navigatePreviousKeyPressed.set(false);
                             navigateNextKeyPressed.set(false);
                         },
-                        event -> KeyCombinations.navigationReleaseKeyCodes.contains(event.getCode()) || !event.isShortcutDown()),
+                        event -> (navigateNextKeyPressed.get() || navigatePreviousKeyPressed.get()) &&
+                                (KeyCombinations.navigationReleaseKeyCodes.contains(event.getCode()) || !event.isShortcutDown())
+                        ),
                 new KeyCombinationEventHandler(KeyCombinations.navigateNext,
                         event -> handleNavigateNextKeyPressed(), null),
                 new KeyCombinationEventHandler(KeyCombinations.navigatePrevious,
                         event -> handleNavigatePreviousKeyPressed(), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.deleteSelectedBoundingShape,
-                        event -> view.removeSelectedTreeItemAndChildren(), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected,
-                        event -> view.removeEditingVerticesWhenPolygonViewSelected(), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.focusCategorySearchField,
-                        event -> view.getCategorySearchField().requestFocus(), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.focusFileSearchField,
-                        event -> view.getImageFileSearchField().requestFocus(), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.focusCategoryNameTextField,
-                        event -> view.getObjectCategoryInputField().requestFocus(), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.focusTagTextField,
-                        event -> view.getTagInputField().requestFocus(), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.hideSelectedBoundingShape,
-                        event -> view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(false), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.hideAllBoundingShapes,
-                        event -> view.getObjectTree().setToggleIconStateForAllTreeItems(false), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.hideNonSelectedBoundingShapes,
-                        event -> view.getObjectTree().setToggleIconStateForNonSelectedObjectTreeItems(false), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.showSelectedBoundingShape,
-                        event -> view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(true), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.showAllBoundingShapes,
-                        event -> view.getObjectTree().setToggleIconStateForAllTreeItems(true), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.resetSizeAndCenterImage,
-                        event -> view.getEditorImagePane().resetImageViewSize(), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.selectRectangleDrawingMode,
-                        event -> view.getEditor().getEditorToolBar().getRectangleModeButton().setSelected(true), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.selectPolygonDrawingMode,
-                        event -> view.getEditor().getEditorToolBar().getPolygonModeButton().setSelected(true), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.selectFreehandDrawingMode,
-                        event -> view.getEditor().getEditorToolBar().getFreehandModeButton().setSelected(true), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.changeSelectedBoundingShapeCategory,
-                        event -> view.initiateCurrentSelectedBoundingBoxCategoryChange(), null),
-                new SingleFireKeyCombinationEventHandler(KeyCombinations.simplifyPolygon,
-                        event -> view.simplifyCurrentSelectedBoundingPolygon(), null)
-        );
+                new KeyCombinationEventHandler(KeyCombinations.deleteSelectedBoundingShape,
+                        null, event -> view.removeSelectedTreeItemAndChildren()),
+                new KeyCombinationEventHandler(KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected,
+                        null, event -> view.removeEditingVerticesWhenPolygonViewSelected()),
+                new KeyCombinationEventHandler(KeyCombinations.focusCategorySearchField,
+                        null, event -> view.getCategorySearchField().requestFocus()),
+                new KeyCombinationEventHandler(KeyCombinations.focusFileSearchField,
+                        null, event -> view.getImageFileSearchField().requestFocus()),
+                new KeyCombinationEventHandler(KeyCombinations.focusCategoryNameTextField,
+                        null, event -> view.getObjectCategoryInputField().requestFocus()),
+                new KeyCombinationEventHandler(KeyCombinations.focusTagTextField,
+                        null, event -> view.getTagInputField().requestFocus()),
+                new KeyCombinationEventHandler(KeyCombinations.hideSelectedBoundingShape,
+                        null, event -> view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(false)),
+                new KeyCombinationEventHandler(KeyCombinations.hideAllBoundingShapes,
+                        null, event -> view.getObjectTree().setToggleIconStateForAllTreeItems(false)),
+                new KeyCombinationEventHandler(KeyCombinations.hideNonSelectedBoundingShapes,
+                        null, event -> view.getObjectTree().setToggleIconStateForNonSelectedObjectTreeItems(false)),
+                new KeyCombinationEventHandler(KeyCombinations.showSelectedBoundingShape,
+                        null, event -> view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(true)),
+                new KeyCombinationEventHandler(KeyCombinations.showAllBoundingShapes,
+                        null, event -> view.getObjectTree().setToggleIconStateForAllTreeItems(true)),
+                new KeyCombinationEventHandler(KeyCombinations.resetSizeAndCenterImage,
+                        null, event -> view.getEditorImagePane().resetImageViewSize()),
+                new KeyCombinationEventHandler(KeyCombinations.selectRectangleDrawingMode,
+                        null, event -> view.getEditor().getEditorToolBar().getRectangleModeButton().setSelected(true)),
+                new KeyCombinationEventHandler(KeyCombinations.selectPolygonDrawingMode,
+                        null, event -> view.getEditor().getEditorToolBar().getPolygonModeButton().setSelected(true)),
+                new KeyCombinationEventHandler(KeyCombinations.selectFreehandDrawingMode,
+                        null, event -> view.getEditor().getEditorToolBar().getFreehandModeButton().setSelected(true)),
+                new KeyCombinationEventHandler(KeyCombinations.changeSelectedBoundingShapeCategory,
+                        null, event -> view.initiateCurrentSelectedBoundingBoxCategoryChange()),
+                new KeyCombinationEventHandler(KeyCombinations.simplifyPolygon,
+                        null, event -> view.simplifyCurrentSelectedBoundingPolygon()),
+                new KeyCombinationEventHandler(KeyCombinations.saveBoundingShapeAsImage,
+                        null, event -> view.saveCurrentSelectedBoundingShapeAsImage())
+                );
     }
 
     private void onBoundingBoxPredictionSucceeded(WorkerStateEvent event) {
@@ -1635,6 +1646,8 @@ public class Controller {
 
         public static final KeyCombination simplifyPolygon =
                 new KeyCodeCombination(KeyCode.S, KeyCombination.SHIFT_DOWN);
+        public static final KeyCombination saveBoundingShapeAsImage =
+                new KeyCodeCombination(KeyCode.I, KeyCombination.SHIFT_DOWN);
 
         private KeyCombinations() {
             throw new IllegalStateException("Key Combination Class");

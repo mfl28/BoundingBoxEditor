@@ -25,6 +25,7 @@ import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
 import com.github.mfl28.boundingboxeditor.ui.MainView;
 import com.github.mfl28.boundingboxeditor.utils.MathUtils;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Worker;
 import javafx.geometry.Bounds;
@@ -40,15 +41,15 @@ import javafx.scene.image.PixelReader;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
-import javafx.stage.Modality;
-import javafx.stage.Screen;
-import javafx.stage.Stage;
+import javafx.stage.*;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedConstruction;
+import org.mockito.Mockito;
 import org.testfx.api.FxRobot;
 import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationExtension;
@@ -65,8 +66,12 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.testfx.api.FxAssert.verifyThat;
 
 @ExtendWith(ApplicationExtension.class)
@@ -579,5 +584,21 @@ public class BoundingBoxEditorTestBase {
         }
 
         return true;
+    }
+
+    protected static AtomicReference<MockedConstruction<FileChooser>> createMockedFileChooser(File outputFile) {
+        final AtomicReference<MockedConstruction<FileChooser>> mockedFileChooser = new AtomicReference<>();
+
+        Platform.runLater(() -> {
+            mockedFileChooser.set(Mockito.mockConstruction(FileChooser.class, (mock, context) -> {
+                @SuppressWarnings("unchecked")
+                final ObservableList<FileChooser.ExtensionFilter> extensionFiltersMock = mock(ObservableList.class);
+                when(mock.getExtensionFilters()).thenReturn(extensionFiltersMock);
+                when(mock.showSaveDialog(any(Window.class))).thenReturn(outputFile);
+            }));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        return mockedFileChooser;
     }
 }

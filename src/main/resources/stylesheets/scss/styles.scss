@@ -182,6 +182,14 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-accent: $base-background-color;
 }
 
+#save-as-image-menu:hover {
+    -fx-background-color: $base-alt-colorful-component-color-3;
+    -fx-accent: $base-background-color;
+    & .label {
+        -fx-text-fill: $base-background-color;
+    }
+}
+
 // --Buttons--
 .button {
     -fx-background-color: transparent;

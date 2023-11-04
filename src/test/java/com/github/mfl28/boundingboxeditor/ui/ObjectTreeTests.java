@@ -26,12 +26,16 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
+import org.hamcrest.io.FileMatchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedConstruction;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
@@ -40,14 +44,18 @@ import org.testfx.matcher.control.LabeledMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static org.mockito.Mockito.verify;
 import static org.testfx.api.FxAssert.verifyThat;
 
 @Tag("ui")
 class ObjectTreeTests extends BoundingBoxEditorTestBase {
+
     @Start
     void start(Stage stage) {
         super.onStart(stage);
@@ -433,5 +441,54 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(robot.lookup("#tag").queryAll(), Matchers.empty(), saveScreenshot(testinfo));
         verifyThat(currentBoundingShape.getTags(), Matchers.empty(), saveScreenshot(testinfo));
         verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(false), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onBoundingShapeSaveAsImageRequested_ShouldWriteImageFile(FxRobot robot, TestInfo testinfo, @TempDir Path tempDirectory) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        enterNewCategory(robot, "Dummy", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
+        WaitForAsyncUtils.waitForFxEvents();
+        final String expectedFilename = "austin-neill-685084-unsplash_Dummy_1.png";
+
+        final AtomicReference<MockedConstruction<FileChooser>> mockedFileChooser = createMockedFileChooser(
+                tempDirectory.resolve(expectedFilename).toFile());
+
+        verifyThat(mockedFileChooser.get(), Matchers.notNullValue());
+
+        try {
+            robot.rightClickOn("Dummy 1");
+            WaitForAsyncUtils.waitForFxEvents();
+            timeOutClickOn(robot, "Save as Image...", testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
+
+            verifyThat(mockedFileChooser.get().constructed().size(), Matchers.equalTo(1));
+            verify(mockedFileChooser.get().constructed().get(0)).setInitialFileName(expectedFilename);
+
+            verifyThat(tempDirectory.resolve(expectedFilename).toFile(), FileMatchers.anExistingFile());
+        } finally {
+            mockedFileChooser.get().close();
+        }
+
+        robot.rightClickOn("Dummy 1");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Delete", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));
+
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.25, 0.25));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.rightClickOn("Dummy 1");
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "Save as Image...", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertDialogOpenedAndGetStage(robot, "Image Saving Error", "Bounding shape region is too small.",
+                testinfo);
     }
 }

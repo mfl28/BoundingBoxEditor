@@ -21,6 +21,7 @@ module com.github.mfl28.boundingboxeditor {
     requires java.desktop;
     requires org.controlsfx.controls;
     requires org.apache.commons.collections4;
+    requires org.apache.commons.io;
     requires com.github.benmanes.caffeine;
     requires java.xml;
     requires org.apache.commons.lang3;

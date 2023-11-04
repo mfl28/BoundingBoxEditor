@@ -77,6 +77,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private static final String SIMPLIFY_POLYGON_MENU_ITEM_TEXT = "Simplify";
     private static final String SIMPLIFY_CONTEXT_MENU_ITEM_ID = "simplify-context-menu";
     private static final String SIMPLIFY_POLYGON_MENU_ITEM_TOOLTIP_TEXT = "Simplify polygon";
+    public static final String SAVE_AS_IMAGE_MENU_ITEM_ID = "save-as-image-menu";
+    public static final String SAVE_AS_IMAGE_MENU_ITEM_TEXT = "Save as Image...";
 
     private final MenuItem deleteBoundingShapeMenuItem = createDeleteBoundingShapeMenuItem();
     private final MenuItem hideBoundingShapeMenuItem = createHideBoundingShapeMenuItem();
@@ -88,6 +90,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private final MenuItem deleteVerticesMenuItem = createDeleteVerticesMenuItem();
     private final MenuItem simplifyMenuItem = createSimplifyMenuItem();
     private final MenuItem changeObjectCategoryMenuItem = createChangeObjectCategoryMenuItem();
+    private final MenuItem saveAsImageMenuItem = createSaveAsImageMenuItem();
     private final SeparatorMenuItem separatorMenuItem = new SeparatorMenuItem();
     private final BooleanProperty draggedOver = new SimpleBooleanProperty(false);
     private final Text nameText = new Text();
@@ -117,11 +120,11 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     protected void updateItem(Object newCellObject, boolean empty) {
         Object oldCellObject = getItem();
 
-        if(Objects.equals(newCellObject, oldCellObject)) {
+        if (Objects.equals(newCellObject, oldCellObject)) {
             return;
         }
 
-        if(oldCellObject instanceof Shape oldItem) {
+        if (oldCellObject instanceof Shape oldItem) {
             // Remove the old item's context-menu event-handler.
             oldItem.removeEventHandler(ContextMenuEvent.CONTEXT_MENU_REQUESTED, showContextMenuEventHandler);
             oldItem.visibleProperty().removeListener(boundingShapeVisibilityListener);
@@ -134,7 +137,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         additionalInfoText.textProperty().unbind();
         tagIconRegion.visibleProperty().unbind();
 
-        if(empty || newCellObject == null) {
+        if (empty || newCellObject == null) {
             setGraphic(null);
             contextMenu.hide();
             setContextMenu(null);
@@ -145,13 +148,13 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         } else {
             setGraphic(createContentBox());
 
-            if(newCellObject instanceof View) {
+            if (newCellObject instanceof View) {
                 contextMenu.addViewFeatures();
             } else {
                 contextMenu.removeViewFeatures();
             }
 
-            if(newCellObject instanceof BoundingPolygonView) {
+            if (newCellObject instanceof BoundingPolygonView) {
                 contextMenu.addPolygonFeatures();
             } else {
                 contextMenu.removePolygonFeatures();
@@ -160,7 +163,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             // Register the contextMenu with the cell.
             setContextMenu(contextMenu);
 
-            if(newCellObject instanceof Shape shape && !(newCellObject instanceof BoundingFreehandShapeView)) {
+            if (newCellObject instanceof Shape shape && !(newCellObject instanceof BoundingFreehandShapeView)) {
                 // Register the contextMenu with the shape associated with the cell. This
                 // allows to display the contextMenu by right-clicking on the shape itself.
                 shape.setOnContextMenuRequested(showContextMenuEventHandler);
@@ -241,6 +244,10 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         return simplifyMenuItem;
     }
 
+    MenuItem getSaveAsImageMenuItem() {
+        return saveAsImageMenuItem;
+    }
+
     /**
      * Returns the popover of this cell.
      *
@@ -263,16 +270,16 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     void setHighlightStatusIncludingChildren(boolean highlightStatus) {
         TreeItem<Object> treeItem = getTreeItem();
 
-        if(treeItem instanceof ObjectCategoryTreeItem) {
+        if (treeItem instanceof ObjectCategoryTreeItem) {
             treeItem.getChildren().stream()
                     .filter(child -> child.getValue() instanceof BoundingShapeViewable)
                     .map(child -> ((BoundingShapeViewable) child.getValue()).getViewData())
                     .filter(viewData -> !viewData.isSelected())
                     .forEach(viewData -> viewData.setHighlighted(highlightStatus));
-        } else if(treeItem instanceof BoundingShapeTreeItem) {
+        } else if (treeItem instanceof BoundingShapeTreeItem) {
             final BoundingShapeViewData viewData = ((BoundingShapeViewable) treeItem.getValue()).getViewData();
 
-            if(!viewData.isSelected()) {
+            if (!viewData.isSelected()) {
                 viewData.setHighlighted(highlightStatus);
             }
         }
@@ -325,7 +332,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
 
     private void setUpInternalListeners() {
         setOnScroll(event -> {
-            if(!isEmpty() && !contextMenu.isShowing()) {
+            if (!isEmpty() && !contextMenu.isShowing()) {
                 setHighlightStatusIncludingChildren(false);
             }
         });
@@ -345,7 +352,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         content.setId(TREE_CELL_CONTENT_ID);
         content.setAlignment(Pos.CENTER_LEFT);
 
-        if(treeItem instanceof BoundingShapeTreeItem boundingShapeTreeItem) {
+        if (treeItem instanceof BoundingShapeTreeItem boundingShapeTreeItem) {
             final BoundingShapeViewData boundingShapeViewData =
                     ((BoundingShapeViewable) treeItem.getValue()).getViewData();
 
@@ -354,7 +361,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
                     .concat(boundingShapeTreeItem.getId()));
             tagIconRegion.visibleProperty().bind(Bindings.size(boundingShapeViewData.getTags()).greaterThan(0));
             content.getChildren().add(tagIconRegion);
-        } else if(treeItem instanceof ObjectCategoryTreeItem) {
+        } else if (treeItem instanceof ObjectCategoryTreeItem) {
             nameText.textProperty().bind(((ObjectCategory) treeItem.getValue()).nameProperty());
             nameText.setId(CATEGORY_NAME_TEXT_ID);
             additionalInfoText.textProperty().bind(Bindings.format("(%d)", treeItem.getChildren().size()));
@@ -373,7 +380,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     @SuppressWarnings("UnnecessaryLambda")
     private EventHandler<ContextMenuEvent> createShowContextMenuEventHandler() {
         return event -> {
-            if(getItem() instanceof Shape shape
+            if (getItem() instanceof Shape shape
                     && getItem() instanceof Toggle toggle && toggle.isSelected()) {
                 contextMenu.show(shape, event.getScreenX(), event.getScreenY());
             }
@@ -383,7 +390,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     @SuppressWarnings("UnnecessaryLambda")
     private ChangeListener<Boolean> createBoundingShapeVisibilityListener() {
         return (observable, oldValue, newValue) -> {
-            if(!Boolean.TRUE.equals(newValue)) {
+            if (!Boolean.TRUE.equals(newValue)) {
                 contextMenu.hide();
             }
         };
@@ -446,10 +453,20 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         return menuItem;
     }
 
+    private MenuItem createSaveAsImageMenuItem() {
+        CustomMenuItem menuItem = new CustomMenuItem(new Label(SAVE_AS_IMAGE_MENU_ITEM_TEXT));
+        menuItem.setId(SAVE_AS_IMAGE_MENU_ITEM_ID);
+
+        Tooltip.install(menuItem.getContent(),
+                UiUtils.createTooltip("", Controller.KeyCombinations.saveBoundingShapeAsImage));
+
+        return menuItem;
+    }
+
     private void handleHide(ActionEvent event) {
         final TreeItem<Object> treeItem = getTreeItem();
 
-        if(treeItem instanceof IconToggleable iconToggleable) {
+        if (treeItem instanceof IconToggleable iconToggleable) {
             iconToggleable.setIconToggledOn(false);
         }
     }
@@ -457,7 +474,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     private void handleShow(ActionEvent event) {
         final TreeItem<Object> treeItem = getTreeItem();
 
-        if(treeItem instanceof IconToggleable iconToggleable) {
+        if (treeItem instanceof IconToggleable iconToggleable) {
             iconToggleable.setIconToggledOn(true);
         }
     }
@@ -474,23 +491,24 @@ class ObjectTreeElementCell extends TreeCell<Object> {
                     deleteBoundingShapeMenuItem);
 
             getItems().add(CHANGE_OBJECT_CATEGORY_ITEM_POSITION, changeObjectCategoryMenuItem);
+            getItems().add(CHANGE_OBJECT_CATEGORY_ITEM_POSITION + 1, saveAsImageMenuItem);
             setUpInternalListeners();
         }
 
         void addPolygonFeatures() {
-            if(!getItems().contains(separatorMenuItem)) {
+            if (!getItems().contains(separatorMenuItem)) {
                 getItems().add(separatorMenuItem);
             }
 
-            if(!getItems().contains(simplifyMenuItem)) {
+            if (!getItems().contains(simplifyMenuItem)) {
                 getItems().add(simplifyMenuItem);
             }
 
-            if(!getItems().contains(addVerticesMenuItem)) {
+            if (!getItems().contains(addVerticesMenuItem)) {
                 getItems().add(addVerticesMenuItem);
             }
 
-            if(!getItems().contains(deleteVerticesMenuItem)) {
+            if (!getItems().contains(deleteVerticesMenuItem)) {
                 getItems().add(deleteVerticesMenuItem);
             }
 
@@ -521,18 +539,23 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         }
 
         void addViewFeatures() {
-            if(!getItems().contains(changeObjectCategoryMenuItem)) {
+            if (!getItems().contains(changeObjectCategoryMenuItem)) {
                 getItems().add(CHANGE_OBJECT_CATEGORY_ITEM_POSITION, changeObjectCategoryMenuItem);
+            }
+
+            if (!getItems().contains(saveAsImageMenuItem)) {
+                getItems().add(CHANGE_OBJECT_CATEGORY_ITEM_POSITION + 1, saveAsImageMenuItem);
             }
         }
 
         void removeViewFeatures() {
             getItems().remove(changeObjectCategoryMenuItem);
+            getItems().remove(saveAsImageMenuItem);
         }
 
         private void setUpInternalListeners() {
             showingProperty().addListener((observable, oldValue, newValue) -> {
-                if(!ObjectTreeElementCell.this.isEmpty() && !Boolean.TRUE.equals(newValue)) {
+                if (!ObjectTreeElementCell.this.isEmpty() && !Boolean.TRUE.equals(newValue)) {
                     ObjectTreeElementCell.this.setHighlightStatusIncludingChildren(false);
                 }
             });

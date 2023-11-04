@@ -23,6 +23,7 @@ import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.geometry.Orientation;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -286,6 +287,26 @@ public class EditorsSplitPaneView extends SplitPane implements View {
         });
 
         categorySearchField.setOnAction(event -> requestFocus());
+
+        categorySearchField.setOnKeyReleased(event -> {
+            if(event.getCode() == KeyCode.ESCAPE) {
+                requestFocus();
+                event.consume();
+            }
+        });
+
+        categoryNameTextField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if(!Boolean.TRUE.equals(newValue)) {
+                categoryNameTextField.setText(null);
+            }
+        });
+
+        categoryNameTextField.setOnKeyReleased(event -> {
+            if(event.getCode() == KeyCode.ESCAPE) {
+                requestFocus();
+                event.consume();
+            }
+        });
 
         expandTreeItemsButton.setOnAction(event -> objectTree.expandAllTreeItems());
 

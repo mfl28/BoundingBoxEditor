@@ -159,13 +159,13 @@ public class MainView extends BorderPane implements View {
      * Displays a file chooser window and returns the chosen directory.
      *
      * @param title The title of the file chooser window
-     * @param stage The stage on top of which the window will be shown
+     * @param window The window on top of which the window will be shown
      * @param initialDirectory The initial directory
      * @param initialFileName The initial default filename
      * @param extensionFilter The extension filter to apply
      * @return The chosen file, or null if the user closed the window without choosing.
      */
-    public static File displayFileChooserAndGetChoice(String title, Stage stage, File initialDirectory,
+    public static File displayFileChooserAndGetChoice(String title, Window window, File initialDirectory,
                                                       String initialFileName,
                                                       FileChooser.ExtensionFilter extensionFilter,
                                                       FileChooserType type) {
@@ -188,9 +188,9 @@ public class MainView extends BorderPane implements View {
         File result;
 
         if(type.equals(FileChooserType.SAVE)) {
-            result = fileChooser.showSaveDialog(stage);
+            result = fileChooser.showSaveDialog(window);
         } else {
-            result = fileChooser.showOpenDialog(stage);
+            result = fileChooser.showOpenDialog(window);
         }
 
         return result;
@@ -429,6 +429,15 @@ public class MainView extends BorderPane implements View {
         if(selectedTreeItem instanceof BoundingShapeTreeItem boundingShapeTreeItem &&
                 boundingShapeTreeItem.getValue() instanceof BoundingPolygonView boundingPolygonView) {
             workspaceSplitPane.simplifyBoundingPolygon(boundingPolygonView);
+        }
+    }
+
+    public void saveCurrentSelectedBoundingShapeAsImage() {
+        final TreeItem<Object> selectedTreeItem = getObjectTree().getSelectionModel().getSelectedItem();
+
+        if(selectedTreeItem instanceof BoundingShapeTreeItem boundingShapeTreeItem &&
+                boundingShapeTreeItem.getValue() instanceof BoundingShapeViewable boundingShapeViewable) {
+            workspaceSplitPane.initiateSaveAsImage(boundingShapeViewable, boundingShapeTreeItem.getId());
         }
     }
 
