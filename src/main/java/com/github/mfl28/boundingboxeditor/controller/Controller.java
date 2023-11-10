@@ -201,15 +201,8 @@ public class Controller {
         this.view = view;
         this.hostServices = hostServices;
 
-        stage.setTitle(PROGRAM_IDENTIFIER);
-        stage.getIcons().add(MainView.APPLICATION_ICON);
-        stage.setOnCloseRequest(event -> {
-            onRegisterExitAction();
-            event.consume();
-        });
-
+        setupStage();
         loadPreferences();
-
         view.connectToController(this);
         setUpModelListeners();
         setUpServices();
@@ -463,6 +456,8 @@ public class Controller {
      * Handles the event of the user requesting to exit the application.
      */
     public void onRegisterExitAction() {
+        view.getEditorImagePane().finalizeBoundingShapeDrawing();
+
         updateModelFromView();
 
         if(!model.isSaved()) {
@@ -608,14 +603,10 @@ public class Controller {
                 view.getEditorImageView().setCursor(Cursor.OPEN_HAND);
             }
 
-            if(view.getObjectCategoryTable().isCategorySelected()) {
-                if(imagePane.getDrawingMode() == EditorImagePaneView.DrawingMode.BOX
-                        && imagePane.isBoundingBoxDrawingInProgress()) {
-                    imagePane.finalizeBoundingBox();
-                } else if(imagePane.getDrawingMode() == EditorImagePaneView.DrawingMode.FREEHAND
-                        && imagePane.isFreehandDrawingInProgress()) {
-                    imagePane.finalizeFreehandShape();
-                }
+            if(view.getObjectCategoryTable().isCategorySelected() &&
+                    (Objects.equals(imagePane.getCurrentBoundingShapeDrawingMode(), EditorImagePaneView.DrawingMode.BOX) ||
+                Objects.equals(imagePane.getCurrentBoundingShapeDrawingMode(), EditorImagePaneView.DrawingMode.FREEHAND))) {
+                imagePane.finalizeBoundingShapeDrawing();
             }
         }
     }
@@ -632,16 +623,15 @@ public class Controller {
                 && !event.isShortcutDown()
                 && imagePaneView.isCategorySelected()) {
             if(event.getButton().equals(MouseButton.PRIMARY)) {
-                if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.BOX) {
-                    imagePaneView.initializeBoundingRectangle(event);
-                } else if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
-                    imagePaneView.initializeBoundingPolygon(event);
-                } else if(imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.FREEHAND) {
-                    imagePaneView.initializeBoundingFreehandShape(event);
+                if(!imagePaneView.isDrawingInProgress()) {
+                    imagePaneView.initializeBoundingShapeDrawing(event);
+                } else {
+                    imagePaneView.updateBoundingShapeDrawing(event);
                 }
             } else if(event.getButton().equals(MouseButton.SECONDARY)
-                    && imagePaneView.getDrawingMode() == EditorImagePaneView.DrawingMode.POLYGON) {
-                imagePaneView.setBoundingPolygonsEditingAndConstructing(false);
+                    && Objects.equals(imagePaneView.getCurrentBoundingShapeDrawingMode(),
+                        EditorImagePaneView.DrawingMode.POLYGON)) {
+                imagePaneView.finalizeBoundingShapeDrawing();
             }
         }
     }
@@ -1596,6 +1586,21 @@ public class Controller {
         } else if(source.isFile() && source.getParentFile().isDirectory()) {
             ioMetaData.setDefaultAnnotationLoadingDirectory(source.getParentFile());
         }
+    }
+
+    private void setupStage() {
+        stage.setTitle(PROGRAM_IDENTIFIER);
+        stage.getIcons().add(MainView.APPLICATION_ICON);
+        stage.setOnCloseRequest(event -> {
+            onRegisterExitAction();
+            event.consume();
+        });
+
+        stage.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+            if (event.getTarget() != view.getEditorImageView()) {
+                view.getEditorImagePane().finalizeBoundingShapeDrawing();
+            }
+        });
     }
 
     /**
