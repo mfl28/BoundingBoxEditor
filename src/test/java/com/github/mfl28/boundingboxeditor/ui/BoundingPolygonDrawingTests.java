@@ -419,7 +419,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(boundingFreehandShapeView.isSelected(), Matchers.equalTo(true), saveScreenshot(testinfo));
         verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(),
                 Matchers.equalTo(boundingFreehandShapeView), saveScreenshot(testinfo));
-        verifyThat(mainView.getEditorImagePane().isFreehandDrawingInProgress(), Matchers.equalTo(true));
+        verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(), Matchers.equalTo(EditorImagePaneView.DrawingMode.FREEHAND));
 
         int numPathElements = boundingFreehandShapeView.getElements().size();
 
@@ -453,7 +453,8 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                         .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
                 saveScreenshot(testinfo));
 
-        verifyThat(mainView.getEditorImagePane().isFreehandDrawingInProgress(), Matchers.equalTo(false));
+        verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
+                Matchers.not(Matchers.equalTo(EditorImagePaneView.DrawingMode.FREEHAND)));
 
         verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingPolygonView.class),
                 saveScreenshot(testinfo));

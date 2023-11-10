@@ -21,6 +21,7 @@ package com.github.mfl28.boundingboxeditor.controller;
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
 import com.github.mfl28.boundingboxeditor.controller.utils.KeyCombinationEventHandler;
 import com.github.mfl28.boundingboxeditor.ui.BoundingPolygonView;
+import com.github.mfl28.boundingboxeditor.ui.EditorImagePaneView;
 import javafx.application.Platform;
 import javafx.event.EventType;
 import javafx.geometry.Point2D;
@@ -113,6 +114,18 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                                 TIMEOUT_DURATION_IN_SEC +
                                 " sec."));
 
+        verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.equalTo(true));
+        verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
+                Matchers.equalTo(EditorImagePaneView.DrawingMode.POLYGON));
+
+        // Clicking outside the imageview should finalize any drawn shapes.
+        robot.clickOn(mainView.getStatusBar());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.equalTo(false));
+        verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
+                Matchers.equalTo(EditorImagePaneView.DrawingMode.NONE));
+
         BoundingPolygonView polygon = (BoundingPolygonView) mainView.getCurrentBoundingShapes().get(0);
         verifyThat(polygon.isSelected(), Matchers.is(true));
         verifyThat(polygon, NodeMatchers.isVisible());
@@ -135,6 +148,9 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                 new Point2D(targetImageViewPointRatios2[4], targetImageViewPointRatios2[5]),
                 new Point2D(targetImageViewPointRatios2[6], targetImageViewPointRatios2[7]));
 
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.clickOn(mainView.getStatusBar());
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
@@ -324,7 +340,6 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         Platform.runLater(() -> controller.onRegisterSceneKeyReleased(focusTagTextFieldEvent));
         WaitForAsyncUtils.waitForFxEvents();
 
-        // No bounding-shapes are selected, therefore tag text-field should be disabled.
         verifyThat(controller.getView().getTagInputField().isFocused(), Matchers.is(true));
 
         robot.push(KeyCode.ESCAPE);

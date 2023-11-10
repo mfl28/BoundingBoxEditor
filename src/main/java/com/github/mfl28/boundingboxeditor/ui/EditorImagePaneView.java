@@ -21,7 +21,6 @@ package com.github.mfl28.boundingboxeditor.ui;
 import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
-import com.github.mfl28.boundingboxeditor.utils.MathUtils;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -33,7 +32,6 @@ import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
@@ -41,10 +39,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.ClosePath;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * A UI-element responsible for displaying the currently selected image on which the
@@ -77,11 +73,10 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private final ProgressIndicator imageLoadingProgressIndicator = new ProgressIndicator();
     private final StackPane contentPane = new StackPane(imageView, boundingShapeSceneGroup,
             imageLoadingProgressIndicator);
-    private boolean boundingBoxDrawingInProgress = false;
-    private DrawingMode drawingMode = DrawingMode.BOX;
-
-    private boolean freehandDrawingInProgress = false;
+    private final ObjectProperty<DrawingMode> drawingMode = new SimpleObjectProperty<>(DrawingMode.BOX);
     private String currentImageUrl = null;
+
+    private BoundingShapeDrawer boundingShapeDrawer = null;
 
     /**
      * Creates a new image-pane UI-element responsible for displaying the currently selected image on which the
@@ -109,12 +104,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
         imageView.setOnMousePressed(controller::onRegisterImageViewMousePressedEvent);
     }
 
-    public DrawingMode getDrawingMode() {
-        return drawingMode;
-    }
-
     public void setDrawingMode(DrawingMode drawingMode) {
-        this.drawingMode = drawingMode;
+        this.drawingMode.set(drawingMode);
     }
 
     public DoubleProperty simplifyRelativeDistanceToleranceProperty() {
@@ -125,11 +116,41 @@ public class EditorImagePaneView extends ScrollPane implements View {
         return autoSimplifyPolygons;
     }
 
-    /**
-     * Finalizes the currently drawn {@link BoundingBoxView}.
-     */
-    public void finalizeBoundingBox() {
-        boundingBoxDrawingInProgress = false;
+    public void initializeBoundingShapeDrawing(MouseEvent event) {
+        if (isCategorySelected()) {
+            boundingShapeDrawer = switch (drawingMode.get()) {
+                case BOX -> new BoundingBoxDrawer(imageView, boundingShapeSelectionGroup, currentBoundingShapes);
+                case POLYGON -> new BoundingPolygonDrawer(imageView, boundingShapeSelectionGroup, currentBoundingShapes);
+                case FREEHAND -> new BoundingFreeHandShapeDrawer(imageView, boundingShapeSelectionGroup,
+                        currentBoundingShapes, autoSimplifyPolygons,
+                        simplifyRelativeDistanceTolerance);
+                default -> null;
+            };
+
+            if (boundingShapeDrawer != null) {
+                boundingShapeDrawer.initializeShape(event, selectedCategory.get());
+            }
+        }
+    }
+
+    public void updateBoundingShapeDrawing(MouseEvent event) {
+        if (boundingShapeDrawer != null && boundingShapeDrawer.isDrawingInProgress()) {
+            boundingShapeDrawer.updateShape(event);
+        }
+    }
+
+    public void finalizeBoundingShapeDrawing() {
+        if (boundingShapeDrawer != null && boundingShapeDrawer.isDrawingInProgress()) {
+            boundingShapeDrawer.finalizeShape();
+        }
+    }
+
+    public DrawingMode getCurrentBoundingShapeDrawingMode() {
+        if (boundingShapeDrawer == null || !boundingShapeDrawer.isDrawingInProgress()) {
+            return DrawingMode.NONE;
+        }
+
+        return boundingShapeDrawer.getDrawingMode();
     }
 
     /**
@@ -191,138 +212,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
         return image != null && image.getProgress() == 1.0;
     }
 
-    /**
-     * Returns a boolean indicating that a bounding box is currently drawn by the user.
-     *
-     * @return the boolean value
-     */
-    public boolean isBoundingBoxDrawingInProgress() {
-        return boundingBoxDrawingInProgress;
-    }
-
-    public boolean isFreehandDrawingInProgress() {
-        return freehandDrawingInProgress;
-    }
-
     public boolean isDrawingInProgress() {
-        return boundingBoxDrawingInProgress || freehandDrawingInProgress;
-    }
-
-    public void initializeBoundingRectangle(MouseEvent event) {
-        Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
-
-        BoundingBoxView boundingBoxView = new BoundingBoxView(selectedCategory.get());
-        boundingBoxView.getConstructionAnchorLocal().setFromMouseEvent(event);
-        boundingBoxView.setToggleGroup(boundingShapeSelectionGroup);
-
-        boundingBoxView.setX(parentCoordinates.getX());
-        boundingBoxView.setY(parentCoordinates.getY());
-        boundingBoxView.setWidth(0);
-        boundingBoxView.setHeight(0);
-
-        currentBoundingShapes.add(boundingBoxView);
-
-        boundingBoxView.autoScaleWithBounds(imageView.boundsInParentProperty());
-        boundingShapeSelectionGroup.selectToggle(boundingBoxView);
-
-        boundingBoxDrawingInProgress = true;
-    }
-
-    public void initializeBoundingPolygon(MouseEvent event) {
-        Toggle selectedBoundingShape = boundingShapeSelectionGroup.getSelectedToggle();
-
-        BoundingPolygonView selectedBoundingPolygon;
-
-        if(!(selectedBoundingShape instanceof BoundingPolygonView boundingPolygonView &&
-                boundingPolygonView.isConstructing())) {
-            selectedBoundingPolygon = new BoundingPolygonView(selectedCategory.get());
-            selectedBoundingPolygon.setToggleGroup(boundingShapeSelectionGroup);
-            selectedBoundingPolygon.setConstructing(true);
-
-            currentBoundingShapes.add(selectedBoundingPolygon);
-
-            selectedBoundingPolygon.autoScaleWithBounds(imageView.boundsInParentProperty());
-            selectedBoundingPolygon.setMouseTransparent(true);
-            selectedBoundingPolygon.setVisible(true);
-            boundingShapeSelectionGroup.selectToggle(selectedBoundingPolygon);
-        } else {
-            selectedBoundingPolygon = (BoundingPolygonView) selectedBoundingShape;
-        }
-
-        Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
-        selectedBoundingPolygon.appendNode(parentCoordinates.getX(), parentCoordinates.getY());
-        selectedBoundingPolygon.setEditing(true);
-    }
-
-    public void initializeBoundingFreehandShape(MouseEvent event) {
-        Point2D parentCoordinates = imageView.localToParent(event.getX(), event.getY());
-
-        BoundingFreehandShapeView boundingFreehandShape = new BoundingFreehandShapeView(selectedCategory.get());
-        boundingFreehandShape.setToggleGroup(boundingShapeSelectionGroup);
-
-        currentBoundingShapes.add(boundingFreehandShape);
-
-
-        boundingFreehandShape.autoScaleWithBounds(imageView.boundsInParentProperty());
-
-        boundingFreehandShape.setVisible(true);
-        boundingShapeSelectionGroup.selectToggle(boundingFreehandShape);
-        boundingFreehandShape.addMoveTo(parentCoordinates.getX(), parentCoordinates.getY());
-        freehandDrawingInProgress = true;
-    }
-
-    public void finalizeFreehandShape() {
-        BoundingFreehandShapeView boundingFreehandShape = (BoundingFreehandShapeView) boundingShapeSelectionGroup
-                .getSelectedToggle();
-
-        boundingFreehandShape.getElements().add(new ClosePath());
-
-        BoundingPolygonView boundingPolygonView = new BoundingPolygonView(
-                boundingFreehandShape.getViewData().getObjectCategory());
-
-        final List<Double> pointsInImage = boundingFreehandShape.getPointsInImage();
-
-        boundingPolygonView.setEditing(true);
-
-        for(int i = 0; i < pointsInImage.size(); i += 2) {
-            boundingPolygonView.appendNode(pointsInImage.get(i), pointsInImage.get(i + 1));
-        }
-
-        if(autoSimplifyPolygons.get()) {
-            boundingPolygonView.simplify(simplifyRelativeDistanceTolerance.get(),
-                    boundingFreehandShape.getViewData().autoScaleBounds().getValue());
-        }
-
-        boundingPolygonView.setToggleGroup(boundingShapeSelectionGroup);
-
-        currentBoundingShapes.remove(boundingFreehandShape);
-
-        ObjectCategoryTreeItem parentTreeItem = (ObjectCategoryTreeItem) boundingFreehandShape.getViewData()
-                .getTreeItem().getParent();
-        parentTreeItem.detachBoundingShapeTreeItemChild(boundingFreehandShape.getViewData().getTreeItem());
-
-        if(parentTreeItem.getChildren().isEmpty()) {
-            parentTreeItem.getParent().getChildren().remove(parentTreeItem);
-        }
-
-        currentBoundingShapes.add(boundingPolygonView);
-
-        boundingPolygonView.autoScaleWithBounds(imageView.boundsInParentProperty());
-        boundingPolygonView.setVisible(true);
-        boundingShapeSelectionGroup.selectToggle(boundingPolygonView);
-        setBoundingPolygonsEditingAndConstructing(false);
-
-        freehandDrawingInProgress = false;
-    }
-
-    public void setBoundingPolygonsEditingAndConstructing(boolean editing) {
-        currentBoundingShapes.stream()
-                .filter(BoundingPolygonView.class::isInstance)
-                .map(BoundingPolygonView.class::cast)
-                .forEach(boundingPolygonView -> {
-                    boundingPolygonView.setEditing(editing);
-                    boundingPolygonView.setConstructing(false);
-                });
+        return (boundingShapeDrawer != null && boundingShapeDrawer.isDrawingInProgress());
     }
 
     public boolean isCategorySelected() {
@@ -505,42 +396,10 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 if(isDrawingInProgress() &&
                         event.getButton().equals(MouseButton.PRIMARY) &&
                         isCategorySelected()) {
-                    final Point2D clampedEventXY =
-                            MathUtils.clampWithinBounds(event.getX(), event.getY(), imageView.getBoundsInLocal());
-
-                    if(drawingMode == DrawingMode.BOX) {
-                        updateCurrentBoundingBoxFromMouseDrag(clampedEventXY);
-                    } else if(drawingMode == DrawingMode.FREEHAND) {
-                        updateCurrentFreehandShapeFromMouseDrag(clampedEventXY);
-                    }
+                    boundingShapeDrawer.updateShape(event);
                 }
             }
         });
-    }
-
-    private void updateCurrentFreehandShapeFromMouseDrag(Point2D clampedEventXY) {
-        Point2D parentCoordinates =
-                imageView.localToParent(clampedEventXY.getX(), clampedEventXY.getY());
-
-        BoundingFreehandShapeView shape =
-                (BoundingFreehandShapeView) boundingShapeSelectionGroup.getSelectedToggle();
-
-        shape.addLineTo(parentCoordinates.getX(), parentCoordinates.getY());
-    }
-
-    private void updateCurrentBoundingBoxFromMouseDrag(Point2D clampedEventXY) {
-        BoundingBoxView boundingBoxView =
-                (BoundingBoxView) boundingShapeSelectionGroup.getSelectedToggle();
-
-        DragAnchor constructionAnchor = boundingBoxView.getConstructionAnchorLocal();
-        Point2D parentCoordinates =
-                imageView.localToParent(Math.min(clampedEventXY.getX(), constructionAnchor.getX()),
-                        Math.min(clampedEventXY.getY(), constructionAnchor.getY()));
-
-        boundingBoxView.setX(parentCoordinates.getX());
-        boundingBoxView.setY(parentCoordinates.getY());
-        boundingBoxView.setWidth(Math.abs(clampedEventXY.getX() - constructionAnchor.getX()));
-        boundingBoxView.setHeight(Math.abs(clampedEventXY.getY() - constructionAnchor.getY()));
     }
 
     private void setUpContentPaneListeners() {
@@ -616,5 +475,5 @@ public class EditorImagePaneView extends ScrollPane implements View {
         }
     }
 
-    public enum DrawingMode {BOX, POLYGON, FREEHAND}
+    public enum DrawingMode {BOX, POLYGON, FREEHAND, NONE}
 }

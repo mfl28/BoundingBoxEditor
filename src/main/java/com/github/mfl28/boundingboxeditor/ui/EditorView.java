@@ -86,24 +86,18 @@ public class EditorView extends BorderPane implements View {
                          .setOnAction(event -> editorImagePaneView.resetImageViewSize());
 
         editorToolBarView.getRectangleModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
-            editorImagePaneView.setBoundingPolygonsEditingAndConstructing(false);
-
             if(Boolean.TRUE.equals(newValue)) {
                 editorImagePaneView.setDrawingMode(EditorImagePaneView.DrawingMode.BOX);
             }
         });
 
         editorToolBarView.getPolygonModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
-            editorImagePaneView.setBoundingPolygonsEditingAndConstructing(false);
-
             if(Boolean.TRUE.equals(newValue)) {
                 editorImagePaneView.setDrawingMode(EditorImagePaneView.DrawingMode.POLYGON);
             }
         });
 
         editorToolBarView.getFreehandModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
-            editorImagePaneView.setBoundingPolygonsEditingAndConstructing(false);
-
             if(Boolean.TRUE.equals(newValue)) {
                 editorImagePaneView.setDrawingMode(EditorImagePaneView.DrawingMode.FREEHAND);
             }
