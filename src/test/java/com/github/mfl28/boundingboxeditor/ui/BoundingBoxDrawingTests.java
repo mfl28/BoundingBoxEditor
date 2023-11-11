@@ -206,7 +206,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         final IOErrorInfoEntry referenceErrorInfoEntry1 = new IOErrorInfoEntry("cameraman.tif",
                                                                                "Unsupported image file format.");
-        final IOErrorInfoEntry referenceErrorInfoEntry2 = new IOErrorInfoEntry("no_image_file.txt",
+        final IOErrorInfoEntry referenceErrorInfoEntry2 = new IOErrorInfoEntry("no_image_file.pdf",
                                                                                "Invalid image file.");
 
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1, referenceErrorInfoEntry2),
