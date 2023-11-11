@@ -783,7 +783,9 @@ public class Controller {
                 new KeyCombinationEventHandler(KeyCombinations.simplifyPolygon,
                         null, event -> view.simplifyCurrentSelectedBoundingPolygon()),
                 new KeyCombinationEventHandler(KeyCombinations.saveBoundingShapeAsImage,
-                        null, event -> view.saveCurrentSelectedBoundingShapeAsImage())
+                        null, event -> view.saveCurrentSelectedBoundingShapeAsImage()),
+                new KeyCombinationEventHandler(KeyCombinations.openSettings,
+                        null, event -> onRegisterSettingsAction())
                 );
     }
 
@@ -1653,6 +1655,9 @@ public class Controller {
                 new KeyCodeCombination(KeyCode.S, KeyCombination.SHIFT_DOWN);
         public static final KeyCombination saveBoundingShapeAsImage =
                 new KeyCodeCombination(KeyCode.I, KeyCombination.SHIFT_DOWN);
+
+        public static final KeyCombination openSettings =
+                new KeyCodeCombination(KeyCode.COMMA, KeyCombination.SHORTCUT_DOWN);
 
         private KeyCombinations() {
             throw new IllegalStateException("Key Combination Class");
