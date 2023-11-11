@@ -26,6 +26,7 @@ import javafx.application.Platform;
 import javafx.event.EventType;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
+import javafx.scene.control.ButtonType;
 import javafx.scene.input.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -74,9 +75,10 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                         Controller.KeyCombinations.selectFreehandDrawingMode, Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected,
                         Controller.KeyCombinations.changeSelectedBoundingShapeCategory,
                         Controller.KeyCombinations.hideNonSelectedBoundingShapes, Controller.KeyCombinations.simplifyPolygon,
-                        Controller.KeyCombinations.saveBoundingShapeAsImage
+                        Controller.KeyCombinations.saveBoundingShapeAsImage, Controller.KeyCombinations.openSettings
                 ));
 
+        testOpenSettingsKeyEvent(robot, testinfo);
         testNavigateNextKeyEvent(testinfo, true, true, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");
         testNavigatePreviousKeyEvent(testinfo, true, true, "rachel-hisko-rEM3cK8F1pk-unsplash.jpg");
         testNavigateNextKeyEvent(testinfo, false, true, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");
@@ -170,6 +172,20 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         testSaveCurrentlySelectedBoundingShapeKeyEvent();
         testRemoveCurrentlySelectedBoundingShapeKeyEvent();
         testResetImageViewSizeKeyEvent(robot);
+    }
+
+    private void testOpenSettingsKeyEvent(FxRobot robot, TestInfo testinfo) {
+        KeyEvent openSettingsKeyEvent = buildKeyEventFromCombination((KeyCodeCombination) Controller.KeyCombinations.openSettings, KeyEvent.KEY_RELEASED);
+        Platform.runLater(() -> controller.onRegisterSceneKeyReleased(openSettingsKeyEvent));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
+
+        timeOutClickOnButtonInDialogStage(robot, settingsStage, ButtonType.CANCEL, testinfo);
+        timeOutAssertNoTopModelStage(robot, testinfo);
+
+        verifyThat(settingsStage.isShowing(), Matchers.is(false));
     }
 
     private void testSaveCurrentlySelectedBoundingShapeKeyEvent() {
