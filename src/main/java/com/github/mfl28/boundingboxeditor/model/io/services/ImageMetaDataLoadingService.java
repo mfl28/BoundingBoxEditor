@@ -27,12 +27,14 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Task;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ImageMetaDataLoadingService extends IoService<ImageMetaDataLoadingResult> {
+    private static final String[] ignoredExtensions = {".txt", ".json", ".xml", ".data"};
     private final ObjectProperty<File> source = new SimpleObjectProperty<>(this, "source");
     private final ObjectProperty<List<File>> imageFiles = new SimpleObjectProperty<>(this, "imageFiles");
     private final BooleanProperty reload = new SimpleBooleanProperty(this, "reload");
@@ -72,7 +74,9 @@ public class ImageMetaDataLoadingService extends IoService<ImageMetaDataLoadingR
                     final AtomicInteger nrProcessedFiles = new AtomicInteger(0);
 
                     fileNameToMetaDataMap
-                            .putAll(imageFiles.get().parallelStream().collect(HashMap::new, (map, item) -> {
+                            .putAll(imageFiles.get().parallelStream()
+                                    .filter(file -> !StringUtils.endsWithAny(file.getName().toLowerCase(Locale.ENGLISH), ignoredExtensions))
+                                    .collect(HashMap::new, (map, item) -> {
                                 updateProgress(1.0 * nrProcessedFiles.incrementAndGet() / totalNrOfFiles, 1.0);
                                 try {
                                     map.put(item.getName(), ImageMetaData.fromFile(item));
