@@ -70,12 +70,15 @@ public class ImageMetaDataLoadingService extends IoService<ImageMetaDataLoadingR
                     final List<IOErrorInfoEntry> errorInfoEntries =
                             Collections.synchronizedList(new ArrayList<>());
 
-                    int totalNrOfFiles = imageFiles.get().size();
+                    final List<File> filteredFiles = imageFiles.get().stream()
+                            .filter(file -> !StringUtils.endsWithAny(file.getName().toLowerCase(Locale.ENGLISH), ignoredExtensions))
+                            .toList();
+
+                    int totalNrOfFiles = filteredFiles.size();
                     final AtomicInteger nrProcessedFiles = new AtomicInteger(0);
 
                     fileNameToMetaDataMap
-                            .putAll(imageFiles.get().parallelStream()
-                                    .filter(file -> !StringUtils.endsWithAny(file.getName().toLowerCase(Locale.ENGLISH), ignoredExtensions))
+                            .putAll(filteredFiles.parallelStream()
                                     .collect(HashMap::new, (map, item) -> {
                                 updateProgress(1.0 * nrProcessedFiles.incrementAndGet() / totalNrOfFiles, 1.0);
                                 try {
@@ -86,7 +89,7 @@ public class ImageMetaDataLoadingService extends IoService<ImageMetaDataLoadingR
                             }, Map::putAll));
 
                     final List<File> validImageFiles =
-                            imageFiles.get().stream().filter(item -> fileNameToMetaDataMap.containsKey(item.getName()))
+                            filteredFiles.stream().filter(item -> fileNameToMetaDataMap.containsKey(item.getName()))
                                       .toList();
 
                     return new ImageMetaDataLoadingResult(fileNameToMetaDataMap.size(), errorInfoEntries,
