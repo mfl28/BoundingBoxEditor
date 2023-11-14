@@ -23,6 +23,7 @@ import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationImportResult;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import javafx.beans.property.DoubleProperty;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,6 +33,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -42,11 +45,10 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     public static final String INVALID_BOUNDING_BOX_COORDINATES_MESSAGE = "Invalid bounding-box coordinates on line ";
     private static final boolean INCLUDE_SUBDIRECTORIES = false;
     private static final String OBJECT_DATA_FILE_NAME = "object.data";
-    private static final String YOLO_IMAGE_EXTENSION = ".jpg";
     private final List<String> categories = new ArrayList<>();
     private final List<IOErrorInfoEntry> unParsedFileErrorMessages =
             Collections.synchronizedList(new ArrayList<>());
-    private Set<String> fileNamesToLoad;
+    private Map<String, List<String>> baseFileNameToImageFileMap;
     private Map<String, ObjectCategory> categoryNameToCategoryMap;
     private Map<String, Integer> boundingShapeCountPerCategory;
 
@@ -55,7 +57,10 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                                             Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
                                             DoubleProperty progress)
             throws IOException {
-        this.fileNamesToLoad = filesToLoad;
+        this.baseFileNameToImageFileMap = filesToLoad.stream().collect(
+                Collectors.groupingBy(FilenameUtils::getBaseName, HashMap::new,
+                        Collectors.mapping(Function.identity(), Collectors.toList()))
+        );
         this.boundingShapeCountPerCategory = new ConcurrentHashMap<>();
         this.categoryNameToCategoryMap = new ConcurrentHashMap<>(existingCategoryNameToCategoryMap);
 
@@ -89,6 +94,7 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                                                                             return loadAnnotationFromFile(file);
                                                                         } catch(InvalidAnnotationFormatException |
                                                                                 AnnotationToNonExistentImageException |
+                                                                                AnnotationAssociationException |
                                                                                 IOException e) {
                                                                             unParsedFileErrorMessages
                                                                                     .add(new IOErrorInfoEntry(
@@ -128,13 +134,18 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private ImageAnnotation loadAnnotationFromFile(File file) throws IOException {
-        String annotatedImageFileName =
-                file.getName().substring(0, file.getName().lastIndexOf('.')) + YOLO_IMAGE_EXTENSION;
+        final List<String> annotatedImageFiles = baseFileNameToImageFileMap.get(
+                FilenameUtils.getBaseName(file.getName()));
 
-        if(!fileNamesToLoad.contains(annotatedImageFileName)) {
-            throw new AnnotationToNonExistentImageException("The image file \"" + annotatedImageFileName +
-                                                                    "\" does not belong to the currently loaded images.");
+        if(annotatedImageFiles == null) {
+            throw new AnnotationToNonExistentImageException(
+                    "No associated image file.");
+        } else if(annotatedImageFiles.size() > 1) {
+            throw new AnnotationAssociationException(
+                    "More than one associated image file.");
         }
+
+        final String annotatedImageFileName = annotatedImageFiles.get(0);
 
         try(BufferedReader fileReader = Files.newBufferedReader(file.toPath())) {
             String line;
