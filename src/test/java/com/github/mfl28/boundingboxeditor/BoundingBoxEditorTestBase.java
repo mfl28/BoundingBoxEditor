@@ -86,6 +86,7 @@ public class BoundingBoxEditorTestBase {
     protected static String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
     protected static String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
     protected static String TEST_IMAGE_FOLDER_PATH_3 = "/testimages/3";
+    protected static String TEST_IMAGE_FOLDER_PATH_4 = "/testimages/4";
     protected static String TEST_EXIF_IMAGE_FOLDER_PATH = "/testimages/ExifJpeg";
     protected Controller controller;
     protected MainView mainView;

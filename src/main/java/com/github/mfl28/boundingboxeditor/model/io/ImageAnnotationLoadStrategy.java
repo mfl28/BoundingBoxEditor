@@ -80,4 +80,9 @@ public interface ImageAnnotationLoadStrategy {
             super(message);
         }
     }
+
+    @SuppressWarnings("serial")
+    class AnnotationAssociationException extends RuntimeException {
+        AnnotationAssociationException(String message) { super(message); }
+    }
 }

@@ -43,3 +43,6 @@
 
 # Chocolatey
 /chocolatey/*.nupkg
+
+# Mac
+**/.DS_STORE
