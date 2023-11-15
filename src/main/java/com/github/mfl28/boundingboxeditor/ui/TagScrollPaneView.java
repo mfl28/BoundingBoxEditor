@@ -94,9 +94,9 @@ class TagScrollPaneView extends ScrollPane implements View {
         tagFlowPane.maxWidthProperty().bind(widthProperty());
 
         tagInputField.setOnAction(event -> {
-            String text = tagInputField.getText();
+            final String text = tagInputField.getText();
             // Empty or already existing tags are not added to the list of tags.
-            if(!text.isEmpty() && !tags.get().contains(text)) {
+            if(text != null && !text.isEmpty() && !tags.get().contains(text)) {
                 tags.get().add(text);
             }
             requestFocus();

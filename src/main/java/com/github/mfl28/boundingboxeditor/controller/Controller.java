@@ -422,7 +422,7 @@ public class Controller {
     public void onRegisterAddObjectCategoryAction() {
         final String categoryName = view.getObjectCategoryInputField().getText();
 
-        if(categoryName.isBlank()) {
+        if(categoryName == null || categoryName.isBlank()) {
             MainView.displayErrorAlert(CATEGORY_INPUT_ERROR_DIALOG_TITLE,
                     INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT, stage);
             view.getObjectCategoryInputField().clear();
@@ -562,7 +562,7 @@ public class Controller {
         String newName = event.getNewValue();
         String oldName = event.getOldValue();
 
-        if(oldName.equals(newName)) {
+        if(Objects.equals(oldName, newName)) {
             // Nothing to do if the new name is the same as the current one.
             return;
         }
@@ -571,7 +571,7 @@ public class Controller {
         final Map<String, Integer> boundingShapesPerCategoryNameMap =
                 model.getCategoryToAssignedBoundingShapesCountMap();
 
-        if(newName.isBlank()) {
+        if(newName == null || newName.isBlank()) {
             MainView.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
                     INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT, stage);
             objectCategory.setName(oldName);
@@ -582,10 +582,14 @@ public class Controller {
             objectCategory.setName(oldName);
             event.getTableView().refresh();
         } else {
-            int assignedBoundingShapesCount = boundingShapesPerCategoryNameMap.get(oldName);
-            boundingShapesPerCategoryNameMap.remove(oldName);
+            if(oldName != null) {
+                int assignedBoundingShapesCount = boundingShapesPerCategoryNameMap.get(oldName);
+                boundingShapesPerCategoryNameMap.remove(oldName);
+                boundingShapesPerCategoryNameMap.put(newName, assignedBoundingShapesCount);
+            } else {
+                boundingShapesPerCategoryNameMap.put(newName, 0);
+            }
 
-            boundingShapesPerCategoryNameMap.put(newName, assignedBoundingShapesCount);
             objectCategory.setName(newName);
         }
     }
