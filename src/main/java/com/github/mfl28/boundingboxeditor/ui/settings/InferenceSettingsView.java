@@ -260,7 +260,7 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private boolean validateMinimumScoreControlData() {
         boolean valid = true;
 
-        if(minimumScoreControl.getEditor().getText().isBlank()) {
+        if(minimumScoreControl.getEditor().getText() == null || minimumScoreControl.getEditor().getText().isBlank()) {
             minimumScoreControl.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, true);
             valid = false;
         } else {
@@ -276,7 +276,7 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private boolean validateAddressPortTextFields(TextField addressField, TextField portField) {
         boolean valid = true;
 
-        if(addressField.getText().isBlank()) {
+        if(addressField.getText() == null || addressField.getText().isBlank()) {
             addressField.pseudoClassStateChanged(invalidValuePseudoClass, true);
             valid = false;
         } else {
@@ -385,7 +385,10 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private void addModelSelectionRow(int row) {
         selectModelButton.disableProperty().bind(
                 Bindings.createBooleanBinding(
-                        () -> managementAddressField.getText().isBlank() || managementPortField.getText().isBlank(),
+                        () -> managementAddressField.getText() == null
+                                || managementAddressField.getText().isBlank()
+                                || managementPortField == null
+                                || managementPortField.getText().isBlank(),
                         managementAddressField.textProperty(),
                         managementPortField.textProperty()));
 
