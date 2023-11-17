@@ -147,6 +147,15 @@ public class BoundingBoxEditorTestBase {
                 .release(MouseButton.PRIMARY);
     }
 
+    protected void moveRelativeToImageViewNoRelease(FxRobot robot, Point2D startPointRatios, Point2D endPointRatios) {
+        Point2D startPoint = getScreenPointFromRatios(mainView.getEditorImageView(), startPointRatios);
+        Point2D endPoint = getScreenPointFromRatios(mainView.getEditorImageView(), endPointRatios);
+
+        robot.moveTo(startPoint)
+                .press(MouseButton.PRIMARY)
+                .moveTo(endPoint);
+    }
+
     protected void moveAndClickRelativeToImageView(FxRobot robot, MouseButton mousebutton, Point2D... points) {
         for(Point2D point : points) {
             robot.moveTo(getScreenPointFromRatios(mainView.getEditorImageView(), point)).clickOn(mousebutton);

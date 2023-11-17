@@ -58,6 +58,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private static final int MAXIMUM_IMAGE_WIDTH = 3072;
     private static final int MAXIMUM_IMAGE_HEIGHT = 3072;
     private static final double ZOOM_SCALE_DELTA = 0.05;
+    private static final String BOUNDING_SHAPE_SCENE_GROUP_ID = "bounding-shape-scene-group";
 
     private final ImageView imageView = new ImageView();
     private final SimpleBooleanProperty maximizeImageView = new SimpleBooleanProperty(true);
@@ -93,6 +94,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
         setHbarPolicy(ScrollBarPolicy.NEVER);
 
         boundingShapeSceneGroup.setManaged(false);
+        boundingShapeSceneGroup.setId(BOUNDING_SHAPE_SCENE_GROUP_ID);
 
         setUpImageView();
         setUpInternalListeners();
@@ -129,6 +131,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
             if (boundingShapeDrawer != null) {
                 boundingShapeDrawer.initializeShape(event, selectedCategory.get());
+                boundingShapeSceneGroup.setMouseTransparent(true);
             }
         }
     }
@@ -142,6 +145,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
     public void finalizeBoundingShapeDrawing() {
         if (boundingShapeDrawer != null && boundingShapeDrawer.isDrawingInProgress()) {
             boundingShapeDrawer.finalizeShape();
+            boundingShapeSceneGroup.setMouseTransparent(false);
         }
     }
 

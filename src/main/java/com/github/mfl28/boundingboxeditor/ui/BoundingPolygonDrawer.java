@@ -45,7 +45,6 @@ public class BoundingPolygonDrawer implements BoundingShapeDrawer {
     @Override
     public void initializeShape(MouseEvent event, ObjectCategory objectCategory) {
         if(event.getEventType().equals(MouseEvent.MOUSE_PRESSED) && event.getButton().equals(MouseButton.PRIMARY)) {
-            boundingShapes.forEach(boundingShapeViewable -> ((Node) boundingShapeViewable).setMouseTransparent(true));
             boundingPolygonView = new BoundingPolygonView(objectCategory);
             boundingPolygonView.setToggleGroup(toggleGroup);
             boundingPolygonView.setConstructing(true);
@@ -53,7 +52,6 @@ public class BoundingPolygonDrawer implements BoundingShapeDrawer {
             boundingShapes.add(boundingPolygonView);
 
             boundingPolygonView.autoScaleWithBounds(imageView.boundsInParentProperty());
-            boundingPolygonView.setMouseTransparent(true);
             boundingPolygonView.setVisible(true);
             toggleGroup.selectToggle(boundingPolygonView);
 
@@ -77,7 +75,6 @@ public class BoundingPolygonDrawer implements BoundingShapeDrawer {
         boundingPolygonView.setConstructing(false);
         boundingPolygonView.setEditing(false);
 
-        boundingShapes.forEach(boundingShapeViewable -> ((Node) boundingShapeViewable).setMouseTransparent(false));
         drawingInProgress = false;
     }
 
