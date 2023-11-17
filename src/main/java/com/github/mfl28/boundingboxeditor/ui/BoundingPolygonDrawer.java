@@ -20,7 +20,6 @@ package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;

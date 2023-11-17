@@ -41,7 +41,7 @@ import java.util.Map;
 import static org.testfx.api.FxAssert.verifyThat;
 
 @Tag("ui")
-public class AnnotationTests extends BoundingBoxEditorTestBase {
+class AnnotationTests extends BoundingBoxEditorTestBase {
 
     @Start
     void start(Stage stage) {
