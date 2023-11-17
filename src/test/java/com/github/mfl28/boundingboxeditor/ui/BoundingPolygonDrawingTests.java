@@ -19,18 +19,13 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
-import javafx.css.Match;
-import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.stage.Stage;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.hamcrest.Matchers;
-import org.hamcrest.core.AllOf;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -132,6 +127,10 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(),
                    Matchers.equalTo(drawnBoundingPolygon), saveScreenshot(testinfo));
+        verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.is(true));
+        verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
+                Matchers.equalTo(EditorImagePaneView.DrawingMode.POLYGON));
+        verifyThat(robot.lookup("#bounding-shape-scene-group").query().isMouseTransparent(), Matchers.is(true));
 
         robot.rightClickOn(mainView.getEditorImageView());
         WaitForAsyncUtils.waitForFxEvents();
@@ -141,6 +140,11 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(drawnBoundingPolygon.isEditing(), Matchers.equalTo(false), saveScreenshot(testinfo));
         verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(),
                    Matchers.nullValue(), saveScreenshot(testinfo));
+        verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.is(false));
+        verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
+                Matchers.equalTo(EditorImagePaneView.DrawingMode.NONE));
+        verifyThat(robot.lookup("#bounding-shape-scene-group").query().isMouseTransparent(), Matchers.is(false));
+
 
         robot.clickOn(drawnBoundingPolygon, MouseButton.MIDDLE);
         WaitForAsyncUtils.waitForFxEvents();
@@ -422,6 +426,10 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(), Matchers.equalTo(EditorImagePaneView.DrawingMode.FREEHAND));
 
         int numPathElements = boundingFreehandShapeView.getElements().size();
+        verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.is(true));
+        verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
+                Matchers.equalTo(EditorImagePaneView.DrawingMode.FREEHAND));
+        verifyThat(robot.lookup("#bounding-shape-scene-group").query().isMouseTransparent(), Matchers.is(true));
 
 
         robot.moveTo(screenPoints.get(1));
@@ -454,7 +462,9 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                 saveScreenshot(testinfo));
 
         verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
-                Matchers.not(Matchers.equalTo(EditorImagePaneView.DrawingMode.FREEHAND)));
+                Matchers.equalTo(EditorImagePaneView.DrawingMode.NONE));
+        verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.is(false));
+        verifyThat(robot.lookup("#bounding-shape-scene-group").query().isMouseTransparent(), Matchers.is(false));
 
         verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingPolygonView.class),
                 saveScreenshot(testinfo));

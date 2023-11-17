@@ -85,7 +85,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
 
         // Draw a bounding box.
-        moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
+        moveRelativeToImageViewNoRelease(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
         WaitForAsyncUtils.waitForFxEvents();
 
         int drawnBoundingBoxFileIndex = model.getCurrentFileIndex();
@@ -98,6 +98,18 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                                                                                    " found in " +
                                                                                    TIMEOUT_DURATION_IN_SEC +
                                                                                    " sec."));
+        verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.is(true));
+        verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
+                Matchers.equalTo(EditorImagePaneView.DrawingMode.BOX));
+        verifyThat(robot.lookup("#bounding-shape-scene-group").query().isMouseTransparent(), Matchers.is(true));
+
+        robot.release(MouseButton.PRIMARY);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.is(false));
+        verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
+                Matchers.equalTo(EditorImagePaneView.DrawingMode.NONE));
+        verifyThat(robot.lookup("#bounding-shape-scene-group").query().isMouseTransparent(), Matchers.is(false));
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1),
                    saveScreenshot(testinfo));
