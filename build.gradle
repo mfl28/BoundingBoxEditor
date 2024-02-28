@@ -107,6 +107,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor
     implementation 'com.drewnoakes:metadata-extractor:2.18.0'
+    
+    implementation 'com.opencsv:opencsv:5.9'
 }
 
 javafx {

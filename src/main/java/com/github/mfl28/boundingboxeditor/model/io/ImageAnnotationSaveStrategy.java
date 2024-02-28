@@ -43,6 +43,8 @@ public interface ImageAnnotationSaveStrategy {
             return new YOLOSaveStrategy();
         } else if(type.equals(Type.JSON)) {
             return new JSONSaveStrategy();
+        } else if(type.equals(Type.CSV)) {
+            return new CSVSaveStrategy();
         } else {
             throw new InvalidParameterException();
         }
@@ -75,6 +77,12 @@ public interface ImageAnnotationSaveStrategy {
             @Override
             public String toString() {
                 return "JSON";
+            }
+        },
+        CSV {
+            @Override
+            public String toString() {
+                return "CSV";
             }
         }
     }
