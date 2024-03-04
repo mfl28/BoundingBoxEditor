@@ -24,6 +24,7 @@ import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationImport
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import javafx.beans.property.DoubleProperty;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -38,8 +39,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Loads rectangular bounding-box annotations in the YOLO-format described at
- * <a href="https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885">...</a>
+ * Loads rectangular bounding-box annotations and instance-segmentation annotations in the YOLO-format described at
+ * <a href="https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885">...</a> and
+ * <a href="https://docs.ultralytics.com/datasets/segment/">...</a>
  */
 public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     public static final String INVALID_BOUNDING_BOX_COORDINATES_MESSAGE = "Invalid bounding-box coordinates on line ";
@@ -158,8 +160,14 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                 line = line.strip();
 
                 if(!line.isBlank()) {
+                    int lineCoordinatesCount = Arrays.asList(StringUtils.split(line)).size() - 1;
+
                     try {
-                        boundingShapeDataList.add(parseBoundingBoxData(line, counter));
+                        if(lineCoordinatesCount == 4){
+                            boundingShapeDataList.add(parseBoundingBoxData(line, counter));
+                        } else if(lineCoordinatesCount > 4){
+                            boundingShapeDataList.add(parseBoundingPolygonData(line, counter));
+                        }
                     } catch(InvalidAnnotationFormatException e) {
                         unParsedFileErrorMessages.add(new IOErrorInfoEntry(file.getName(), e.getMessage()));
                     }
@@ -217,10 +225,38 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
         return boundingBoxData;
     }
 
+    private BoundingPolygonData parseBoundingPolygonData(String line, int lineNumber) {
+        Scanner scanner = new Scanner(line);
+        scanner.useLocale(Locale.ENGLISH);
+
+        int categoryId = parseCategoryIndex(scanner, lineNumber);
+
+        List<Double> relativePoints = new ArrayList<>();
+
+        while(scanner.hasNextDouble()) {
+            double xRelative = parseRatio(scanner, lineNumber);
+            double yRelative = parseRatio(scanner, lineNumber);
+            relativePoints.add(xRelative);
+            relativePoints.add(yRelative);
+        }
+
+        String categoryName = categories.get(categoryId);
+
+        ObjectCategory objectCategory = categoryNameToCategoryMap.computeIfAbsent(categoryName,
+                                                        key -> new ObjectCategory(key,
+                                                                                ColorUtils
+                                                                                        .createRandomColor()));
+
+        // Note that there are no tags or parts in YOLO-format.
+        BoundingPolygonData boundingPolygonData = new BoundingPolygonData(objectCategory, relativePoints, Collections.emptyList());
+
+        return boundingPolygonData;
+    }
+
     private double parseRatio(Scanner scanner, int lineNumber) {
         if(!scanner.hasNextDouble()) {
             throw new InvalidAnnotationFormatException(
-                    "Missing or invalid bounding-box bounds on line " + lineNumber + ".");
+                    "Missing or invalid bounding-box/polygon bounds on line " + lineNumber + ".");
         }
 
         double ratio = scanner.nextDouble();

@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.model.io;
 
 import com.github.mfl28.boundingboxeditor.model.data.BoundingBoxData;
+import com.github.mfl28.boundingboxeditor.model.data.BoundingPolygonData;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotationData;
@@ -116,6 +117,9 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
                 if(boundingShapeData instanceof BoundingBoxData boundingBoxData) {
                     fileWriter.write(createBoundingBoxDataEntry(boundingBoxData));
                     fileWriter.newLine();
+                } else if(boundingShapeData instanceof BoundingPolygonData boundingPolygonData) {
+                    fileWriter.write(createBoundingPolygonDataEntry(boundingPolygonData));
+                    fileWriter.newLine();
                 }
             }
 
@@ -124,6 +128,8 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
 
                 if(lastShapeData instanceof BoundingBoxData boundingBoxData) {
                     fileWriter.write(createBoundingBoxDataEntry(boundingBoxData));
+                } else if(lastShapeData instanceof BoundingPolygonData boundingPolygonData) {
+                    fileWriter.write(createBoundingPolygonDataEntry(boundingPolygonData));
                 }
             }
         }
@@ -140,5 +146,20 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         String heightRelative = DECIMAL_FORMAT.format(relativeBounds.getHeight());
 
         return StringUtils.join(List.of(categoryIndex, xMidRelative, yMidRelative, widthRelative, heightRelative), " ");
+    }
+
+    private String createBoundingPolygonDataEntry(BoundingPolygonData boundingPolygonData) {
+        int categoryIndex = categories.indexOf(boundingPolygonData.getCategoryName());
+
+        List<Double> relativePoints = boundingPolygonData.getRelativePointsInImage();
+        List<String> relativePointsAsStrings = new ArrayList<>();
+
+        for(int i = 0; i + 1 < relativePoints.size(); i += 2){
+            String xRelative = DECIMAL_FORMAT.format(relativePoints.get(i));
+            String yRelative = DECIMAL_FORMAT.format(relativePoints.get(i + 1));
+            relativePointsAsStrings.add(StringUtils.join(List.of(xRelative, yRelative), " "));
+        }
+
+        return StringUtils.join(List.of(categoryIndex, StringUtils.join(relativePointsAsStrings, " ")), " ");
     }
 }
