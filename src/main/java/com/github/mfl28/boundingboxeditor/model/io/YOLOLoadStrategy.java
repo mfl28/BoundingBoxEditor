@@ -163,9 +163,9 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                     int lineCoordinatesCount = Arrays.asList(StringUtils.split(line)).size() - 1;
 
                     try {
-                        if(lineCoordinatesCount == 4){
+                        if(lineCoordinatesCount <= 4){
                             boundingShapeDataList.add(parseBoundingBoxData(line, counter));
-                        } else if(lineCoordinatesCount > 4){
+                        } else {
                             boundingShapeDataList.add(parseBoundingPolygonData(line, counter));
                         }
                     } catch(InvalidAnnotationFormatException e) {
