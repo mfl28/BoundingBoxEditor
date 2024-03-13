@@ -32,6 +32,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Saving-strategy to export annotations to a CSV file.
+ *
+ * The CSVSaveStrategy supports {@link BoundingBoxData} only.
+ */
 public class CSVSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String FILE_NAME_SERIALIZED_NAME = "name";
     private static final String ID_SERIALIZED_NAME = "id";
@@ -40,6 +45,7 @@ public class CSVSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String MAX_X_SERIALIZED_NAME = "xMax";
     private static final String MIN_Y_SERIALIZED_NAME = "yMin";
     private static final String MAX_Y_SERIALIZED_NAME = "yMax";
+    public static final String UNSUPPORTED_BOUNDING_SHAPE = "CSV can export Rectangles only";
 
     @Override
     public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
@@ -49,9 +55,7 @@ public class CSVSaveStrategy implements ImageAnnotationSaveStrategy {
 
         final List<IOErrorInfoEntry> errorEntries = new ArrayList<>();
 
-        try(ICSVWriter writer = new CSVWriterBuilder(Files.newBufferedWriter(destination, StandardCharsets.UTF_8))
-                .withSeparator(',')
-                .build()) {
+        try(ICSVWriter writer = new CSVWriterBuilder(Files.newBufferedWriter(destination, StandardCharsets.UTF_8)).build()) {
             String[] header = {FILE_NAME_SERIALIZED_NAME, ID_SERIALIZED_NAME, LABEL_SERIALIZED_NAME, MIN_X_SERIALIZED_NAME, MAX_X_SERIALIZED_NAME, MIN_Y_SERIALIZED_NAME, MAX_Y_SERIALIZED_NAME};
             writer.writeNext(header);
             for (ImageAnnotation imageAnnotation : annotations.imageAnnotations()) {
@@ -64,7 +68,7 @@ public class CSVSaveStrategy implements ImageAnnotationSaveStrategy {
                         String[] line = { imageAnnotation.getImageFileName(), String.valueOf(nrProcessedAnnotations), boundingShapeData.getCategoryName(), String.valueOf((int) xMin), String.valueOf((int) xMax), String.valueOf((int) yMin), String.valueOf((int) yMax)};
                         writer.writeNext(line);
                     } else {
-                        throw new ImageAnnotationLoadStrategy.InvalidAnnotationFormatException("CSV can export Rectangles only");
+                        errorEntries.add(new IOErrorInfoEntry(imageAnnotation.getImageFileName(), UNSUPPORTED_BOUNDING_SHAPE));
                     }
                     progress.set(1.0 * nrProcessedAnnotations++ / totalNrAnnotations);
                 }
