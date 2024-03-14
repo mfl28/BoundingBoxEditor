@@ -45,7 +45,7 @@ public class CSVSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String MAX_X_SERIALIZED_NAME = "xMax";
     private static final String MIN_Y_SERIALIZED_NAME = "yMin";
     private static final String MAX_Y_SERIALIZED_NAME = "yMax";
-    public static final String UNSUPPORTED_BOUNDING_SHAPE = "CSV can export Rectangles only";
+    private static final String UNSUPPORTED_BOUNDING_SHAPE = "CSV can export Rectangles only";
 
     @Override
     public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
