@@ -136,6 +136,7 @@ public class Controller {
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT = "Annotation format:";
     private static final String KEEP_EXISTING_CATEGORIES_DIALOG_TEXT = "Keep existing categories?";
     private static final String DEFAULT_JSON_EXPORT_FILENAME = "annotations.json";
+    private static final String DEFAULT_CSV_EXPORT_FILENAME = "annotations.csv";
     private static final String ANNOTATION_IMPORT_SAVE_EXISTING_DIALOG_CONTENT = "All current annotations are about " +
             "to be removed. Do you want to save them first?";
     private static final String IMAGE_IMPORT_ERROR_ALERT_TITLE = "Image Import Error";
@@ -1196,6 +1197,14 @@ public class Controller {
                     new FileChooser.ExtensionFilter("JSON files",
                             "*.json",
                             "*.JSON"),
+                    MainView.FileChooserType.SAVE);
+        } else if(saveFormat.equals(ImageAnnotationSaveStrategy.Type.CSV)) {
+            destination = MainView.displayFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
+                    ioMetaData.getDefaultAnnotationSavingDirectory(),
+                    DEFAULT_CSV_EXPORT_FILENAME,
+                    new FileChooser.ExtensionFilter("CSV files",
+                            "*.csv",
+                            "*.CSV"),
                     MainView.FileChooserType.SAVE);
         } else {
             destination =
