@@ -75,10 +75,6 @@ jobs:
         with:
           name: boundingboxeditor-portable-windows
           path: build/jpackage/BoundingBoxEditor
-      - name: Sonarqube analysis
-        run: ./gradlew sonarqube '-Dsonar.host.url=https://sonarcloud.io' '-Dsonar.login=${{ secrets.SONAR_TOKEN }}'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Stop Gradle daemons
         run: ./gradlew --stop
 
