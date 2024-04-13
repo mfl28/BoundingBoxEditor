@@ -75,10 +75,6 @@ jobs:
         with:
           name: boundingboxeditor-portable-windows
           path: build/jpackage/BoundingBoxEditor
-      - name: Sonarqube analysis
-        run: ./gradlew sonarqube '-Dsonar.host.url=https://sonarcloud.io' '-Dsonar.login=${{ secrets.SONAR_TOKEN }}'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Stop Gradle daemons
         run: ./gradlew --stop
 
@@ -106,6 +102,8 @@ jobs:
         run: ./gradlew --info --stacktrace build -x test
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
+      - name: 'Prepare Sonar analysis'
+        uses: evaristegalois11/sonar-fork-analysis@v1
       - name: Test setup
         run: |
           sudo apt-get install xvfb fluxbox
