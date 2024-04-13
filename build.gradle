@@ -258,7 +258,7 @@ task dist {
     dependsOn clean, jlinkZip
 }
 
-sonarqube {
+sonar {
     properties {
         property "sonar.projectKey", "mfl28_BoundingBoxEditor"
         property "sonar.organization", "mfl28"
