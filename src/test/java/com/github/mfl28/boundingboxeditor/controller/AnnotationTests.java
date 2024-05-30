@@ -36,7 +36,6 @@ import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import static org.testfx.api.FxAssert.verifyThat;
 

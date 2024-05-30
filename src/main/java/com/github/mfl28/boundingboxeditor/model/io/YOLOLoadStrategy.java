@@ -189,15 +189,27 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
         double heightRelative = parseRatio(scanner, lineNumber);
 
         double xMinRelative = xMidRelative - widthRelative / 2;
+        if(xMinRelative < 0 && -xMinRelative < 1e-6) {
+            xMinRelative = 0;
+        }
         assertRatio(xMinRelative, INVALID_BOUNDING_BOX_COORDINATES_MESSAGE + lineNumber + ".");
 
         double yMinRelative = yMidRelative - heightRelative / 2;
+        if(yMinRelative < 0 && -yMinRelative < 1e-6) {
+            yMinRelative = 0;
+        }
         assertRatio(yMinRelative, INVALID_BOUNDING_BOX_COORDINATES_MESSAGE + lineNumber + ".");
 
         double xMaxRelative = xMidRelative + widthRelative / 2;
+        if(xMaxRelative > 1 && xMaxRelative - 1 < 1e-6) {
+            xMaxRelative = 1;
+        }
         assertRatio(xMaxRelative, INVALID_BOUNDING_BOX_COORDINATES_MESSAGE + lineNumber + ".");
 
         double yMaxRelative = yMidRelative + heightRelative / 2;
+        if(yMaxRelative > 1 && yMaxRelative - 1 < 1e-6) {
+            yMaxRelative = 1;
+        }
         assertRatio(yMaxRelative, INVALID_BOUNDING_BOX_COORDINATES_MESSAGE + lineNumber + ".");
 
         String categoryName = categories.get(categoryId);
