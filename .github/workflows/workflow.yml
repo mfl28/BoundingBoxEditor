@@ -61,7 +61,9 @@ jobs:
         env:
           OS: Windows
         with:
+          fail_ci_if_error: true
           directory: build/reports/
+          token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: OS
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
@@ -121,7 +123,9 @@ jobs:
         env:
           OS: Linux
         with:
+          fail_ci_if_error: true
           directory: build/reports/
+          token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: OS
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
@@ -167,7 +171,9 @@ jobs:
         env:
           OS: macOS
         with:
+          fail_ci_if_error: true
           directory: build/reports/
+          token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: OS
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
