@@ -19,15 +19,16 @@
 plugins {
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.1.0'
-    id 'org.javamodularity.moduleplugin' version '1.8.12'
-    id 'com.github.ben-manes.versions' version '0.49.0'
+    id 'org.javamodularity.moduleplugin' version '1.8.15'
+    id 'com.github.ben-manes.versions' version '0.51.0'
     id 'org.beryx.jlink' version '3.0.1'
     id 'jacoco'
-    id 'net.ltgt.errorprone' version '3.1.0'
-    id 'org.sonarqube' version '4.4.1.3373'
+    id 'net.ltgt.errorprone' version '4.0.1'
+    id 'org.sonarqube' version '5.1.0.4882'
     id 'org.ysb33r.cloudci' version '4.0.0'
     id 'com.github.hierynomus.license' version '0.16.1'
     id 'io.miret.etienne.sass' version '1.5.0'
+    id "com.ryandens.javaagent-test" version "0.5.1"
 }
 
 group 'com.github.mfl28'
@@ -39,15 +40,16 @@ repositories {
 
 dependencies {
     // Junit (Unit testing)
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // TestFx UI TesTing // https://mvnrepository.com/artifact/org.testfx/testfx-junit5
-    testImplementation('org.testfx:testfx-junit5:4.0.17') {
+    testImplementation('org.testfx:testfx-junit5:4.0.18') {
         exclude group: 'org.hamcrest'
     }
 
     // https://mvnrepository.com/artifact/nl.jqno.equalsverifier/equalsverifier
-    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.15.2'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.16.1'
 
     // Hamcrest https://mvnrepository.com/artifact/org.hamcrest/hamcrest
     testImplementation 'org.hamcrest:hamcrest:2.2'
@@ -56,21 +58,23 @@ dependencies {
     testImplementation 'org.mockito:mockito-inline:5.2.0'
 
     // Mockito-Junit https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
-    testImplementation 'org.mockito:mockito-junit-jupiter:5.6.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
 
     testImplementation 'com.google.jimfs:jimfs:1.3.0'
+
+    testJavaagent "net.bytebuddy:byte-buddy-agent:1.14.18"
 
     // Commons Collections https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
     implementation 'org.apache.commons:commons-collections4:4.4'
 
     // Commons Lang https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-    implementation 'org.apache.commons:commons-lang3:3.13.0'
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
-    implementation 'commons-io:commons-io:2.15.0'
+    implementation 'commons-io:commons-io:2.16.1'
 
     // ControlsFX https://mvnrepository.com/artifact/org.controlsfx/controlsfx
-    implementation('org.controlsfx:controlsfx:11.1.2') {
+    implementation('org.controlsfx:controlsfx:11.2.1') {
         exclude group: 'org.openjfx'
     }
 
@@ -78,43 +82,43 @@ dependencies {
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 
     // Gradle plugin to use the error-prone compiler https://github.com/tbroyer/gradle-errorprone-plugin
-    errorprone 'com.google.errorprone:error_prone_core:2.23.0'
+    errorprone 'com.google.errorprone:error_prone_core:2.28.0'
 
     // Google GSON https://github.com/google/gson
-    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.google.code.gson:gson:2.11.0'
 
     // Jersey REST client https://mvnrepository.com/artifact/org.glassfish.jersey.core/jersey-client
-    implementation 'org.glassfish.jersey.core:jersey-client:3.1.3'
+    implementation 'org.glassfish.jersey.core:jersey-client:3.1.7'
 
     // HK2 InjectionManager https://mvnrepository.com/artifact/org.glassfish.jersey.inject/jersey-hk2
-    implementation 'org.glassfish.jersey.inject:jersey-hk2:3.1.3'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:3.1.7'
 
     // Jersey Multipart https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-multipart
-    implementation 'org.glassfish.jersey.media:jersey-media-multipart:3.1.3'
+    implementation 'org.glassfish.jersey.media:jersey-media-multipart:3.1.7'
 
     // Jaxb runtime https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime
-    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.4'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
 
     // Mimepull https://mvnrepository.com/artifact/org.jvnet.mimepull/mimepull
     implementation 'org.jvnet.mimepull:mimepull:1.10.0'
 
     // Xml bind https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api
-    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.1'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
 
     // https://mvnrepository.com/artifact/jakarta.ws.rs/jakarta.ws.rs-api
-    implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
+    implementation 'jakarta.ws.rs:jakarta.ws.rs-api:4.0.0'
 
     // https://mvnrepository.com/artifact/org.locationtech.jts/jts-core
     implementation 'org.locationtech.jts:jts-core:1.19.0'
 
     // https://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor
-    implementation 'com.drewnoakes:metadata-extractor:2.18.0'
+    implementation 'com.drewnoakes:metadata-extractor:2.19.0'
     
     implementation 'com.opencsv:opencsv:5.9'
 }
 
 javafx {
-    version = '21.0.1'
+    version = '22.0.1'
     modules = ['javafx.base', 'javafx.graphics', 'javafx.controls', 'javafx.swing']
 }
 
@@ -168,7 +172,7 @@ tasks.named("dependencyUpdates").configure {
 }
 
 compileSass {
-    outputDir = project.file ("${buildDir}/resources/main/stylesheets/css")
+    outputDir = layout.buildDirectory.file ("resources/main/stylesheets/css").get().asFile
     destPath = "."
     sourceDir = project.file ("${projectDir}/src/main/resources/stylesheets/scss")
     style = expanded
@@ -199,12 +203,12 @@ application {
 java {
     modularity.inferModulePath = false
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
 jlink {
-    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    options = ['--strip-debug', '--compress', 'zip-6', '--no-header-files', '--no-man-pages']
     launcher {
         name = 'BoundingBoxEditor'
         jvmArgs = ['-Dprism.forceGPU=true', '-Djava.net.preferIPv6Addresses=system']
@@ -218,7 +222,7 @@ jlink {
         uses 'jakarta.ws.rs.ext.RuntimeDelegate'
     }
 
-    imageZip = project.file("${buildDir}/distributions/boundingboxeditor-${javafx.platform.classifier}.zip")
+    imageZip = layout.buildDirectory.file("distributions/boundingboxeditor-${javafx.platform.classifier}.zip")
 
     jpackage {
         installerOptions += [
@@ -258,7 +262,7 @@ jlink {
     }
 }
 
-task dist {
+tasks.register('dist') {
     dependsOn clean, jlinkZip
 }
 

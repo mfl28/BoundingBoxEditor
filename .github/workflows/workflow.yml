@@ -19,7 +19,7 @@ on:
       - master
 
 env:
-  JAVA_VERSION: '17.0.8+7'
+  JAVA_VERSION: '21.0.3+9'
   JAVA_DISTRIBUTION: 'temurin'
   TEST_SCREEN_WIDTH: '1920'
   TEST_SCREEN_HEIGHT: '1080'
