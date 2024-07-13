@@ -20,6 +20,7 @@ package com.github.mfl28.boundingboxeditor.utils;
 
 import javafx.scene.paint.Color;
 
+import java.util.Locale;
 import java.util.Random;
 
 /***
@@ -49,7 +50,7 @@ public class ColorUtils {
      */
     public static String colorToHexString(Color color) {
         return "#" + (format(color.getRed()) + format(color.getGreen()) + format(color.getBlue()))
-                .toUpperCase();
+                .toUpperCase(Locale.ENGLISH);
     }
 
     /**
