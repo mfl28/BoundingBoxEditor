@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
+ * Copyright (C) 2024 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
  *
  * This file is part of Bounding Box Editor
  *
@@ -49,6 +49,7 @@ class MenuBarView extends MenuBar implements View {
     private static final String PASCAL_VOC_FORMAT_EXPORT_TEXT = "Pascal-VOC format...";
     private static final String YOLO_FORMAT_EXPORT_TEXT = "YOLO format...";
     private static final String JSON_FORMAT_EXPORT_TEXT = "JSON format...";
+    private static final String CSV_FORMAT_EXPORT_TEXT = "CSV format...";
     private static final String JSON_FORMAT_IMPORT_TEXT = "JSON format...";
     private static final String FILE_MENU_ID = "file-menu";
     private static final String FILE_OPEN_FOLDER_MENU_ITEM_ID = "file-open-folder-menu-item";
@@ -61,6 +62,7 @@ class MenuBarView extends MenuBar implements View {
     private static final String PVOC_EXPORT_MENU_ITEM_ID = "pvoc-export-menu-item";
     private static final String YOLO_EXPORT_MENU_ITEM_ID = "yolo-export-menu-item";
     private static final String JSON_EXPORT_MENU_ITEM_ID = "json-export-menu-item";
+    private static final String CSV_EXPORT_MENU_ITEM_ID = "csv-export-menu-item";
     private static final String PVOC_IMPORT_MENU_ITEM_ID = "pvoc-import-menu-item";
     private static final String YOLO_IMPORT_MENU_ITEM_ID = "yolo-import-menu-item";
     private static final String JSON_IMPORT_MENU_ITEM_ID = "json-import-menu-item";
@@ -79,6 +81,7 @@ class MenuBarView extends MenuBar implements View {
     private final MenuItem pvocExportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_EXPORT_TEXT);
     private final MenuItem yoloExportMenuItem = new MenuItem(YOLO_FORMAT_EXPORT_TEXT);
     private final MenuItem jsonExportMenuItem = new MenuItem(JSON_FORMAT_EXPORT_TEXT);
+    private final MenuItem csvExportMenuItem = new MenuItem(CSV_FORMAT_EXPORT_TEXT);
     private final MenuItem settingsMenuItem = new MenuItem(SETTINGS_TEXT, createIconRegion(SETTINGS_ICON_ID));
 
     private final Menu fileImportAnnotationsMenu =
@@ -101,11 +104,12 @@ class MenuBarView extends MenuBar implements View {
         viewShowImagesPanelItem.setSelected(true);
         viewMaximizeImagesItem.setSelected(true);
 
-        fileExportAnnotationsMenu.getItems().addAll(pvocExportMenuItem, yoloExportMenuItem, jsonExportMenuItem);
+        fileExportAnnotationsMenu.getItems().addAll(pvocExportMenuItem, yoloExportMenuItem, jsonExportMenuItem, csvExportMenuItem);
 
         pvocExportMenuItem.setId(PVOC_EXPORT_MENU_ITEM_ID);
         yoloExportMenuItem.setId(YOLO_EXPORT_MENU_ITEM_ID);
         jsonExportMenuItem.setId(JSON_EXPORT_MENU_ITEM_ID);
+        csvExportMenuItem.setId(CSV_EXPORT_MENU_ITEM_ID);
 
         fileImportAnnotationsMenu.getItems().addAll(pvocImportMenuItem,
                                                     yoloRImportMenuItem,
@@ -129,6 +133,9 @@ class MenuBarView extends MenuBar implements View {
         jsonExportMenuItem.setOnAction(action ->
                                                controller.onRegisterSaveAnnotationsAction(
                                                        ImageAnnotationSaveStrategy.Type.JSON));
+        csvExportMenuItem.setOnAction(action ->
+										       controller.onRegisterSaveAnnotationsAction(
+										               ImageAnnotationSaveStrategy.Type.CSV));
         pvocImportMenuItem.setOnAction(action ->
                                                controller.onRegisterImportAnnotationsAction(
                                                        ImageAnnotationLoadStrategy.Type.PASCAL_VOC));

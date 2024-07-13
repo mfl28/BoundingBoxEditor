@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
+ * Copyright (C) 2024 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
  *
  * This file is part of Bounding Box Editor
  *
@@ -1133,6 +1133,41 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0), saveScreenshot(testinfo));
         verifyThat(mainView.getObjectTree().getRoot().getChildren(), Matchers.hasSize(0), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onLoadAnnotation_YOLO_WhenAnnotationWithinYOLOPrecision_ShouldLoadBoundingBoxes(FxRobot robot,
+                                                                                         TestInfo testinfo) {
+
+        final String referenceAnnotationDirectoryPath = "/testannotations/yolo/precision";
+
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+
+        final File referenceAnnotationFolder =
+                new File(getClass().getResource(referenceAnnotationDirectoryPath).getFile());
+
+        // Load bounding-boxes defined in the reference annotation-file.
+        Platform.runLater(() -> controller
+                .initiateAnnotationImport(referenceAnnotationFolder, ImageAnnotationLoadStrategy.Type.YOLO));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testinfo);
+
+        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> Objects.equals(counts.get("Test"), 2)),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
+                        "per-category-counts were not read within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
+
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(1),
+                saveScreenshot(testinfo));
+        verifyThat(model.getObjectCategories(), Matchers.hasSize(1), saveScreenshot(testinfo));
     }
 
     private void userChoosesNoOnAnnotationImportDialogSubtest(FxRobot robot, File annotationFile, TestInfo testinfo) {

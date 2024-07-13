@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
+ * Copyright (C) 2024 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
  *
  * This file is part of Bounding Box Editor
  *
@@ -36,7 +36,6 @@ import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import static org.testfx.api.FxAssert.verifyThat;
 

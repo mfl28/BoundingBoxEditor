@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
+ * Copyright (C) 2024 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
  *
  * This file is part of Bounding Box Editor
  *
@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.Serial;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -195,7 +196,7 @@ public final class ImageMetaData {
                 try {
                     reader.setInput(imageStream);
 
-                    final String imageFormatName = reader.getFormatName().toLowerCase();
+                    final String imageFormatName = reader.getFormatName().toLowerCase(Locale.ENGLISH);
 
                     if(!supportedImageFormats.contains(imageFormatName)) {
                         throw new UnsupportedImageFileException(UNSUPPORTED_IMAGE_FORMAT_ERROR_MESSAGE);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
+ * Copyright (C) 2024 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
  *
  * This file is part of Bounding Box Editor
  *
@@ -177,7 +177,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         List<String> actionTags = new ArrayList<>();
 
         for(String tag : boundingShapeData.getTags()) {
-            String lowerCaseTag = tag.toLowerCase();
+            String lowerCaseTag = tag.toLowerCase(Locale.ENGLISH);
 
             if(lowerCaseTag.startsWith("pose:")) {
                 poseString = StringUtils.capitalize(lowerCaseTag.substring(5).stripLeading());

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
+ * Copyright (C) 2024 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
  *
  * This file is part of Bounding Box Editor
  *
@@ -39,6 +39,7 @@ module com.github.mfl28.boundingboxeditor {
     requires org.jvnet.mimepull;
     requires org.locationtech.jts;
     requires metadata.extractor;
+    requires com.opencsv;
 
     opens com.github.mfl28.boundingboxeditor.model to javafx.base, com.google.gson;
     opens com.github.mfl28.boundingboxeditor.model.data to javafx.base, com.google.gson;

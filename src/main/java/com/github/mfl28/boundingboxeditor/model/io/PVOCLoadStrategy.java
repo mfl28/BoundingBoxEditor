@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
+ * Copyright (C) 2024 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
  *
  * This file is part of Bounding Box Editor
  *
@@ -256,7 +256,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 String poseValue = tagElement.getTextContent();
 
                 if(poseValue != null && !poseValue.equalsIgnoreCase("unspecified")) {
-                    boxDataParseResult.getTags().add("pose: " + poseValue.toLowerCase());
+                    boxDataParseResult.getTags().add("pose: " + poseValue.toLowerCase(Locale.ENGLISH));
                 }
 
                 break;
@@ -458,16 +458,8 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             return tags;
         }
 
-        public void setTags(List<String> tags) {
-            this.tags = tags;
-        }
-
         public List<BoundingShapeData> getParts() {
             return parts;
-        }
-
-        public void setParts(List<BoundingShapeData> parts) {
-            this.parts = parts;
         }
 
         public List<Double> getPoints() {
