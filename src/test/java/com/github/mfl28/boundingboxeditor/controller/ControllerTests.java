@@ -64,7 +64,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
     @Start
     void start(Stage stage) {
         super.onStart(stage);
-        controller.loadImageFiles(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile()));
+        controller.loadImageFiles(new File(Objects.requireNonNull(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1)).getFile()));
     }
 
     @Test
@@ -81,10 +81,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
 
-        final File referenceAnnotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
+        final File referenceAnnotationFile = new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
         timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
@@ -107,68 +107,68 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         Path actualDir = Files.createDirectory(tempDirectory.resolve("actual"));
 
         Assertions.assertTrue(Files.isDirectory(actualDir),
-                              () -> saveScreenshotAndReturnMessage(testinfo, "Actual files " +
-                                      "directory does not exist."));
+                () -> saveScreenshotAndReturnMessage(testinfo, "Actual files " +
+                        "directory does not exist."));
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Objects.equals(counts.get("Boat"), 2) &&
-                                                                              Objects.equals(counts.get("Sail"), 6) &&
-                                                                              Objects.equals(counts.get("Flag"), 1)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
-                                              "per-category-counts were not read within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Objects.equals(counts.get("Boat"), 2) &&
+                                Objects.equals(counts.get("Sail"), 6) &&
+                                Objects.equals(counts.get("Flag"), 1)),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
+                        "per-category-counts were not read within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(3), saveScreenshot(testinfo));
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> mainView.getImageFileListView()
-                                                                                    .getSelectionModel()
-                                                                                    .getSelectedItem()
-                                                                                    .isHasAssignedBoundingShapes()
-                                                                              && mainView.getCurrentBoundingShapes()
-                                                                                         .stream()
-                                                                                         .filter(viewable -> viewable instanceof BoundingBoxView)
-                                                                                         .count() == 8
-                                                                              && mainView.getCurrentBoundingShapes()
-                                                                                         .stream()
-                                                                                         .filter(viewable -> viewable instanceof BoundingPolygonView)
-                                                                                         .count() == 1),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Bounding shape counts did not match " +
-                                                                                   "within " + TIMEOUT_DURATION_IN_SEC +
-                                                                                   " sec."));
+                        () -> mainView.getImageFileListView()
+                                .getSelectionModel()
+                                .getSelectedItem()
+                                .isHasAssignedBoundingShapes()
+                                && mainView.getCurrentBoundingShapes()
+                                .stream()
+                                .filter(viewable -> viewable instanceof BoundingBoxView)
+                                .count() == 8
+                                && mainView.getCurrentBoundingShapes()
+                                .stream()
+                                .filter(viewable -> viewable instanceof BoundingPolygonView)
+                                .count() == 1),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Bounding shape counts did not match " +
+                                "within " + TIMEOUT_DURATION_IN_SEC +
+                                " sec."));
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> controller.getIoMetaData()
-                                                                                      .getDefaultAnnotationLoadingDirectory()
-                                                                                      .equals(referenceAnnotationFile
-                                                                                                      .getParentFile())),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Expected default annotation loading " +
-                                                                                   "directory was not set within " +
-                                                                                   TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> controller.getIoMetaData()
+                                .getDefaultAnnotationLoadingDirectory()
+                                .equals(referenceAnnotationFile
+                                        .getParentFile())),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected default annotation loading " +
+                                "directory was not set within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
 
         verifyThat(model.getImageFileNameToAnnotationMap().values().stream()
                         .allMatch(imageAnnotation -> imageAnnotation.getImageMetaData().hasDetails()),
-                   Matchers.equalTo(true), saveScreenshot(testinfo));
+                Matchers.equalTo(true), saveScreenshot(testinfo));
 
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
-             .press(KeyCode.SHORTCUT)
-             .scroll(-30)
-             .release(KeyCode.SHORTCUT);
+                .press(KeyCode.SHORTCUT)
+                .scroll(-30)
+                .release(KeyCode.SHORTCUT);
 
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
 
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
         // Save the annotations to the temporary folder.
         Platform.runLater(() -> controller.initiateAnnotationExport(actualDir.toFile(),
-                                                                    ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
+                ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
         WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getAnnotationExportService(), testinfo);
@@ -179,36 +179,36 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Wait until the output-file actually exists. If the file was not created in
         // the specified time-frame, a TimeoutException is thrown and the test fails.
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Files.exists(actualFilePath)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Output-file was not created within " +
-                                                                                   TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Files.exists(actualFilePath)),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Output-file was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
 
 
         // The output file should be exactly the same as the reference file.
-        final File referenceFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
+        final File referenceFile = new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
         final byte[] referenceArray = Files.readAllBytes(referenceFile.toPath());
 
         // Wait until the annotations were written to the output file and the file is equivalent to the reference file
         // or throw a TimeoutException if this did not happen within the specified time-frame.
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Arrays.equals(referenceArray,
-                                                                                          Files.readAllBytes(
-                                                                                                  actualFilePath))),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Expected annotation output-file " +
-                                                                                   "content was not created within " +
-                                                                                   TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Arrays.equals(referenceArray,
+                                Files.readAllBytes(
+                                        actualFilePath))),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected annotation output-file " +
+                                "content was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
 
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> controller.getIoMetaData()
-                                                                                      .getDefaultAnnotationSavingDirectory()
-                                                                                      .equals(actualDir.toFile())),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Expected default annotation saving " +
-                                                                                   "directory was no set within " +
-                                                                                   TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> controller.getIoMetaData()
+                                .getDefaultAnnotationSavingDirectory()
+                                .equals(actualDir.toFile())),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected default annotation saving " +
+                                "directory was no set within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
     @Test
@@ -224,10 +224,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
 
         final File referenceAnnotationFolder =
-                new File(getClass().getResource(referenceAnnotationDirectoryPath).getFile());
+                new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationDirectoryPath)).getFile());
 
         timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
@@ -250,48 +250,50 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         Path actualDir = Files.createDirectory(tempDirectory.resolve("actual"));
 
         Assertions.assertTrue(Files.isDirectory(actualDir),
-                              () -> saveScreenshotAndReturnMessage(testinfo, "Actual files " +
-                                      "directory does not exist."));
+                () -> saveScreenshotAndReturnMessage(testinfo, "Actual files " +
+                        "directory does not exist."));
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Objects.equals(counts.get("Boat"), 2) &&
-                                                                              Objects.equals(counts.get("Sail"), 6) &&
-                                                                              Objects.equals(counts.get("Flag"), 1)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
-                                              "per-category-counts were not read within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Objects.equals(counts.get("Boat"), 2) &&
+                                Objects.equals(counts.get("Sail"), 6) &&
+                                Objects.equals(counts.get("Flag"), 1) &&
+                                Objects.equals(counts.get("Test"), 1)),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding shape " +
+                        "per-category-counts were not read within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
 
-        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3),
-                   saveScreenshot(testinfo));
-        verifyThat(model.getObjectCategories(), Matchers.hasSize(3), saveScreenshot(testinfo));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(4),
+                saveScreenshot(testinfo));
+        verifyThat(model.getObjectCategories(), Matchers.hasSize(4), saveScreenshot(testinfo));
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> mainView.getImageFileListView()
-                                                                                    .getSelectionModel()
-                                                                                    .getSelectedItem()
-                                                                                    .isHasAssignedBoundingShapes()
-                                                                              && mainView.getCurrentBoundingShapes()
-                                                                                         .stream()
-                                                                                         .filter(viewable -> viewable instanceof BoundingBoxView)
-                                                                                         .count() == 9
-                                                                              && mainView.getCurrentBoundingShapes()
-                                                                                         .stream().noneMatch(
-                                                                                      viewable -> viewable instanceof BoundingPolygonView)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Bounding shape counts did not match " +
-                                                                                   "within " + TIMEOUT_DURATION_IN_SEC +
-                                                                                   " sec."));
+                        () -> mainView.getImageFileListView()
+                                .getSelectionModel()
+                                .getSelectedItem()
+                                .isHasAssignedBoundingShapes()
+                                && mainView.getCurrentBoundingShapes()
+                                .stream()
+                                .filter(viewable -> viewable instanceof BoundingBoxView)
+                                .count() == 9
+                                && mainView.getCurrentBoundingShapes()
+                                .stream()
+                                .filter(viewable -> viewable instanceof BoundingPolygonView)
+                                .count() == 1),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Bounding shape counts did not match " +
+                                "within " + TIMEOUT_DURATION_IN_SEC +
+                                " sec."));
 
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
-             .press(KeyCode.SHORTCUT)
-             .scroll(-30)
-             .release(KeyCode.SHORTCUT);
+                .press(KeyCode.SHORTCUT)
+                .scroll(-30)
+                .release(KeyCode.SHORTCUT);
 
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
 
         // Save the annotations to the temporary folder.
         Platform.runLater(
@@ -306,11 +308,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Wait until the output-file actually exists. If the file was not created in
         // the specified time-frame, a TimeoutException is thrown and the test fails.
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Files.exists(actualFilePath) &&
-                                                                              Files.exists(actualObjectDataFilePath)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Output-files were not created within " +
-                                                                                   TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Files.exists(actualFilePath) &&
+                                Files.exists(actualObjectDataFilePath)),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Output-files were not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
 
         final File objectDataFile = referenceAnnotationFolder.toPath().resolve("object.data").toFile();
         final byte[] objectDataFileArray = Files.readAllBytes(objectDataFile.toPath());
@@ -318,13 +320,13 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Wait until the annotations were written to the output file and the file is equivalent to the reference file
         // or throw a TimeoutException if this did not happen within the specified time-frame.
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Arrays.equals(objectDataFileArray,
-                                                                                          Files.readAllBytes(
-                                                                                                  actualObjectDataFilePath))),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Expected annotation output-file " +
-                                                                                   "content was not created within " +
-                                                                                   TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Arrays.equals(objectDataFileArray,
+                                Files.readAllBytes(
+                                        actualObjectDataFilePath))),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected annotation output-file " +
+                                "content was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
 
 
         // The output file should be exactly the same as the reference file.
@@ -334,13 +336,13 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Wait until the annotations were written to the output file and the file is equivalent to the reference file
         // or throw a TimeoutException if this did not happen within the specified time-frame.
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Arrays.equals(referenceArray,
-                                                                                          Files.readAllBytes(
-                                                                                                  actualFilePath))),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Expected annotation output-file " +
-                                                                                   "content was not created within " +
-                                                                                   TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Arrays.equals(referenceArray,
+                                Files.readAllBytes(
+                                        actualFilePath))),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected annotation output-file " +
+                                "content was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
     @Test
@@ -356,10 +358,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
 
         final File referenceAnnotationFile =
-                new File(getClass().getResource(referenceAnnotationFilePath).getFile());
+                new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
         timeOutClickOn(robot, "#file-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
@@ -382,55 +384,55 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         Path actualDir = Files.createDirectory(tempDirectory.resolve("actual"));
 
         Assertions.assertTrue(Files.isDirectory(actualDir), () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                                                 "Actual " +
-                                                                                                         "files " +
-                                                                                                         "directory does not exist."));
+                "Actual " +
+                        "files " +
+                        "directory does not exist."));
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Objects.equals(counts.get("Boat"), 2) &&
-                                                                              Objects.equals(counts.get("Sail"), 6) &&
-                                                                              Objects.equals(counts.get("Flag"), 1)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
-                                              "per-category-counts were not read within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Objects.equals(counts.get("Boat"), 2) &&
+                                Objects.equals(counts.get("Sail"), 6) &&
+                                Objects.equals(counts.get("Flag"), 1)),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
+                        "per-category-counts were not read within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(3), saveScreenshot(testinfo));
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> mainView.getImageFileListView()
-                                                                                    .getSelectionModel()
-                                                                                    .getSelectedItem()
-                                                                                    .isHasAssignedBoundingShapes()
-                                                                              && mainView.getCurrentBoundingShapes()
-                                                                                         .stream()
-                                                                                         .filter(viewable -> viewable instanceof BoundingBoxView)
-                                                                                         .count() == 8
-                                                                              && mainView.getCurrentBoundingShapes()
-                                                                                         .stream()
-                                                                                         .filter(viewable -> viewable instanceof BoundingPolygonView)
-                                                                                         .count() == 1),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Bounding shape counts did not match " +
-                                                                                   "within " + TIMEOUT_DURATION_IN_SEC +
-                                                                                   " sec."));
+                        () -> mainView.getImageFileListView()
+                                .getSelectionModel()
+                                .getSelectedItem()
+                                .isHasAssignedBoundingShapes()
+                                && mainView.getCurrentBoundingShapes()
+                                .stream()
+                                .filter(viewable -> viewable instanceof BoundingBoxView)
+                                .count() == 8
+                                && mainView.getCurrentBoundingShapes()
+                                .stream()
+                                .filter(viewable -> viewable instanceof BoundingPolygonView)
+                                .count() == 1),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Bounding shape counts did not match " +
+                                "within " + TIMEOUT_DURATION_IN_SEC +
+                                " sec."));
 
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
-             .press(KeyCode.SHORTCUT)
-             .scroll(-30)
-             .release(KeyCode.SHORTCUT);
+                .press(KeyCode.SHORTCUT)
+                .scroll(-30)
+                .release(KeyCode.SHORTCUT);
 
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
 
         // Save the annotations to the temporary folder.
         Platform.runLater(
                 () -> controller.initiateAnnotationExport(actualDir.resolve(expectedAnnotationFileName).toFile(),
-                                                          ImageAnnotationSaveStrategy.Type.JSON));
+                        ImageAnnotationSaveStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getAnnotationExportService(), testinfo);
@@ -440,10 +442,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Wait until the output-file actually exists. If the file was not created in
         // the specified time-frame, a TimeoutException is thrown and the test fails.
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Files.exists(actualFilePath)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Output-files were not created within " +
-                                                                                   TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Files.exists(actualFilePath)),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Output-files were not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
 
         // The output file should be exactly the same as the reference file.
         final byte[] referenceArray = Files.readAllBytes(referenceAnnotationFile.toPath());
@@ -451,13 +453,13 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Wait until the annotations were written to the output file and the file is equivalent to the reference file
         // or throw a TimeoutException if this did not happen within the specified time-frame.
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Arrays.equals(referenceArray,
-                                                                                          Files.readAllBytes(
-                                                                                                  actualFilePath))),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Expected annotation output-file " +
-                                                                                   "content was not created within " +
-                                                                                   TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Arrays.equals(referenceArray,
+                                Files.readAllBytes(
+                                        actualFilePath))),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected annotation output-file " +
+                                "content was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
     @Test
@@ -469,9 +471,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
 
-        final File inputFile = new File(getClass().getResource(inputPath).getFile());
+        final File inputFile = new File(Objects.requireNonNull(getClass().getResource(inputPath)).getFile());
 
         // Load bounding-boxes defined in annotation-file.
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.YOLO));
@@ -485,26 +487,26 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyThat(errorReportDialog.getExpandableContent(), Matchers.instanceOf(GridPane.class),
-                   saveScreenshot(testinfo));
-        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().get(0),
-                   Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
+        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().getFirst(),
+                Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
         final GridPane errorReportDialogContentPane = (GridPane) errorReportDialog.getExpandableContent();
 
-        verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class),
-                   saveScreenshot(testinfo));
+        verifyThat(errorReportDialogContentPane.getChildren().getFirst(), Matchers.instanceOf(TableView.class),
+                saveScreenshot(testinfo));
 
         @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
-                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().getFirst();
 
         final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
         verifyThat(errorInfoEntries, Matchers.hasSize(1), saveScreenshot(testinfo));
 
         final IOErrorInfoEntry referenceErrorInfoEntry1 = new IOErrorInfoEntry("object.data",
-                                                                               "Does not exist in annotation folder \"missing-classes-file\".");
+                "Does not exist in annotation folder \"missing-classes-file\".");
 
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1), saveScreenshot(testinfo));
 
@@ -521,7 +523,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(counts.size(), Matchers.equalTo(0), saveScreenshot(testinfo));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
     }
 
     @Test
@@ -534,9 +536,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
 
-        final File inputFile = new File(getClass().getResource(inputPath).getFile());
+        final File inputFile = new File(Objects.requireNonNull(getClass().getResource(inputPath)).getFile());
 
         // Load bounding-boxes defined in annotation-file.
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.YOLO));
@@ -551,19 +553,19 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 "Some bounding boxes could not be loaded from 4 image-annotations.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyThat(errorReportDialog.getExpandableContent(), Matchers.instanceOf(GridPane.class),
-                   saveScreenshot(testinfo));
-        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().get(0),
-                   Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
+        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().getFirst(),
+                Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
         final GridPane errorReportDialogContentPane = (GridPane) errorReportDialog.getExpandableContent();
 
-        verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class),
-                   saveScreenshot(testinfo));
+        verifyThat(errorReportDialogContentPane.getChildren().getFirst(), Matchers.instanceOf(TableView.class),
+                saveScreenshot(testinfo));
 
         @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
-                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().getFirst();
 
         final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
@@ -571,27 +573,27 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         final IOErrorInfoEntry referenceErrorInfoEntry1 =
                 new IOErrorInfoEntry("austin-neill-685084-unsplash.txt",
-                                     "Invalid category index 4 (of 4 categories) on line 1.");
+                        "Invalid category index 4 (of 4 categories) on line 1.");
 
         final IOErrorInfoEntry referenceErrorInfoEntry2 =
                 new IOErrorInfoEntry("caleb-george-316073-unsplash.txt",
-                                     "Missing or invalid category index on line 1.");
+                        "Missing or invalid category index on line 1.");
 
         final IOErrorInfoEntry referenceErrorInfoEntry3 =
                 new IOErrorInfoEntry("nico-bhlr-1067059-unsplash.txt",
-                                     "Missing or invalid bounding-box bounds on line 1.");
+                        "Invalid number of bounds values on line 1.");
 
         final IOErrorInfoEntry referenceErrorInfoEntry4 =
                 new IOErrorInfoEntry("tyler-nix-582593-unsplash.txt",
-                                     "Bounds ratio not within [0, 1] on line 1.");
+                        "Bounds value not within interval [0, 1] on line 1.");
 
         final IOErrorInfoEntry referenceErrorInfoEntry5 =
                 new IOErrorInfoEntry("tyler-nix-582593-unsplash.txt",
-                                     "Invalid bounding-box coordinates on line 2.");
+                        "Invalid bounding-box coordinates on line 2.");
 
         verifyThat(errorInfoEntries, Matchers.containsInAnyOrder(referenceErrorInfoEntry1, referenceErrorInfoEntry2,
-                                                                 referenceErrorInfoEntry3, referenceErrorInfoEntry4,
-                                                                 referenceErrorInfoEntry5), saveScreenshot(testinfo));
+                referenceErrorInfoEntry3, referenceErrorInfoEntry4,
+                referenceErrorInfoEntry5), saveScreenshot(testinfo));
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -606,10 +608,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(counts.get("Ship"), Matchers.equalTo(1), saveScreenshot(testinfo));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(0), saveScreenshot(testinfo));
         verifyThat(model.createImageAnnotationData().imageAnnotations(), Matchers.hasSize(1),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
     }
 
     @Test
@@ -621,7 +623,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
-        final File referenceAnnotationFile = new File(getClass().getResource(inputFilePath).getFile());
+        final File referenceAnnotationFile = new File(Objects.requireNonNull(getClass().getResource(inputFilePath)).getFile());
 
         // Load bounding-boxes defined in annotation-file.
         Platform.runLater(() -> controller
@@ -637,19 +639,19 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 "Some bounding boxes could not be loaded from 1 image-annotation.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyThat(errorReportDialog.getExpandableContent(), Matchers.instanceOf(GridPane.class),
-                   saveScreenshot(testinfo));
-        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().get(0),
-                   Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
+        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().getFirst(),
+                Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
         final GridPane errorReportDialogContentPane = (GridPane) errorReportDialog.getExpandableContent();
 
-        verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class),
-                   saveScreenshot(testinfo));
+        verifyThat(errorReportDialogContentPane.getChildren().getFirst(), Matchers.instanceOf(TableView.class),
+                saveScreenshot(testinfo));
 
         @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
-                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().getFirst();
 
         final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
@@ -657,12 +659,12 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         final IOErrorInfoEntry referenceErrorInfoEntry1 =
                 new IOErrorInfoEntry("annotation_with_missing_elements.xml",
-                                     "Missing element: name");
+                        "Missing element: name");
         final IOErrorInfoEntry referenceErrorInfoEntry2 =
                 new IOErrorInfoEntry("annotation_with_missing_elements.xml",
-                                     "Missing element: ymin");
+                        "Missing element: ymin");
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry1, referenceErrorInfoEntry2),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -673,15 +675,15 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Objects.equals(counts.get("Boat"), 1) &&
-                                                                              Objects.equals(counts.get("Sail"), 6) &&
-                                                                              counts.get("Flag") == null),
-                                      () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
-                                              "per-category-counts were not read within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Objects.equals(counts.get("Boat"), 1) &&
+                                Objects.equals(counts.get("Sail"), 6) &&
+                                counts.get("Flag") == null),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
+                        "per-category-counts were not read within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
     }
 
     @Test
@@ -693,7 +695,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
-        final File referenceAnnotationFile = new File(getClass().getResource(inputFilePath).getFile());
+        final File referenceAnnotationFile = new File(Objects.requireNonNull(getClass().getResource(inputFilePath)).getFile());
 
         // Load bounding-boxes defined in annotation-file.
         Platform.runLater(() -> controller
@@ -708,33 +710,33 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyThat(errorReportDialog.getExpandableContent(), Matchers.instanceOf(GridPane.class),
-                   saveScreenshot(testinfo));
-        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().get(0),
-                   Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
+        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().getFirst(),
+                Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
         final GridPane errorReportDialogContentPane = (GridPane) errorReportDialog.getExpandableContent();
 
-        verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class),
-                   saveScreenshot(testinfo));
+        verifyThat(errorReportDialogContentPane.getChildren().getFirst(), Matchers.instanceOf(TableView.class),
+                saveScreenshot(testinfo));
 
         @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
-                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().getFirst();
 
         final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> errorInfoTable.getItems().size() == 1),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Expected number of error info entries" +
-                                                                                   " not found in " +
-                                                                                   TIMEOUT_DURATION_IN_SEC +
-                                                                                   " sec."));
+                        () -> errorInfoTable.getItems().size() == 1),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected number of error info entries" +
+                                " not found in " +
+                                TIMEOUT_DURATION_IN_SEC +
+                                " sec."));
 
         final IOErrorInfoEntry referenceErrorInfoEntry =
                 new IOErrorInfoEntry("annotation_with_missing_filename.xml",
-                                     "Missing element: filename");
+                        "Missing element: filename");
 
         verifyThat(errorInfoEntries, Matchers.contains(referenceErrorInfoEntry), saveScreenshot(testinfo));
 
@@ -747,14 +749,14 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().isEmpty(), Matchers.is(true),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.empty(), saveScreenshot(testinfo));
         verifyThat(model.createImageAnnotationData().imageAnnotations(), Matchers.empty(), saveScreenshot(testinfo));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty(), saveScreenshot(testinfo));
 
         // Should not have changed the status message.
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
     }
 
     @Test
@@ -782,36 +784,36 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap(), Matchers.hasEntry("Test", 0),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         // Draw a bounding box.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
         WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> mainView.getCurrentBoundingShapes()
-                                                                                    .size() == 1),
-                                      () -> saveScreenshotAndReturnMessage(testinfo,
-                                                                           "Expected number of bounding boxes not" +
-                                                                                   " found in " +
-                                                                                   TIMEOUT_DURATION_IN_SEC +
-                                                                                   " sec."));
+                        () -> mainView.getCurrentBoundingShapes()
+                                .size() == 1),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected number of bounding boxes not" +
+                                " found in " +
+                                TIMEOUT_DURATION_IN_SEC +
+                                " sec."));
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap(), Matchers.hasEntry("Test", 1),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                           .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
-                   saveScreenshot(testinfo));
+                        .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
+                saveScreenshot(testinfo));
 
-        verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class),
-                   saveScreenshot(testinfo));
+        verifyThat(mainView.getCurrentBoundingShapes().getFirst(), Matchers.instanceOf(BoundingBoxView.class),
+                saveScreenshot(testinfo));
 
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(true), saveScreenshot(testinfo));
-        final BoundingBoxView drawnBoundingBox = (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
+        final BoundingBoxView drawnBoundingBox = (BoundingBoxView) mainView.getCurrentBoundingShapes().getFirst();
 
-        final File annotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
+        final File annotationFile = new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
         // (1) User chooses Cancel:
         userChoosesCancelOnAnnotationImportDialogSubtest(robot, drawnBoundingBox, annotationFile, testinfo);
@@ -833,9 +835,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
 
-        final File inputFile = new File(getClass().getResource(missingFileNameAnnotationFilePath).getFile());
+        final File inputFile = new File(Objects.requireNonNull(getClass().getResource(missingFileNameAnnotationFilePath)).getFile());
 
         // Load bounding-boxes defined in annotation-file.
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.JSON));
@@ -850,92 +852,92 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 "image-annotation.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyThat(errorReportDialog.getExpandableContent(), Matchers.instanceOf(GridPane.class),
-                   saveScreenshot(testinfo));
-        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().get(0),
-                   Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
+        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().getFirst(),
+                Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
         final GridPane errorReportDialogContentPane = (GridPane) errorReportDialog.getExpandableContent();
 
-        verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class),
-                   saveScreenshot(testinfo));
+        verifyThat(errorReportDialogContentPane.getChildren().getFirst(), Matchers.instanceOf(TableView.class),
+                saveScreenshot(testinfo));
 
         @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
-                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().getFirst();
 
         final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
         verifyThat(errorInfoEntries, Matchers.hasSize(17), saveScreenshot(testinfo));
 
         final IOErrorInfoEntry error1 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                             "Invalid coordinate value for minX element" +
-                                                                     " in bndbox element in annotation " +
-                                                                     "for image " +
-                                                                     "tyler-nix-582593-unsplash.jpg.");
+                "Invalid coordinate value for minX element" +
+                        " in bndbox element in annotation " +
+                        "for image " +
+                        "tyler-nix-582593-unsplash.jpg.");
         final IOErrorInfoEntry error2 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                             "Invalid coordinate value for minY element" +
-                                                                     " in bndbox element in annotation " +
-                                                                     "for image " +
-                                                                     "tyler-nix-582593-unsplash.jpg.");
+                "Invalid coordinate value for minY element" +
+                        " in bndbox element in annotation " +
+                        "for image " +
+                        "tyler-nix-582593-unsplash.jpg.");
         final IOErrorInfoEntry error3 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                             "Missing category name element in " +
-                                                                     "annotation for image " +
-                                                                     "tyler-nix-582593-unsplash.jpg.");
+                "Missing category name element in " +
+                        "annotation for image " +
+                        "tyler-nix-582593-unsplash.jpg.");
         final IOErrorInfoEntry error4 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                             "Invalid coordinate value for maxX element" +
-                                                                     " in bndbox element in annotation " +
-                                                                     "for image " +
-                                                                     "nico-bhlr-1067059-unsplash.jpg.");
+                "Invalid coordinate value for maxX element" +
+                        " in bndbox element in annotation " +
+                        "for image " +
+                        "nico-bhlr-1067059-unsplash.jpg.");
         final IOErrorInfoEntry error5 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                             "Missing maxY element in bndbox element in" +
-                                                                     " annotation for image " +
-                                                                     "nico-bhlr-1067059-unsplash.jpg.");
+                "Missing maxY element in bndbox element in" +
+                        " annotation for image " +
+                        "nico-bhlr-1067059-unsplash.jpg.");
         final IOErrorInfoEntry error6 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                             "Invalid color element " +
-                                                                     "in annotation for image " +
-                                                                     "nico-bhlr-1067059-unsplash.jpg.");
+                "Invalid color element " +
+                        "in annotation for image " +
+                        "nico-bhlr-1067059-unsplash.jpg.");
         final IOErrorInfoEntry error7 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                             "Missing category element in bndbox " +
-                                                                     "element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
+                "Missing category element in bndbox " +
+                        "element in annotation for image nico-bhlr-1067059-unsplash.jpg.");
         final IOErrorInfoEntry error8 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                             "Invalid tags value(s) in bndbox element " +
-                                                                     "in annotation for image nico-bhlr-1067059-unsplash.jpg.");
+                "Invalid tags value(s) in bndbox element " +
+                        "in annotation for image nico-bhlr-1067059-unsplash.jpg.");
         final IOErrorInfoEntry error9 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                             "Missing bndbox or polygon element in " +
-                                                                     "annotation for image austin-neill-685084-unsplash.jpg.");
+                "Missing bndbox or polygon element in " +
+                        "annotation for image austin-neill-685084-unsplash.jpg.");
         final IOErrorInfoEntry error10 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                              "Missing maxY element in bndbox element in" +
-                                                                      " annotation for image austin-neill-685084-unsplash.jpg.");
+                "Missing maxY element in bndbox element in" +
+                        " annotation for image austin-neill-685084-unsplash.jpg.");
         final IOErrorInfoEntry error11 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                              "Invalid parts value(s) in bndbox element " +
-                                                                      "in annotation for image austin-neill-685084-unsplash.jpg.");
+                "Invalid parts value(s) in bndbox element " +
+                        "in annotation for image austin-neill-685084-unsplash.jpg.");
         final IOErrorInfoEntry error12 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                              "Missing minY element" +
-                                                                      " in bndbox element in annotation " +
-                                                                      "for image " +
-                                                                      "austin-neill-685084-unsplash.jpg.");
+                "Missing minY element" +
+                        " in bndbox element in annotation " +
+                        "for image " +
+                        "austin-neill-685084-unsplash.jpg.");
         final IOErrorInfoEntry error13 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                              "Missing maxY element" +
-                                                                      " in bndbox element in annotation " +
-                                                                      "for image " +
-                                                                      "austin-neill-685084-unsplash.jpg.");
+                "Missing maxY element" +
+                        " in bndbox element in annotation " +
+                        "for image " +
+                        "austin-neill-685084-unsplash.jpg.");
         final IOErrorInfoEntry error14 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                              "Invalid number of coordinates in polygon " +
-                                                                      "element in annotation for image caleb-george-316073-unsplash.jpg.");
+                "Invalid number of coordinates in polygon " +
+                        "element in annotation for image caleb-george-316073-unsplash.jpg.");
         final IOErrorInfoEntry error15 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                              "Invalid coordinate value(s) in polygon " +
-                                                                      "element in annotation for image caleb-george-316073-unsplash.jpg.");
+                "Invalid coordinate value(s) in polygon " +
+                        "element in annotation for image caleb-george-316073-unsplash.jpg.");
         final IOErrorInfoEntry error16 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                              "Missing image fileName element.");
+                "Missing image fileName element.");
         final IOErrorInfoEntry error17 = new IOErrorInfoEntry("missing_critical_elements.json",
-                                                              "Image nothere.jpg does not belong to " +
-                                                                      "currently loaded image files.");
+                "Image nothere.jpg does not belong to " +
+                        "currently loaded image files.");
 
         verifyThat(errorInfoEntries,
-                   Matchers.containsInAnyOrder(error1, error2, error3, error4, error5, error6, error7,
-                                               error8, error9, error10, error11, error12, error13, error14,
-                                               error15, error16, error17), saveScreenshot(testinfo));
+                Matchers.containsInAnyOrder(error1, error2, error3, error4, error5, error6, error7,
+                        error8, error9, error10, error11, error12, error13, error14,
+                        error15, error16, error17), saveScreenshot(testinfo));
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -955,12 +957,12 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final List<ObjectCategory> objectCategories = model.getObjectCategories();
         verifyThat(objectCategories, Matchers.hasSize(4), saveScreenshot(testinfo));
         verifyThat(objectCategories.stream().map(ObjectCategory::getName).collect(Collectors.toList()),
-                   Matchers.containsInAnyOrder("Car", "Sail", "Surfboard", "Boat"), saveScreenshot(testinfo));
+                Matchers.containsInAnyOrder("Car", "Sail", "Surfboard", "Boat"), saveScreenshot(testinfo));
 
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(4), saveScreenshot(testinfo));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully imported annotations for 3 images in "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully imported annotations for 3 images in "), saveScreenshot(testinfo));
     }
 
     @Test
@@ -972,9 +974,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
 
-        final File inputFile = new File(getClass().getResource(emptyAnnotationFilePath).getFile());
+        final File inputFile = new File(Objects.requireNonNull(getClass().getResource(emptyAnnotationFilePath)).getFile());
 
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
@@ -997,9 +999,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
 
-        final File inputFile = new File(getClass().getResource(corruptAnnotationFilePath).getFile());
+        final File inputFile = new File(Objects.requireNonNull(getClass().getResource(corruptAnnotationFilePath)).getFile());
 
         Platform.runLater(() -> controller.initiateAnnotationImport(inputFile, ImageAnnotationLoadStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
@@ -1012,28 +1014,28 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final String errorReportDialogContentReferenceText = "The source does not contain any valid annotations.";
         final DialogPane errorReportDialog = (DialogPane) errorReportStage.getScene().getRoot();
         verifyThat(errorReportDialog.getContentText(), Matchers.equalTo(errorReportDialogContentReferenceText),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyThat(errorReportDialog.getExpandableContent(), Matchers.instanceOf(GridPane.class),
-                   saveScreenshot(testinfo));
-        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().get(0),
-                   Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
+        verifyThat(((GridPane) errorReportDialog.getExpandableContent()).getChildren().getFirst(),
+                Matchers.instanceOf(TableView.class), saveScreenshot(testinfo));
         final GridPane errorReportDialogContentPane = (GridPane) errorReportDialog.getExpandableContent();
 
-        verifyThat(errorReportDialogContentPane.getChildren().get(0), Matchers.instanceOf(TableView.class),
-                   saveScreenshot(testinfo));
+        verifyThat(errorReportDialogContentPane.getChildren().getFirst(), Matchers.instanceOf(TableView.class),
+                saveScreenshot(testinfo));
 
         @SuppressWarnings("unchecked") final TableView<IOErrorInfoEntry> errorInfoTable =
-                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().get(0);
+                (TableView<IOErrorInfoEntry>) errorReportDialogContentPane.getChildren().getFirst();
 
         final List<IOErrorInfoEntry> errorInfoEntries = errorInfoTable.getItems();
 
         verifyThat(errorInfoEntries, Matchers.hasSize(1), saveScreenshot(testinfo));
 
-        verifyThat(errorInfoEntries.get(0).getSourceName(), Matchers.equalTo("corrupt.json"), saveScreenshot(testinfo));
-        verifyThat(errorInfoEntries.get(0).getErrorDescription(), Matchers.startsWith("Unterminated array at line 2 " +
-                                                                                              "column 13"),
-                   saveScreenshot(testinfo));
+        verifyThat(errorInfoEntries.getFirst().getSourceName(), Matchers.equalTo("corrupt.json"), saveScreenshot(testinfo));
+        verifyThat(errorInfoEntries.getFirst().getErrorDescription(), Matchers.startsWith("Unterminated array at line 2 " +
+                        "column 13"),
+                saveScreenshot(testinfo));
 
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
     }
@@ -1049,13 +1051,13 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
 
         verifyThat(controller.getStage().getTitle(), Matchers.matchesRegex("^Bounding Box Editor \\d\\.\\d\\.\\d - .*$"),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
 
-        final File referenceAnnotationFile = new File(getClass().getResource(referenceAnnotationFilePath).getFile());
+        final File referenceAnnotationFile = new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
@@ -1066,12 +1068,12 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Objects.equals(counts.get("Boat"), 2) &&
-                                                                              Objects.equals(counts.get("Sail"), 6) &&
-                                                                              Objects.equals(counts.get("Flag"), 1)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
-                                              "per-category-counts were not read within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Objects.equals(counts.get("Boat"), 2) &&
+                                Objects.equals(counts.get("Sail"), 6) &&
+                                Objects.equals(counts.get("Flag"), 1)),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
+                        "per-category-counts were not read within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
 
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
 
@@ -1087,9 +1089,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         loadImageFolder(TEST_IMAGE_FOLDER_PATH_1);
 
         Stage keepExistingCategoriesDialogStage = timeOutAssertDialogOpenedAndGetStage(robot,
-                                                                                       "Open Image Folder",
-                                                                                       "Keep existing categories?",
-                                                                                       testinfo);
+                "Open Image Folder",
+                "Keep existing categories?",
+                testinfo);
 
         timeOutLookUpInStageAndClickOn(robot, keepExistingCategoriesDialogStage, "No", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
@@ -1104,8 +1106,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getImageFileNameToAnnotationMap().size(), Matchers.equalTo(0), saveScreenshot(testinfo));
         verifyThat(controller.lastLoadedImageUrl, Matchers.nullValue(), saveScreenshot(testinfo));
         verifyThat(controller.getIoMetaData().getDefaultImageLoadingDirectory(),
-                   Matchers.equalTo(new File(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1).getFile())),
-                   saveScreenshot(testinfo));
+                Matchers.equalTo(new File(Objects.requireNonNull(getClass().getResource(TEST_IMAGE_FOLDER_PATH_1)).getFile())),
+                saveScreenshot(testinfo));
 
         // Reload bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
@@ -1116,16 +1118,16 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         final Map<String, Integer> countsReloaded = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Objects
-                                                                              .equals(countsReloaded.get("Boat"), 2) &&
-                                                                              Objects.equals(countsReloaded.get("Sail"),
-                                                                                             6)
-                                                                              &&
-                                                                              Objects.equals(countsReloaded.get("Flag"),
-                                                                                             1)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
-                                              "per-category-counts were not read within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Objects
+                                .equals(countsReloaded.get("Boat"), 2) &&
+                                Objects.equals(countsReloaded.get("Sail"),
+                                        6)
+                                &&
+                                Objects.equals(countsReloaded.get("Flag"),
+                                        1)),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
+                        "per-category-counts were not read within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
 
         timeOutClickOn(robot, "#next-button", testinfo);
         waitUntilCurrentImageIsLoaded(testinfo);
@@ -1136,8 +1138,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onLoadAnnotation_YOLO_WhenAnnotationWithinYOLOPrecision_ShouldLoadBoundingBoxes(FxRobot robot,
-                                                                                         TestInfo testinfo) {
+    void onLoadAnnotation_YOLO_WhenAnnotationWithinYOLOPrecision_ShouldLoadBoundingBoxes(TestInfo testinfo) {
 
         final String referenceAnnotationDirectoryPath = "/testannotations/yolo/precision";
 
@@ -1149,7 +1150,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
 
         final File referenceAnnotationFolder =
-                new File(getClass().getResource(referenceAnnotationDirectoryPath).getFile());
+                new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationDirectoryPath)).getFile());
 
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
@@ -1191,8 +1192,8 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                           .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
-                   saveScreenshot(testinfo));
+                        .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
+                saveScreenshot(testinfo));
         // Trying to import annotations updates annotation data and "saved" check
         // (there are unsaved annotations):
         verifyThat(model.isSaved(), Matchers.is(false), saveScreenshot(testinfo));
@@ -1214,28 +1215,28 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // the newly imported ones should exist.
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Objects.equals(counts.get("Boat"), 2) &&
-                                                                              Objects.equals(counts.get("Sail"), 6) &&
-                                                                              Objects.equals(counts.get("Flag"), 1)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
-                                              "per-category-counts were not read within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Objects.equals(counts.get("Boat"), 2) &&
+                                Objects.equals(counts.get("Sail"), 6) &&
+                                Objects.equals(counts.get("Flag"), 1)),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
+                        "per-category-counts were not read within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(3), saveScreenshot(testinfo));
         verifyThat(model.createImageAnnotationData().imageAnnotations(), Matchers.hasSize(1),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty(), saveScreenshot(testinfo));
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                           .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false),
-                   saveScreenshot(testinfo));
+                        .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false),
+                saveScreenshot(testinfo));
 
-        verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingShapes(),
-                   Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(mainView.getImageFileListView().getItems().getFirst().isHasAssignedBoundingShapes(),
+                Matchers.is(true), saveScreenshot(testinfo));
 
         // Loading new annotations from existing annotation files
         // should lead to a positive "saved" status:
@@ -1252,48 +1253,48 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox), saveScreenshot(testinfo));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                           .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
-                   saveScreenshot(testinfo));
+                        .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
+                saveScreenshot(testinfo));
 
         // ... but there should be additional categories and bounding boxes in the model.
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                                                                      () -> Objects.equals(counts.get("Boat"), 2) &&
-                                                                              Objects.equals(counts.get("Sail"), 6)
-                                                                              &&
-                                                                              Objects.equals(counts.get("Flag"), 1) &&
-                                                                              Objects.equals(counts.get("Test"), 1)),
-                                      () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
-                                              "per-category-counts were not read within " +
-                                              TIMEOUT_DURATION_IN_SEC + " sec."));
+                        () -> Objects.equals(counts.get("Boat"), 2) &&
+                                Objects.equals(counts.get("Sail"), 6)
+                                &&
+                                Objects.equals(counts.get("Flag"), 1) &&
+                                Objects.equals(counts.get("Test"), 1)),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding box " +
+                        "per-category-counts were not read within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(4),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(4), saveScreenshot(testinfo));
         verifyThat(model.createImageAnnotationData().imageAnnotations(), Matchers.hasSize(2),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
 
-        verifyThat(mainView.getImageFileListView().getItems().get(0).isHasAssignedBoundingShapes(),
-                   Matchers.is(true), saveScreenshot(testinfo));
+        verifyThat(mainView.getImageFileListView().getItems().getFirst().isHasAssignedBoundingShapes(),
+                Matchers.is(true), saveScreenshot(testinfo));
 
         // Remove the imported Annotations manually to reset for next test.
         timeOutClickOn(robot, "#previous-button", testinfo);
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.rightClickOn(mainView.getObjectTree().getRoot().getChildren().get(0).getGraphic())
-             .clickOn("Delete");
+        robot.rightClickOn(mainView.getObjectTree().getRoot().getChildren().getFirst().getGraphic())
+                .clickOn("Delete");
 
         WaitForAsyncUtils.waitForFxEvents();
 
-        for(int i = 0; i != 3; ++i) {
+        for (int i = 0; i != 3; ++i) {
             NodeQuery nodeQuery = robot.from(mainView.getObjectCategoryTable()).lookup("#delete-button").nth(1);
             robot.clickOn((Node) nodeQuery.query(), MouseButton.PRIMARY);
         }
 
         verifyThat(mainView.getObjectCategoryTable(), TableViewMatchers.hasNumRows(1), saveScreenshot(testinfo));
-        verifyThat(mainView.getObjectCategoryTable().getItems().get(0).getName(), Matchers.equalTo("Test"),
-                   saveScreenshot(testinfo));
+        verifyThat(mainView.getObjectCategoryTable().getItems().getFirst().getName(), Matchers.equalTo("Test"),
+                saveScreenshot(testinfo));
 
         timeOutClickOn(robot, "#next-button", testinfo);
 
@@ -1312,13 +1313,13 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(1),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap(), Matchers.hasEntry("Test", 1),
-                   saveScreenshot(testinfo));
+                saveScreenshot(testinfo));
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox), saveScreenshot(testinfo));
         verifyThat(mainView.getImageFileListView().getSelectionModel()
-                           .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
-                   saveScreenshot(testinfo));
+                        .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
+                saveScreenshot(testinfo));
         // Trying to import annotations updates annotation data and "saved" check
         // (there are unsaved annotations):
         verifyThat(model.isSaved(), Matchers.is(false), saveScreenshot(testinfo));

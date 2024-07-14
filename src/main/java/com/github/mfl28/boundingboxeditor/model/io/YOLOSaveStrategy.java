@@ -18,10 +18,7 @@
  */
 package com.github.mfl28.boundingboxeditor.model.io;
 
-import com.github.mfl28.boundingboxeditor.model.data.BoundingBoxData;
-import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
-import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
-import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotationData;
+import com.github.mfl28.boundingboxeditor.model.data.*;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationExportResult;
 import javafx.beans.property.DoubleProperty;
@@ -36,10 +33,13 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
- * Saves rectangular bounding-box annotations in the YOLO-format described at
- * <a href="https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885">...</a>
+ * Saves bounding-box and bounding-polygon annotations (with at least 3 nodes)
+ * in the YOLO-format described at
+ * <a href="https://github.com/AlexeyAB/Yolo_mark/issues/60#issuecomment-401854885">...</a> and
+ * <a href="https://docs.ultralytics.com/datasets/segment/">...</a>
  */
 public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final DecimalFormat DECIMAL_FORMAT =
@@ -54,16 +54,16 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
                                             DoubleProperty progress) {
         this.saveFolderPath = destination;
         this.categories = annotations.categoryNameToBoundingShapeCountMap().entrySet().stream()
-                                     .filter(stringIntegerEntry -> stringIntegerEntry.getValue() > 0)
-                                     .map(Map.Entry::getKey)
-                                     .sorted()
-                                     .toList();
+                .filter(stringIntegerEntry -> stringIntegerEntry.getValue() > 0)
+                .map(Map.Entry::getKey)
+                .sorted()
+                .toList();
 
         List<IOErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
         try {
             createObjectDataFile();
-        } catch(IOException e) {
+        } catch (IOException e) {
             unParsedFileErrorMessages.add(new IOErrorInfoEntry(OBJECT_DATA_FILE_NAME, e.getMessage()));
         }
 
@@ -73,7 +73,7 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         annotations.imageAnnotations().parallelStream().forEach(annotation -> {
             try {
                 createAnnotationFile(annotation);
-            } catch(IOException e) {
+            } catch (IOException e) {
                 unParsedFileErrorMessages
                         .add(new IOErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
             }
@@ -88,15 +88,13 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     }
 
     private void createObjectDataFile() throws IOException {
-        try(BufferedWriter fileWriter = Files.newBufferedWriter(saveFolderPath
-                                                                        .resolve(OBJECT_DATA_FILE_NAME))) {
-            for(int i = 0; i < categories.size() - 1; ++i) {
+        try (BufferedWriter fileWriter = Files.newBufferedWriter(
+                saveFolderPath.resolve(OBJECT_DATA_FILE_NAME))) {
+            for (int i = 0; i < categories.size(); ++i) {
                 fileWriter.write(categories.get(i));
-                fileWriter.newLine();
-            }
-
-            if(!categories.isEmpty()) {
-                fileWriter.write(categories.get(categories.size() - 1));
+                if (i != categories.size() - 1) {
+                    fileWriter.newLine();
+                }
             }
         }
     }
@@ -105,25 +103,27 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         String imageFileName = annotation.getImageFileName();
         String imageFileNameWithoutExtension = imageFileName.substring(0, imageFileName.lastIndexOf('.'));
 
-        try(BufferedWriter fileWriter = Files.newBufferedWriter(saveFolderPath
-                                                                        .resolve(imageFileNameWithoutExtension +
-                                                                                         YOLO_ANNOTATION_FILE_EXTENSION))) {
+        try (BufferedWriter fileWriter = Files.newBufferedWriter(
+                saveFolderPath.resolve(imageFileNameWithoutExtension +
+                        YOLO_ANNOTATION_FILE_EXTENSION))) {
             List<BoundingShapeData> boundingShapeDataList = annotation.getBoundingShapeData();
 
-            for(int i = 0; i < boundingShapeDataList.size() - 1; ++i) {
+            for (int i = 0; i < boundingShapeDataList.size(); ++i) {
                 BoundingShapeData boundingShapeData = boundingShapeDataList.get(i);
 
-                if(boundingShapeData instanceof BoundingBoxData boundingBoxData) {
+                if (boundingShapeData instanceof BoundingBoxData boundingBoxData) {
                     fileWriter.write(createBoundingBoxDataEntry(boundingBoxData));
-                    fileWriter.newLine();
-                }
-            }
 
-            if(!boundingShapeDataList.isEmpty()) {
-                BoundingShapeData lastShapeData = boundingShapeDataList.get(boundingShapeDataList.size() - 1);
+                    if (i != boundingShapeDataList.size() - 1) {
+                        fileWriter.newLine();
+                    }
+                } else if (boundingShapeData instanceof BoundingPolygonData boundingPolygonData
+                        && boundingPolygonData.getRelativePointsInImage().size() >= 6) {
+                    fileWriter.write(createBoundingPolygonDataEntry(boundingPolygonData));
 
-                if(lastShapeData instanceof BoundingBoxData boundingBoxData) {
-                    fileWriter.write(createBoundingBoxDataEntry(boundingBoxData));
+                    if (i != boundingShapeDataList.size() - 1) {
+                        fileWriter.newLine();
+                    }
                 }
             }
         }
@@ -140,5 +140,17 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         String heightRelative = DECIMAL_FORMAT.format(relativeBounds.getHeight());
 
         return StringUtils.join(List.of(categoryIndex, xMidRelative, yMidRelative, widthRelative, heightRelative), " ");
+    }
+
+    private String createBoundingPolygonDataEntry(BoundingPolygonData boundingPolygonData) {
+        int categoryIndex = categories.indexOf(boundingPolygonData.getCategoryName());
+
+        List<Double> relativePoints = boundingPolygonData.getRelativePointsInImage();
+
+        String relativePointsEntry = relativePoints.stream()
+                .map(DECIMAL_FORMAT::format)
+                .collect(Collectors.joining(" "));
+
+        return StringUtils.join(List.of(categoryIndex, relativePointsEntry), " ");
     }
 }
