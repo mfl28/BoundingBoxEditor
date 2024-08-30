@@ -18,7 +18,7 @@
  */
 package com.github.mfl28.boundingboxeditor.ui;
 
-import com.github.mfl28.boundingboxeditor.controller.Controller;
+import com.github.mfl28.boundingboxeditor.controller.KeyCombinations;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.beans.binding.Bindings;
@@ -299,7 +299,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         showAllMenuItem.setId(SHOW_ALL_CONTEXT_MENU_ID);
         Tooltip.install(showAllMenuItem.getContent(),
                 UiUtils.createTooltip("",
-                        Controller.KeyCombinations.showAllBoundingShapes));
+                        KeyCombinations.showAllBoundingShapes));
         return showAllMenuItem;
     }
 
@@ -308,7 +308,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         showMenuItem.setId(SHOW_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(showMenuItem.getContent(),
                 UiUtils.createTooltip("",
-                        Controller.KeyCombinations.showSelectedBoundingShape));
+                        KeyCombinations.showSelectedBoundingShape));
         return showMenuItem;
     }
 
@@ -317,7 +317,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         hideAllMenuItem.setId(HIDE_ALL_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(hideAllMenuItem.getContent(),
                 UiUtils.createTooltip("",
-                        Controller.KeyCombinations.hideAllBoundingShapes));
+                        KeyCombinations.hideAllBoundingShapes));
         return hideAllMenuItem;
     }
 
@@ -326,7 +326,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         hideOthersMenuItem.setId(HIDE_OTHERS_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(hideOthersMenuItem.getContent(),
                 UiUtils.createTooltip("",
-                        Controller.KeyCombinations.hideNonSelectedBoundingShapes));
+                        KeyCombinations.hideNonSelectedBoundingShapes));
         return hideOthersMenuItem;
     }
 
@@ -401,7 +401,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         deleteMenuItem.setId(DELETE_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(deleteMenuItem.getContent(),
                 UiUtils.createTooltip("",
-                        Controller.KeyCombinations.deleteSelectedBoundingShape));
+                        KeyCombinations.deleteSelectedBoundingShape));
         return deleteMenuItem;
     }
 
@@ -410,7 +410,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         hideMenuItem.setId(HIDE_BOUNDING_SHAPE_CONTEXT_MENU_ITEM_ID);
         Tooltip.install(hideMenuItem.getContent(),
                 UiUtils.createTooltip("",
-                        Controller.KeyCombinations.hideSelectedBoundingShape));
+                        KeyCombinations.hideSelectedBoundingShape));
         return hideMenuItem;
     }
 
@@ -420,7 +420,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
 
         Tooltip.install(menuItem.getContent(),
                 UiUtils.createTooltip(REFINE_MENU_ITEM_TOOLTIP_TEXT,
-                        Controller.KeyCombinations.addVerticesToPolygon));
+                        KeyCombinations.addVerticesToPolygon));
         return menuItem;
     }
 
@@ -430,7 +430,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
 
         Tooltip.install(menuItem.getContent(),
                 UiUtils.createTooltip(DELETE_VERTICES_MENU_ITEM_TOOLTIP_TEXT,
-                        Controller.KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected));
+                        KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected));
         return menuItem;
     }
 
@@ -439,7 +439,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(SIMPLIFY_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(), UiUtils.createTooltip(SIMPLIFY_POLYGON_MENU_ITEM_TOOLTIP_TEXT,
-                Controller.KeyCombinations.simplifyPolygon));
+                KeyCombinations.simplifyPolygon));
 
         return menuItem;
     }
@@ -449,7 +449,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(CHANGE_CATEGORY_CONTEXT_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                UiUtils.createTooltip("", Controller.KeyCombinations.changeSelectedBoundingShapeCategory));
+                UiUtils.createTooltip("", KeyCombinations.changeSelectedBoundingShapeCategory));
         return menuItem;
     }
 
@@ -458,7 +458,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         menuItem.setId(SAVE_AS_IMAGE_MENU_ITEM_ID);
 
         Tooltip.install(menuItem.getContent(),
-                UiUtils.createTooltip("", Controller.KeyCombinations.saveBoundingShapeAsImage));
+                UiUtils.createTooltip("", KeyCombinations.saveBoundingShapeAsImage));
 
         return menuItem;
     }
