@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
+import com.github.mfl28.boundingboxeditor.controller.KeyCombinations;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.geometry.Orientation;
@@ -249,7 +250,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
     private void setUpButtonsAndTextFields() {
         categoryNameTextField.setId(CATEGORY_INPUT_FIELD_ID);
         categoryNameTextField
-                .setTooltip(UiUtils.createFocusTooltip(Controller.KeyCombinations.focusCategoryNameTextField));
+                .setTooltip(UiUtils.createFocusTooltip(KeyCombinations.focusCategoryNameTextField));
 
         categoryColorPicker.getStyleClass().add(OBJECT_CATEGORY_COLOR_PICKER_STYLE);
         categoryColorPicker.setValue(ColorUtils.createRandomColor());
@@ -258,7 +259,7 @@ public class EditorsSplitPaneView extends SplitPane implements View {
         addCategoryButton.setId(ADD_BUTTON_ID);
         addCategoryButton.setTooltip(UiUtils.createTooltip(ADD_CATEGORY_BUTTON_TOOLTIP));
 
-        categorySearchField.setTooltip(UiUtils.createFocusTooltip(Controller.KeyCombinations.focusCategorySearchField));
+        categorySearchField.setTooltip(UiUtils.createFocusTooltip(KeyCombinations.focusCategorySearchField));
 
         collapseTreeItemsButton.setTooltip(UiUtils.createTooltip(COLLAPSE_TREE_ITEMS_BUTTON_TOOLTIP));
 

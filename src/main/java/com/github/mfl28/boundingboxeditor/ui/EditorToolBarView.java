@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
+import com.github.mfl28.boundingboxeditor.controller.KeyCombinations;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Pos;
@@ -309,11 +310,11 @@ public class EditorToolBarView extends ToolBar implements View {
     private void setUpButtonsAndLabels() {
         nextButton.setId(NEXT_BUTTON_ID);
         nextButton.setTooltip(UiUtils.createTooltip(NEXT_BUTTON_TOOLTIP_TEXT,
-                Controller.KeyCombinations.navigateNext));
+                KeyCombinations.navigateNext));
 
         previousButton.setId(PREVIOUS_BUTTON_ID);
         previousButton.setTooltip(UiUtils.createTooltip(PREVIOUS_BUTTON_TOOLTIP_TEXT,
-                Controller.KeyCombinations.navigatePrevious));
+                KeyCombinations.navigatePrevious));
 
         brightnessLabel.setId(BRIGHTNESS_LABEL_ID);
         brightnessLabel.setTooltip(UiUtils.createTooltip(BRIGHTNESS_LABEL_TOOLTIP));
@@ -328,23 +329,23 @@ public class EditorToolBarView extends ToolBar implements View {
         imageSettingsToolBox.setId(BOUNDING_SHAPE_EDITOR_TOOLBOX_ID);
 
         showBoundingShapesButton.setTooltip(UiUtils.createTooltip(SHOW_BOUNDING_BOXES_BUTTON_TOOLTIP_TEXT,
-                Controller.KeyCombinations.showAllBoundingShapes));
+                KeyCombinations.showAllBoundingShapes));
         hideBoundingShapesButton.setTooltip(UiUtils.createTooltip(HIDE_BOUNDING_BOXES_BUTTON_TOOLTIP,
-                Controller.KeyCombinations.hideAllBoundingShapes));
+                KeyCombinations.hideAllBoundingShapes));
         resetSizeAndCenterImageButton.setTooltip(UiUtils.createTooltip(RESET_IMAGE_SIZE_BUTTON_TOOLTIP,
-                Controller.KeyCombinations.resetSizeAndCenterImage));
+                KeyCombinations.resetSizeAndCenterImage));
 
         rectangleModeButton.setToggleGroup(modeToggleGroup);
         polygonModeButton.setToggleGroup(modeToggleGroup);
         freehandModeButton.setToggleGroup(modeToggleGroup);
 
         rectangleModeButton.setTooltip(UiUtils.createTooltip(RECTANGLE_DRAWING_MODE_TOOLTIP_TEXT,
-                Controller.KeyCombinations.selectRectangleDrawingMode));
+                KeyCombinations.selectRectangleDrawingMode));
         polygonModeButton.setTooltip(UiUtils.createTooltip(POLYGON_DRAWING_MODE_TOOLTIP_TEXT,
-                Controller.KeyCombinations.selectPolygonDrawingMode));
+                KeyCombinations.selectPolygonDrawingMode));
 
         freehandModeButton.setTooltip(UiUtils.createTooltip(FREEHAND_DRAWING_MODE_TOOLTIP_TEXT,
-                Controller.KeyCombinations.selectFreehandDrawingMode));
+                KeyCombinations.selectFreehandDrawingMode));
 
         modeToggleGroup.selectToggle(rectangleModeButton);
 

@@ -18,7 +18,7 @@
  */
 package com.github.mfl28.boundingboxeditor.ui;
 
-import com.github.mfl28.boundingboxeditor.controller.Controller;
+import com.github.mfl28.boundingboxeditor.controller.KeyCombinations;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.collections.FXCollections;
@@ -104,7 +104,7 @@ public class ImageFileExplorerView extends VBox implements View {
 
         imageFileSearchField.setPromptText(IMAGE_FILE_SEARCH_PROMPT_TEXT);
         imageFileSearchField.setFocusTraversable(false);
-        imageFileSearchField.setTooltip(UiUtils.createFocusTooltip(Controller.KeyCombinations.focusFileSearchField));
+        imageFileSearchField.setTooltip(UiUtils.createFocusTooltip(KeyCombinations.focusFileSearchField));
 
         Region searchIcon = new Region();
         searchIcon.setId(IMAGE_FILE_SEARCH_ICON_ID);

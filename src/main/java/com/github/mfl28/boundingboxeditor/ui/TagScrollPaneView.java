@@ -18,7 +18,7 @@
  */
 package com.github.mfl28.boundingboxeditor.ui;
 
-import com.github.mfl28.boundingboxeditor.controller.Controller;
+import com.github.mfl28.boundingboxeditor.controller.KeyCombinations;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleListProperty;
@@ -143,7 +143,7 @@ class TagScrollPaneView extends ScrollPane implements View {
         TextField textField = new TextField();
         textField.setId(TAG_INPUT_FIELD_ID);
         textField.setPromptText(TEXT_FIELD_PROMPT_TEXT);
-        textField.setTooltip(UiUtils.createFocusTooltip(Controller.KeyCombinations.focusTagTextField));
+        textField.setTooltip(UiUtils.createFocusTooltip(KeyCombinations.focusTagTextField));
         // Will be enabled if a tag-list is registered with the tagLists-property.
         textField.setDisable(true);
 
