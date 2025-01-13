@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
+ * Copyright (C) 2025 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
  *
  * This file is part of Bounding Box Editor
  *
@@ -225,7 +225,7 @@ jlink {
     jpackage {
         installerOptions += [
                 '--app-version', version,
-                '--copyright', 'Copyright 2024, Markus Fleischhacker',
+                '--copyright', 'Copyright 2025, Markus Fleischhacker',
                 '--description', 'Graphical image annotation application',
                 '--license-file', 'LICENSE',
                 '--vendor', 'Markus Fleischhacker',
