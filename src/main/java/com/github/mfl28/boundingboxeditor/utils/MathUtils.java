@@ -49,19 +49,8 @@ public class MathUtils {
      * @return the clamped point
      */
     public static Point2D clampWithinBounds(double x, double y, Bounds bounds) {
-        return new Point2D(clamp(x, bounds.getMinX(), bounds.getMaxX()),
-                           clamp(y, bounds.getMinY(), bounds.getMaxY()));
-    }
-
-    /***
-     * Clamps a double value 'val' between the bounds 'min' and 'max'.
-     * @param val the value to be clamped
-     * @param min the lower bound
-     * @param max the upper bound
-     * @return clamped value
-     */
-    public static double clamp(double val, double min, double max) {
-        return Math.max(min, Math.min(max, val));
+        return new Point2D(Math.clamp(x, bounds.getMinX(), bounds.getMaxX()),
+                           Math.clamp(y, bounds.getMinY(), bounds.getMaxY()));
     }
 
     /**

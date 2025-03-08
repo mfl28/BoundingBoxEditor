@@ -82,12 +82,12 @@ public class BoundingBoxEditorTestBase {
     private static final Path SCREENSHOT_PATH = Paths.get("").toAbsolutePath().resolve(
             "build/test-screenshots/");
     private static final String FULL_SCREEN_TESTS_SYSTEM_PROPERTY_NAME = "fullScreenTests";
-    protected static int TIMEOUT_DURATION_IN_SEC = 30;
-    protected static String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
-    protected static String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
-    protected static String TEST_IMAGE_FOLDER_PATH_3 = "/testimages/3";
-    protected static String TEST_IMAGE_FOLDER_PATH_4 = "/testimages/4";
-    protected static String TEST_EXIF_IMAGE_FOLDER_PATH = "/testimages/ExifJpeg";
+    protected static final int TIMEOUT_DURATION_IN_SEC = 30;
+    protected static final String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
+    protected static final String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
+    protected static final String TEST_IMAGE_FOLDER_PATH_3 = "/testimages/3";
+    protected static final String TEST_IMAGE_FOLDER_PATH_4 = "/testimages/4";
+    protected static final String TEST_EXIF_IMAGE_FOLDER_PATH = "/testimages/ExifJpeg";
     protected Controller controller;
     protected MainView mainView;
     protected Model model;
@@ -240,11 +240,10 @@ public class BoundingBoxEditorTestBase {
         // Set up image screenshot directory:
         final File screenShotDirectory = SCREENSHOT_PATH.toFile();
 
-        if(!screenShotDirectory.isDirectory()) {
-            if(!screenShotDirectory.mkdir()) {
+        if(!screenShotDirectory.isDirectory() && !screenShotDirectory.mkdir()) {
                 throw new RuntimeException("Could not create test-screenshot directory.");
             }
-        }
+
     }
 
     @AfterEach
@@ -569,25 +568,25 @@ public class BoundingBoxEditorTestBase {
     /**
      * Compares two images pixel by pixel.
      *
-     * @param image_l the first image.
-     * @param image_r the second image.
+     * @param imageL the first image.
+     * @param imageR the second image.
      * @return whether the images are both the same or not.
      */
-    public static boolean compareImages(Image image_l, Image image_r) {
+    public static boolean compareImages(Image imageL, Image imageR) {
         // The images must be the same size.
-        if(image_l.getWidth() != image_r.getWidth() || image_l.getHeight() != image_r.getHeight()) {
+        if(imageL.getWidth() != imageR.getWidth() || imageL.getHeight() != imageR.getHeight()) {
             return false;
         }
 
-        final PixelReader image_l_reader = image_l.getPixelReader();
-        final PixelReader image_r_reader = image_r.getPixelReader();
+        final PixelReader imageLReader = imageL.getPixelReader();
+        final PixelReader imageRReader = imageR.getPixelReader();
 
-        int width = (int) image_l.getWidth();
-        int height = (int) image_r.getHeight();
+        int width = (int) imageL.getWidth();
+        int height = (int) imageR.getHeight();
 
         for(int y = 0; y < height; ++y) {
             for(int x = 0; x < width; ++x) {
-                if(image_l_reader.getArgb(x, y) != image_r_reader.getArgb(x, y)) {
+                if(imageLReader.getArgb(x, y) != imageRReader.getArgb(x, y)) {
                     return false;
                 }
             }

@@ -51,6 +51,7 @@ class MenuBarView extends MenuBar implements View {
     private static final String JSON_FORMAT_EXPORT_TEXT = "JSON format...";
     private static final String CSV_FORMAT_EXPORT_TEXT = "CSV format...";
     private static final String JSON_FORMAT_IMPORT_TEXT = "JSON format...";
+    private static final String CSV_FORMAT_IMPORT_TEXT = "CSV format...";
     private static final String FILE_MENU_ID = "file-menu";
     private static final String FILE_OPEN_FOLDER_MENU_ITEM_ID = "file-open-folder-menu-item";
     private static final String FILE_EXPORT_ANNOTATIONS_MENU_ID = "file-export-annotations-menu";
@@ -75,6 +76,7 @@ class MenuBarView extends MenuBar implements View {
     private static final String ABOUT_TEXT = "_About";
     private static final String DOCUMENTATION_MENU_ITEM_ID = "documentation-menu-item";
     private static final String ABOUT_MENU_ITEM_ID = "about-menu-item";
+    public static final String CSV_IMPORT_MENU_ITEM_ID = "csv-import-menu-item";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
     private final Menu fileExportAnnotationsMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
@@ -89,6 +91,7 @@ class MenuBarView extends MenuBar implements View {
     private final MenuItem pvocImportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_IMPORT_TEXT);
     private final MenuItem yoloRImportMenuItem = new MenuItem(YOLO_FORMAT_IMPORT_TEXT);
     private final MenuItem jsonImportMenuItem = new MenuItem(JSON_FORMAT_IMPORT_TEXT);
+    private final MenuItem csvImportMenuItem = new MenuItem(CSV_FORMAT_IMPORT_TEXT);
     private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT, createIconRegion(EXIT_ICON_ID));
     private final CheckMenuItem viewMaximizeImagesItem = new CheckMenuItem(MAXIMIZE_IMAGES_TEXT);
     private final CheckMenuItem viewShowImagesPanelItem = new CheckMenuItem(SHOW_IMAGE_FILE_EXPLORER_TEXT);
@@ -104,47 +107,56 @@ class MenuBarView extends MenuBar implements View {
         viewShowImagesPanelItem.setSelected(true);
         viewMaximizeImagesItem.setSelected(true);
 
-        fileExportAnnotationsMenu.getItems().addAll(pvocExportMenuItem, yoloExportMenuItem, jsonExportMenuItem, csvExportMenuItem);
+        fileExportAnnotationsMenu.getItems().addAll(
+                pvocExportMenuItem,
+                yoloExportMenuItem,
+                jsonExportMenuItem,
+                csvExportMenuItem);
 
         pvocExportMenuItem.setId(PVOC_EXPORT_MENU_ITEM_ID);
         yoloExportMenuItem.setId(YOLO_EXPORT_MENU_ITEM_ID);
         jsonExportMenuItem.setId(JSON_EXPORT_MENU_ITEM_ID);
         csvExportMenuItem.setId(CSV_EXPORT_MENU_ITEM_ID);
 
-        fileImportAnnotationsMenu.getItems().addAll(pvocImportMenuItem,
-                                                    yoloRImportMenuItem,
-                                                    jsonImportMenuItem);
+        fileImportAnnotationsMenu.getItems().addAll(
+                pvocImportMenuItem,
+                yoloRImportMenuItem,
+                jsonImportMenuItem,
+                csvImportMenuItem);
 
         pvocImportMenuItem.setId(PVOC_IMPORT_MENU_ITEM_ID);
         yoloRImportMenuItem.setId(YOLO_IMPORT_MENU_ITEM_ID);
         jsonImportMenuItem.setId(JSON_IMPORT_MENU_ITEM_ID);
+        csvImportMenuItem.setId(CSV_IMPORT_MENU_ITEM_ID);
     }
 
     @Override
     public void connectToController(final Controller controller) {
         fileOpenFolderItem.setOnAction(action ->
-                                               controller.onRegisterOpenImageFolderAction());
+                controller.onRegisterOpenImageFolderAction());
         pvocExportMenuItem.setOnAction(action ->
-                                               controller.onRegisterSaveAnnotationsAction(
-                                                       ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
+                controller.onRegisterSaveAnnotationsAction(
+                        ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
         yoloExportMenuItem.setOnAction(action ->
-                                               controller.onRegisterSaveAnnotationsAction(
-                                                       ImageAnnotationSaveStrategy.Type.YOLO));
+                controller.onRegisterSaveAnnotationsAction(
+                        ImageAnnotationSaveStrategy.Type.YOLO));
         jsonExportMenuItem.setOnAction(action ->
-                                               controller.onRegisterSaveAnnotationsAction(
-                                                       ImageAnnotationSaveStrategy.Type.JSON));
+                controller.onRegisterSaveAnnotationsAction(
+                        ImageAnnotationSaveStrategy.Type.JSON));
         csvExportMenuItem.setOnAction(action ->
-										       controller.onRegisterSaveAnnotationsAction(
-										               ImageAnnotationSaveStrategy.Type.CSV));
+                controller.onRegisterSaveAnnotationsAction(
+                        ImageAnnotationSaveStrategy.Type.CSV));
         pvocImportMenuItem.setOnAction(action ->
-                                               controller.onRegisterImportAnnotationsAction(
-                                                       ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
+                controller.onRegisterImportAnnotationsAction(
+                        ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
         yoloRImportMenuItem.setOnAction(action ->
-                                                controller.onRegisterImportAnnotationsAction(
-                                                        ImageAnnotationLoadStrategy.Type.YOLO));
+                controller.onRegisterImportAnnotationsAction(
+                        ImageAnnotationLoadStrategy.Type.YOLO));
         jsonImportMenuItem.setOnAction(action ->
-                                               controller.onRegisterImportAnnotationsAction(
-                                                       ImageAnnotationLoadStrategy.Type.JSON));
+                controller.onRegisterImportAnnotationsAction(
+                        ImageAnnotationLoadStrategy.Type.JSON));
+        csvImportMenuItem.setOnAction(action ->
+                controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.CSV));
         fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
         settingsMenuItem.setOnAction(action -> controller.onRegisterSettingsAction());
         documentationMenuItem.setOnAction(action -> controller.onRegisterDocumentationAction());

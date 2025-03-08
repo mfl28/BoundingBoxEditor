@@ -18,15 +18,12 @@
  */
 module com.github.mfl28.boundingboxeditor {
     requires javafx.controls;
-    requires java.desktop;
     requires org.controlsfx.controls;
     requires org.apache.commons.collections4;
     requires org.apache.commons.io;
     requires com.github.benmanes.caffeine;
-    requires java.xml;
     requires org.apache.commons.lang3;
     requires java.prefs;
-    requires java.logging;
     requires com.google.gson;
     requires jersey.client;
     requires jersey.common;
@@ -39,13 +36,17 @@ module com.github.mfl28.boundingboxeditor {
     requires org.jvnet.mimepull;
     requires org.locationtech.jts;
     requires metadata.extractor;
-    requires com.opencsv;
+    requires static lombok;
+    requires com.fasterxml.jackson.dataformat.csv;
+    requires com.fasterxml.jackson.databind;
+    requires org.checkerframework.checker.qual;
 
     opens com.github.mfl28.boundingboxeditor.model to javafx.base, com.google.gson;
     opens com.github.mfl28.boundingboxeditor.model.data to javafx.base, com.google.gson;
     opens com.github.mfl28.boundingboxeditor.model.io to javafx.base, com.google.gson;
     opens com.github.mfl28.boundingboxeditor.model.io.results to javafx.base, com.google.gson;
     opens com.github.mfl28.boundingboxeditor.model.io.restclients to javafx.base, com.google.gson;
+    opens com.github.mfl28.boundingboxeditor.model.io.data to com.fasterxml.jackson.databind;
     exports com.github.mfl28.boundingboxeditor.model.io.restclients to org.glassfish.hk2.locator;
     exports com.github.mfl28.boundingboxeditor to javafx.graphics;
 }

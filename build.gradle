@@ -29,6 +29,7 @@ plugins {
     id 'com.github.hierynomus.license' version '0.16.1'
     id 'io.miret.etienne.sass' version '1.5.1'
     id "com.ryandens.javaagent-test" version "0.7.0"
+    id "io.freefair.lombok" version "8.11"
 }
 
 group 'com.github.mfl28'
@@ -112,7 +113,8 @@ dependencies {
     // https://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor
     implementation 'com.drewnoakes:metadata-extractor:2.19.0'
     
-    implementation 'com.opencsv:opencsv:5.9'
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-csv
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.18.3'
 }
 
 javafx {

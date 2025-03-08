@@ -75,10 +75,10 @@ class CSVSaveStrategyTest {
         String content = Files.readString(destination);
 
         assertEquals("""
-                "filename","width","height","class","xmin","ymin","xmax","ymax"
-                "sample1.png","100","200","catA","0","0","50","100"
-                "sample1.png","100","200","catB","0","0","25","50"
-                "sample2.png","400","300","catB","40","0","200","60"
+                filename,width,height,class,xmin,ymin,xmax,ymax
+                sample1.png,100,200,catA,0,0,50,100
+                sample1.png,100,200,catB,0,0,25,50
+                sample2.png,400,300,catB,40,0,200,60
                 """, content);
     }
 }

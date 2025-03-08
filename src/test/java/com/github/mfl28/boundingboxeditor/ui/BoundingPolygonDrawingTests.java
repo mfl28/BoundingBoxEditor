@@ -38,7 +38,6 @@ import org.testfx.util.WaitForAsyncUtils;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.testfx.api.FxAssert.verifyThat;
@@ -267,7 +266,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                    Matchers.equalTo(false), saveScreenshot(testinfo));
         verifyThat(
                 reloadedBoundingPolygon.getVertexHandles().stream().map(BoundingPolygonView.VertexHandle::getPointIndex)
-                                       .collect(Collectors.toList()),
+                                       .toList(),
                 Matchers.containsInRelativeOrder(0, 2, 4, 6, 8, 10), saveScreenshot(testinfo));
         verifyThat(reloadedBoundingPolygon.isEditing(), Matchers.equalTo(false), saveScreenshot(testinfo));
         verifyThat(reloadedBoundingPolygon.isSelected(), Matchers.equalTo(true), saveScreenshot(testinfo));
@@ -334,7 +333,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                    Matchers.equalTo(false), saveScreenshot(testinfo));
         verifyThat(
                 newBoundingPolygonView.getVertexHandles().stream().map(BoundingPolygonView.VertexHandle::getPointIndex)
-                                      .collect(Collectors.toList()),
+                                      .toList(),
                 Matchers.containsInRelativeOrder(0, 2, 4, 6, 8, 10, 12, 14), saveScreenshot(testinfo));
         verifyThat(newBoundingPolygonView.isEditing(), Matchers.equalTo(false), saveScreenshot(testinfo));
         verifyThat(newBoundingPolygonView.isSelected(), Matchers.equalTo(true), saveScreenshot(testinfo));
@@ -364,7 +363,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                    Matchers.not(Matchers.contains(vertexHandle1, vertexHandle2)), saveScreenshot(testinfo));
         verifyThat(
                 newBoundingPolygonView.getVertexHandles().stream().map(BoundingPolygonView.VertexHandle::getPointIndex)
-                                      .collect(Collectors.toList()),
+                                      .toList(),
                 Matchers.containsInRelativeOrder(0, 2, 4, 6, 8, 10), saveScreenshot(testinfo));
         verifyThat(newBoundingPolygonView.getVertexHandles().stream()
                                          .allMatch(BoundingPolygonView.VertexHandle::isEditing),
