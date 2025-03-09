@@ -55,7 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static org.testfx.api.FxAssert.verifyThat;
 
@@ -956,7 +955,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         final List<ObjectCategory> objectCategories = model.getObjectCategories();
         verifyThat(objectCategories, Matchers.hasSize(4), saveScreenshot(testinfo));
-        verifyThat(objectCategories.stream().map(ObjectCategory::getName).collect(Collectors.toList()),
+        verifyThat(objectCategories.stream().map(ObjectCategory::getName).toList(),
                 Matchers.containsInAnyOrder("Car", "Sail", "Surfboard", "Boat"), saveScreenshot(testinfo));
 
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(4), saveScreenshot(testinfo));
@@ -1169,6 +1168,110 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(1),
                 saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(1), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onExportAnnotation_CSV_WhenPreviouslyImportedAnnotation_ShouldProduceEquivalentOutput(FxRobot robot,
+                                                                                                TestInfo testinfo,
+                                                                                                @TempDir Path tempDirectory)
+            throws IOException {
+        final String referenceAnnotationFilePath = "/testannotations/csv/reference/annotations.csv";
+
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+
+        final File referenceAnnotationFile =
+                new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
+
+        timeOutClickOn(robot, "#file-menu", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "#csv-import-menu-item", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.push(KeyCode.ESCAPE);
+
+        // Load bounding-boxes defined in the reference annotation-file.
+        Platform.runLater(() -> controller
+                .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.CSV));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testinfo);
+
+        // Create temporary folder to save annotations to.
+        Path actualFile = tempDirectory.resolve("actual.csv");
+
+        final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> Objects.equals(counts.get("Boat"), 2) &&
+                                Objects.equals(counts.get("Sail"), 2) &&
+                                Objects.equals(counts.get("Surfboard"), 3)),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Correct bounding shape " +
+                        "per-category-counts were not read within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
+
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().size(), Matchers.equalTo(3),
+                saveScreenshot(testinfo));
+        verifyThat(model.getObjectCategories(), Matchers.hasSize(3), saveScreenshot(testinfo));
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> mainView.getImageFileListView()
+                                .getSelectionModel()
+                                .getSelectedItem()
+                                .isHasAssignedBoundingShapes()
+                                && mainView.getCurrentBoundingShapes()
+                                .stream()
+                                .filter(viewable -> viewable instanceof BoundingBoxView)
+                                .count() == 3
+                                && mainView.getCurrentBoundingShapes()
+                                .stream().noneMatch(viewable -> viewable instanceof BoundingPolygonView)),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Bounding shape counts did not match " +
+                                "within " + TIMEOUT_DURATION_IN_SEC +
+                                " sec."));
+
+        // Zoom a bit to change the image-view size.
+        robot.moveTo(mainView.getEditorImageView())
+                .press(KeyCode.SHORTCUT)
+                .scroll(-30)
+                .release(KeyCode.SHORTCUT);
+
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                Matchers.startsWith("Successfully imported annotations for 3 images in"), saveScreenshot(testinfo));
+
+        // Save the annotations to the temporary folder.
+        Platform.runLater(
+                () -> controller.initiateAnnotationExport(actualFile.toFile(), ImageAnnotationSaveStrategy.Type.CSV));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationExportService(), testinfo);
+
+        // Wait until the output-file actually exists. If the file was not created in
+        // the specified time-frame, a TimeoutException is thrown and the test fails.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> Files.exists(actualFile)),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Output-file was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
+
+        final byte[] referenceFileBytes = Files.readAllBytes(referenceAnnotationFile.toPath());
+
+        // Wait until the annotations were written to the output file and the file is equivalent to the reference file
+        // or throw a TimeoutException if this did not happen within the specified time-frame.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> Arrays.equals(referenceFileBytes,
+                                Files.readAllBytes(actualFile))),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected annotation output-file " +
+                                "content was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
     private void userChoosesNoOnAnnotationImportDialogSubtest(FxRobot robot, File annotationFile, TestInfo testinfo) {

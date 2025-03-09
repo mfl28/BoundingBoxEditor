@@ -1216,21 +1216,22 @@ public class Controller {
     }
 
     private File getAnnotationLoadingSource(ImageAnnotationLoadStrategy.Type loadFormat) {
-        File source;
-
-        if(loadFormat.equals(ImageAnnotationLoadStrategy.Type.JSON)) {
-            source = MainView.displayFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
+        return switch (loadFormat) {
+            case JSON -> MainView.displayFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
                     ioMetaData.getDefaultAnnotationLoadingDirectory(),
                     DEFAULT_JSON_EXPORT_FILENAME,
                     new FileChooser.ExtensionFilter("JSON files", "*.json",
                             "*.JSON"),
                     MainView.FileChooserType.OPEN);
-        } else {
-            source = MainView.displayDirectoryChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
+            case CSV -> MainView.displayFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
+                    ioMetaData.getDefaultAnnotationLoadingDirectory(),
+                    DEFAULT_CSV_EXPORT_FILENAME,
+                    new FileChooser.ExtensionFilter("CSV files", "*.csv",
+                            "*.CSV"),
+                    MainView.FileChooserType.OPEN);
+            default -> MainView.displayDirectoryChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
                     ioMetaData.getDefaultAnnotationLoadingDirectory());
-        }
-
-        return source;
+        };
     }
 
     private void interruptDirectoryWatcher() {

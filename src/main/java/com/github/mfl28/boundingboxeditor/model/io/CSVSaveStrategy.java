@@ -18,14 +18,14 @@
  */
 package com.github.mfl28.boundingboxeditor.model.io;
 
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingBoxData;
-import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotationData;
+import com.github.mfl28.boundingboxeditor.model.io.data.CSVRow;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationExportResult;
-import com.opencsv.CSVWriterBuilder;
-import com.opencsv.ICSVWriter;
 import javafx.beans.property.DoubleProperty;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Saving-strategy to export annotations to a CSV file.
@@ -40,44 +41,32 @@ import java.util.List;
  * The CSVSaveStrategy supports {@link BoundingBoxData} only.
  */
 public class CSVSaveStrategy implements ImageAnnotationSaveStrategy {
-    private static final String FILE_NAME_SERIALIZED_NAME = "filename";
-    private static final String WIDTH_SERIALIZED_NAME = "width";
-    private static final String HEIGHT_SERIALIZED_NAME = "height";
-    private static final String CLASS_SERIALIZED_NAME = "class";
-    private static final String MIN_X_SERIALIZED_NAME = "xmin";
-    private static final String MAX_X_SERIALIZED_NAME = "xmax";
-    private static final String MIN_Y_SERIALIZED_NAME = "ymin";
-    private static final String MAX_Y_SERIALIZED_NAME = "ymax";
-
     @Override
     public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
                                             DoubleProperty progress) {
         final int totalNrAnnotations = annotations.imageAnnotations().size();
-        int nrProcessedAnnotations = 0;
+        final AtomicInteger nrProcessedAnnotations = new AtomicInteger();
 
         final List<IOErrorInfoEntry> errorEntries = new ArrayList<>();
 
-        try (ICSVWriter writer = new CSVWriterBuilder(Files.newBufferedWriter(destination, StandardCharsets.UTF_8)).build()) {
-            String[] header = {
-                    FILE_NAME_SERIALIZED_NAME,
-                    WIDTH_SERIALIZED_NAME,
-                    HEIGHT_SERIALIZED_NAME,
-                    CLASS_SERIALIZED_NAME,
-                    MIN_X_SERIALIZED_NAME,
-                    MIN_Y_SERIALIZED_NAME,
-                    MAX_X_SERIALIZED_NAME,
-                    MAX_Y_SERIALIZED_NAME};
+        try (var writer = Files.newBufferedWriter(destination, StandardCharsets.UTF_8)) {
+            var csvMapper = new CsvMapper();
+            var csvSchema = csvMapper.schemaFor(CSVRow.class).withHeader();
 
-            writer.writeNext(header);
+            try (var valuesWriter = csvMapper.writer(csvSchema).writeValues(writer)) {
+                valuesWriter.writeAll(
+                        annotations.imageAnnotations().stream()
+                                .flatMap(
+                                        imageAnnotation -> {
+                                            progress.set(1.0 * nrProcessedAnnotations.getAndIncrement() / totalNrAnnotations);
 
-            for (var imageAnnotation : annotations.imageAnnotations()) {
-                for (var boundingShapeData : imageAnnotation.getBoundingShapeData()) {
-                    if (boundingShapeData instanceof BoundingBoxData boundingBoxData) {
-                        writer.writeNext(buildLine(imageAnnotation, boundingBoxData));
-                    }
-
-                    progress.set(1.0 * nrProcessedAnnotations++ / totalNrAnnotations);
-                }
+                                            return imageAnnotation.getBoundingShapeData().stream()
+                                                    .filter(BoundingBoxData.class::isInstance)
+                                                    .map(boundingShapeData -> Pair.of(imageAnnotation, (BoundingBoxData) boundingShapeData));
+                                        })
+                                .map(pair -> CSVRow.fromData(pair.getLeft(), pair.getRight()))
+                                .toList()
+                );
             }
         } catch (IOException e) {
             errorEntries.add(new IOErrorInfoEntry(destination.getFileName().toString(), e.getMessage()));
@@ -89,21 +78,4 @@ public class CSVSaveStrategy implements ImageAnnotationSaveStrategy {
         );
     }
 
-    private static String[] buildLine(ImageAnnotation imageAnnotation, BoundingBoxData boundingBoxData) {
-        double imageWidth = imageAnnotation.getImageMetaData().getImageWidth();
-        double imageHeight = imageAnnotation.getImageMetaData().getImageHeight();
-
-        var bounds = boundingBoxData.getAbsoluteBoundsInImage(imageWidth, imageHeight);
-
-        return new String[]{
-                imageAnnotation.getImageFileName(),
-                String.valueOf((int) Math.round(imageWidth)),
-                String.valueOf((int) Math.round(imageHeight)),
-                boundingBoxData.getCategoryName(),
-                String.valueOf((int) Math.round(bounds.getMinX())),
-                String.valueOf((int) Math.round(bounds.getMinY())),
-                String.valueOf((int) Math.round(bounds.getMaxX())),
-                String.valueOf((int) Math.round(bounds.getMaxY()))
-        };
-    }
 }

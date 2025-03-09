@@ -24,7 +24,6 @@ import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationExport
 import javafx.beans.property.DoubleProperty;
 
 import java.nio.file.Path;
-import java.security.InvalidParameterException;
 
 /**
  * The interface of an image annotation saving-strategy.
@@ -37,17 +36,12 @@ public interface ImageAnnotationSaveStrategy {
      * @return the saving-strategy with the provided type
      */
     static ImageAnnotationSaveStrategy createStrategy(Type type) {
-        if(type.equals(Type.PASCAL_VOC)) {
-            return new PVOCSaveStrategy();
-        } else if(type.equals(Type.YOLO)) {
-            return new YOLOSaveStrategy();
-        } else if(type.equals(Type.JSON)) {
-            return new JSONSaveStrategy();
-        } else if(type.equals(Type.CSV)) {
-            return new CSVSaveStrategy();
-        } else {
-            throw new InvalidParameterException();
-        }
+        return switch (type) {
+            case PASCAL_VOC -> new PVOCSaveStrategy();
+            case YOLO -> new YOLOSaveStrategy();
+            case JSON -> new JSONSaveStrategy();
+            case CSV -> new CSVSaveStrategy();
+        };
     }
 
     /**

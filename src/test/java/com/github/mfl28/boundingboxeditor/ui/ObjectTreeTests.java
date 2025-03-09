@@ -48,7 +48,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.verify;
 import static org.testfx.api.FxAssert.verifyThat;
@@ -373,7 +372,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         verifyThat(changeCategoryDialog.getContentText(), Matchers.equalTo("New category:"), saveScreenshot(testinfo));
         verifyThat(model.getObjectCategories(), Matchers.hasSize(2), saveScreenshot(testinfo));
-        verifyThat(model.getObjectCategories().stream().map(ObjectCategory::getName).collect(Collectors.toList()),
+        verifyThat(model.getObjectCategories().stream().map(ObjectCategory::getName).toList(),
                    Matchers.containsInRelativeOrder("Test", "Dummy"));
 
         ObjectCategory testCategory = model.getObjectCategories().get(0);
