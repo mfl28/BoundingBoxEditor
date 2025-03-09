@@ -40,6 +40,7 @@ import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -226,53 +227,23 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
                     () -> saveScreenshotAndReturnMessage(testinfo, "Export annotations item not " +
                             "enabled"));
 
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "#pvoc-export-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
+        for(var exportItemName : List.of("pvoc", "yolo", "json", "csv")) {
+            timeOutClickOn(robot, "#file-menu", testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
+            timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
+            timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
+            timeOutClickOn(robot, String.format("#%s-export-menu-item", exportItemName), testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
 
-        Stage errorDialogStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
-        verifyThat(errorDialogStage, Matchers.notNullValue(), saveScreenshot(testinfo));
+            Stage errorDialogStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
+            verifyThat(errorDialogStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
-        timeOutClickOnButtonInDialogStage(robot, errorDialogStage, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-
-        timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
-
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "#yolo-export-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-
-        Stage errorDialogStage2 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
-        verifyThat(errorDialogStage2, Matchers.notNullValue(), saveScreenshot(testinfo));
-
-        timeOutClickOnButtonInDialogStage(robot, errorDialogStage2, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
-
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "#json-export-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-
-        Stage errorDialogStage3 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
-        verifyThat(errorDialogStage3, Matchers.notNullValue(), saveScreenshot(testinfo));
-
-        timeOutClickOnButtonInDialogStage(robot, errorDialogStage3, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-
-        timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
+            timeOutClickOnButtonInDialogStage(robot, errorDialogStage, ButtonType.OK, testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
+            timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
+        }
 
         MenuItem settingsItem = getSubMenuItem(robot, "File", "Settings");
 

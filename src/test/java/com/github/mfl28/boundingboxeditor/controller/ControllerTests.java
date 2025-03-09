@@ -1187,6 +1187,16 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFile =
                 new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
+        timeOutClickOn(robot, "#file-menu", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "#csv-import-menu-item", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.push(KeyCode.ESCAPE);
+
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
                 .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.CSV));
