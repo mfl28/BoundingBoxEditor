@@ -1226,6 +1226,12 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                 "within " + TIMEOUT_DURATION_IN_SEC +
                                 " sec."));
 
+        // Zoom a bit to change the image-view size.
+        robot.moveTo(mainView.getEditorImageView())
+                .press(KeyCode.SHORTCUT)
+                .scroll(-30)
+                .release(KeyCode.SHORTCUT);
+
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                 Matchers.startsWith("Successfully imported annotations for 3 images in"), saveScreenshot(testinfo));
