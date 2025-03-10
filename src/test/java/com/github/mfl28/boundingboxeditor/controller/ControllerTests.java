@@ -1274,6 +1274,118 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                 TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
+    @Test
+    void onExportAnnotation_CSV_WhenPreviouslyImportedAnnotationWithParts_OutputShouldIncludeNestedBoxes(FxRobot robot,
+                                                                                               TestInfo testinfo,
+                                                                                               @TempDir Path tempDirectory)
+            throws IOException {
+        loadJson("/testannotations/json/reference/annotations.json", testinfo);
+
+        final String referenceAnnotationFilePath = "/testannotations/csv/reference/annotations_with_parts.csv";
+        final File referenceAnnotationFile =
+                new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
+
+        // Create temporary folder to save annotations to.
+        Path actualFile = tempDirectory.resolve("actual.csv");
+
+        // Save the annotations to the temporary folder.
+        Platform.runLater(
+                () -> controller.initiateAnnotationExport(actualFile.toFile(), ImageAnnotationSaveStrategy.Type.CSV));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationExportService(), testinfo);
+
+        // Wait until the output-file actually exists. If the file was not created in
+        // the specified time-frame, a TimeoutException is thrown and the test fails.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> Files.exists(actualFile)),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Output-file was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
+
+        final byte[] referenceFileBytes = Files.readAllBytes(referenceAnnotationFile.toPath());
+
+        // Wait until the annotations were written to the output file and the file is equivalent to the reference file
+        // or throw a TimeoutException if this did not happen within the specified time-frame.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> Arrays.equals(referenceFileBytes,
+                                Files.readAllBytes(actualFile))),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected annotation output-file " +
+                                "content was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
+    }
+    @Test
+    void onExportAnnotation_YOLO_WhenPreviouslyImportedAnnotationWithParts_OutputShouldIncludeNestedBoxes(FxRobot robot,
+                                                                                                         TestInfo testinfo,
+                                                                                                         @TempDir Path tempDirectory)
+            throws IOException {
+        loadPvoc("/testannotations/pvoc/reference/austin-neill-685084-unsplash_jpg_A.xml", testinfo);
+
+        final String referenceAnnotationDirectoryPath = "/testannotations/yolo/reference_with_parts";
+        final String expectedAnnotationFileName = "austin-neill-685084-unsplash.txt";
+
+        final File referenceAnnotationFolder =
+                new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationDirectoryPath)).getFile());
+
+        // Create temporary folder to save annotations to.
+        Path actualDir = Files.createDirectory(tempDirectory.resolve("actual"));
+
+        Assertions.assertTrue(Files.isDirectory(actualDir),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Actual files " +
+                        "directory does not exist."));
+
+
+        // Save the annotations to the temporary folder.
+        Platform.runLater(
+                () -> controller.initiateAnnotationExport(actualDir.toFile(), ImageAnnotationSaveStrategy.Type.YOLO));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationExportService(), testinfo);
+
+        Path actualFilePath = actualDir.resolve(expectedAnnotationFileName);
+        Path actualObjectDataFilePath = actualDir.resolve("object.data");
+
+        // Wait until the output-file actually exists. If the file was not created in
+        // the specified time-frame, a TimeoutException is thrown and the test fails.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> Files.exists(actualFilePath) &&
+                                Files.exists(actualObjectDataFilePath)),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Output-files were not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
+
+        final File objectDataFile = referenceAnnotationFolder.toPath().resolve("object.data").toFile();
+        final byte[] objectDataFileArray = Files.readAllBytes(objectDataFile.toPath());
+
+        // Wait until the annotations were written to the output file and the file is equivalent to the reference file
+        // or throw a TimeoutException if this did not happen within the specified time-frame.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> Arrays.equals(objectDataFileArray,
+                                Files.readAllBytes(
+                                        actualObjectDataFilePath))),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected object-data output-file " +
+                                "content was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
+
+
+        // The output file should be exactly the same as the reference file.
+        final File referenceFile = referenceAnnotationFolder.toPath().resolve(expectedAnnotationFileName).toFile();
+        final byte[] referenceArray = Files.readAllBytes(referenceFile.toPath());
+
+        // Wait until the annotations were written to the output file and the file is equivalent to the reference file
+        // or throw a TimeoutException if this did not happen within the specified time-frame.
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> Arrays.equals(referenceArray,
+                                Files.readAllBytes(
+                                        actualFilePath))),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Expected annotation output-file " +
+                                "content was not created within " +
+                                TIMEOUT_DURATION_IN_SEC + " sec."));
+    }
+
     private void userChoosesNoOnAnnotationImportDialogSubtest(FxRobot robot, File annotationFile, TestInfo testinfo) {
         userChoosesToSaveExistingAnnotationsOnAnnotationImport(robot, annotationFile, testinfo);
         userChoosesNotToSaveExistingAnnotationsOnAnnotationImport(robot, annotationFile, testinfo);
@@ -1442,5 +1554,48 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         timeOutAssertTopModalStageClosed(robot, "Import Annotation Data", testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    private void loadJson(String resourceName, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+        final File inputAnnotationFile =
+                new File(Objects.requireNonNull(getClass().getResource(resourceName)).getFile());
+
+        // Load bounding-boxes defined in the reference annotation-file.
+        Platform.runLater(() -> controller
+                .initiateAnnotationImport(inputAnnotationFile, ImageAnnotationLoadStrategy.Type.JSON));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
+    }
+
+    private void loadPvoc(String resourceName, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getImageMetaDataLoadingService(), testinfo);
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                Matchers.startsWith("Successfully loaded 4 image-files from folder "), saveScreenshot(testinfo));
+        verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
+
+        final File referenceAnnotationFile = new File(Objects.requireNonNull(getClass().getResource(resourceName)).getFile());
+
+        // Load bounding-boxes defined in the reference annotation-file.
+        Platform.runLater(() -> controller
+                .initiateAnnotationImport(referenceAnnotationFile, ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertServiceSucceeded(controller.getAnnotationImportService(), testinfo);
+
+        verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
     }
 }
