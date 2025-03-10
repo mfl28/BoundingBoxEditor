@@ -34,6 +34,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Saves bounding-box and bounding-polygon annotations (with at least 3 nodes)
@@ -106,7 +107,9 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         try (BufferedWriter fileWriter = Files.newBufferedWriter(
                 saveFolderPath.resolve(imageFileNameWithoutExtension +
                         YOLO_ANNOTATION_FILE_EXTENSION))) {
-            List<BoundingShapeData> boundingShapeDataList = annotation.getBoundingShapeData();
+            List<BoundingShapeData> boundingShapeDataList = annotation.getBoundingShapeData().stream()
+                    .flatMap(this::extractBoundingShapeDataElements)
+                    .toList();
 
             for (int i = 0; i < boundingShapeDataList.size(); ++i) {
                 BoundingShapeData boundingShapeData = boundingShapeDataList.get(i);
@@ -152,5 +155,25 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
                 .collect(Collectors.joining(" "));
 
         return StringUtils.join(List.of(categoryIndex, relativePointsEntry), " ");
+    }
+
+    private Stream<BoundingShapeData> extractBoundingShapeDataElements(BoundingShapeData boundingShapeData) {
+        if(boundingShapeData.getParts().isEmpty()) {
+            return Stream.of(boundingShapeData);
+        }
+
+        final Deque<BoundingShapeData> stack = new ArrayDeque<>();
+        final List<BoundingShapeData> result = new ArrayList<>();
+
+        stack.push(boundingShapeData);
+
+        while(!stack.isEmpty()) {
+            var currentBoundingBox = stack.pop();
+
+            result.add(currentBoundingBox);
+            stack.addAll(currentBoundingBox.getParts());
+        }
+
+        return result.stream();
     }
 }
