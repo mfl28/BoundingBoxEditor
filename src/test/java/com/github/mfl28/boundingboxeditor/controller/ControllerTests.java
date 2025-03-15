@@ -129,11 +129,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                 .isHasAssignedBoundingShapes()
                                 && mainView.getCurrentBoundingShapes()
                                 .stream()
-                                .filter(viewable -> viewable instanceof BoundingBoxView)
+                                .filter(BoundingBoxView.class::isInstance)
                                 .count() == 8
                                 && mainView.getCurrentBoundingShapes()
                                 .stream()
-                                .filter(viewable -> viewable instanceof BoundingPolygonView)
+                                .filter(BoundingPolygonView.class::isInstance)
                                 .count() == 1),
                 () -> saveScreenshotAndReturnMessage(testinfo,
                         "Bounding shape counts did not match " +
@@ -273,11 +273,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                 .isHasAssignedBoundingShapes()
                                 && mainView.getCurrentBoundingShapes()
                                 .stream()
-                                .filter(viewable -> viewable instanceof BoundingBoxView)
+                                .filter(BoundingBoxView.class::isInstance)
                                 .count() == 9
                                 && mainView.getCurrentBoundingShapes()
                                 .stream()
-                                .filter(viewable -> viewable instanceof BoundingPolygonView)
+                                .filter(BoundingPolygonView.class::isInstance)
                                 .count() == 1),
                 () -> saveScreenshotAndReturnMessage(testinfo,
                         "Bounding shape counts did not match " +
@@ -407,11 +407,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                 .isHasAssignedBoundingShapes()
                                 && mainView.getCurrentBoundingShapes()
                                 .stream()
-                                .filter(viewable -> viewable instanceof BoundingBoxView)
+                                .filter(BoundingBoxView.class::isInstance)
                                 .count() == 8
                                 && mainView.getCurrentBoundingShapes()
                                 .stream()
-                                .filter(viewable -> viewable instanceof BoundingPolygonView)
+                                .filter(BoundingPolygonView.class::isInstance)
                                 .count() == 1),
                 () -> saveScreenshotAndReturnMessage(testinfo,
                         "Bounding shape counts did not match " +
@@ -1227,10 +1227,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                 .isHasAssignedBoundingShapes()
                                 && mainView.getCurrentBoundingShapes()
                                 .stream()
-                                .filter(viewable -> viewable instanceof BoundingBoxView)
+                                .filter(BoundingBoxView.class::isInstance)
                                 .count() == 3
                                 && mainView.getCurrentBoundingShapes()
-                                .stream().noneMatch(viewable -> viewable instanceof BoundingPolygonView)),
+                                .stream().noneMatch(BoundingPolygonView.class::isInstance)),
                 () -> saveScreenshotAndReturnMessage(testinfo,
                         "Bounding shape counts did not match " +
                                 "within " + TIMEOUT_DURATION_IN_SEC +
