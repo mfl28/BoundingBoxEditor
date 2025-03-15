@@ -145,7 +145,7 @@ jobs:
           name: boundingboxeditor-portable-linux
           path: build/jpackage/BoundingBoxEditor
       - name: Sonarqube analysis
-        run: ./gradlew sonar '-Dsonar.host.url=https://sonarcloud.io' '-Dsonar.login=${{ secrets.SONAR_TOKEN }}'
+        run: ./gradlew sonar '-Dsonar.host.url=https://sonarcloud.io' '-Dsonar.token=${{ secrets.SONAR_TOKEN }}'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}r
 
