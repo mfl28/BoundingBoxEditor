@@ -46,7 +46,7 @@ jobs:
         distribution: ${{ env.JAVA_DISTRIBUTION }}
         cache: gradle
     - name: Verify Gradle wrapper
-      uses: gradle/actions/wrapper-validation@v3
+      uses: gradle/actions/wrapper-validation@v4
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
