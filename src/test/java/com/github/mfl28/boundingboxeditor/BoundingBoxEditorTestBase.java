@@ -113,8 +113,8 @@ public class BoundingBoxEditorTestBase {
         // It is needed to get the first found modal window.
         return robot.listWindows()
                 .stream()
-                .filter(window -> window instanceof Stage)
-                .map(window -> (Stage) window)
+                .filter(Stage.class::isInstance)
+                .map(Stage.class::cast)
                 .filter(stage -> stage.getModality() == Modality.APPLICATION_MODAL)
                 .filter(stage -> stage.getTitle().equals(title))
                 .findFirst()
@@ -247,7 +247,7 @@ public class BoundingBoxEditorTestBase {
     }
 
     @AfterEach
-    protected void tearDown() throws TimeoutException {
+    void tearDown() throws TimeoutException {
         FxToolkit.cleanupStages();
         FxToolkit.hideStage();
         // Make sure FileChangeWatcher is interrupted.
@@ -554,8 +554,8 @@ public class BoundingBoxEditorTestBase {
     private boolean isTopModalStagePresent(FxRobot robot) {
         return robot.listWindows()
                 .stream()
-                .filter(window -> window instanceof Stage)
-                .map(window -> (Stage) window)
+                .filter(Stage.class::isInstance)
+                .map(Stage.class::cast)
                 .anyMatch(stage -> stage.getModality() == Modality.APPLICATION_MODAL);
     }
 

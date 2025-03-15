@@ -1,8 +1,8 @@
-FROM eclipse-temurin:17-jdk AS builder-base
+FROM eclipse-temurin:21-jdk AS builder-base
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      dos2unix \
       binutils \
+      dos2unix \
       fakeroot \
       rpm && \
     rm -rf /var/lib/apt/lists/*
