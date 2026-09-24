@@ -166,7 +166,10 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             if (newCellObject instanceof Shape shape && !(newCellObject instanceof BoundingFreehandShapeView)) {
                 // Register the contextMenu with the shape associated with the cell. This
                 // allows to display the contextMenu by right-clicking on the shape itself.
-                shape.setOnContextMenuRequested(showContextMenuEventHandler);
+                // Added as a handler (not via setOnContextMenuRequested) so that the removeEventHandler call above
+                // unregisters it when the cell is reused. Otherwise, a reused cell's stale handler could stay on
+                // the shape and check the wrong item, so the context menu would not show.
+                shape.addEventHandler(ContextMenuEvent.CONTEXT_MENU_REQUESTED, showContextMenuEventHandler);
                 // The context menu should be hidden when the shape associated with this cell
                 // is hidden.
                 shape.visibleProperty().addListener(boundingShapeVisibilityListener);
