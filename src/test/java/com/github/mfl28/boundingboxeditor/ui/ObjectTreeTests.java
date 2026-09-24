@@ -21,12 +21,15 @@ package com.github.mfl28.boundingboxeditor.ui;
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import javafx.geometry.Point2D;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
@@ -46,6 +49,7 @@ import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -321,13 +325,26 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         robot.moveTo(secondTestBoundingBoxView);
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertNoPopupWindowShowing(testinfo);
+
+        // Diagnostics for an intermittent CI failure: record where the right-click actually lands.
+        final AtomicReference<MouseEvent> lastMousePress = new AtomicReference<>();
+        final EventHandler<MouseEvent> mousePressRecorder = lastMousePress::set;
+        WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L,
+                () -> mainView.getScene().addEventFilter(MouseEvent.MOUSE_PRESSED, mousePressRecorder));
+
         robot.rightClickOn(secondTestBoundingBoxView);
         WaitForAsyncUtils.waitForFxEvents();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                         () -> robot.lookup("Delete").tryQuery().filter(Node::isVisible).isPresent()),
                 () -> saveScreenshotAndReturnMessage(testinfo, "Context-menu of bounding box was not shown within " +
-                        TIMEOUT_DURATION_IN_SEC + " sec (box selected: " + secondTestBoundingBoxView.isSelected() +
-                        ", showing windows: " + describeShowingWindows() + ")."));
+                        TIMEOUT_DURATION_IN_SEC + " sec. " +
+                        WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L,
+                                () -> describeBoundingShapeClickState(secondTestBoundingBoxView,
+                                        lastMousePress.get())) +
+                        ", showing windows: " + describeShowingWindows()));
+
+        WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L,
+                () -> mainView.getScene().removeEventFilter(MouseEvent.MOUSE_PRESSED, mousePressRecorder));
         timeOutClickOn(robot, "Delete", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         // Now just the Dummy-category item should be left.
@@ -501,5 +518,38 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertDialogOpenedAndGetStage(robot, "Image Saving Error", "Bounding shape region is too small.",
                 testinfo);
+    }
+
+    /**
+     * Describes why a mouse press on a bounding shape might not have reached it. Must be called on the FX thread.
+     */
+    private String describeBoundingShapeClickState(BoundingBoxView boundingBoxView, MouseEvent lastMousePress) {
+        final List<String> mouseTransparentAncestors = new ArrayList<>();
+
+        for(Parent parent = boundingBoxView.getParent(); parent != null; parent = parent.getParent()) {
+            if(parent.isMouseTransparent()) {
+                mouseTransparentAncestors.add(describeNode(parent));
+            }
+        }
+
+        final String mousePressDescription = lastMousePress == null ? "none recorded" :
+                "target=" + (lastMousePress.getTarget() instanceof Node node
+                        ? describeNode(node) : String.valueOf(lastMousePress.getTarget())) +
+                        ", screen=(" + lastMousePress.getScreenX() + ", " + lastMousePress.getScreenY() + ")" +
+                        ", button=" + lastMousePress.getButton() +
+                        ", shortcutDown=" + lastMousePress.isShortcutDown();
+
+        return "Box: inScene=" + (boundingBoxView.getScene() != null) +
+                ", visible=" + boundingBoxView.isVisible() +
+                ", selected=" + boundingBoxView.isSelected() +
+                ", mouseTransparent=" + boundingBoxView.isMouseTransparent() +
+                ", screenBounds=" + boundingBoxView.localToScreen(boundingBoxView.getBoundsInLocal()) +
+                ", mouseTransparentAncestors=" + mouseTransparentAncestors +
+                "; last mouse press: " + mousePressDescription +
+                "; drawing in progress: " + mainView.getEditorImagePane().isDrawingInProgress();
+    }
+
+    private static String describeNode(Node node) {
+        return node.getClass().getSimpleName() + (node.getId() != null ? "#" + node.getId() : "");
     }
 }
