@@ -54,16 +54,33 @@ public class CSVLoadStrategy implements ImageAnnotationLoadStrategy {
             Map<String, Integer> categoryNameToShapeCountMap) {
         var filename = csvRow.getFilename();
 
+        var boundingBoxData = createBoundingBox(csvRow, categoryNameToCategoryMap);
+
         var imageAnnotation = filenameAnnotationMap.computeIfAbsent(
                 filename, key -> new ImageAnnotation(new ImageMetaData(key)));
-
-        var boundingBoxData = createBoundingBox(csvRow, categoryNameToCategoryMap);
 
         imageAnnotation.getBoundingShapeData().add(boundingBoxData);
         categoryNameToShapeCountMap.merge(boundingBoxData.getCategoryName(), 1, Integer::sum);
     }
 
+    private static void validateBounds(CSVRow csvRow) {
+        if (csvRow.getWidth() <= 0 || csvRow.getHeight() <= 0) {
+            throw new InvalidAnnotationFormatException("Invalid image size " + csvRow.getWidth() + "x"
+                    + csvRow.getHeight() + ".");
+        }
+
+        if (csvRow.getXMin() < 0 || csvRow.getXMin() > csvRow.getXMax() || csvRow.getXMax() > csvRow.getWidth()
+                || csvRow.getYMin() < 0 || csvRow.getYMin() > csvRow.getYMax()
+                || csvRow.getYMax() > csvRow.getHeight()) {
+            throw new InvalidAnnotationFormatException("Invalid bounding-box bounds (xmin=" + csvRow.getXMin()
+                    + ", ymin=" + csvRow.getYMin() + ", xmax=" + csvRow.getXMax() + ", ymax=" + csvRow.getYMax()
+                    + ") for the given image size " + csvRow.getWidth() + "x" + csvRow.getHeight() + ".");
+        }
+    }
+
     private static BoundingBoxData createBoundingBox(CSVRow csvRow, Map<String, ObjectCategory> existingCategoryNameToCategoryMap) {
+        validateBounds(csvRow);
+
         var objectCategory = existingCategoryNameToCategoryMap.computeIfAbsent(csvRow.getCategoryName(),
                 name -> new ObjectCategory(name, ColorUtils.createRandomColor()));
 
@@ -111,6 +128,9 @@ public class CSVLoadStrategy implements ImageAnnotationLoadStrategy {
 
                         } catch (RuntimeJsonMappingException exception) {
                             errorInfoEntries.add(new IOErrorInfoEntry(path.getFileName().toString(),
+                                    exception.getMessage()));
+                        } catch (InvalidAnnotationFormatException exception) {
+                            errorInfoEntries.add(new IOErrorInfoEntry(csvRow.getFilename(),
                                     exception.getMessage()));
                         }
                     }
