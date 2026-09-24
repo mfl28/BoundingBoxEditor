@@ -34,6 +34,7 @@ import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import javafx.application.Platform;
+import javafx.concurrent.Worker;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
@@ -44,6 +45,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -61,6 +63,7 @@ import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.reset;
@@ -76,7 +79,8 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
     private static final String MANAGEMENT_SERVER = "http://bar456";
     private static final String MANAGEMENT_PORT = "8081";
 
-    @Mock
+    // Returns itself from all builder methods (e.g. timeouts, registrations), only build() needs stubbing.
+    @Mock(answer = Answers.RETURNS_SELF)
     ClientBuilder mockClientBuilder;
 
     @Mock
@@ -142,6 +146,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         verifyManagementEntityReadingErrorHandling(robot, testinfo);
         verifyManagementJsonSyntaxErrorHandling(robot, testinfo);
         verifyManagementNoModelsRegisteredWithServerErrorHandling(robot, testinfo);
+        verifyManagementUnresponsiveServerCancelHandling(robot, testinfo);
         verifyManagementCorrectResponseHandling(robot, testinfo);
     }
 
@@ -629,6 +634,45 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         timeOutClickOnButtonInDialogStage(robot, errorDialogStage, ButtonType.OK, testinfo);
 
         WaitForAsyncUtils.waitForFxEvents();
+        resetAllMocks();
+    }
+
+    private void verifyManagementUnresponsiveServerCancelHandling(FxRobot robot, TestInfo testinfo) {
+        controller.makeClientUnavailable();
+
+        final CountDownLatch serverResponse = new CountDownLatch(1);
+
+        try(MockedStatic<ClientBuilder> testBuilder = Mockito.mockStatic(ClientBuilder.class)) {
+            testBuilder.when(ClientBuilder::newBuilder).thenReturn(mockClientBuilder);
+            when(mockClientBuilder.build()).thenReturn(mockClient);
+
+            when(mockClient.target(MANAGEMENT_SERVER + ":" + MANAGEMENT_PORT)).thenReturn(mockManagementTarget);
+            when(mockManagementTarget.path("models")).thenReturn(mockModelsTarget);
+            when(mockModelsTarget.request(MediaType.APPLICATION_JSON)).thenReturn(mockModelInvocationBuilder);
+            // The server never answers (until released at the end of this check).
+            when(mockModelInvocationBuilder.get()).thenAnswer(invocation -> {
+                serverResponse.await();
+                throw new ProcessingException("Released");
+            });
+            controller.makeClientAvailable();
+        }
+
+        robot.clickOn(mainView.getInferenceSettingsView().getSelectModelButton());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Stage progressDialogStage = timeOutGetTopModalStage(robot, "Fetching Models", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, progressDialogStage, ButtonType.CANCEL, testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        timeOutAssertTopModalStageClosed(robot, "Fetching Models", testinfo);
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> WaitForAsyncUtils.asyncFx(() -> controller.getModelNameFetchService().getState()
+                                .equals(Worker.State.CANCELLED)).get()),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Model name fetching was not cancelled within " + TIMEOUT_DURATION_IN_SEC + " sec."));
+
+        serverResponse.countDown();
         resetAllMocks();
     }
 
