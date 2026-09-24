@@ -44,7 +44,9 @@ class TorchServeRestClientTest {
     @BeforeEach
     void setUp() throws IOException {
         // Connections are completed by the socket's backlog but no request is ever answered.
-        unresponsiveServer = new ServerSocket(0, 50, InetAddress.getLoopbackAddress());
+        // Bound explicitly to the IPv4 address used below: InetAddress.getLoopbackAddress() returns ::1 when
+        // java.net.preferIPv6Addresses=system is set (as on CI), and the client's connection would be refused.
+        unresponsiveServer = new ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"));
 
         client = ClientBuilder.newBuilder()
                 .readTimeout(500, TimeUnit.MILLISECONDS)
