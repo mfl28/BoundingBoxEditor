@@ -20,6 +20,7 @@ package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
@@ -51,6 +52,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -524,11 +526,20 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
      * Describes why a mouse press on a bounding shape might not have reached it. Must be called on the FX thread.
      */
     private String describeBoundingShapeClickState(BoundingBoxView boundingBoxView, MouseEvent lastMousePress) {
-        final List<String> mouseTransparentAncestors = new ArrayList<>();
+        // Picking skips a parent (and all its children) if it is invisible, disabled or mouse-transparent, or if
+        // the pick point lies outside its bounds, so describe each ancestor up to the editor image pane.
+        final List<String> ancestors = new ArrayList<>();
 
         for(Parent parent = boundingBoxView.getParent(); parent != null; parent = parent.getParent()) {
-            if(parent.isMouseTransparent()) {
-                mouseTransparentAncestors.add(describeNode(parent));
+            final Bounds screenBounds = parent.localToScreen(parent.getBoundsInLocal());
+            ancestors.add(describeNode(parent) + "[visible=" + parent.isVisible() + ", disabled=" + parent.isDisabled() +
+                    ", mouseTransparent=" + parent.isMouseTransparent() +
+                    ", containsPress=" + (lastMousePress != null && screenBounds != null &&
+                    screenBounds.contains(lastMousePress.getScreenX(), lastMousePress.getScreenY())) +
+                    ", screenBounds=" + formatBounds(screenBounds) + "]");
+
+            if(parent instanceof EditorImagePaneView) {
+                break;
             }
         }
 
@@ -542,11 +553,17 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         return "Box: inScene=" + (boundingBoxView.getScene() != null) +
                 ", visible=" + boundingBoxView.isVisible() +
                 ", selected=" + boundingBoxView.isSelected() +
+                ", disabled=" + boundingBoxView.isDisabled() +
                 ", mouseTransparent=" + boundingBoxView.isMouseTransparent() +
-                ", screenBounds=" + boundingBoxView.localToScreen(boundingBoxView.getBoundsInLocal()) +
-                ", mouseTransparentAncestors=" + mouseTransparentAncestors +
+                ", screenBounds=" + formatBounds(boundingBoxView.localToScreen(boundingBoxView.getBoundsInLocal())) +
+                ", ancestors=" + ancestors +
                 "; last mouse press: " + mousePressDescription +
                 "; drawing in progress: " + mainView.getEditorImagePane().isDrawingInProgress();
+    }
+
+    private static String formatBounds(Bounds bounds) {
+        return bounds == null ? "null" : String.format(Locale.ROOT, "(%.1f, %.1f)-(%.1f, %.1f)",
+                bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY());
     }
 
     private static String describeNode(Node node) {
