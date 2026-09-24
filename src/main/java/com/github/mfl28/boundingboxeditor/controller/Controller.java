@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
+ * Copyright (C) 2026 Markus Fleischhacker <markus.fleischhacker28@gmail.com>
  *
  * This file is part of Bounding Box Editor
  *
@@ -364,11 +364,6 @@ public class Controller {
         view.getInferenceSettingsView().applyDisplayedSettingsToPredictorClientConfig(clientConfig);
         makeClientAvailable();
         modelNameFetchService.setClient(BoundingBoxPredictorClient.create(client, clientConfig));
-        modelNameFetchService.setProgressViewer(MainView.createServiceProgressDialog(modelNameFetchService,
-                FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
-                FETCHING_MODELS_PROGRESS_DIALOG_HEADER));
-        modelNameFetchService.getProgressViewer()
-                .setOwnerParentWindow(view.getSettingsWindow().orElse(stage));
         modelNameFetchService.restart();
     }
 
@@ -894,6 +889,14 @@ public class Controller {
         boundingBoxPredictorService.setOnSucceeded(this::onBoundingBoxPredictionSucceeded);
         boundingBoxPredictorService.setOnFailed(this::onIoServiceFailed);
 
+        // A single dialog per service: ControlsFX progress dialogs never detach from their worker, so creating
+        // one per fetch would leave stale dialogs that reappear on every later fetch.
+        final ServiceProgressDialog modelNameFetchProgressDialog =
+                MainView.createServiceProgressDialog(modelNameFetchService,
+                        FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
+                        FETCHING_MODELS_PROGRESS_DIALOG_HEADER);
+        modelNameFetchProgressDialog.setOwnerParentWindow(stage);
+        modelNameFetchService.setProgressViewer(modelNameFetchProgressDialog);
         modelNameFetchService.setOnFailed(this::onIoServiceFailed);
         modelNameFetchService.setOnSucceeded(this::onModelNameFetchingSucceeded);
     }
