@@ -324,6 +324,35 @@ public class BoundingBoxEditorTestBase {
                                 " sec."));
     }
 
+    /**
+     * Waits until no popup window (context menu, tooltip, pop-over, ...) is showing. An auto-hiding popup
+     * consumes the next mouse press outside of it, so a click issued while one is open never reaches its target.
+     */
+    protected void timeOutAssertNoPopupWindowShowing(TestInfo testinfo) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> WaitForAsyncUtils.asyncFx(() -> Window.getWindows().stream()
+                                .noneMatch(window -> window instanceof PopupWindow && window.isShowing())).get()),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Popup windows were still showing after " + TIMEOUT_DURATION_IN_SEC + " sec: " +
+                                describeShowingWindows()));
+    }
+
+    /**
+     * Describes the currently showing windows, for use in failure messages.
+     */
+    protected static String describeShowingWindows() {
+        try {
+            return WaitForAsyncUtils.asyncFx(() -> Window.getWindows().stream()
+                    .filter(Window::isShowing)
+                    .map(window -> window instanceof Stage stage
+                            ? "Stage(" + stage.getTitle() + ")" : window.getClass().getSimpleName())
+                    .toList()
+                    .toString()).get();
+        } catch(Exception e) {
+            return "unknown (" + e + ")";
+        }
+    }
+
     protected void timeOutLookUpNth(FxRobot robot, String id, int n, TestInfo testinfo) {
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                         () -> nodePresentAndVisibleNth(robot, id, n)),

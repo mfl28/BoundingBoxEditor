@@ -21,6 +21,7 @@ package com.github.mfl28.boundingboxeditor.ui;
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.TreeItem;
@@ -314,8 +315,19 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
                            .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
         // Delete second Test-bounding-box via the context-menu on the element itself.
-        robot.rightClickOn((BoundingBoxView) newSecondTestChildTreeItem.getValue());
+        final BoundingBoxView secondTestBoundingBoxView = (BoundingBoxView) newSecondTestChildTreeItem.getValue();
+        // Leaving the tree hides its hover pop-over. A still showing (auto-hiding) popup would consume the
+        // right-click, so the bounding box would neither be selected nor show its context-menu.
+        robot.moveTo(secondTestBoundingBoxView);
         WaitForAsyncUtils.waitForFxEvents();
+        timeOutAssertNoPopupWindowShowing(testinfo);
+        robot.rightClickOn(secondTestBoundingBoxView);
+        WaitForAsyncUtils.waitForFxEvents();
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> robot.lookup("Delete").tryQuery().filter(Node::isVisible).isPresent()),
+                () -> saveScreenshotAndReturnMessage(testinfo, "Context-menu of bounding box was not shown within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec (box selected: " + secondTestBoundingBoxView.isSelected() +
+                        ", showing windows: " + describeShowingWindows() + ")."));
         timeOutClickOn(robot, "Delete", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         // Now just the Dummy-category item should be left.
