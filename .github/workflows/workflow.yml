@@ -19,7 +19,7 @@ on:
       - master
 
 env:
-  JAVA_VERSION: '21.0.3+9.0.LTS'
+  JAVA_VERSION: '25'
   JAVA_DISTRIBUTION: 'temurin'
   TEST_SCREEN_WIDTH: '1920'
   TEST_SCREEN_HEIGHT: '1080'
@@ -106,6 +106,7 @@ jobs:
         uses: github/codeql-action/analyze@v3
       - name: Test setup
         run: |
+          sudo apt-get update
           sudo apt-get install xvfb fluxbox
           Xvfb :10 -screen 0 ${TEST_SCREEN_WIDTH}x${TEST_SCREEN_HEIGHT}x24 &
           fluxbox -display :10 &
@@ -223,6 +224,7 @@ jobs:
         uses: actions/download-artifact@v4
       - name: Prepare artifacts
         run: |
+          sudo apt-get update
           sudo apt-get install rename
           mv boundingboxeditor-installer-*/* .
           find "$PWD"/* -maxdepth 0 -type f -name "BoundingBoxEditor*" -exec basename {} ";" | rename -f 'y/A-Z/a-z/'

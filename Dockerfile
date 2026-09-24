@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk AS builder-base
+FROM eclipse-temurin:25-jdk AS builder-base
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       binutils \
