@@ -22,6 +22,7 @@ import javafx.application.Platform;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -53,8 +54,7 @@ public class FileChangeWatcher implements Runnable {
 
             WatchKey key;
             while((key = watchService.take()) != null) {
-                if(key.pollEvents().stream()
-                      .anyMatch(watchEvent -> fileNamesToWatch.contains(watchEvent.context().toString()))) {
+                if(affectsWatchedFiles(key.pollEvents(), directoryToWatch, fileNamesToWatch)) {
                     Platform.runLater(onFilesChangedHandler);
                 } else {
                     key.reset();
@@ -65,5 +65,21 @@ public class FileChangeWatcher implements Runnable {
         } catch(IOException e) {
             Platform.runLater(onFilesChangedHandler);
         }
+    }
+
+    static boolean affectsWatchedFiles(List<WatchEvent<?>> events, Path directory, Set<String> fileNamesToWatch) {
+        for(WatchEvent<?> event : events) {
+            if(event.kind() == StandardWatchEventKinds.OVERFLOW) {
+                // Events were lost and an overflow event carries no file name, so check whether any watched
+                // file was removed. Lost modification events cannot be recovered.
+                if(fileNamesToWatch.stream().anyMatch(fileName -> !Files.exists(directory.resolve(fileName)))) {
+                    return true;
+                }
+            } else if(event.context() != null && fileNamesToWatch.contains(event.context().toString())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
