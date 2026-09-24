@@ -23,6 +23,7 @@ import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationExportResult;
 import javafx.beans.property.DoubleProperty;
 import javafx.geometry.Bounds;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedWriter;
@@ -69,18 +70,37 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         }
 
         int totalNrOfAnnotations = annotations.imageAnnotations().size();
-        AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
 
-        annotations.imageAnnotations().parallelStream().forEach(annotation -> {
-            try {
-                createAnnotationFile(annotation);
-            } catch (IOException e) {
-                unParsedFileErrorMessages
-                        .add(new IOErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
-            }
+        // Annotation files are named after the image file without its extension, so images such as "a.jpg" and
+        // "a.png" would overwrite each other's annotation file. Grouping is case-insensitive because the most
+        // common file systems on Windows and macOS are.
+        final Collection<List<ImageAnnotation>> annotationsByAnnotationFileName = annotations.imageAnnotations()
+                .stream()
+                .collect(Collectors.groupingBy(annotation ->
+                        getAnnotationFileName(annotation.getImageFileName()).toLowerCase(Locale.ROOT)))
+                .values();
 
-            progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrOfAnnotations);
-        });
+        final List<IOErrorInfoEntry> annotationFileNameClashErrors = annotationsByAnnotationFileName.stream()
+                .filter(group -> group.size() > 1)
+                .flatMap(group -> createAnnotationFileNameClashErrors(group).stream())
+                .toList();
+        unParsedFileErrorMessages.addAll(annotationFileNameClashErrors);
+
+        AtomicInteger nrProcessedAnnotations = new AtomicInteger(annotationFileNameClashErrors.size());
+
+        annotationsByAnnotationFileName.parallelStream()
+                .filter(group -> group.size() == 1)
+                .map(List::getFirst)
+                .forEach(annotation -> {
+                    try {
+                        createAnnotationFile(annotation);
+                    } catch (IOException e) {
+                        unParsedFileErrorMessages
+                                .add(new IOErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
+                    }
+
+                    progress.set(1.0 * nrProcessedAnnotations.incrementAndGet() / totalNrOfAnnotations);
+                });
 
         return new ImageAnnotationExportResult(
                 totalNrOfAnnotations - unParsedFileErrorMessages.size(),
@@ -100,13 +120,28 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         }
     }
 
-    private void createAnnotationFile(ImageAnnotation annotation) throws IOException {
-        String imageFileName = annotation.getImageFileName();
-        String imageFileNameWithoutExtension = imageFileName.substring(0, imageFileName.lastIndexOf('.'));
+    private static String getAnnotationFileName(String imageFileName) {
+        return FilenameUtils.getBaseName(imageFileName) + YOLO_ANNOTATION_FILE_EXTENSION;
+    }
 
+    private static List<IOErrorInfoEntry> createAnnotationFileNameClashErrors(List<ImageAnnotation> clashingAnnotations) {
+        final List<String> imageFileNames = clashingAnnotations.stream()
+                .map(ImageAnnotation::getImageFileName)
+                .sorted()
+                .toList();
+
+        final String message = "Not saved: images " + String.join(", ", imageFileNames) +
+                " would share the annotation file \"" + getAnnotationFileName(imageFileNames.getFirst()) +
+                "\". YOLO requires image file names to be unique without their extension.";
+
+        return imageFileNames.stream()
+                .map(imageFileName -> new IOErrorInfoEntry(imageFileName, message))
+                .toList();
+    }
+
+    private void createAnnotationFile(ImageAnnotation annotation) throws IOException {
         try (BufferedWriter fileWriter = Files.newBufferedWriter(
-                saveFolderPath.resolve(imageFileNameWithoutExtension +
-                        YOLO_ANNOTATION_FILE_EXTENSION))) {
+                saveFolderPath.resolve(getAnnotationFileName(annotation.getImageFileName())))) {
             List<BoundingShapeData> boundingShapeDataList = annotation.getBoundingShapeData().stream()
                     .flatMap(this::extractBoundingShapeDataElements)
                     .toList();

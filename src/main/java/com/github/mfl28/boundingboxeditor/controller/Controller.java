@@ -66,6 +66,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 import java.util.stream.Stream;
 
@@ -146,6 +147,9 @@ public class Controller {
     private static final String IMAGE_FILES_CHANGED_ERROR_CONTENT =
             "Image files were changed externally. Will reload folder.";
     private static final String IMAGE_FILE_CHANGE_WATCHER_THREAD_NAME = "ImageFileChangeWatcher";
+    private static final long CLIENT_CONNECT_TIMEOUT_SECONDS = 10;
+    // Matches Torch serve's default response timeout, so that slow predictions are not cut off early.
+    private static final long CLIENT_READ_TIMEOUT_SECONDS = 120;
     private static final String SETTINGS_APPLICATION_ERROR_DIALOG_TITLE = "Settings Application Error";
     private static final String SETTINGS_APPLICATION_INVALID_FIELDS_ERROR_DIALOG_CONTENT =
             "Please provide valid values for the indicated fields.";
@@ -678,6 +682,8 @@ public class Controller {
     void makeClientAvailable() {
         if(client == null) {
             client = ClientBuilder.newBuilder()
+                    .connectTimeout(CLIENT_CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .readTimeout(CLIENT_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                     .register(MultiPartFeature.class)
                     .register(GsonMessageBodyHandler.class)
                     .build();
@@ -885,6 +891,7 @@ public class Controller {
                         BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE,
                         BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
         predictorProgressDialog.setOwnerParentWindow(stage);
+        predictorProgressDialog.enableCancellation();
         boundingBoxPredictorService.setProgressViewer(predictorProgressDialog);
         boundingBoxPredictorService.setOnSucceeded(this::onBoundingBoxPredictionSucceeded);
         boundingBoxPredictorService.setOnFailed(this::onIoServiceFailed);
@@ -896,6 +903,7 @@ public class Controller {
                         FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
                         FETCHING_MODELS_PROGRESS_DIALOG_HEADER);
         modelNameFetchProgressDialog.setOwnerParentWindow(stage);
+        modelNameFetchProgressDialog.enableCancellation();
         modelNameFetchService.setProgressViewer(modelNameFetchProgressDialog);
         modelNameFetchService.setOnFailed(this::onIoServiceFailed);
         modelNameFetchService.setOnSucceeded(this::onModelNameFetchingSucceeded);

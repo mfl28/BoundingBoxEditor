@@ -34,6 +34,7 @@ import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +55,8 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
     private static final String TORCH_SERVE_NAME = "Torch serve";
     private static final String INFERENCE_ADDRESS_ERROR_MESSAGE = "Invalid inference address or port.";
     private static final String INFERENCE_SERVER_CONNECTION_ERROR_MESSAGE = "Could not connect to inference server.";
+    private static final String INFERENCE_SERVER_TIMEOUT_ERROR_MESSAGE = "Inference server did not respond in time.";
+    private static final String MANAGEMENT_SERVER_TIMEOUT_ERROR_MESSAGE = "Management server did not respond in time.";
     private static final String SERVER_ERROR_REASON = " Reason: ";
     private final Client client;
     private final BoundingBoxPredictorClientConfig clientConfig;
@@ -95,6 +98,8 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
         } catch(ProcessingException | IllegalArgumentException | IllegalStateException | IOException e) {
             if(e.getCause() instanceof ConnectException) {
                 throw new PredictionClientException(INFERENCE_SERVER_CONNECTION_ERROR_MESSAGE);
+            } else if(e.getCause() instanceof SocketTimeoutException) {
+                throw new PredictionClientException(INFERENCE_SERVER_TIMEOUT_ERROR_MESSAGE);
             } else {
                 throw new PredictionClientException(SERVER_PREDICTION_POST_ERROR_MESSAGE);
             }
@@ -137,6 +142,8 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
         } catch(ProcessingException | IllegalArgumentException | IllegalStateException e) {
             if(e.getCause() instanceof ConnectException) {
                 throw new PredictionClientException(MANAGEMENT_SERVER_CONNECTION_ERROR_MESSAGE);
+            } else if(e.getCause() instanceof SocketTimeoutException) {
+                throw new PredictionClientException(MANAGEMENT_SERVER_TIMEOUT_ERROR_MESSAGE);
             } else {
                 throw new PredictionClientException(SERVER_MODELS_READ_ERROR_MESSAGE);
             }
