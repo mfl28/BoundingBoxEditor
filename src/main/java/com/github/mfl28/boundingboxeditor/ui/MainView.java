@@ -22,33 +22,19 @@ import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
-import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
-import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
 import com.github.mfl28.boundingboxeditor.ui.settings.EditorSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.settings.InferenceSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.settings.SettingsDialogView;
 import com.github.mfl28.boundingboxeditor.ui.settings.UISettingsView;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Service;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import org.controlsfx.dialog.ExceptionDialog;
 
-import java.io.File;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,11 +51,7 @@ public class MainView extends BorderPane implements View {
     public static final Image APPLICATION_ICON =
             new Image(MainView.class.getResource(APPLICATION_ICON_PATH).toExternalForm());
 
-    private static final int INFO_DIALOGUE_MIN_WIDTH = 600;
     private static final String MAIN_VIEW_ID = "main-view";
-    private static final String ANNOTATION_IMPORT_ERROR_REPORT_TITLE = "Annotation Import Error Report";
-    private static final String ANNOTATION_SAVING_ERROR_REPORT_TITLE = "Annotation Saving Error Report";
-    private static final String STYLESHEET_PATH = "/stylesheets/css/styles.css";
 
 
     private final HeaderView header = new HeaderView();
@@ -92,213 +74,6 @@ public class MainView extends BorderPane implements View {
 
         setId(MAIN_VIEW_ID);
         setUpInternalListeners();
-    }
-
-    /**
-     * Displays an error alert dialog-window.
-     *
-     * @param title   the title of the dialog
-     * @param content the text-content of the dialog
-     */
-    public static void displayErrorAlert(String title, String content, Window owner) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        setupAndShowDialog(alert, title, content, owner);
-    }
-
-    /**
-     * Displays a dialog with 'Yes', 'No' and 'Cancel' buttons and returns the chosen option.
-     *
-     * @param title   The title of the dialog window
-     * @param content The content text of the dialog window
-     * @return {@link ButtonBar.ButtonData}.YES/NO/CANCEL_CLOSE
-     */
-    public static ButtonBar.ButtonData displayYesNoCancelDialogAndGetResult(String title, String content,
-                                                                            Window owner) {
-        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
-                content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
-                new ButtonType("No", ButtonBar.ButtonData.NO),
-                new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
-        setupAndShowDialog(dialog, title, content, owner);
-        return dialog.getResult().getButtonData();
-    }
-
-    /**
-     * Displays a dialog with 'Yes', 'No' buttons and returns the chosen option.
-     *
-     * @param title   The title of the dialog window
-     * @param content The content text of the dialog window
-     * @return {@link ButtonBar.ButtonData}.YES/NO
-     */
-    public static ButtonBar.ButtonData displayYesNoDialogAndGetResult(String title, String content, Window owner) {
-        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION,
-                content, new ButtonType("Yes", ButtonBar.ButtonData.YES),
-                new ButtonType("No", ButtonBar.ButtonData.NO));
-        setupAndShowDialog(dialog, title, content, owner);
-        return dialog.getResult().getButtonData();
-    }
-
-    /**
-     * Displays a directory chooser window and returns the chosen directory.
-     *
-     * @param title The title of the directory chooser window
-     * @param stage The stage on top of which the window will be shown
-     * @return The chosen directory, or null if the user closed the window without choosing.
-     */
-    public static File displayDirectoryChooserAndGetChoice(String title, Stage stage, File initialDirectory) {
-        final DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle(title);
-
-        if(initialDirectory != null && initialDirectory.exists()) {
-            directoryChooser.setInitialDirectory(initialDirectory);
-        }
-
-        return directoryChooser.showDialog(stage);
-    }
-
-    /***
-     * Displays a file chooser window and returns the chosen directory.
-     *
-     * @param title The title of the file chooser window
-     * @param window The window on top of which the window will be shown
-     * @param initialDirectory The initial directory
-     * @param initialFileName The initial default filename
-     * @param extensionFilter The extension filter to apply
-     * @return The chosen file, or null if the user closed the window without choosing.
-     */
-    public static File displayFileChooserAndGetChoice(String title, Window window, File initialDirectory,
-                                                      String initialFileName,
-                                                      FileChooser.ExtensionFilter extensionFilter,
-                                                      FileChooserType type) {
-        final FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle(title);
-
-        if(initialFileName != null) {
-            fileChooser.setInitialFileName(initialFileName);
-        }
-
-        if(initialDirectory != null && initialDirectory.exists()) {
-            fileChooser.setInitialDirectory(initialDirectory);
-        }
-
-        if(extensionFilter != null) {
-            fileChooser.getExtensionFilters().add(extensionFilter);
-            fileChooser.setSelectedExtensionFilter(extensionFilter);
-        }
-
-        File result;
-
-        if(type.equals(FileChooserType.SAVE)) {
-            result = fileChooser.showSaveDialog(window);
-        } else {
-            result = fileChooser.showOpenDialog(window);
-        }
-
-        return result;
-    }
-
-    /**
-     * Displays a dialog-window that shows information about the result of an
-     * IO-operation.
-     *
-     * @param ioResult the {@link IOResult} object containing the information tom display
-     */
-    public static void displayIOResultErrorInfoAlert(IOResult ioResult, Window owner) {
-        TableView<IOErrorInfoEntry> errorTable = new TableView<>();
-        TableColumn<IOErrorInfoEntry, String> errorSourceColumn = new TableColumn<>("Source");
-        TableColumn<IOErrorInfoEntry, String> errorDescriptionColumn = new TableColumn<>("Error");
-
-        errorTable.getColumns().add(errorSourceColumn);
-        errorTable.getColumns().add(errorDescriptionColumn);
-        errorTable.setEditable(false);
-        errorTable.setMaxWidth(Double.MAX_VALUE);
-        errorTable.setMaxHeight(Double.MAX_VALUE);
-
-        errorSourceColumn.setCellValueFactory(new PropertyValueFactory<>("sourceName"));
-
-        errorDescriptionColumn.setCellValueFactory(new PropertyValueFactory<>("errorDescription"));
-        errorDescriptionColumn.setSortable(false);
-        errorTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-
-        errorTable.setItems(FXCollections.observableArrayList(ioResult.getErrorTableEntries()));
-        errorTable.getSortOrder().add(errorSourceColumn);
-        errorTable.sort();
-
-        long numErrorEntries = ioResult.getErrorTableEntries().stream()
-                .map(IOErrorInfoEntry::getSourceName)
-                .distinct()
-                .count();
-
-        switch(ioResult.getOperationType()) {
-            case ANNOTATION_IMPORT -> displayAnnotationImportInfoAlert(ioResult, errorTable, numErrorEntries, owner);
-            case ANNOTATION_SAVING -> MainView.displayInfoAlert(ANNOTATION_SAVING_ERROR_REPORT_TITLE,
-                    "There were errors while saving annotations.",
-                    numErrorEntries + " image-annotation file"
-                            + (numErrorEntries > 1 ? "s" : "") + " could not be saved.",
-                    errorTable, owner);
-            case IMAGE_METADATA_LOADING ->
-                    displayImageMetadataLoadingInfoAlert(ioResult, errorTable, numErrorEntries, owner);
-            case BOUNDING_BOX_PREDICTION -> MainView.displayInfoAlert("Bounding Box Prediction Error Report",
-                    "There were errors while performing the prediction",
-                    "Bounding box predictions for " + numErrorEntries + " image file" +
-                            (numErrorEntries > 1 ? "s" : "") + " could not be loaded.",
-                    errorTable, owner);
-            case MODEL_NAME_FETCHING -> MainView.displayInfoAlert("Model Fetching Error Report",
-                    "There were errors while fetching model names from the server",
-                    null, errorTable, owner);
-        }
-    }
-
-    /**
-     * Displays a dialog with a choice box and returns the user's choice.
-     *
-     * @param defaultChoice the pre-selected choice
-     * @param choices       the available choices
-     * @param title         the title of the dialog-window
-     * @param header        the header-text of the dialog-window
-     * @param content       the content-text of the dialog-window
-     * @param <T>           the type of the choices
-     * @return an {@link Optional<T>} (possibly) containing the user's choice
-     */
-    public static <T> Optional<T> displayChoiceDialogAndGetResult(T defaultChoice, Collection<T> choices,
-                                                                  String title, String header, String content,
-                                                                  Window owner) {
-        ChoiceDialog<T> choiceDialog = new ChoiceDialog<>(defaultChoice, choices);
-        choiceDialog.setTitle(title);
-        choiceDialog.setHeaderText(header);
-        choiceDialog.setContentText(content);
-        choiceDialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-        ((Stage) choiceDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        choiceDialog.initOwner(owner);
-        return choiceDialog.showAndWait();
-    }
-
-    /**
-     * Shows a dialog for a thrown exception.
-     *
-     * @param throwable the exception thrown
-     */
-    public static void displayExceptionDialog(Throwable throwable, Window owner) {
-        ExceptionDialog exceptionDialog = new ExceptionDialog(throwable);
-        exceptionDialog.getDialogPane().getStylesheets()
-                .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-        ((Stage) exceptionDialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        exceptionDialog.initOwner(owner);
-        exceptionDialog.showAndWait();
-    }
-
-    public static ServiceProgressDialog createServiceProgressDialog(Service<? extends IOResult> service, String title,
-                                                                    String header) {
-        final ServiceProgressDialog progressDialog = new ServiceProgressDialog(service);
-        progressDialog.setTitle(title);
-        progressDialog.setHeaderText(header);
-
-        return progressDialog;
-    }
-
-    public static void applyDialogStyle(Dialog<?> dialog) {
-        dialog.getDialogPane().getStylesheets()
-                .add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
     }
 
     @Override
@@ -558,10 +333,6 @@ public class MainView extends BorderPane implements View {
     }
 
 
-    public static void displayTextInfoDialog(String title, String header, String content, Window owner) {
-        displayInfoAlert(title, header, content, null, owner);
-    }
-
     public Optional<Window> getSettingsWindow() {
         return Window.getWindows()
                 .stream()
@@ -570,44 +341,6 @@ public class MainView extends BorderPane implements View {
                 .findFirst();
     }
 
-
-    private static void displayImageMetadataLoadingInfoAlert(IOResult ioResult, TableView<IOErrorInfoEntry> errorTable,
-                                                             long numErrorEntries, Window owner) {
-        if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
-            MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
-                    "The folder does not contain any valid image files.", errorTable, owner);
-        } else {
-            MainView.displayInfoAlert("Image loading error report", "There were errors while loading images.",
-                    numErrorEntries + " image file" + (numErrorEntries > 1 ? "s" : "") +
-                            " could not be loaded.", errorTable, owner);
-        }
-    }
-
-    private static void displayAnnotationImportInfoAlert(IOResult ioResult, TableView<IOErrorInfoEntry> errorTable,
-                                                         long numErrorEntries, Window owner) {
-        if(ioResult.getNrSuccessfullyProcessedItems() == 0) {
-            MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
-                    "There were errors while loading annotations.",
-                    "The source does not contain any valid annotations.", errorTable, owner);
-        } else {
-            MainView.displayInfoAlert(ANNOTATION_IMPORT_ERROR_REPORT_TITLE,
-                    "There were errors while loading annotations.",
-                    "Some bounding boxes could not be loaded from " + numErrorEntries +
-                            " image-annotation"
-                            + (numErrorEntries > 1 ? "s" : "") + ".", errorTable, owner);
-        }
-    }
-
-    private static void setupAndShowDialog(Alert dialog, String title, String content, Window owner) {
-        dialog.setTitle(title);
-        dialog.setHeaderText(null);
-        dialog.setContentText(content);
-        dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-        dialog.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        dialog.initOwner(owner);
-        dialog.showAndWait();
-    }
 
     private void setUpInternalListeners() {
         header.getSeparator().visibleProperty().bind(workspaceSplitPane.visibleProperty());
@@ -645,30 +378,6 @@ public class MainView extends BorderPane implements View {
 
             event.consume();
         });
-    }
-
-    private static void displayInfoAlert(String title, String header, String content, Node additionalInfoNode,
-                                         Window owner) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.getDialogPane().setPrefWidth(INFO_DIALOGUE_MIN_WIDTH);
-        alert.getDialogPane().getStylesheets().add(MainView.class.getResource(STYLESHEET_PATH).toExternalForm());
-        ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(APPLICATION_ICON);
-        alert.initOwner(owner);
-
-        if(additionalInfoNode != null) {
-            GridPane.setVgrow(additionalInfoNode, Priority.ALWAYS);
-            GridPane.setHgrow(additionalInfoNode, Priority.ALWAYS);
-
-            GridPane expandableContent = new GridPane();
-            expandableContent.setMaxWidth(Double.MAX_VALUE);
-            expandableContent.add(additionalInfoNode, 0, 0);
-
-            alert.getDialogPane().setExpandableContent(expandableContent);
-        }
-        alert.showAndWait();
     }
 
     public enum FileChooserType {SAVE, OPEN}

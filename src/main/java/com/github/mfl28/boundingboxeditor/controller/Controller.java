@@ -655,7 +655,7 @@ public class Controller {
     private void setUpService(IoService<?> service, String progressDialogTitle, String progressDialogHeader,
                               EventHandler<WorkerStateEvent> onSucceeded, boolean cancellable) {
         final ServiceProgressDialog progressDialog =
-                MainView.createServiceProgressDialog(service, progressDialogTitle, progressDialogHeader);
+                dialogService.createServiceProgressDialog(service, progressDialogTitle, progressDialogHeader);
         progressDialog.setOwnerParentWindow(stage);
 
         if(cancellable) {
