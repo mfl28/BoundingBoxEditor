@@ -28,7 +28,6 @@ import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
-import com.github.mfl28.boundingboxeditor.model.io.restclients.GsonMessageBodyHandler;
 import com.github.mfl28.boundingboxeditor.model.io.results.*;
 import com.github.mfl28.boundingboxeditor.model.io.services.*;
 import com.github.mfl28.boundingboxeditor.ui.*;
@@ -39,8 +38,6 @@ import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsSaving
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageFilesLoadingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.github.mfl28.boundingboxeditor.utils.ImageUtils;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -56,11 +53,9 @@ import javafx.scene.image.Image;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
 /**
@@ -102,20 +97,11 @@ public class Controller {
             "currentAnnotationLoadingDirectory";
     private static final String CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME =
             "currentAnnotationSavingDirectory";
-    private static final long CLIENT_CONNECT_TIMEOUT_SECONDS = 10;
-    // Matches Torch serve's default response timeout, so that slow predictions are not cut off early.
-    private static final long CLIENT_READ_TIMEOUT_SECONDS = 120;
     private static final String SETTINGS_APPLICATION_ERROR_DIALOG_TITLE = "Settings Application Error";
     private static final String SETTINGS_APPLICATION_INVALID_FIELDS_ERROR_DIALOG_CONTENT =
             "Please provide valid values for the indicated fields.";
     private static final String SETTINGS_APPLICATION_NO_MODEL_SELECTED_ERROR_DIALOG_CONTENT =
             "Please select a model or disable inference.";
-    private static final String MODEL_FETCHING_ERROR_DIALOG_TITLE = "Model Fetching Error";
-    private static final String MODEL_FETCHING_NO_MODELS_ERROR_DIALOG_CONTENT =
-            "No models are registered with the management server.";
-    private static final String MODEL_CHOICE_DIALOG_TITLE = "Model Choice";
-    private static final String MODEL_CHOICE_DIALOG_HEADER = "Choose the model used for performing predictions.";
-    private static final String MODEL_CHOICE_DIALOG_CONTENT = "Model:";
     private static final String IMAGE_LOADING_ERROR_DIALOG_TITLE = "Image Loading Error";
     private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Saving Annotations";
     private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
@@ -139,6 +125,7 @@ public class Controller {
     private final DialogService dialogService;
     private final AnnotationIoController annotationIoController;
     private final ImageFolderController imageFolderController;
+    private final InferenceController inferenceController;
     private final Model model = new Model();
     private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener =
             createBoundingShapeCountPerCategoryListener();
@@ -150,7 +137,6 @@ public class Controller {
     final List<KeyCombinationEventHandler> keyCombinationHandlers = createKeyCombinationHandlers();
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
-    private Client client;
 
     /**
      * Creates a new controller object that is responsible for handling the application logic and
@@ -181,6 +167,7 @@ public class Controller {
                 new AnnotationIoOperations());
         this.imageFolderController = new ImageFolderController(model, ioMetaData, dialogService, stage,
                 annotationIoController, new ImageFolderOperations());
+        this.inferenceController = new InferenceController(model, dialogService, new InferenceOperations());
 
         setupStage();
         loadPreferences();
@@ -235,11 +222,8 @@ public class Controller {
         view.getEditorSettingsView()
                 .applyDisplayedSettingsToEditorSettingsConfig(view.getEditorSettingsConfig());
 
-        if(!inferenceWasEnabled && model.getBoundingBoxPredictorConfig().isInferenceEnabled()) {
-            makeClientAvailable();
-        } else if(inferenceWasEnabled && !model.getBoundingBoxPredictorConfig().isInferenceEnabled()) {
-            makeClientUnavailable();
-        }
+        inferenceController.onInferenceSettingsApplied(inferenceWasEnabled,
+                model.getBoundingBoxPredictorConfig().isInferenceEnabled());
 
         if(buttonType.equals(ButtonType.APPLY)) {
             event.consume();
@@ -254,9 +238,7 @@ public class Controller {
     }
 
     public void onRegisterPerformCurrentImageBoundingBoxPredictionAction() {
-        if(model.containsImageFiles()) {
-            initiateBoundingBoxPrediction(model.getCurrentImageFile());
-        }
+        inferenceController.predictCurrentImage();
     }
 
     /**
@@ -305,12 +287,9 @@ public class Controller {
     }
 
     public void onRegisterModelNameFetchingAction() {
-        modelNameFetchService.reset();
         final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
         view.getInferenceSettingsView().applyDisplayedSettingsToPredictorClientConfig(clientConfig);
-        makeClientAvailable();
-        modelNameFetchService.setClient(BoundingBoxPredictorClient.create(client, clientConfig));
-        modelNameFetchService.restart();
+        inferenceController.fetchModelNames(clientConfig);
     }
 
     /**
@@ -323,8 +302,7 @@ public class Controller {
     }
 
     public void initiateBoundingBoxPrediction(File imageFile) {
-        updateModelFromView();
-        startBoundingBoxPredictionService(imageFile);
+        inferenceController.predict(imageFile);
     }
 
     /**
@@ -591,21 +569,11 @@ public class Controller {
     }
 
     void makeClientAvailable() {
-        if(client == null) {
-            client = ClientBuilder.newBuilder()
-                    .connectTimeout(CLIENT_CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                    .readTimeout(CLIENT_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                    .register(MultiPartFeature.class)
-                    .register(GsonMessageBodyHandler.class)
-                    .build();
-        }
+        inferenceController.makeClientAvailable();
     }
 
     void makeClientUnavailable() {
-        if(client != null) {
-            client.close();
-            client = null;
-        }
+        inferenceController.makeClientUnavailable();
     }
 
     IoMetaData getIoMetaData() {
@@ -755,20 +723,6 @@ public class Controller {
         imageMetaDataLoadingService.restart();
     }
 
-    private void startBoundingBoxPredictionService(File imageFile) {
-        boundingBoxPredictorService.reset();
-        boundingBoxPredictorService.setImageFile(imageFile);
-        boundingBoxPredictorService.setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
-        boundingBoxPredictorService.setImageMetaData(model.getImageFileNameToMetaDataMap().get(imageFile.getName()));
-        boundingBoxPredictorService.setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
-
-        boundingBoxPredictorService
-                .setPredictorClient(BoundingBoxPredictorClient.create(client,
-                        model.getBoundingBoxPredictorClientConfig()));
-
-        boundingBoxPredictorService.restart();
-    }
-
     private void setUpServices() {
         final ServiceProgressDialog annotationExportProgressDialog =
                 MainView.createServiceProgressDialog(annotationExportService,
@@ -821,32 +775,8 @@ public class Controller {
     }
 
     private void onModelNameFetchingSucceeded(WorkerStateEvent event) {
-        final ModelNameFetchResult result = modelNameFetchService.getValue();
-
-        final List<String> modelNames = result.getModelNames();
-
         modelNameFetchService.getProgressViewer().hideProgress();
-
-        if(result.getErrorTableEntries().isEmpty()) {
-            if(modelNames.isEmpty()) {
-                dialogService.displayErrorAlert(MODEL_FETCHING_ERROR_DIALOG_TITLE,
-                        MODEL_FETCHING_NO_MODELS_ERROR_DIALOG_CONTENT,
-                        view.getSettingsWindow().orElse(stage));
-            } else {
-                final Optional<String> modelChoice = dialogService.displayChoiceDialogAndGetResult(modelNames.get(0),
-                        modelNames,
-                        MODEL_CHOICE_DIALOG_TITLE,
-                        MODEL_CHOICE_DIALOG_HEADER,
-                        MODEL_CHOICE_DIALOG_CONTENT,
-                        view.getSettingsWindow()
-                                .orElse(stage));
-                modelChoice
-                        .ifPresent(s -> view.getInferenceSettingsView().getSelectedModelLabel()
-                                .setText(s));
-            }
-        } else {
-            dialogService.displayIOResultErrorInfoAlert(result, view.getSettingsWindow().orElse(stage));
-        }
+        inferenceController.onModelNamesFetched(modelNameFetchService.getValue(), view.getSettingsWindow().orElse(stage));
     }
 
     private void onImageMetaDataLoadingSucceeded(WorkerStateEvent workerStateEvent) {
@@ -1348,6 +1278,40 @@ public class Controller {
         @Override
         public void clearWorkspace() {
             clearViewAndModel();
+        }
+    }
+
+    /**
+     * Runs the model fetching and predictions initiated by the {@link InferenceController}.
+     */
+    private class InferenceOperations implements InferenceController.Operations {
+        @Override
+        public void updateModelFromView() {
+            Controller.this.updateModelFromView();
+        }
+
+        @Override
+        public void startModelNameFetching(BoundingBoxPredictorClient predictorClient) {
+            modelNameFetchService.reset();
+            modelNameFetchService.setClient(predictorClient);
+            modelNameFetchService.restart();
+        }
+
+        @Override
+        public void startPrediction(File imageFile, BoundingBoxPredictorClient predictorClient) {
+            boundingBoxPredictorService.reset();
+            boundingBoxPredictorService.setImageFile(imageFile);
+            boundingBoxPredictorService.setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
+            boundingBoxPredictorService.setImageMetaData(
+                    model.getImageFileNameToMetaDataMap().get(imageFile.getName()));
+            boundingBoxPredictorService.setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
+            boundingBoxPredictorService.setPredictorClient(predictorClient);
+            boundingBoxPredictorService.restart();
+        }
+
+        @Override
+        public void showSelectedModel(String modelName) {
+            view.getInferenceSettingsView().getSelectedModelLabel().setText(modelName);
         }
     }
 }
