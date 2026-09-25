@@ -19,11 +19,13 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
+import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.ui.BoundingBoxView;
+import com.github.mfl28.boundingboxeditor.ui.BoundingShapeDataConvertible;
 import com.github.mfl28.boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
@@ -810,15 +812,17 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(true), saveScreenshot(testinfo));
-        final BoundingBoxView drawnBoundingBox = (BoundingBoxView) mainView.getCurrentBoundingShapes().getFirst();
+        // Importing annotations may recreate the views, which use identity equality, so compare their data instead.
+        final BoundingShapeData drawnBoundingBoxData =
+                ((BoundingBoxView) mainView.getCurrentBoundingShapes().getFirst()).toBoundingShapeData();
 
         final File annotationFile = new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
         // (1) User chooses Cancel:
-        userChoosesCancelOnAnnotationImportDialogSubtest(robot, drawnBoundingBox, annotationFile, testinfo);
+        userChoosesCancelOnAnnotationImportDialogSubtest(robot, drawnBoundingBoxData, annotationFile, testinfo);
 
         // (2) User chooses Yes (Keep existing annotations and categories)
-        userChoosesYesOnAnnotationImportDialogSubTest(robot, drawnBoundingBox, annotationFile, testinfo);
+        userChoosesYesOnAnnotationImportDialogSubTest(robot, drawnBoundingBoxData, annotationFile, testinfo);
 
         // (3) User chooses No (Do not keep existing bounding boxes):
         userChoosesNoOnAnnotationImportDialogSubtest(robot, annotationFile, testinfo);
@@ -1459,13 +1463,13 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(true), saveScreenshot(testinfo));
     }
 
-    private void userChoosesYesOnAnnotationImportDialogSubTest(FxRobot robot, BoundingBoxView drawnBoundingBox,
+    private void userChoosesYesOnAnnotationImportDialogSubTest(FxRobot robot, BoundingShapeData drawnBoundingBoxData,
                                                                File annotationFile, TestInfo testinfo) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "Yes", testinfo);
 
         // Everything should have stayed the same for the current image...
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
-        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox), saveScreenshot(testinfo));
+        verifyThat(getCurrentBoundingShapeData(), Matchers.hasItem(drawnBoundingBoxData), saveScreenshot(testinfo));
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                         .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
@@ -1521,8 +1525,14 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getStatusBar().isSavedStatus(), Matchers.is(false), saveScreenshot(testinfo));
     }
 
+    private List<BoundingShapeData> getCurrentBoundingShapeData() {
+        return mainView.getCurrentBoundingShapes().stream()
+                .map(shape -> ((BoundingShapeDataConvertible) shape).toBoundingShapeData())
+                .toList();
+    }
+
     private void userChoosesCancelOnAnnotationImportDialogSubtest(FxRobot robot,
-                                                                  BoundingBoxView drawnBoundingBox,
+                                                                  BoundingShapeData drawnBoundingBoxData,
                                                                   File annotationFile, TestInfo testinfo) {
         importAnnotationAndClickDialogOption(robot, annotationFile, "Cancel", testinfo);
 
@@ -1531,7 +1541,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 saveScreenshot(testinfo));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap(), Matchers.hasEntry("Test", 1),
                 saveScreenshot(testinfo));
-        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox), saveScreenshot(testinfo));
+        verifyThat(getCurrentBoundingShapeData(), Matchers.hasItem(drawnBoundingBoxData), saveScreenshot(testinfo));
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                         .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true),
                 saveScreenshot(testinfo));
