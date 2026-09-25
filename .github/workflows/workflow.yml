@@ -40,7 +40,7 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           cache: gradle
       - name: Verify Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
+        uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
       - name: Build
         run: ./gradlew --info --stacktrace build -x test
       - name: Test setup
@@ -57,7 +57,7 @@ jobs:
           name: failed-test-screenshots-windows
           path: build/test-screenshots
       - name: Publish coverage report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         env:
           OS: Windows
         with:
@@ -95,7 +95,7 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           cache: gradle
       - name: Verify Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
+        uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
@@ -120,7 +120,7 @@ jobs:
           name: failed-test-screenshots-linux
           path: build/test-screenshots
       - name: Publish coverage report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         env:
           OS: Linux
         with:
@@ -146,9 +146,10 @@ jobs:
           name: boundingboxeditor-portable-linux
           path: build/jpackage/BoundingBoxEditor
       - name: Sonarqube analysis
-        run: ./gradlew sonar '-Dsonar.host.url=https://sonarcloud.io' '-Dsonar.token=${{ secrets.SONAR_TOKEN }}'
+        run: ./gradlew sonar '-Dsonar.host.url=https://sonarcloud.io'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}r
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   Build-and-Test-macOS:
     runs-on: macos-latest
@@ -165,14 +166,14 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           cache: gradle
       - name: Verify Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
+        uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
       - name: Build
         run: ./gradlew --info --stacktrace build -x test
       - name: Test
         id: test
         run: ./gradlew --info --stacktrace test
       - name: Publish coverage report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         env:
           OS: macOS
         with:
@@ -234,7 +235,7 @@ jobs:
             zip -r $image_dir *
           done
       - name: Release to github
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
