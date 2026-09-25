@@ -22,38 +22,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingBoxData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
-import lombok.Builder;
-import lombok.Value;
-import lombok.extern.jackson.Jacksonized;
 
+/**
+ * A row of a CSV annotation file: one bounding box in absolute pixel coordinates.
+ */
 @JsonPropertyOrder({ "filename", "width", "height", "class" , "xmin", "ymin", "xmax", "ymax" })
-@Jacksonized
-@Builder
-@Value
-public class CSVRow {
-    @JsonProperty(required = true)
-    String filename;
-
-    @JsonProperty(required = true)
-    int width;
-
-    @JsonProperty(required = true)
-    int height;
-
-    @JsonProperty(value = "class", required = true)
-    String categoryName;
-
-    @JsonProperty(value = "xmin", required = true)
-    int xMin;
-
-    @JsonProperty(value = "ymin", required = true)
-    int yMin;
-
-    @JsonProperty(value = "xmax", required = true)
-    int xMax;
-
-    @JsonProperty(value = "ymax", required = true)
-    int yMax;
+public record CSVRow(
+        @JsonProperty(required = true) String filename,
+        @JsonProperty(required = true) int width,
+        @JsonProperty(required = true) int height,
+        @JsonProperty(value = "class", required = true) String categoryName,
+        @JsonProperty(value = "xmin", required = true) int xMin,
+        @JsonProperty(value = "ymin", required = true) int yMin,
+        @JsonProperty(value = "xmax", required = true) int xMax,
+        @JsonProperty(value = "ymax", required = true) int yMax) {
 
     public static CSVRow fromData(ImageAnnotation imageAnnotation, BoundingBoxData boundingBoxData) {
         double imageWidth = imageAnnotation.getImageMetaData().getImageWidth();

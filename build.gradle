@@ -29,7 +29,6 @@ plugins {
     id 'com.github.hierynomus.license' version '0.16.1'
     id 'io.miret.etienne.sass' version '1.6.0'
     id "com.ryandens.javaagent-test" version "0.12.2"
-    id "io.freefair.lombok" version "9.7.0"
 }
 
 group = 'com.github.mfl28'
