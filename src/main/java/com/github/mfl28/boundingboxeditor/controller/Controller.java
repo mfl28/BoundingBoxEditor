@@ -40,8 +40,7 @@ import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.github.mfl28.boundingboxeditor.utils.ImageUtils;
 import javafx.application.HostServices;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
@@ -126,15 +125,14 @@ public class Controller {
     private final AnnotationIoController annotationIoController;
     private final ImageFolderController imageFolderController;
     private final InferenceController inferenceController;
+    private final KeyboardShortcutHandler keyboardShortcutHandler;
     private final Model model = new Model();
     private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener =
             createBoundingShapeCountPerCategoryListener();
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
-    private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
-    private final BooleanProperty navigateNextKeyPressed = new SimpleBooleanProperty(false);
     private final IoMetaData ioMetaData = new IoMetaData();
-    final List<KeyCombinationEventHandler> keyCombinationHandlers = createKeyCombinationHandlers();
+    final List<KeyCombinationEventHandler> keyCombinationHandlers;
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
 
@@ -168,6 +166,9 @@ public class Controller {
         this.imageFolderController = new ImageFolderController(model, ioMetaData, dialogService, stage,
                 annotationIoController, new ImageFolderOperations());
         this.inferenceController = new InferenceController(model, dialogService, new InferenceOperations());
+        this.keyboardShortcutHandler = new KeyboardShortcutHandler(model, new KeyboardShortcutEditor(),
+                KeyboardShortcutHandler.createViewActionShortcuts(view, this::onRegisterSettingsAction));
+        this.keyCombinationHandlers = keyboardShortcutHandler.getKeyCombinationHandlers();
 
         setupStage();
         loadPreferences();
@@ -379,22 +380,7 @@ public class Controller {
      * @param event the short-cut key-event
      */
     public void onRegisterSceneKeyPressed(KeyEvent event) {
-        if(view.getEditorImagePane().isDrawingInProgress()) {
-            return;
-        }
-
-        if(event.isShortcutDown()) {
-            view.getEditorImagePane().setZoomableAndPannable(true);
-        }
-
-        if(event.getTarget() instanceof TextInputControl) {
-            return;
-        }
-
-        keyCombinationHandlers.stream()
-                .filter(keyCombinationHandler -> keyCombinationHandler.handlesPressed(event))
-                .findFirst()
-                .ifPresent(keyCombinationEventHandler -> keyCombinationEventHandler.onPressed(event));
+        keyboardShortcutHandler.onKeyPressed(event);
     }
 
     /**
@@ -403,22 +389,7 @@ public class Controller {
      * @param event the short-cut key-event
      */
     public void onRegisterSceneKeyReleased(KeyEvent event) {
-        if(view.getEditorImagePane().isDrawingInProgress()) {
-            return;
-        }
-
-        if(!event.isShortcutDown()) {
-            view.getEditorImagePane().setZoomableAndPannable(false);
-        }
-
-        if(event.getTarget() instanceof TextInputControl) {
-            return;
-        }
-
-        keyCombinationHandlers.stream()
-                .filter(keyCombinationHandler -> keyCombinationHandler.handlesReleased(event))
-                .findFirst()
-                .ifPresent(keyCombinationEventHandler -> keyCombinationEventHandler.onReleased(event));
+        keyboardShortcutHandler.onKeyReleased(event);
     }
 
     /**
@@ -619,61 +590,6 @@ public class Controller {
         initiateAnnotationExport(destination, exportFormat, null);
     }
 
-    private List<KeyCombinationEventHandler> createKeyCombinationHandlers() {
-        return List.of(
-                new KeyCombinationEventHandler(KeyCombination.NO_MATCH, null,
-                        event -> {
-                            navigatePreviousKeyPressed.set(false);
-                            navigateNextKeyPressed.set(false);
-                        },
-                        event -> (navigateNextKeyPressed.get() || navigatePreviousKeyPressed.get()) &&
-                                (KeyCombinations.navigationReleaseKeyCodes.contains(event.getCode()) || !event.isShortcutDown())
-                        ),
-                new KeyCombinationEventHandler(KeyCombinations.navigateNext,
-                        event -> handleNavigateNextKeyPressed(), null),
-                new KeyCombinationEventHandler(KeyCombinations.navigatePrevious,
-                        event -> handleNavigatePreviousKeyPressed(), null),
-                new KeyCombinationEventHandler(KeyCombinations.deleteSelectedBoundingShape,
-                        null, event -> view.removeSelectedTreeItemAndChildren()),
-                new KeyCombinationEventHandler(KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected,
-                        null, event -> view.removeEditingVerticesWhenPolygonViewSelected()),
-                new KeyCombinationEventHandler(KeyCombinations.focusCategorySearchField,
-                        null, event -> view.getCategorySearchField().requestFocus()),
-                new KeyCombinationEventHandler(KeyCombinations.focusFileSearchField,
-                        null, event -> view.getImageFileSearchField().requestFocus()),
-                new KeyCombinationEventHandler(KeyCombinations.focusCategoryNameTextField,
-                        null, event -> view.getObjectCategoryInputField().requestFocus()),
-                new KeyCombinationEventHandler(KeyCombinations.focusTagTextField,
-                        null, event -> view.getTagInputField().requestFocus()),
-                new KeyCombinationEventHandler(KeyCombinations.hideSelectedBoundingShape,
-                        null, event -> view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(false)),
-                new KeyCombinationEventHandler(KeyCombinations.hideAllBoundingShapes,
-                        null, event -> view.getObjectTree().setToggleIconStateForAllTreeItems(false)),
-                new KeyCombinationEventHandler(KeyCombinations.hideNonSelectedBoundingShapes,
-                        null, event -> view.getObjectTree().setToggleIconStateForNonSelectedObjectTreeItems(false)),
-                new KeyCombinationEventHandler(KeyCombinations.showSelectedBoundingShape,
-                        null, event -> view.getObjectTree().setToggleIconStateForSelectedObjectTreeItem(true)),
-                new KeyCombinationEventHandler(KeyCombinations.showAllBoundingShapes,
-                        null, event -> view.getObjectTree().setToggleIconStateForAllTreeItems(true)),
-                new KeyCombinationEventHandler(KeyCombinations.resetSizeAndCenterImage,
-                        null, event -> view.getEditorImagePane().resetImageViewSize()),
-                new KeyCombinationEventHandler(KeyCombinations.selectRectangleDrawingMode,
-                        null, event -> view.getEditor().getEditorToolBar().getRectangleModeButton().setSelected(true)),
-                new KeyCombinationEventHandler(KeyCombinations.selectPolygonDrawingMode,
-                        null, event -> view.getEditor().getEditorToolBar().getPolygonModeButton().setSelected(true)),
-                new KeyCombinationEventHandler(KeyCombinations.selectFreehandDrawingMode,
-                        null, event -> view.getEditor().getEditorToolBar().getFreehandModeButton().setSelected(true)),
-                new KeyCombinationEventHandler(KeyCombinations.changeSelectedBoundingShapeCategory,
-                        null, event -> view.initiateCurrentSelectedBoundingBoxCategoryChange()),
-                new KeyCombinationEventHandler(KeyCombinations.simplifyPolygon,
-                        null, event -> view.simplifyCurrentSelectedBoundingPolygon()),
-                new KeyCombinationEventHandler(KeyCombinations.saveBoundingShapeAsImage,
-                        null, event -> view.saveCurrentSelectedBoundingShapeAsImage()),
-                new KeyCombinationEventHandler(KeyCombinations.openSettings,
-                        null, event -> onRegisterSettingsAction())
-                );
-    }
-
     private void onBoundingBoxPredictionSucceeded(WorkerStateEvent event) {
         final BoundingBoxPredictionResult predictionResult = boundingBoxPredictorService.getValue();
 
@@ -865,26 +781,6 @@ public class Controller {
         }
     }
 
-    private void handleNavigateNextKeyPressed() {
-        if(model.containsImageFiles() && model.hasNextImageFile()
-                && !navigatePreviousKeyPressed.get()) {
-            navigateNextKeyPressed.set(true);
-            onRegisterNextImageFileRequested();
-        } else {
-            navigateNextKeyPressed.set(false);
-        }
-    }
-
-    private void handleNavigatePreviousKeyPressed() {
-        if(model.containsImageFiles() && model.hasPreviousImageFile()
-                && !navigateNextKeyPressed.get()) {
-            navigatePreviousKeyPressed.set(true);
-            onRegisterPreviousImageFileRequested();
-        } else {
-            navigatePreviousKeyPressed.set(false);
-        }
-    }
-
     private void setUpModelListeners() {
         view.getEditor().getEditorToolBar()
                 .getIndexLabel()
@@ -1032,6 +928,10 @@ public class Controller {
             }
 
             updateStageTitle();
+
+            final ReadOnlyBooleanProperty navigateNextKeyPressed = keyboardShortcutHandler.navigateNextKeyPressedProperty();
+            final ReadOnlyBooleanProperty navigatePreviousKeyPressed =
+                    keyboardShortcutHandler.navigatePreviousKeyPressedProperty();
 
             if(navigateNextKeyPressed.get() ^ navigatePreviousKeyPressed.get()) {
                 // If a navigation key is pressed, image loading is skipped (but the image file index is still updated).
@@ -1312,6 +1212,31 @@ public class Controller {
         @Override
         public void showSelectedModel(String modelName) {
             view.getInferenceSettingsView().getSelectedModelLabel().setText(modelName);
+        }
+    }
+
+    /**
+     * The image editor as seen by the {@link KeyboardShortcutHandler}.
+     */
+    private class KeyboardShortcutEditor implements KeyboardShortcutHandler.Editor {
+        @Override
+        public boolean isDrawingInProgress() {
+            return view.getEditorImagePane().isDrawingInProgress();
+        }
+
+        @Override
+        public void setZoomableAndPannable(boolean zoomableAndPannable) {
+            view.getEditorImagePane().setZoomableAndPannable(zoomableAndPannable);
+        }
+
+        @Override
+        public void showNextImage() {
+            onRegisterNextImageFileRequested();
+        }
+
+        @Override
+        public void showPreviousImage() {
+            onRegisterPreviousImageFileRequested();
         }
     }
 }
