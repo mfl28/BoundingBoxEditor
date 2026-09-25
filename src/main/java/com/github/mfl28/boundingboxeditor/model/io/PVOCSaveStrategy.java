@@ -64,8 +64,14 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String BOUNDING_SHAPE_CATEGORY_NAME = "name";
     private static final String BOUNDING_BOX_SIZE_GROUP_NAME = "bndbox";
 
-    private static final DecimalFormat DECIMAL_FORMAT =
-            new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+    // DecimalFormat and the JAXP factories aren't thread-safe and the annotations are saved in parallel,
+    // so each thread uses its own instances.
+    private static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT = ThreadLocal.withInitial(() ->
+            new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ENGLISH)));
+    private static final ThreadLocal<DocumentBuilderFactory> DOCUMENT_BUILDER_FACTORY =
+            ThreadLocal.withInitial(PVOCSaveStrategy::createDocumentBuilderFactory);
+    private static final ThreadLocal<TransformerFactory> TRANSFORMER_FACTORY =
+            ThreadLocal.withInitial(TransformerFactory::newInstance);
     private static final String FILE_EXTENSION = ".xml";
     private static final String XMIN_TAG = "xmin";
     private static final String XMAX_TAG = "xmax";
@@ -76,15 +82,10 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String ACTIONS_TAG_NAME = "actions";
     private static final String IMAGE_DEPTH_ELEMENT_NAME = "depth";
     private static final String BOUNDING_POLYGON_SIZE_GROUP_NAME = "polygon";
-    private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-    private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
-    private Path saveFolderPath;
 
     @Override
     public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
                                             DoubleProperty progress) {
-        this.saveFolderPath = destination;
-
         List<IOErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
         int totalNrOfAnnotations = annotations.imageAnnotations().size();
@@ -93,7 +94,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
         annotations.imageAnnotations().parallelStream().forEach(annotation -> {
             try {
-                createXmlFileFromImageAnnotationDataElement(annotation);
+                createXmlFileFromImageAnnotationDataElement(annotation, destination);
             } catch(TransformerException | ParserConfigurationException e) {
                 unParsedFileErrorMessages
                         .add(new IOErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
@@ -108,13 +109,19 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         );
     }
 
-    private void createXmlFileFromImageAnnotationDataElement(final ImageAnnotation dataElement)
-            throws TransformerException, ParserConfigurationException {
+    private static DocumentBuilderFactory createDocumentBuilderFactory() {
+        final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
         documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-        final Document document = documentBuilderFactory.newDocumentBuilder().newDocument();
+        return documentBuilderFactory;
+    }
 
-        final Transformer transformer = transformerFactory.newTransformer();
+    private void createXmlFileFromImageAnnotationDataElement(final ImageAnnotation dataElement,
+                                                             final Path saveFolderPath)
+            throws TransformerException, ParserConfigurationException {
+        final Document document = DOCUMENT_BUILDER_FACTORY.get().newDocumentBuilder().newDocument();
+
+        final Transformer transformer = TRANSFORMER_FACTORY.get().newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
         final Element annotationElement = document.createElement(ROOT_ELEMENT_NAME);
@@ -223,7 +230,7 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
     private Element createDoubleValueElement(Document document, String tagName, double value) {
         Element element = document.createElement(tagName);
-        element.appendChild(document.createTextNode(DECIMAL_FORMAT.format(value)));
+        element.appendChild(document.createTextNode(DECIMAL_FORMAT.get().format(value)));
         return element;
     }
 

@@ -55,27 +55,23 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final String INVALID_OBJECT_ELEMENT_MISSING_ERROR = "Invalid \"object\"-element: " +
             "Missing \"bndbox\"- or \"polygon\"-element.";
     private static final String INVALID_POLYGON_ELEMENT_ERROR = "Invalid \"polygon\"-element.";
-    private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-    private Set<String> fileNamesToLoad;
-    private Map<String, ObjectCategory> categoryNameToCategoryMap;
-    private Map<String, Integer> boundingShapeCountPerCategory;
-    private List<IOErrorInfoEntry> unParsedFileErrorMessages;
+    // JAXP factories aren't thread-safe and the files are parsed in parallel, so each thread uses its own.
+    private static final ThreadLocal<DocumentBuilderFactory> DOCUMENT_BUILDER_FACTORY =
+            ThreadLocal.withInitial(PVOCLoadStrategy::createDocumentBuilderFactory);
 
     @Override
     public ImageAnnotationImportResult load(Path path, Set<String> filesToLoad,
                                             Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
                                             DoubleProperty progress)
             throws IOException {
-        this.fileNamesToLoad = filesToLoad;
-        this.boundingShapeCountPerCategory = new ConcurrentHashMap<>();
-        this.categoryNameToCategoryMap = new ConcurrentHashMap<>(existingCategoryNameToCategoryMap);
+        final LoadContext context = new LoadContext(filesToLoad,
+                new ConcurrentHashMap<>(existingCategoryNameToCategoryMap), new ConcurrentHashMap<>(),
+                Collections.synchronizedList(new ArrayList<>()));
 
         try(Stream<Path> fileStream = Files.walk(path, INCLUDE_SUBDIRECTORIES ? Integer.MAX_VALUE : 1)) {
             List<File> annotationFiles = fileStream
                     .filter(pathItem -> pathItem.getFileName().toString().endsWith(".xml"))
                     .map(Path::toFile).toList();
-
-            unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
             int totalNrOfFiles = annotationFiles.size();
             AtomicInteger nrProcessedFiles = new AtomicInteger(0);
@@ -86,10 +82,10 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                                 .incrementAndGet() / totalNrOfFiles);
 
                         try {
-                            return parseAnnotationFile(file);
+                            return parseAnnotationFile(file, context);
                         } catch(SAXException | IOException | InvalidAnnotationFormatException
                                 | ParserConfigurationException | AnnotationToNonExistentImageException e) {
-                            unParsedFileErrorMessages
+                            context.unParsedFileErrorMessages()
                                     .add(new IOErrorInfoEntry(
                                             file.getName(),
                                             e.getMessage()));
@@ -101,28 +97,34 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
             return new ImageAnnotationImportResult(
                     imageAnnotations.size(),
-                    unParsedFileErrorMessages,
-                    new ImageAnnotationData(imageAnnotations, boundingShapeCountPerCategory, categoryNameToCategoryMap)
+                    context.unParsedFileErrorMessages(),
+                    new ImageAnnotationData(imageAnnotations, context.boundingShapeCountPerCategory(),
+                            context.categoryNameToCategoryMap())
             );
         }
     }
 
-    private ImageAnnotation parseAnnotationFile(File file) throws SAXException, IOException,
-            ParserConfigurationException {
+    private static DocumentBuilderFactory createDocumentBuilderFactory() {
+        final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
         documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-        final Document document = documentBuilderFactory.newDocumentBuilder().parse(file);
+        return documentBuilderFactory;
+    }
+
+    private ImageAnnotation parseAnnotationFile(File file, LoadContext context) throws SAXException, IOException,
+            ParserConfigurationException {
+        final Document document = DOCUMENT_BUILDER_FACTORY.get().newDocumentBuilder().parse(file);
         document.normalize();
 
         final ImageMetaData parsedImageMetaData = parseImageMetaData(document);
 
-        if(!fileNamesToLoad.contains(parsedImageMetaData.getFileName())) {
+        if(!context.fileNamesToLoad().contains(parsedImageMetaData.getFileName())) {
             throw new AnnotationToNonExistentImageException(
                     "The image file does not belong to the currently loaded images.");
         }
 
         List<BoundingShapeData> boundingShapeData =
-                parseBoundingShapeData(document, file.getName(), parsedImageMetaData);
+                parseBoundingShapeData(document, file.getName(), parsedImageMetaData, context);
 
         if(boundingShapeData.isEmpty()) {
             // No image annotation will be constructed if it does not contain any bounding boxes.
@@ -143,7 +145,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private List<BoundingShapeData> parseBoundingShapeData(Document document, String filename,
-                                                           ImageMetaData imageMetaData) {
+                                                           ImageMetaData imageMetaData, LoadContext context) {
         NodeList objectElements = document.getElementsByTagName("object");
 
         List<BoundingShapeData> boundingShapeDataList = new ArrayList<>();
@@ -154,10 +156,10 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             if(objectNode.getNodeType() == Node.ELEMENT_NODE) {
                 try {
                     BoundingShapeData boundingShapeData =
-                            parseBoundingShapeElement((Element) objectNode, filename, imageMetaData);
+                            parseBoundingShapeElement((Element) objectNode, filename, imageMetaData, context);
                     boundingShapeDataList.add(boundingShapeData);
                 } catch(InvalidAnnotationFormatException e) {
-                    unParsedFileErrorMessages.add(new IOErrorInfoEntry(filename, e.getMessage()));
+                    context.unParsedFileErrorMessages().add(new IOErrorInfoEntry(filename, e.getMessage()));
                 }
             }
         }
@@ -166,7 +168,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private BoundingShapeData parseBoundingShapeElement(Element objectElement, String filename,
-                                                        ImageMetaData imageMetaData) {
+                                                        ImageMetaData imageMetaData, LoadContext context) {
         NodeList childElements = objectElement.getChildNodes();
 
         BoundingShapeDataParseResult boxDataParseResult = new BoundingShapeDataParseResult();
@@ -196,11 +198,12 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
         boxDataParseResult.validateCoordinates(imageMetaData);
 
-        ObjectCategory category = categoryNameToCategoryMap.computeIfAbsent(boxDataParseResult.getCategoryName(),
+        ObjectCategory category = context.categoryNameToCategoryMap().computeIfAbsent(
+                boxDataParseResult.getCategoryName(),
                 key -> new ObjectCategory(key, ColorUtils
                         .createRandomColor()));
 
-        boundingShapeCountPerCategory.merge(category.getName(), 1, Integer::sum);
+        context.boundingShapeCountPerCategory().merge(category.getName(), 1, Integer::sum);
 
         BoundingShapeData boundingShapeData;
 
@@ -221,7 +224,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         }
 
         // Now parse parts.
-        parsePartElements(childElements, boxDataParseResult, filename, imageMetaData);
+        parsePartElements(childElements, boxDataParseResult, filename, imageMetaData, context);
 
         if(!boxDataParseResult.getParts().isEmpty()) {
             boundingShapeData.setParts(boxDataParseResult.getParts());
@@ -286,11 +289,12 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private void parsePart(Element tagElement, BoundingShapeDataParseResult boxDataParseResult,
-                           String filename, ImageMetaData imageMetaData) {
+                           String filename, ImageMetaData imageMetaData, LoadContext context) {
         try {
-            boxDataParseResult.getParts().add(parseBoundingShapeElement(tagElement, filename, imageMetaData));
+            boxDataParseResult.getParts()
+                    .add(parseBoundingShapeElement(tagElement, filename, imageMetaData, context));
         } catch(InvalidAnnotationFormatException e) {
-            unParsedFileErrorMessages.add(new IOErrorInfoEntry(filename, e.getMessage()));
+            context.unParsedFileErrorMessages().add(new IOErrorInfoEntry(filename, e.getMessage()));
         }
     }
 
@@ -309,7 +313,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private void parsePartElements(NodeList childElements, BoundingShapeDataParseResult boxDataParseResult,
-                                   String filename, ImageMetaData imageMetaData) {
+                                   String filename, ImageMetaData imageMetaData, LoadContext context) {
         for(int i = 0; i != childElements.getLength(); ++i) {
             Node currentChild = childElements.item(i);
 
@@ -317,7 +321,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 Element currentElement = (Element) currentChild;
 
                 if(currentElement.getTagName().equals("part")) {
-                    parsePart((Element) currentChild, boxDataParseResult, filename, imageMetaData);
+                    parsePart((Element) currentChild, boxDataParseResult, filename, imageMetaData, context);
                 }
             }
         }
@@ -503,5 +507,13 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 }
             }
         }
+    }
+
+    /**
+     * The state of a single call to {@link #load}, shared by the (parallel) parsing of the annotation files.
+     */
+    private record LoadContext(Set<String> fileNamesToLoad, Map<String, ObjectCategory> categoryNameToCategoryMap,
+                               Map<String, Integer> boundingShapeCountPerCategory,
+                               List<IOErrorInfoEntry> unParsedFileErrorMessages) {
     }
 }

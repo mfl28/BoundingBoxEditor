@@ -42,8 +42,6 @@ import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
-    private static final DecimalFormat DECIMAL_FORMAT =
-            new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     private static final String OBJECT_CATEGORY_SERIALIZED_NAME = "name";
     private static final String OBJECT_COLOR_SERIALIZED_NAME = "color";
     private static final String BOUNDS_MIN_X_SERIALIZED_NAME = "minX";
@@ -62,6 +60,10 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
                                             DoubleProperty progress) {
         final int totalNrAnnotations = annotations.imageAnnotations().size();
         final AtomicInteger nrProcessedAnnotations = new AtomicInteger(0);
+
+        // DecimalFormat isn't thread-safe, so every call uses its own instance.
+        final DecimalFormat decimalFormat =
+                new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
         final Gson gson = new GsonBuilder()
                 .setPrettyPrinting()
@@ -113,7 +115,7 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
                     return boundsObject;
                 })
                 .registerTypeAdapter(Double.class, (JsonSerializer<Double>) (src, typeOfSrc, context)
-                        -> new JsonPrimitive(Double.parseDouble(DECIMAL_FORMAT.format(src))))
+                        -> new JsonPrimitive(Double.parseDouble(decimalFormat.format(src))))
                 .create();
 
         final List<IOErrorInfoEntry> errorEntries = new ArrayList<>();
