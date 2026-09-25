@@ -46,6 +46,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -55,7 +56,6 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.*;
-import java.util.prefs.Preferences;
 
 /**
  * The control-component of the application (as in MVC pattern). Responsible for interaction-handling
@@ -90,12 +90,6 @@ public class Controller {
     private static final String EXIT_APPLICATION_OPTION_DIALOG_TITLE = "Exit Application";
     private static final String EXIT_APPLICATION_OPTION_DIALOG_CONTENT =
             "Do you want to save the existing annotation data?";
-    private static final String IS_WINDOW_MAXIMIZED_PREFERENCE_NAME = "isMaximized";
-    private static final String CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME = "currentImageLoadingDirectory";
-    private static final String CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME =
-            "currentAnnotationLoadingDirectory";
-    private static final String CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME =
-            "currentAnnotationSavingDirectory";
     private static final String SETTINGS_APPLICATION_ERROR_DIALOG_TITLE = "Settings Application Error";
     private static final String SETTINGS_APPLICATION_INVALID_FIELDS_ERROR_DIALOG_CONTENT =
             "Please provide valid values for the indicated fields.";
@@ -132,6 +126,7 @@ public class Controller {
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
     private final IoMetaData ioMetaData = new IoMetaData();
+    private final PreferencesStore preferencesStore = PreferencesStore.forApplication();
     final List<KeyCombinationEventHandler> keyCombinationHandlers;
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
@@ -640,54 +635,36 @@ public class Controller {
     }
 
     private void setUpServices() {
-        final ServiceProgressDialog annotationExportProgressDialog =
-                MainView.createServiceProgressDialog(annotationExportService,
-                        SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
-                        SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
-        annotationExportProgressDialog.setOwnerParentWindow(stage);
-        annotationExportService.setProgressViewer(annotationExportProgressDialog);
-        annotationExportService.setOnSucceeded(this::onAnnotationExportSucceeded);
-        annotationExportService.setOnFailed(this::onIoServiceFailed);
+        setUpService(annotationExportService, SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
+                SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER, this::onAnnotationExportSucceeded, false);
+        setUpService(annotationImportService, LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
+                LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER, this::onAnnotationImportSucceeded, false);
+        setUpService(imageMetaDataLoadingService, IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE,
+                IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER, this::onImageMetaDataLoadingSucceeded, false);
+        setUpService(boundingBoxPredictorService, BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE,
+                BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER, this::onBoundingBoxPredictionSucceeded, true);
+        setUpService(modelNameFetchService, FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
+                FETCHING_MODELS_PROGRESS_DIALOG_HEADER, this::onModelNameFetchingSucceeded, true);
+    }
 
-        final ServiceProgressDialog annotationImportProgressDialog =
-                MainView.createServiceProgressDialog(annotationImportService,
-                        LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
-                        LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER);
-        annotationImportProgressDialog.setOwnerParentWindow(stage);
-        annotationImportService.setProgressViewer(annotationImportProgressDialog);
-        annotationImportService.setOnSucceeded(this::onAnnotationImportSucceeded);
-        annotationImportService.setOnFailed(this::onIoServiceFailed);
+    /**
+     * Gives the service its progress dialog and its result handlers. Each service gets a single dialog that is reused
+     * for every run: ControlsFX progress dialogs never detach from their worker, so creating one per run would leave
+     * stale dialogs that reappear on every later run.
+     */
+    private void setUpService(IoService<?> service, String progressDialogTitle, String progressDialogHeader,
+                              EventHandler<WorkerStateEvent> onSucceeded, boolean cancellable) {
+        final ServiceProgressDialog progressDialog =
+                MainView.createServiceProgressDialog(service, progressDialogTitle, progressDialogHeader);
+        progressDialog.setOwnerParentWindow(stage);
 
-        final ServiceProgressDialog imageMetaDataLoadingProgressDialog =
-                MainView.createServiceProgressDialog(imageMetaDataLoadingService,
-                        IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE,
-                        IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER);
-        imageMetaDataLoadingProgressDialog.setOwnerParentWindow(stage);
-        imageMetaDataLoadingService.setProgressViewer(imageMetaDataLoadingProgressDialog);
-        imageMetaDataLoadingService.setOnSucceeded(this::onImageMetaDataLoadingSucceeded);
-        imageMetaDataLoadingService.setOnFailed(this::onIoServiceFailed);
+        if(cancellable) {
+            progressDialog.enableCancellation();
+        }
 
-        final ServiceProgressDialog predictorProgressDialog =
-                MainView.createServiceProgressDialog(boundingBoxPredictorService,
-                        BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE,
-                        BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
-        predictorProgressDialog.setOwnerParentWindow(stage);
-        predictorProgressDialog.enableCancellation();
-        boundingBoxPredictorService.setProgressViewer(predictorProgressDialog);
-        boundingBoxPredictorService.setOnSucceeded(this::onBoundingBoxPredictionSucceeded);
-        boundingBoxPredictorService.setOnFailed(this::onIoServiceFailed);
-
-        // A single dialog per service: ControlsFX progress dialogs never detach from their worker, so creating
-        // one per fetch would leave stale dialogs that reappear on every later fetch.
-        final ServiceProgressDialog modelNameFetchProgressDialog =
-                MainView.createServiceProgressDialog(modelNameFetchService,
-                        FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
-                        FETCHING_MODELS_PROGRESS_DIALOG_HEADER);
-        modelNameFetchProgressDialog.setOwnerParentWindow(stage);
-        modelNameFetchProgressDialog.enableCancellation();
-        modelNameFetchService.setProgressViewer(modelNameFetchProgressDialog);
-        modelNameFetchService.setOnFailed(this::onIoServiceFailed);
-        modelNameFetchService.setOnSucceeded(this::onModelNameFetchingSucceeded);
+        service.setProgressViewer(progressDialog);
+        service.setOnSucceeded(onSucceeded);
+        service.setOnFailed(this::onIoServiceFailed);
     }
 
     private void onModelNameFetchingSucceeded(WorkerStateEvent event) {
@@ -1018,62 +995,12 @@ public class Controller {
     }
 
     private void loadPreferences() {
-        Preferences preferences = Preferences.userNodeForPackage(getClass());
-        stage.setMaximized(preferences.getBoolean(IS_WINDOW_MAXIMIZED_PREFERENCE_NAME, false));
-
-        String imageLoadingDirectoryPathPreference =
-                preferences.get(CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME, null);
-
-        if(imageLoadingDirectoryPathPreference != null) {
-            File imageLoadingDirectoryPreference = new File(imageLoadingDirectoryPathPreference);
-
-            if(imageLoadingDirectoryPreference.exists() && imageLoadingDirectoryPreference.isDirectory()) {
-                ioMetaData.setDefaultImageLoadingDirectory(imageLoadingDirectoryPreference);
-            }
-        }
-
-        String annotationLoadingDirectoryPathPreference =
-                preferences.get(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME, null);
-
-        if(annotationLoadingDirectoryPathPreference != null) {
-            File annotationLoadingDirectoryPreference = new File(annotationLoadingDirectoryPathPreference);
-
-            if(annotationLoadingDirectoryPreference.exists() && annotationLoadingDirectoryPreference.isDirectory()) {
-                ioMetaData.setDefaultAnnotationLoadingDirectory(annotationLoadingDirectoryPreference);
-            }
-        }
-
-        String annotationSavingDirectoryPathPreference =
-                preferences.get(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME, null);
-
-        if(annotationSavingDirectoryPathPreference != null) {
-            File annotationSavingDirectoryPreference = new File(annotationSavingDirectoryPathPreference);
-
-            if(annotationSavingDirectoryPreference.exists() && annotationSavingDirectoryPreference.isDirectory()) {
-                ioMetaData.setDefaultAnnotationSavingDirectory(annotationSavingDirectoryPreference);
-            }
-        }
+        stage.setMaximized(preferencesStore.loadWindowMaximized());
+        preferencesStore.loadDirectories(ioMetaData);
     }
 
     private void savePreferences() {
-        Preferences preferences = Preferences.userNodeForPackage(getClass());
-
-        preferences.putBoolean(IS_WINDOW_MAXIMIZED_PREFERENCE_NAME, stage.isMaximized());
-
-        if(ioMetaData.getDefaultImageLoadingDirectory() != null) {
-            preferences.put(CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME,
-                    ioMetaData.getDefaultImageLoadingDirectory().toString());
-        }
-
-        if(ioMetaData.getDefaultAnnotationLoadingDirectory() != null) {
-            preferences.put(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME,
-                    ioMetaData.getDefaultAnnotationLoadingDirectory().toString());
-        }
-
-        if(ioMetaData.getDefaultAnnotationSavingDirectory() != null) {
-            preferences.put(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME,
-                    ioMetaData.getDefaultAnnotationSavingDirectory().toString());
-        }
+        preferencesStore.save(stage.isMaximized(), ioMetaData);
     }
 
     private void clearViewAndModel() {
