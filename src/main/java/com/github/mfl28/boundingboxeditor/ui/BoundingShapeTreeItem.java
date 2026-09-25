@@ -21,6 +21,8 @@ package com.github.mfl28.boundingboxeditor.ui;
 import javafx.scene.control.TreeItem;
 import javafx.scene.shape.Shape;
 
+import java.util.Objects;
+
 /**
  * Base class of all shape tree items.
  */
@@ -31,6 +33,25 @@ public abstract class BoundingShapeTreeItem extends TreeItem<Object> implements 
     BoundingShapeTreeItem(Toggleable toggleIcon, BoundingShapeViewable shape) {
         super(shape);
         this.toggleIcon = toggleIcon;
+    }
+
+    /**
+     * Compares two bounding shape views by their data (category, tags and relative geometry). The views themselves
+     * use identity equality: a node whose hash code changes while JavaFX tracks it can make its parent's cached
+     * bounds go stale (since JavaFX 25), so that the node doesn't receive mouse events anymore. Shapes without a
+     * data representation are compared by identity.
+     *
+     * @param shape      the first shape
+     * @param otherShape the second shape
+     * @return true if the shapes represent the same data, false otherwise
+     */
+    static boolean haveEqualShapeData(Object shape, Object otherShape) {
+        if(shape instanceof BoundingShapeDataConvertible convertible
+                && otherShape instanceof BoundingShapeDataConvertible otherConvertible) {
+            return Objects.equals(convertible.toBoundingShapeData(), otherConvertible.toBoundingShapeData());
+        }
+
+        return Objects.equals(shape, otherShape);
     }
 
     /**

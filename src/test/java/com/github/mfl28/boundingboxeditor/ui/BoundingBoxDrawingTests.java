@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
+import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.utils.MathUtils;
 import javafx.geometry.Point2D;
@@ -120,7 +121,9 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class),
                    saveScreenshot(testinfo));
-        final BoundingBoxView drawnBoundingBox = (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
+        // The views are recreated when switching images and use identity equality, so compare their data instead.
+        final BoundingShapeData drawnBoundingBoxData =
+                ((BoundingBoxView) mainView.getCurrentBoundingShapes().get(0)).toBoundingShapeData();
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
 
         timeOutClickOn(robot, "#previous-button", testinfo);
@@ -145,7 +148,8 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
-        verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasItem(drawnBoundingBox), saveScreenshot(testinfo));
+        verifyThat(((BoundingBoxView) mainView.getCurrentBoundingShapes().get(0)).toBoundingShapeData(),
+                   Matchers.equalTo(drawnBoundingBoxData), saveScreenshot(testinfo));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1),
                    saveScreenshot(testinfo));
         verifyThat(model.isSaved(), Matchers.is(false), saveScreenshot(testinfo));
