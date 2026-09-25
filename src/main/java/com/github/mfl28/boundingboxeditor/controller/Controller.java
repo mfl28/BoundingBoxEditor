@@ -89,11 +89,6 @@ public class Controller {
     private static final String PROGRAM_IDENTIFIER = PROGRAM_NAME + " " + PROGRAM_VERSION;
     private static final String OPEN_FOLDER_ERROR_DIALOG_TITLE = "Image Folder Loading Error";
     private static final String OPEN_FOLDER_ERROR_DIALOG_HEADER = "The selected folder is not a valid image folder.";
-    private static final String SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE = "Save Image Annotations to Folder";
-    private static final String SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Save Image Annotations to File";
-    private static final String LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE =
-            "Load image annotations from a folder containing annotation files";
-    private static final String LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE = "Load Image Annotations from File";
     private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_TITLE = "Image Folder Loading Error";
     private static final String LOAD_IMAGE_FOLDER_ERROR_DIALOG_CONTENT =
             "The chosen folder does not contain any valid image files.";
@@ -119,9 +114,6 @@ public class Controller {
     private static final String RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT =
             "Reloading the image folder will remove any existing annotation data. " +
                     "Do you want to save the currently existing annotation data (Closing = No)?";
-    private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE = "Import Annotation Data";
-    private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT =
-            "Do you want to keep existing categories and annotation data?";
     private static final String EXIT_APPLICATION_OPTION_DIALOG_TITLE = "Exit Application";
     private static final String EXIT_APPLICATION_OPTION_DIALOG_CONTENT =
             "Do you want to save the existing annotation data?";
@@ -132,14 +124,7 @@ public class Controller {
     private static final String CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME =
             "currentAnnotationSavingDirectory";
     private static final String RELOAD_IMAGE_FOLDER_OPTION_DIALOG_TITLE = "Reload Image Folder";
-    private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE = "Save Annotations";
-    private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER = "Choose the format for the saved annotations.";
-    private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT = "Annotation format:";
     private static final String KEEP_EXISTING_CATEGORIES_DIALOG_TEXT = "Keep existing categories?";
-    private static final String DEFAULT_JSON_EXPORT_FILENAME = "annotations.json";
-    private static final String DEFAULT_CSV_EXPORT_FILENAME = "annotations.csv";
-    private static final String ANNOTATION_IMPORT_SAVE_EXISTING_DIALOG_CONTENT = "All current annotations are about " +
-            "to be removed. Do you want to save them first?";
     private static final String IMAGE_IMPORT_ERROR_ALERT_TITLE = "Image Import Error";
     private static final String IMAGE_IMPORT_ERROR_ALERT_CONTENT =
             "The folder does not contain any valid image files.";
@@ -182,6 +167,7 @@ public class Controller {
     private final HostServices hostServices;
     private final MainView view;
     private final DialogService dialogService;
+    private final AnnotationIoController annotationIoController;
     private final Model model = new Model();
     private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener =
             createBoundingShapeCountPerCategoryListener();
@@ -221,6 +207,8 @@ public class Controller {
         this.view = view;
         this.hostServices = hostServices;
         this.dialogService = dialogService;
+        this.annotationIoController = new AnnotationIoController(model, ioMetaData, dialogService, stage,
+                new AnnotationIoOperations());
 
         setupStage();
         loadPreferences();
@@ -360,22 +348,14 @@ public class Controller {
             return;
         }
 
-        File destination = getAnnotationSavingDestination(saveFormat);
-
-        if(destination != null) {
-            initiateAnnotationExport(destination, saveFormat, null);
-        }
+        annotationIoController.exportAnnotations(saveFormat);
     }
 
     /**
      * Handles the event of the user requesting to save the current image-annotations.
      */
     public void onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type loadFormat) {
-        final File source = getAnnotationLoadingSource(loadFormat);
-
-        if(source != null) {
-            initiateAnnotationImport(source, loadFormat);
-        }
+        annotationIoController.importAnnotations(loadFormat);
     }
 
     public void onRegisterModelNameFetchingAction() {
@@ -393,38 +373,7 @@ public class Controller {
      * @param source the source of the annotations, either a folder or a single file
      */
     public void initiateAnnotationImport(File source, ImageAnnotationLoadStrategy.Type loadFormat) {
-        updateModelFromView();
-
-        if(model.containsCategories()) {
-            ButtonBar.ButtonData keepExistingDataAnswer =
-                    dialogService.displayYesNoCancelDialogAndGetResult(IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE,
-                            IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT, stage);
-
-            if(keepExistingDataAnswer == ButtonBar.ButtonData.NO) {
-                if(!model.isSaved()) {
-                    ButtonBar.ButtonData saveAnswer =
-                            dialogService.displayYesNoCancelDialogAndGetResult(ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
-                                    ANNOTATION_IMPORT_SAVE_EXISTING_DIALOG_CONTENT,
-                                    stage);
-                    if(saveAnswer == ButtonBar.ButtonData.YES) {
-                        initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(() -> {
-                            clearModelAndViewAnnotationData();
-                            startAnnotationImportService(source, loadFormat);
-                        });
-
-                        return;
-                    } else if(saveAnswer == ButtonBar.ButtonData.CANCEL_CLOSE) {
-                        return;
-                    }
-                }
-
-                clearModelAndViewAnnotationData();
-            } else if(keepExistingDataAnswer == ButtonBar.ButtonData.CANCEL_CLOSE) {
-                return;
-            }
-        }
-
-        startAnnotationImportService(source, loadFormat);
+        annotationIoController.importAnnotations(source, loadFormat);
     }
 
     public void initiateBoundingBoxPrediction(File imageFile) {
@@ -482,7 +431,7 @@ public class Controller {
                             EXIT_APPLICATION_OPTION_DIALOG_CONTENT, stage);
 
             if(answer == ButtonBar.ButtonData.YES) {
-                initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(() -> {
+                annotationIoController.saveWithFormatChoiceAndRunOnSaveSuccess(() -> {
                     savePreferences();
                     interruptDirectoryWatcher();
                     Platform.exit();
@@ -1015,10 +964,10 @@ public class Controller {
     private void handleAnnotationSavingDecision(boolean keepExistingCategories, ButtonBar.ButtonData answer) {
         if(answer == ButtonBar.ButtonData.YES) {
             if(imageMetaDataLoadingService.isReload()) {
-                initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(
+                annotationIoController.saveWithFormatChoiceAndRunInAnyCase(
                         () -> onValidFilesPresentHandler(keepExistingCategories));
             } else {
-                initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(
+                annotationIoController.saveWithFormatChoiceAndRunOnSaveSuccess(
                         () -> onValidFilesPresentHandler(keepExistingCategories));
             }
         } else if(answer == ButtonBar.ButtonData.NO || imageMetaDataLoadingService.isReload()) {
@@ -1074,7 +1023,7 @@ public class Controller {
             return;
         }
 
-        setCurrentAnnotationLoadingDirectory(annotationImportService.getSource());
+        annotationIoController.rememberLoadingDirectory(annotationImportService.getSource());
     }
 
 
@@ -1100,7 +1049,7 @@ public class Controller {
             model.setSaved(true);
         }
 
-        setCurrentAnnotationSavingDirectory(annotationExportService.getDestination());
+        annotationIoController.rememberSavingDirectory(annotationExportService.getDestination());
 
         if(annotationExportService.getChainedOperation() != null) {
             annotationExportService.getChainedOperation().run();
@@ -1164,101 +1113,12 @@ public class Controller {
                             RELOAD_IMAGE_FOLDER_OPTION_DIALOG_CONTENT, stage);
 
             if(answer == ButtonBar.ButtonData.YES) {
-                initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(this::clearViewAndModel);
+                annotationIoController.saveWithFormatChoiceAndRunInAnyCase(this::clearViewAndModel);
                 return;
             }
         }
 
         clearViewAndModel();
-    }
-
-    private void initiateAnnotationSavingWithFormatChoiceAndRunOnSaveSuccess(Runnable runnable) {
-        // Ask for annotation save format.
-        Optional<ImageAnnotationSaveStrategy.Type> formatChoice =
-                dialogService.displayChoiceDialogAndGetResult(ImageAnnotationSaveStrategy.Type.PASCAL_VOC,
-                        Arrays.asList(ImageAnnotationSaveStrategy.Type.values()),
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER,
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT, stage);
-
-        formatChoice.ifPresent(choice -> {
-            // Ask for annotation save directory.
-            final File destination = getAnnotationSavingDestination(choice);
-
-            if(destination != null) {
-                // Save annotations.
-                initiateAnnotationExport(destination, choice, runnable);
-            }
-        });
-    }
-
-    private void initiateAnnotationSavingWithFormatChoiceAndRunInAnyCase(Runnable runnable) {
-        // Ask for annotation save format.
-        Optional<ImageAnnotationSaveStrategy.Type> formatChoice =
-                dialogService.displayChoiceDialogAndGetResult(ImageAnnotationSaveStrategy.Type.PASCAL_VOC,
-                        Arrays.asList(ImageAnnotationSaveStrategy.Type.values()),
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE,
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_HEADER,
-                        ANNOTATIONS_SAVE_FORMAT_DIALOG_CONTENT, stage);
-
-        formatChoice.ifPresentOrElse(choice -> {
-            // Ask for annotation save directory.
-            final File destination = getAnnotationSavingDestination(choice);
-
-            if(destination != null) {
-                // Save annotations.
-                initiateAnnotationExport(destination, choice, runnable);
-            } else {
-                runnable.run();
-            }
-        }, runnable);
-    }
-
-    private File getAnnotationSavingDestination(ImageAnnotationSaveStrategy.Type saveFormat) {
-        File destination;
-
-        if(saveFormat.equals(ImageAnnotationSaveStrategy.Type.JSON)) {
-            destination = dialogService.displayFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
-                    ioMetaData.getDefaultAnnotationSavingDirectory(),
-                    DEFAULT_JSON_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("JSON files",
-                            "*.json",
-                            "*.JSON"),
-                    MainView.FileChooserType.SAVE);
-        } else if(saveFormat.equals(ImageAnnotationSaveStrategy.Type.CSV)) {
-            destination = dialogService.displayFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
-                    ioMetaData.getDefaultAnnotationSavingDirectory(),
-                    DEFAULT_CSV_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("CSV files",
-                            "*.csv",
-                            "*.CSV"),
-                    MainView.FileChooserType.SAVE);
-        } else {
-            destination =
-                    dialogService.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
-                            ioMetaData.getDefaultAnnotationSavingDirectory());
-        }
-
-        return destination;
-    }
-
-    private File getAnnotationLoadingSource(ImageAnnotationLoadStrategy.Type loadFormat) {
-        return switch (loadFormat) {
-            case JSON -> dialogService.displayFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
-                    ioMetaData.getDefaultAnnotationLoadingDirectory(),
-                    DEFAULT_JSON_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("JSON files", "*.json",
-                            "*.JSON"),
-                    MainView.FileChooserType.OPEN);
-            case CSV -> dialogService.displayFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
-                    ioMetaData.getDefaultAnnotationLoadingDirectory(),
-                    DEFAULT_CSV_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("CSV files", "*.csv",
-                            "*.CSV"),
-                    MainView.FileChooserType.OPEN);
-            default -> dialogService.displayDirectoryChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE, stage,
-                    ioMetaData.getDefaultAnnotationLoadingDirectory());
-        };
     }
 
     private void interruptDirectoryWatcher() {
@@ -1615,22 +1475,6 @@ public class Controller {
         view.setWorkspaceVisible(false);
     }
 
-    private void setCurrentAnnotationSavingDirectory(File destination) {
-        if(destination.isDirectory()) {
-            ioMetaData.setDefaultAnnotationSavingDirectory(destination);
-        } else if(destination.isFile() && destination.getParentFile().isDirectory()) {
-            ioMetaData.setDefaultAnnotationSavingDirectory(destination.getParentFile());
-        }
-    }
-
-    private void setCurrentAnnotationLoadingDirectory(File source) {
-        if(source.isDirectory()) {
-            ioMetaData.setDefaultAnnotationLoadingDirectory(source);
-        } else if(source.isFile() && source.getParentFile().isDirectory()) {
-            ioMetaData.setDefaultAnnotationLoadingDirectory(source.getParentFile());
-        }
-    }
-
     private void setupStage() {
         stage.setTitle(PROGRAM_IDENTIFIER);
         stage.getIcons().add(MainView.APPLICATION_ICON);
@@ -1644,5 +1488,30 @@ public class Controller {
                 view.getEditorImagePane().finalizeBoundingShapeDrawing();
             }
         });
+    }
+
+    /**
+     * Runs the annotation imports and exports initiated by the {@link AnnotationIoController}.
+     */
+    private class AnnotationIoOperations implements AnnotationIoController.Operations {
+        @Override
+        public void updateModelFromView() {
+            Controller.this.updateModelFromView();
+        }
+
+        @Override
+        public void clearAnnotationData() {
+            clearModelAndViewAnnotationData();
+        }
+
+        @Override
+        public void startImport(File source, ImageAnnotationLoadStrategy.Type format) {
+            startAnnotationImportService(source, format);
+        }
+
+        @Override
+        public void startExport(File destination, ImageAnnotationSaveStrategy.Type format, Runnable chainedOperation) {
+            initiateAnnotationExport(destination, format, chainedOperation);
+        }
     }
 }
