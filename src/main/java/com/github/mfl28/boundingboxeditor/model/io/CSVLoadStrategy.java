@@ -37,12 +37,12 @@ import java.util.*;
 public class CSVLoadStrategy implements ImageAnnotationLoadStrategy {
 
     private static boolean filterRow(Set<String> filesToLoad, CSVRow csvRow, List<IOErrorInfoEntry> errorInfoEntries) {
-        if (filesToLoad.contains(csvRow.getFilename())) {
+        if (filesToLoad.contains(csvRow.filename())) {
             return true;
         }
 
-        errorInfoEntries.add(new IOErrorInfoEntry(csvRow.getFilename(),
-                "Image " + csvRow.getFilename() +
+        errorInfoEntries.add(new IOErrorInfoEntry(csvRow.filename(),
+                "Image " + csvRow.filename() +
                         " does not belong to currently loaded image files."));
 
         return false;
@@ -52,7 +52,7 @@ public class CSVLoadStrategy implements ImageAnnotationLoadStrategy {
             CSVRow csvRow, Map<String, ImageAnnotation> filenameAnnotationMap,
             Map<String, ObjectCategory> categoryNameToCategoryMap,
             Map<String, Integer> categoryNameToShapeCountMap) {
-        var filename = csvRow.getFilename();
+        var filename = csvRow.filename();
 
         var boundingBoxData = createBoundingBox(csvRow, categoryNameToCategoryMap);
 
@@ -64,30 +64,30 @@ public class CSVLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private static void validateBounds(CSVRow csvRow) {
-        if (csvRow.getWidth() <= 0 || csvRow.getHeight() <= 0) {
-            throw new InvalidAnnotationFormatException("Invalid image size " + csvRow.getWidth() + "x"
-                    + csvRow.getHeight() + ".");
+        if (csvRow.width() <= 0 || csvRow.height() <= 0) {
+            throw new InvalidAnnotationFormatException("Invalid image size " + csvRow.width() + "x"
+                    + csvRow.height() + ".");
         }
 
-        if (csvRow.getXMin() < 0 || csvRow.getXMin() > csvRow.getXMax() || csvRow.getXMax() > csvRow.getWidth()
-                || csvRow.getYMin() < 0 || csvRow.getYMin() > csvRow.getYMax()
-                || csvRow.getYMax() > csvRow.getHeight()) {
-            throw new InvalidAnnotationFormatException("Invalid bounding-box bounds (xmin=" + csvRow.getXMin()
-                    + ", ymin=" + csvRow.getYMin() + ", xmax=" + csvRow.getXMax() + ", ymax=" + csvRow.getYMax()
-                    + ") for the given image size " + csvRow.getWidth() + "x" + csvRow.getHeight() + ".");
+        if (csvRow.xMin() < 0 || csvRow.xMin() > csvRow.xMax() || csvRow.xMax() > csvRow.width()
+                || csvRow.yMin() < 0 || csvRow.yMin() > csvRow.yMax()
+                || csvRow.yMax() > csvRow.height()) {
+            throw new InvalidAnnotationFormatException("Invalid bounding-box bounds (xmin=" + csvRow.xMin()
+                    + ", ymin=" + csvRow.yMin() + ", xmax=" + csvRow.xMax() + ", ymax=" + csvRow.yMax()
+                    + ") for the given image size " + csvRow.width() + "x" + csvRow.height() + ".");
         }
     }
 
     private static BoundingBoxData createBoundingBox(CSVRow csvRow, Map<String, ObjectCategory> existingCategoryNameToCategoryMap) {
         validateBounds(csvRow);
 
-        var objectCategory = existingCategoryNameToCategoryMap.computeIfAbsent(csvRow.getCategoryName(),
+        var objectCategory = existingCategoryNameToCategoryMap.computeIfAbsent(csvRow.categoryName(),
                 name -> new ObjectCategory(name, ColorUtils.createRandomColor()));
 
-        double xMinRelative = (double) csvRow.getXMin() / csvRow.getWidth();
-        double yMinRelative = (double) csvRow.getYMin() / csvRow.getHeight();
-        double xMaxRelative = (double) csvRow.getXMax() / csvRow.getWidth();
-        double yMaxRelative = (double) csvRow.getYMax() / csvRow.getHeight();
+        double xMinRelative = (double) csvRow.xMin() / csvRow.width();
+        double yMinRelative = (double) csvRow.yMin() / csvRow.height();
+        double xMaxRelative = (double) csvRow.xMax() / csvRow.width();
+        double yMaxRelative = (double) csvRow.yMax() / csvRow.height();
 
         return new BoundingBoxData(
                 objectCategory, xMinRelative, yMinRelative, xMaxRelative, yMaxRelative,
@@ -130,7 +130,7 @@ public class CSVLoadStrategy implements ImageAnnotationLoadStrategy {
                             errorInfoEntries.add(new IOErrorInfoEntry(path.getFileName().toString(),
                                     exception.getMessage()));
                         } catch (InvalidAnnotationFormatException exception) {
-                            errorInfoEntries.add(new IOErrorInfoEntry(csvRow.getFilename(),
+                            errorInfoEntries.add(new IOErrorInfoEntry(csvRow.filename(),
                                     exception.getMessage()));
                         }
                     }

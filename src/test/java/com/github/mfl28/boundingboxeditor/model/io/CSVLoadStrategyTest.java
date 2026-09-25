@@ -76,4 +76,23 @@ class CSVLoadStrategyTest {
         Map<String, ObjectCategory> categories = result.getImageAnnotationData().categoryNameToCategoryMap();
         assertEquals(Set.of("catA"), categories.keySet());
     }
+
+    @Test
+    void onLoading_WhenRequiredColumnIsMissing_ShouldReportErrorAndLoadNothing(@TempDir Path tempDir)
+            throws IOException {
+        Path csvFile = tempDir.resolve("annotations.csv");
+        Files.writeString(csvFile, """
+                filename,width,height,class,xmin,ymin,xmax
+                valid.jpg,100,200,catA,10,20,50
+                """);
+
+        ImageAnnotationImportResult result = new CSVLoadStrategy().load(csvFile, Set.of("valid.jpg"),
+                new HashMap<>(), new SimpleDoubleProperty(0));
+
+        assertEquals(0, result.getNrSuccessfullyProcessedItems());
+        assertEquals(List.of("annotations.csv"),
+                result.getErrorTableEntries().stream().map(IOErrorInfoEntry::getSourceName).toList());
+        assertTrue(result.getErrorTableEntries().getFirst().getErrorDescription().contains("ymax"),
+                () -> result.getErrorTableEntries().getFirst().getErrorDescription());
+    }
 }

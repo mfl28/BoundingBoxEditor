@@ -36,7 +36,6 @@ module com.github.mfl28.boundingboxeditor {
     requires org.jvnet.mimepull;
     requires org.locationtech.jts;
     requires metadata.extractor;
-    requires static lombok;
     requires com.fasterxml.jackson.dataformat.csv;
     requires com.fasterxml.jackson.databind;
     requires org.checkerframework.checker.qual;
