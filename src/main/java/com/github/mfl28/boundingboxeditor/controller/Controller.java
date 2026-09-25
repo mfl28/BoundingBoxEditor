@@ -723,16 +723,6 @@ public class Controller {
         imageMetaDataLoadingService.restart();
     }
 
-    private void startBoundingBoxPredictionService(File imageFile, BoundingBoxPredictorClient predictorClient) {
-        boundingBoxPredictorService.reset();
-        boundingBoxPredictorService.setImageFile(imageFile);
-        boundingBoxPredictorService.setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
-        boundingBoxPredictorService.setImageMetaData(model.getImageFileNameToMetaDataMap().get(imageFile.getName()));
-        boundingBoxPredictorService.setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
-        boundingBoxPredictorService.setPredictorClient(predictorClient);
-        boundingBoxPredictorService.restart();
-    }
-
     private void setUpServices() {
         final ServiceProgressDialog annotationExportProgressDialog =
                 MainView.createServiceProgressDialog(annotationExportService,
@@ -1309,7 +1299,14 @@ public class Controller {
 
         @Override
         public void startPrediction(File imageFile, BoundingBoxPredictorClient predictorClient) {
-            startBoundingBoxPredictionService(imageFile, predictorClient);
+            boundingBoxPredictorService.reset();
+            boundingBoxPredictorService.setImageFile(imageFile);
+            boundingBoxPredictorService.setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
+            boundingBoxPredictorService.setImageMetaData(
+                    model.getImageFileNameToMetaDataMap().get(imageFile.getName()));
+            boundingBoxPredictorService.setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
+            boundingBoxPredictorService.setPredictorClient(predictorClient);
+            boundingBoxPredictorService.restart();
         }
 
         @Override
