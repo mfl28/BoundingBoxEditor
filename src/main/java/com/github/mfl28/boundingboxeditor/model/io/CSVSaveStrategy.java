@@ -32,12 +32,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 /**
  * Saving-strategy to export annotations to a CSV file.
@@ -65,7 +62,9 @@ public class CSVSaveStrategy implements ImageAnnotationSaveStrategy {
                                             progress.set(1.0 * nrProcessedAnnotations.getAndIncrement() / totalNrAnnotations);
 
                                             return imageAnnotation.getBoundingShapeData().stream()
-                                                    .flatMap(this::extractBoundingBoxDataElements)
+                                                    .flatMap(BoundingShapeData::flatten)
+                                                    .filter(BoundingBoxData.class::isInstance)
+                                                    .map(BoundingBoxData.class::cast)
                                                     .map(boundingBoxData -> Pair.of(imageAnnotation, boundingBoxData));
                                         })
                                 .map(pair -> CSVRow.fromData(pair.getLeft(), pair.getRight()))
@@ -80,33 +79,6 @@ public class CSVSaveStrategy implements ImageAnnotationSaveStrategy {
                 errorEntries.isEmpty() ? totalNrAnnotations : 0,
                 errorEntries
         );
-    }
-
-    private Stream<BoundingBoxData> extractBoundingBoxDataElements(BoundingShapeData boundingShapeData) {
-        if(boundingShapeData.getParts().isEmpty()) {
-            if(boundingShapeData instanceof BoundingBoxData boundingBoxData) {
-                return Stream.of(boundingBoxData);
-            }
-
-            return Stream.empty();
-        }
-
-        final Deque<BoundingShapeData> stack = new ArrayDeque<>();
-        final List<BoundingBoxData> result = new ArrayList<>();
-
-        stack.push(boundingShapeData);
-
-        while(!stack.isEmpty()) {
-            var currentBoundingShape = stack.pop();
-
-            if(currentBoundingShape instanceof BoundingBoxData boundingBoxData) {
-                result.add(boundingBoxData);
-            }
-
-            stack.addAll(currentBoundingShape.getParts());
-        }
-
-        return result.stream();
     }
 
 }

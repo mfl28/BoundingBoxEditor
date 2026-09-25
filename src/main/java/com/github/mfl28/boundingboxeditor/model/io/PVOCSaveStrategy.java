@@ -207,8 +207,8 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         }
 
         // Add coordinates:
-        element.appendChild(boundingShapeData.accept(new XmlElementVisitor(document, imageMetaData.getOrientedWidth(),
-                imageMetaData.getOrientedHeight())));
+        element.appendChild(createCoordinatesElement(document, boundingShapeData, imageMetaData.getOrientedWidth(),
+                imageMetaData.getOrientedHeight()));
 
         // Add parts:
         boundingShapeData.getParts().forEach(part ->
@@ -239,43 +239,33 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
         return element;
     }
 
-    private class XmlElementVisitor implements BoundingShapeDataVisitor<Element> {
-        private final Document document;
-        private final double imageWidth;
-        private final double imageHeight;
+    private Element createCoordinatesElement(Document document, BoundingShapeData boundingShapeData,
+                                             double imageWidth, double imageHeight) {
+        return switch(boundingShapeData) {
+            case BoundingBoxData boundingBoxData -> {
+                Element coordinateElement = document.createElement(BOUNDING_BOX_SIZE_GROUP_NAME);
 
-        public XmlElementVisitor(Document document, double imageWidth, double imageHeight) {
-            this.document = document;
-            this.imageWidth = imageWidth;
-            this.imageHeight = imageHeight;
-        }
+                Bounds absoluteBounds = boundingBoxData.getAbsoluteBoundsInImage(imageWidth, imageHeight);
 
-        @Override
-        public Element visit(BoundingBoxData boundingBoxData) {
-            Element coordinateElement = document.createElement(BOUNDING_BOX_SIZE_GROUP_NAME);
+                coordinateElement.appendChild(createDoubleValueElement(document, XMIN_TAG, absoluteBounds.getMinX()));
+                coordinateElement.appendChild(createDoubleValueElement(document, XMAX_TAG, absoluteBounds.getMaxX()));
+                coordinateElement.appendChild(createDoubleValueElement(document, YMIN_TAG, absoluteBounds.getMinY()));
+                coordinateElement.appendChild(createDoubleValueElement(document, YMAX_TAG, absoluteBounds.getMaxY()));
 
-            Bounds absoluteBounds = boundingBoxData.getAbsoluteBoundsInImage(imageWidth, imageHeight);
-
-            coordinateElement.appendChild(createDoubleValueElement(document, XMIN_TAG, absoluteBounds.getMinX()));
-            coordinateElement.appendChild(createDoubleValueElement(document, XMAX_TAG, absoluteBounds.getMaxX()));
-            coordinateElement.appendChild(createDoubleValueElement(document, YMIN_TAG, absoluteBounds.getMinY()));
-            coordinateElement.appendChild(createDoubleValueElement(document, YMAX_TAG, absoluteBounds.getMaxY()));
-
-            return coordinateElement;
-        }
-
-        @Override
-        public Element visit(BoundingPolygonData boundingPolygonData) {
-            Element coordinateElement = document.createElement(BOUNDING_POLYGON_SIZE_GROUP_NAME);
-
-            List<Double> absolutePoints = boundingPolygonData.getAbsolutePointsInImage(imageWidth, imageHeight);
-
-            for(int i = 0; i < absolutePoints.size(); i += 2) {
-                coordinateElement.appendChild(createDoubleValueElement(document, "x", absolutePoints.get(i)));
-                coordinateElement.appendChild(createDoubleValueElement(document, "y", absolutePoints.get(i + 1)));
+                yield coordinateElement;
             }
+            case BoundingPolygonData boundingPolygonData -> {
+                Element coordinateElement = document.createElement(BOUNDING_POLYGON_SIZE_GROUP_NAME);
 
-            return coordinateElement;
-        }
+                List<Double> absolutePoints = boundingPolygonData.getAbsolutePointsInImage(imageWidth, imageHeight);
+
+                for(int i = 0; i < absolutePoints.size(); i += 2) {
+                    coordinateElement.appendChild(createDoubleValueElement(document, "x", absolutePoints.get(i)));
+                    coordinateElement.appendChild(createDoubleValueElement(document, "y", absolutePoints.get(i + 1)));
+                }
+
+                yield coordinateElement;
+            }
+        };
     }
 }

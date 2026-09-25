@@ -35,7 +35,6 @@ import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Saves bounding-box and bounding-polygon annotations (with at least 3 nodes)
@@ -143,21 +142,21 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         try (BufferedWriter fileWriter = Files.newBufferedWriter(
                 saveFolderPath.resolve(getAnnotationFileName(annotation.getImageFileName())))) {
             List<BoundingShapeData> boundingShapeDataList = annotation.getBoundingShapeData().stream()
-                    .flatMap(this::extractBoundingShapeDataElements)
+                    .flatMap(BoundingShapeData::flatten)
                     .toList();
 
             for (int i = 0; i < boundingShapeDataList.size(); ++i) {
-                BoundingShapeData boundingShapeData = boundingShapeDataList.get(i);
+                // Polygons need at least 3 nodes (6 coordinates) to be saved.
+                final String entry = switch (boundingShapeDataList.get(i)) {
+                    case BoundingBoxData boundingBoxData -> createBoundingBoxDataEntry(boundingBoxData);
+                    case BoundingPolygonData boundingPolygonData
+                            when boundingPolygonData.getRelativePointsInImage().size() >= 6 ->
+                            createBoundingPolygonDataEntry(boundingPolygonData);
+                    case BoundingPolygonData _ -> null;
+                };
 
-                if (boundingShapeData instanceof BoundingBoxData boundingBoxData) {
-                    fileWriter.write(createBoundingBoxDataEntry(boundingBoxData));
-
-                    if (i != boundingShapeDataList.size() - 1) {
-                        fileWriter.newLine();
-                    }
-                } else if (boundingShapeData instanceof BoundingPolygonData boundingPolygonData
-                        && boundingPolygonData.getRelativePointsInImage().size() >= 6) {
-                    fileWriter.write(createBoundingPolygonDataEntry(boundingPolygonData));
+                if (entry != null) {
+                    fileWriter.write(entry);
 
                     if (i != boundingShapeDataList.size() - 1) {
                         fileWriter.newLine();
@@ -190,25 +189,5 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
                 .collect(Collectors.joining(" "));
 
         return StringUtils.join(List.of(categoryIndex, relativePointsEntry), " ");
-    }
-
-    private Stream<BoundingShapeData> extractBoundingShapeDataElements(BoundingShapeData boundingShapeData) {
-        if(boundingShapeData.getParts().isEmpty()) {
-            return Stream.of(boundingShapeData);
-        }
-
-        final Deque<BoundingShapeData> stack = new ArrayDeque<>();
-        final List<BoundingShapeData> result = new ArrayList<>();
-
-        stack.push(boundingShapeData);
-
-        while(!stack.isEmpty()) {
-            var currentBoundingBox = stack.pop();
-
-            result.add(currentBoundingBox);
-            stack.addAll(currentBoundingBox.getParts());
-        }
-
-        return result.stream();
     }
 }
