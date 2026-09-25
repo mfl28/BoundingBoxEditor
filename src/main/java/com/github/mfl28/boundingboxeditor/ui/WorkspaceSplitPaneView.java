@@ -72,6 +72,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     private final EditorView editor = new EditorView();
     private final ImageFileExplorerView imageFileExplorer = new ImageFileExplorerView();
     private final BooleanProperty showObjectPopover = new SimpleBooleanProperty();
+    private final DialogService dialogService = new JavaFxDialogService();
     private boolean treeUpdateEnabled = true;
     private double[] savedDividerPositions = {DEFAULT_FIRST_DIVIDER_RATIO, DEFAULT_SECOND_DIVIDER_RATIO};
 
@@ -118,7 +119,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     void initiateObjectCategoryChange(BoundingShapeViewable boundingShapeViewable) {
         ObjectCategory currentCategory = boundingShapeViewable.getViewData().getObjectCategory();
 
-        MainView.displayChoiceDialogAndGetResult(currentCategory,
+        dialogService.displayChoiceDialogAndGetResult(currentCategory,
                         editorsSplitPane.getObjectCategoryTable().getItems(),
                         CHANGE_CATEGORY_DIALOG_TITLE,
                         "Select new category (current: \"" + currentCategory.getName() + "\")",
@@ -146,7 +147,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         if(relativeOutline == null
                 || relativeOutline.getWidth() < ObjectTreeElementCellFactory.MIN_RELATIVE_SIDE_LENGTH
                 || relativeOutline.getHeight() < ObjectTreeElementCellFactory.MIN_RELATIVE_SIDE_LENGTH) {
-            MainView.displayErrorAlert("Image Saving Error", "Bounding shape region is too small.",
+            dialogService.displayErrorAlert("Image Saving Error", "Bounding shape region is too small.",
                     this.getScene().getWindow());
             return;
         }
@@ -162,7 +163,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
                 itemId +
                 ".png";
 
-        final File outputFile = MainView.displayFileChooserAndGetChoice(
+        final File outputFile = dialogService.displayFileChooserAndGetChoice(
                 "Save as Image", this.getScene().getWindow(), null,
                 outputFilename, new FileChooser.ExtensionFilter("PNG files", "*.png"),
                 MainView.FileChooserType.SAVE);
@@ -183,7 +184,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         try {
             ImageIO.write(bufferedImage, "png", outputFile);
         } catch (IOException e) {
-            MainView.displayErrorAlert("Image Saving Error", "Could not write image.",
+            dialogService.displayErrorAlert("Image Saving Error", "Could not write image.",
                     this.getScene().getWindow());
         }
     }

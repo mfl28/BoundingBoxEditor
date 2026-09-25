@@ -33,7 +33,7 @@ public class ServiceProgressDialog extends ProgressDialog implements ProgressVie
     public ServiceProgressDialog(Worker<?> worker) {
         super(worker);
         this.worker = worker;
-        MainView.applyDialogStyle(this);
+        JavaFxDialogService.applyDialogStyle(this);
         setUpInternalListeners();
     }
 
