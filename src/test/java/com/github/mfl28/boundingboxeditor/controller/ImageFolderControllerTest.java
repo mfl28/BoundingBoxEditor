@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +62,8 @@ class ImageFolderControllerTest {
     private final DialogService dialogService = mock(DialogService.class);
     private final AnnotationIoController annotationIoController = mock(AnnotationIoController.class);
     private final ImageFolderController.Operations operations = mock(ImageFolderController.Operations.class);
+    private final List<File> watchedFolders = new ArrayList<>();
+    private final List<Runnable> watcherCallbacks = new ArrayList<>();
     private ImageFolderController imageFolderController;
 
     @TempDir
@@ -68,8 +71,16 @@ class ImageFolderControllerTest {
 
     @BeforeEach
     void setUp() {
+        // No real watcher threads: they would outlive the test's temporary folder and report it as changed.
         imageFolderController = new ImageFolderController(model, ioMetaData, dialogService, null,
-                annotationIoController, operations);
+                annotationIoController, operations) {
+            @Override
+            Thread createDirectoryWatcher(File folder, Runnable onFilesChanged) {
+                watchedFolders.add(folder);
+                watcherCallbacks.add(onFilesChanged);
+                return new Thread(() -> {});
+            }
+        };
     }
 
     @AfterEach
@@ -131,6 +142,19 @@ class ImageFolderControllerTest {
         verify(operations).showLoadedImageFiles(result, folder.toFile(), false);
         verify(dialogService, never()).displayYesNoCancelDialogAndGetResult(any(), any(), any());
         verify(dialogService, never()).displayYesNoDialogAndGetResult(any(), any(), any());
+        assertEquals(List.of(folder.toFile()), watchedFolders);
+    }
+
+    @Test
+    void onWatchedImageFilesChanged_ShouldReportChangeAndReloadFolder() throws IOException {
+        final File image = Files.createFile(folder.resolve("a.jpg")).toFile();
+        ioMetaData.setDefaultImageLoadingDirectory(folder.toFile());
+        imageFolderController.onImageMetaDataLoaded(createResult(1), folder.toFile(), false);
+
+        watcherCallbacks.getFirst().run();
+
+        verify(dialogService).displayErrorAlert(eq("Image Files Changed"), any(), any());
+        verify(operations).startImageMetaDataLoading(folder.toFile(), List.of(image), true);
     }
 
     @Test

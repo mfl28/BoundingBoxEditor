@@ -297,11 +297,23 @@ class ImageFolderController {
         startWatching(folder);
     }
 
+    /**
+     * Creates the (not yet started) thread that watches the provided folder for changes of the loaded image files.
+     *
+     * @param folder         the image folder
+     * @param onFilesChanged run on the JavaFX application thread when the image files changed
+     * @return the thread
+     */
+    Thread createDirectoryWatcher(File folder, Runnable onFilesChanged) {
+        return new Thread(new FileChangeWatcher(folder.toPath(), model.getImageFileNameSet(), onFilesChanged),
+                IMAGE_FILE_CHANGE_WATCHER_THREAD_NAME);
+    }
+
     private void startWatching(File folder) {
-        directoryWatcher = new Thread(new FileChangeWatcher(folder.toPath(), model.getImageFileNameSet(), () -> {
+        directoryWatcher = createDirectoryWatcher(folder, () -> {
             dialogService.displayErrorAlert(IMAGE_FILES_CHANGED_ERROR_TITLE, IMAGE_FILES_CHANGED_ERROR_CONTENT, stage);
             reloadCurrentFolder();
-        }), IMAGE_FILE_CHANGE_WATCHER_THREAD_NAME);
+        });
         directoryWatcher.start();
     }
 
