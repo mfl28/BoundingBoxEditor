@@ -31,6 +31,8 @@ import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import javafx.beans.property.DoubleProperty;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -110,14 +112,17 @@ public class CSVLoadStrategy implements ImageAnnotationLoadStrategy {
                 .withColumnReordering(true)
                 .withStrictHeaders(true);
 
-        try (MappingIterator<CSVRow> it = csvMapper
+        // The file is opened here (not by Jackson) so that it's closed even if reading the header already fails,
+        // e.g. because of a missing column. Otherwise the file handle leaked (and the file stayed locked on Windows).
+        try (InputStream inputStream = Files.newInputStream(path);
+             MappingIterator<CSVRow> it = csvMapper
                 .readerFor(CSVRow.class)
                 .with(csvSchema)
                 .without(CsvParser.Feature.IGNORE_TRAILING_UNMAPPABLE)
                 .without(CsvParser.Feature.ALLOW_TRAILING_COMMA)
                 .with(CsvParser.Feature.FAIL_ON_MISSING_COLUMNS)
                 .with(CsvParser.Feature.FAIL_ON_MISSING_HEADER_COLUMNS)
-                .readValues(path.toFile())) {
+                .readValues(inputStream)) {
             it.forEachRemaining(csvRow -> {
                         try {
                             if (filterRow(filesToLoad, csvRow, errorInfoEntries)) {
