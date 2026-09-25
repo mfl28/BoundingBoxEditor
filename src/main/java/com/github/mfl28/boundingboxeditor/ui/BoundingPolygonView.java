@@ -199,35 +199,6 @@ public class BoundingPolygonView extends Polygon implements
         return boundingShapeViewData.selectedProperty();
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(boundingShapeViewData, pointsInImage);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if(this == obj) {
-            return true;
-        }
-
-        if(!(obj instanceof BoundingPolygonView other)) {
-            return false;
-        }
-
-        if(!Objects.equals(boundingShapeViewData, other.boundingShapeViewData) ||
-                getPoints().size() != other.getPoints().size()) {
-            return false;
-        }
-
-        for(int i = 0; i != getPoints().size(); ++i) {
-            if(!MathUtils.doubleAlmostEqual(getPoints().get(i), other.getPoints().get(i))) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     public boolean isEditing() {
         return editing.get();
     }

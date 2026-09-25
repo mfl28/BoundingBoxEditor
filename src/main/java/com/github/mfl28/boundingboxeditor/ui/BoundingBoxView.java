@@ -42,7 +42,6 @@ import javafx.scene.shape.Rectangle;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Represents the visual (UI)-component of a bounding-box. To the app-user, instances of
@@ -131,28 +130,6 @@ public class BoundingBoxView extends Rectangle implements
     @Override
     public BooleanProperty selectedProperty() {
         return boundingShapeViewData.selectedProperty();
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(boundingShapeViewData, getX(), getY(), getWidth(), getHeight());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if(this == obj) {
-            return true;
-        }
-
-        if(!(obj instanceof BoundingBoxView other)) {
-            return false;
-        }
-
-        return Objects.equals(boundingShapeViewData, other.boundingShapeViewData)
-                && MathUtils.doubleAlmostEqual(getX(), other.getX()) &&
-                MathUtils.doubleAlmostEqual(getY(), other.getY())
-                && MathUtils.doubleAlmostEqual(getWidth(), other.getWidth()) &&
-                MathUtils.doubleAlmostEqual(getHeight(), other.getHeight());
     }
 
     /**

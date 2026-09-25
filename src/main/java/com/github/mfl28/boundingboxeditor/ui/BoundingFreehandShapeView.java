@@ -30,7 +30,6 @@ import javafx.scene.shape.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class BoundingFreehandShapeView extends Path implements View, Toggle,
         BoundingShapeViewable {
@@ -82,29 +81,6 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
     @Override
     public Rectangle2D getRelativeOutlineRectangle() {
         return null;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(boundingShapeViewData, getElements());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if(this == obj) {
-            return true;
-        }
-
-        if(!(obj instanceof BoundingFreehandShapeView other)) {
-            return false;
-        }
-
-        if(!Objects.equals(boundingShapeViewData, other.boundingShapeViewData) ||
-                getElements().size() != other.getElements().size()) {
-            return false;
-        }
-
-        return Objects.equals(getElements(), other.getElements());
     }
 
     @Override

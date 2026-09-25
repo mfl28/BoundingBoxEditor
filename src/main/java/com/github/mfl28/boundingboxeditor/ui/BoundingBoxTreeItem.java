@@ -46,7 +46,8 @@ class BoundingBoxTreeItem extends BoundingShapeTreeItem {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, getValue(), getChildren());
+        // The shape is left out, as equals() compares it by its data using a tolerance.
+        return Objects.hash(id, getChildren());
     }
 
     @Override
@@ -59,7 +60,8 @@ class BoundingBoxTreeItem extends BoundingShapeTreeItem {
             return false;
         }
 
-        return id == other.id && getValue().equals(other.getValue()) && getChildren().equals(other.getChildren());
+        return id == other.id && haveEqualShapeData(getValue(), other.getValue())
+                && getChildren().equals(other.getChildren());
     }
 
     private void setUpInternalListeners() {
