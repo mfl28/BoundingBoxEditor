@@ -46,6 +46,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -634,54 +635,36 @@ public class Controller {
     }
 
     private void setUpServices() {
-        final ServiceProgressDialog annotationExportProgressDialog =
-                MainView.createServiceProgressDialog(annotationExportService,
-                        SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
-                        SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER);
-        annotationExportProgressDialog.setOwnerParentWindow(stage);
-        annotationExportService.setProgressViewer(annotationExportProgressDialog);
-        annotationExportService.setOnSucceeded(this::onAnnotationExportSucceeded);
-        annotationExportService.setOnFailed(this::onIoServiceFailed);
+        setUpService(annotationExportService, SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
+                SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER, this::onAnnotationExportSucceeded, false);
+        setUpService(annotationImportService, LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
+                LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER, this::onAnnotationImportSucceeded, false);
+        setUpService(imageMetaDataLoadingService, IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE,
+                IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER, this::onImageMetaDataLoadingSucceeded, false);
+        setUpService(boundingBoxPredictorService, BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE,
+                BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER, this::onBoundingBoxPredictionSucceeded, true);
+        setUpService(modelNameFetchService, FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
+                FETCHING_MODELS_PROGRESS_DIALOG_HEADER, this::onModelNameFetchingSucceeded, true);
+    }
 
-        final ServiceProgressDialog annotationImportProgressDialog =
-                MainView.createServiceProgressDialog(annotationImportService,
-                        LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
-                        LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER);
-        annotationImportProgressDialog.setOwnerParentWindow(stage);
-        annotationImportService.setProgressViewer(annotationImportProgressDialog);
-        annotationImportService.setOnSucceeded(this::onAnnotationImportSucceeded);
-        annotationImportService.setOnFailed(this::onIoServiceFailed);
+    /**
+     * Gives the service its progress dialog and its result handlers. Each service gets a single dialog that is reused
+     * for every run: ControlsFX progress dialogs never detach from their worker, so creating one per run would leave
+     * stale dialogs that reappear on every later run.
+     */
+    private void setUpService(IoService<?> service, String progressDialogTitle, String progressDialogHeader,
+                              EventHandler<WorkerStateEvent> onSucceeded, boolean cancellable) {
+        final ServiceProgressDialog progressDialog =
+                MainView.createServiceProgressDialog(service, progressDialogTitle, progressDialogHeader);
+        progressDialog.setOwnerParentWindow(stage);
 
-        final ServiceProgressDialog imageMetaDataLoadingProgressDialog =
-                MainView.createServiceProgressDialog(imageMetaDataLoadingService,
-                        IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE,
-                        IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER);
-        imageMetaDataLoadingProgressDialog.setOwnerParentWindow(stage);
-        imageMetaDataLoadingService.setProgressViewer(imageMetaDataLoadingProgressDialog);
-        imageMetaDataLoadingService.setOnSucceeded(this::onImageMetaDataLoadingSucceeded);
-        imageMetaDataLoadingService.setOnFailed(this::onIoServiceFailed);
+        if(cancellable) {
+            progressDialog.enableCancellation();
+        }
 
-        final ServiceProgressDialog predictorProgressDialog =
-                MainView.createServiceProgressDialog(boundingBoxPredictorService,
-                        BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE,
-                        BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER);
-        predictorProgressDialog.setOwnerParentWindow(stage);
-        predictorProgressDialog.enableCancellation();
-        boundingBoxPredictorService.setProgressViewer(predictorProgressDialog);
-        boundingBoxPredictorService.setOnSucceeded(this::onBoundingBoxPredictionSucceeded);
-        boundingBoxPredictorService.setOnFailed(this::onIoServiceFailed);
-
-        // A single dialog per service: ControlsFX progress dialogs never detach from their worker, so creating
-        // one per fetch would leave stale dialogs that reappear on every later fetch.
-        final ServiceProgressDialog modelNameFetchProgressDialog =
-                MainView.createServiceProgressDialog(modelNameFetchService,
-                        FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
-                        FETCHING_MODELS_PROGRESS_DIALOG_HEADER);
-        modelNameFetchProgressDialog.setOwnerParentWindow(stage);
-        modelNameFetchProgressDialog.enableCancellation();
-        modelNameFetchService.setProgressViewer(modelNameFetchProgressDialog);
-        modelNameFetchService.setOnFailed(this::onIoServiceFailed);
-        modelNameFetchService.setOnSucceeded(this::onModelNameFetchingSucceeded);
+        service.setProgressViewer(progressDialog);
+        service.setOnSucceeded(onSucceeded);
+        service.setOnFailed(this::onIoServiceFailed);
     }
 
     private void onModelNameFetchingSucceeded(WorkerStateEvent event) {
