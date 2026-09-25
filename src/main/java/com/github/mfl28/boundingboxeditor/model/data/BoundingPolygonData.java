@@ -82,11 +82,6 @@ public final class BoundingPolygonData extends BoundingShapeData {
     }
 
     @Override
-    public <T> T accept(BoundingShapeDataVisitor<T> visitor) {
-        return visitor.visit(this);
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), relativePointsInImage);
     }

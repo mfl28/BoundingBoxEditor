@@ -20,14 +20,13 @@ package com.github.mfl28.boundingboxeditor.model.data;
 
 import com.github.mfl28.boundingboxeditor.ui.BoundingShapeViewable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Base class of data-components of a bounding-shape view objects.
  */
-public abstract class BoundingShapeData {
+public abstract sealed class BoundingShapeData permits BoundingBoxData, BoundingPolygonData {
     private final ObjectCategory category;
     private final List<String> tags;
     private List<BoundingShapeData> parts = Collections.emptyList();
@@ -84,7 +83,25 @@ public abstract class BoundingShapeData {
         this.parts = parts;
     }
 
-    public abstract <T> T accept(BoundingShapeDataVisitor<T> visitor);
+    /**
+     * Returns this bounding-shape followed by all of its (transitively) nested parts,
+     * level by level (breadth-first).
+     *
+     * @return the stream of bounding-shapes
+     */
+    public Stream<BoundingShapeData> flatten() {
+        final List<BoundingShapeData> result = new ArrayList<>();
+        final Deque<BoundingShapeData> queue = new ArrayDeque<>();
+        queue.add(this);
+
+        while(!queue.isEmpty()) {
+            final BoundingShapeData current = queue.poll();
+            result.add(current);
+            queue.addAll(current.getParts());
+        }
+
+        return result.stream();
+    }
 
     @Override
     public int hashCode() {
