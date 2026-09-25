@@ -55,7 +55,6 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.*;
-import java.util.prefs.Preferences;
 
 /**
  * The control-component of the application (as in MVC pattern). Responsible for interaction-handling
@@ -90,12 +89,6 @@ public class Controller {
     private static final String EXIT_APPLICATION_OPTION_DIALOG_TITLE = "Exit Application";
     private static final String EXIT_APPLICATION_OPTION_DIALOG_CONTENT =
             "Do you want to save the existing annotation data?";
-    private static final String IS_WINDOW_MAXIMIZED_PREFERENCE_NAME = "isMaximized";
-    private static final String CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME = "currentImageLoadingDirectory";
-    private static final String CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME =
-            "currentAnnotationLoadingDirectory";
-    private static final String CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME =
-            "currentAnnotationSavingDirectory";
     private static final String SETTINGS_APPLICATION_ERROR_DIALOG_TITLE = "Settings Application Error";
     private static final String SETTINGS_APPLICATION_INVALID_FIELDS_ERROR_DIALOG_CONTENT =
             "Please provide valid values for the indicated fields.";
@@ -132,6 +125,7 @@ public class Controller {
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
     private final IoMetaData ioMetaData = new IoMetaData();
+    private final PreferencesStore preferencesStore = PreferencesStore.forApplication();
     final List<KeyCombinationEventHandler> keyCombinationHandlers;
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
@@ -1018,62 +1012,12 @@ public class Controller {
     }
 
     private void loadPreferences() {
-        Preferences preferences = Preferences.userNodeForPackage(getClass());
-        stage.setMaximized(preferences.getBoolean(IS_WINDOW_MAXIMIZED_PREFERENCE_NAME, false));
-
-        String imageLoadingDirectoryPathPreference =
-                preferences.get(CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME, null);
-
-        if(imageLoadingDirectoryPathPreference != null) {
-            File imageLoadingDirectoryPreference = new File(imageLoadingDirectoryPathPreference);
-
-            if(imageLoadingDirectoryPreference.exists() && imageLoadingDirectoryPreference.isDirectory()) {
-                ioMetaData.setDefaultImageLoadingDirectory(imageLoadingDirectoryPreference);
-            }
-        }
-
-        String annotationLoadingDirectoryPathPreference =
-                preferences.get(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME, null);
-
-        if(annotationLoadingDirectoryPathPreference != null) {
-            File annotationLoadingDirectoryPreference = new File(annotationLoadingDirectoryPathPreference);
-
-            if(annotationLoadingDirectoryPreference.exists() && annotationLoadingDirectoryPreference.isDirectory()) {
-                ioMetaData.setDefaultAnnotationLoadingDirectory(annotationLoadingDirectoryPreference);
-            }
-        }
-
-        String annotationSavingDirectoryPathPreference =
-                preferences.get(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME, null);
-
-        if(annotationSavingDirectoryPathPreference != null) {
-            File annotationSavingDirectoryPreference = new File(annotationSavingDirectoryPathPreference);
-
-            if(annotationSavingDirectoryPreference.exists() && annotationSavingDirectoryPreference.isDirectory()) {
-                ioMetaData.setDefaultAnnotationSavingDirectory(annotationSavingDirectoryPreference);
-            }
-        }
+        stage.setMaximized(preferencesStore.loadWindowMaximized());
+        preferencesStore.loadDirectories(ioMetaData);
     }
 
     private void savePreferences() {
-        Preferences preferences = Preferences.userNodeForPackage(getClass());
-
-        preferences.putBoolean(IS_WINDOW_MAXIMIZED_PREFERENCE_NAME, stage.isMaximized());
-
-        if(ioMetaData.getDefaultImageLoadingDirectory() != null) {
-            preferences.put(CURRENT_IMAGE_LOADING_DIRECTORY_PREFERENCE_NAME,
-                    ioMetaData.getDefaultImageLoadingDirectory().toString());
-        }
-
-        if(ioMetaData.getDefaultAnnotationLoadingDirectory() != null) {
-            preferences.put(CURRENT_ANNOTATION_LOADING_DIRECTORY_PREFERENCE_NAME,
-                    ioMetaData.getDefaultAnnotationLoadingDirectory().toString());
-        }
-
-        if(ioMetaData.getDefaultAnnotationSavingDirectory() != null) {
-            preferences.put(CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME,
-                    ioMetaData.getDefaultAnnotationSavingDirectory().toString());
-        }
+        preferencesStore.save(stage.isMaximized(), ioMetaData);
     }
 
     private void clearViewAndModel() {
