@@ -55,9 +55,6 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final String INVALID_OBJECT_ELEMENT_MISSING_ERROR = "Invalid \"object\"-element: " +
             "Missing \"bndbox\"- or \"polygon\"-element.";
     private static final String INVALID_POLYGON_ELEMENT_ERROR = "Invalid \"polygon\"-element.";
-    // JAXP factories aren't thread-safe and the files are parsed in parallel, so each thread uses its own.
-    private static final ThreadLocal<DocumentBuilderFactory> DOCUMENT_BUILDER_FACTORY =
-            ThreadLocal.withInitial(PVOCLoadStrategy::createDocumentBuilderFactory);
 
     @Override
     public ImageAnnotationImportResult load(Path path, Set<String> filesToLoad,
@@ -105,7 +102,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     private static DocumentBuilderFactory createDocumentBuilderFactory() {
-        final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newDefaultInstance();
         documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
         documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
         return documentBuilderFactory;
@@ -113,7 +110,8 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
     private ImageAnnotation parseAnnotationFile(File file, LoadContext context) throws SAXException, IOException,
             ParserConfigurationException {
-        final Document document = DOCUMENT_BUILDER_FACTORY.get().newDocumentBuilder().parse(file);
+        // JAXP factories aren't thread-safe and the files are parsed in parallel, so each file uses its own.
+        final Document document = createDocumentBuilderFactory().newDocumentBuilder().parse(file);
         document.normalize();
 
         final ImageMetaData parsedImageMetaData = parseImageMetaData(document);

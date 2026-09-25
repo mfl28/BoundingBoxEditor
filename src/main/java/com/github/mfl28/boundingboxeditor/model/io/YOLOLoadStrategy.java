@@ -207,7 +207,8 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
         throw new InvalidAnnotationFormatException("Invalid number of bounds values on line " + lineNumber + ".");
     }
 
-    private BoundingBoxData createBoundingBoxData(LoadContext context, int categoryId, double xMidRelative, double yMidRelative,
+    private BoundingBoxData createBoundingBoxData(LoadContext context, int categoryId,
+                                                  double xMidRelative, double yMidRelative,
                                                   double widthRelative, double heightRelative,
                                                   int lineNumber) {
         double xMinRelative = xMidRelative - widthRelative / 2;

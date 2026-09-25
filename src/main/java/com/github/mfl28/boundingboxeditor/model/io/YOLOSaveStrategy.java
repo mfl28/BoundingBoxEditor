@@ -43,9 +43,6 @@ import java.util.stream.Collectors;
  * <a href="https://docs.ultralytics.com/datasets/segment/">...</a>
  */
 public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
-    // DecimalFormat isn't thread-safe and the annotation files are written in parallel, so each thread uses its own.
-    private static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT = ThreadLocal.withInitial(() ->
-            new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH)));
     private static final String YOLO_ANNOTATION_FILE_EXTENSION = ".txt";
     private static final String OBJECT_DATA_FILE_NAME = "object.data";
 
@@ -140,6 +137,10 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
             throws IOException {
         try (BufferedWriter fileWriter = Files.newBufferedWriter(
                 saveFolderPath.resolve(getAnnotationFileName(annotation.getImageFileName())))) {
+            // DecimalFormat isn't thread-safe and the annotation files are written in parallel,
+            // so each file uses its own.
+            final DecimalFormat decimalFormat =
+                    new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
             List<BoundingShapeData> boundingShapeDataList = annotation.getBoundingShapeData().stream()
                     .flatMap(BoundingShapeData::flatten)
                     .toList();
@@ -147,10 +148,11 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
             for (int i = 0; i < boundingShapeDataList.size(); ++i) {
                 // Polygons need at least 3 nodes (6 coordinates) to be saved.
                 final String entry = switch (boundingShapeDataList.get(i)) {
-                    case BoundingBoxData boundingBoxData -> createBoundingBoxDataEntry(boundingBoxData, categories);
+                    case BoundingBoxData boundingBoxData ->
+                            createBoundingBoxDataEntry(boundingBoxData, categories, decimalFormat);
                     case BoundingPolygonData boundingPolygonData
                             when boundingPolygonData.getRelativePointsInImage().size() >= 6 ->
-                            createBoundingPolygonDataEntry(boundingPolygonData, categories);
+                            createBoundingPolygonDataEntry(boundingPolygonData, categories, decimalFormat);
                     case BoundingPolygonData _ -> null;
                 };
 
@@ -165,8 +167,8 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         }
     }
 
-    private static String createBoundingBoxDataEntry(BoundingBoxData boundingBoxData, List<String> categories) {
-        final DecimalFormat decimalFormat = DECIMAL_FORMAT.get();
+    private static String createBoundingBoxDataEntry(BoundingBoxData boundingBoxData, List<String> categories,
+                                                     DecimalFormat decimalFormat) {
         int categoryIndex = categories.indexOf(boundingBoxData.getCategoryName());
 
         Bounds relativeBounds = boundingBoxData.getRelativeBoundsInImage();
@@ -180,8 +182,7 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
     }
 
     private static String createBoundingPolygonDataEntry(BoundingPolygonData boundingPolygonData,
-                                                         List<String> categories) {
-        final DecimalFormat decimalFormat = DECIMAL_FORMAT.get();
+                                                         List<String> categories, DecimalFormat decimalFormat) {
         int categoryIndex = categories.indexOf(boundingPolygonData.getCategoryName());
 
         List<Double> relativePoints = boundingPolygonData.getRelativePointsInImage();
