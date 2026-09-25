@@ -43,18 +43,13 @@ import java.util.stream.Collectors;
  * <a href="https://docs.ultralytics.com/datasets/segment/">...</a>
  */
 public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
-    private static final DecimalFormat DECIMAL_FORMAT =
-            new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     private static final String YOLO_ANNOTATION_FILE_EXTENSION = ".txt";
     private static final String OBJECT_DATA_FILE_NAME = "object.data";
-    private Path saveFolderPath;
-    private List<String> categories;
 
     @Override
     public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
                                             DoubleProperty progress) {
-        this.saveFolderPath = destination;
-        this.categories = annotations.categoryNameToBoundingShapeCountMap().entrySet().stream()
+        final List<String> categories = annotations.categoryNameToBoundingShapeCountMap().entrySet().stream()
                 .filter(stringIntegerEntry -> stringIntegerEntry.getValue() > 0)
                 .map(Map.Entry::getKey)
                 .sorted()
@@ -63,7 +58,7 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         List<IOErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
 
         try {
-            createObjectDataFile();
+            createObjectDataFile(destination, categories);
         } catch (IOException e) {
             unParsedFileErrorMessages.add(new IOErrorInfoEntry(OBJECT_DATA_FILE_NAME, e.getMessage()));
         }
@@ -92,7 +87,7 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
                 .map(List::getFirst)
                 .forEach(annotation -> {
                     try {
-                        createAnnotationFile(annotation);
+                        createAnnotationFile(annotation, destination, categories);
                     } catch (IOException e) {
                         unParsedFileErrorMessages
                                 .add(new IOErrorInfoEntry(annotation.getImageFileName(), e.getMessage()));
@@ -107,7 +102,7 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         );
     }
 
-    private void createObjectDataFile() throws IOException {
+    private static void createObjectDataFile(Path saveFolderPath, List<String> categories) throws IOException {
         try (BufferedWriter fileWriter = Files.newBufferedWriter(
                 saveFolderPath.resolve(OBJECT_DATA_FILE_NAME))) {
             for (int i = 0; i < categories.size(); ++i) {
@@ -138,9 +133,14 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
                 .toList();
     }
 
-    private void createAnnotationFile(ImageAnnotation annotation) throws IOException {
+    private static void createAnnotationFile(ImageAnnotation annotation, Path saveFolderPath, List<String> categories)
+            throws IOException {
         try (BufferedWriter fileWriter = Files.newBufferedWriter(
                 saveFolderPath.resolve(getAnnotationFileName(annotation.getImageFileName())))) {
+            // DecimalFormat isn't thread-safe and the annotation files are written in parallel,
+            // so each file uses its own.
+            final DecimalFormat decimalFormat =
+                    new DecimalFormat("#.######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
             List<BoundingShapeData> boundingShapeDataList = annotation.getBoundingShapeData().stream()
                     .flatMap(BoundingShapeData::flatten)
                     .toList();
@@ -148,10 +148,11 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
             for (int i = 0; i < boundingShapeDataList.size(); ++i) {
                 // Polygons need at least 3 nodes (6 coordinates) to be saved.
                 final String entry = switch (boundingShapeDataList.get(i)) {
-                    case BoundingBoxData boundingBoxData -> createBoundingBoxDataEntry(boundingBoxData);
+                    case BoundingBoxData boundingBoxData ->
+                            createBoundingBoxDataEntry(boundingBoxData, categories, decimalFormat);
                     case BoundingPolygonData boundingPolygonData
                             when boundingPolygonData.getRelativePointsInImage().size() >= 6 ->
-                            createBoundingPolygonDataEntry(boundingPolygonData);
+                            createBoundingPolygonDataEntry(boundingPolygonData, categories, decimalFormat);
                     case BoundingPolygonData _ -> null;
                 };
 
@@ -166,26 +167,28 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
         }
     }
 
-    private String createBoundingBoxDataEntry(BoundingBoxData boundingBoxData) {
+    private static String createBoundingBoxDataEntry(BoundingBoxData boundingBoxData, List<String> categories,
+                                                     DecimalFormat decimalFormat) {
         int categoryIndex = categories.indexOf(boundingBoxData.getCategoryName());
 
         Bounds relativeBounds = boundingBoxData.getRelativeBoundsInImage();
 
-        String xMidRelative = DECIMAL_FORMAT.format(relativeBounds.getCenterX());
-        String yMidRelative = DECIMAL_FORMAT.format(relativeBounds.getCenterY());
-        String widthRelative = DECIMAL_FORMAT.format(relativeBounds.getWidth());
-        String heightRelative = DECIMAL_FORMAT.format(relativeBounds.getHeight());
+        String xMidRelative = decimalFormat.format(relativeBounds.getCenterX());
+        String yMidRelative = decimalFormat.format(relativeBounds.getCenterY());
+        String widthRelative = decimalFormat.format(relativeBounds.getWidth());
+        String heightRelative = decimalFormat.format(relativeBounds.getHeight());
 
         return StringUtils.join(List.of(categoryIndex, xMidRelative, yMidRelative, widthRelative, heightRelative), " ");
     }
 
-    private String createBoundingPolygonDataEntry(BoundingPolygonData boundingPolygonData) {
+    private static String createBoundingPolygonDataEntry(BoundingPolygonData boundingPolygonData,
+                                                         List<String> categories, DecimalFormat decimalFormat) {
         int categoryIndex = categories.indexOf(boundingPolygonData.getCategoryName());
 
         List<Double> relativePoints = boundingPolygonData.getRelativePointsInImage();
 
         String relativePointsEntry = relativePoints.stream()
-                .map(DECIMAL_FORMAT::format)
+                .map(decimalFormat::format)
                 .collect(Collectors.joining(" "));
 
         return StringUtils.join(List.of(categoryIndex, relativePointsEntry), " ");

@@ -46,27 +46,16 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
     public static final String INVALID_BOUNDING_BOX_COORDINATES_MESSAGE = "Invalid bounding-box coordinates on line ";
     private static final boolean INCLUDE_SUBDIRECTORIES = false;
     private static final String OBJECT_DATA_FILE_NAME = "object.data";
-    private final List<String> categories = new ArrayList<>();
-    private final List<IOErrorInfoEntry> unParsedFileErrorMessages =
-            Collections.synchronizedList(new ArrayList<>());
-    private Map<String, List<String>> baseFileNameToImageFileMap;
-    private Map<String, ObjectCategory> categoryNameToCategoryMap;
-    private Map<String, Integer> boundingShapeCountPerCategory;
-
     @Override
     public ImageAnnotationImportResult load(Path path, Set<String> filesToLoad,
                                             Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
                                             DoubleProperty progress)
             throws IOException {
-        this.baseFileNameToImageFileMap = filesToLoad.stream().collect(
-                Collectors.groupingBy(FilenameUtils::getBaseName, HashMap::new,
-                        Collectors.mapping(Function.identity(), Collectors.toList()))
-        );
-        this.boundingShapeCountPerCategory = new ConcurrentHashMap<>();
-        this.categoryNameToCategoryMap = new ConcurrentHashMap<>(existingCategoryNameToCategoryMap);
+        final List<IOErrorInfoEntry> unParsedFileErrorMessages = Collections.synchronizedList(new ArrayList<>());
+        final List<String> categories;
 
         try {
-            loadObjectCategories(path);
+            categories = loadObjectCategories(path);
         } catch (Exception e) {
             unParsedFileErrorMessages.add(new IOErrorInfoEntry(OBJECT_DATA_FILE_NAME, e.getMessage()));
             return new ImageAnnotationImportResult(0, unParsedFileErrorMessages, ImageAnnotationData.empty());
@@ -77,6 +66,12 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                     .add(new IOErrorInfoEntry(OBJECT_DATA_FILE_NAME, "Does not contain any category names."));
             return new ImageAnnotationImportResult(0, unParsedFileErrorMessages, ImageAnnotationData.empty());
         }
+
+        final LoadContext context = new LoadContext(categories,
+                filesToLoad.stream().collect(Collectors.groupingBy(FilenameUtils::getBaseName, HashMap::new,
+                        Collectors.mapping(Function.identity(), Collectors.toList()))),
+                new ConcurrentHashMap<>(existingCategoryNameToCategoryMap), new ConcurrentHashMap<>(),
+                unParsedFileErrorMessages);
 
         try (Stream<Path> fileStream = Files.walk(path, INCLUDE_SUBDIRECTORIES ? Integer.MAX_VALUE : 1)) {
             List<File> annotationFiles = fileStream
@@ -92,7 +87,7 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                                 .incrementAndGet() / totalNrOfFiles);
 
                         try {
-                            return loadAnnotationFromFile(file);
+                            return loadAnnotationFromFile(file, context);
                         } catch (InvalidAnnotationFormatException |
                                  AnnotationToNonExistentImageException |
                                  AnnotationAssociationException |
@@ -110,16 +105,19 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
             return new ImageAnnotationImportResult(
                     imageAnnotations.size(),
                     unParsedFileErrorMessages,
-                    new ImageAnnotationData(imageAnnotations, boundingShapeCountPerCategory, categoryNameToCategoryMap)
+                    new ImageAnnotationData(imageAnnotations, context.boundingShapeCountPerCategory(),
+                            context.categoryNameToCategoryMap())
             );
         }
     }
 
-    private void loadObjectCategories(Path root) throws IOException {
+    private static List<String> loadObjectCategories(Path root) throws IOException {
         if (!root.resolve(OBJECT_DATA_FILE_NAME).toFile().exists()) {
             throw new InvalidAnnotationFormatException(
                     "Does not exist in annotation folder \"" + root.getFileName().toString() + "\".");
         }
+
+        final List<String> categories = new ArrayList<>();
 
         try (BufferedReader fileReader = Files.newBufferedReader(root.resolve(OBJECT_DATA_FILE_NAME))) {
             String line;
@@ -132,10 +130,12 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                 }
             }
         }
+
+        return categories;
     }
 
-    private ImageAnnotation loadAnnotationFromFile(File file) throws IOException {
-        final List<String> annotatedImageFiles = baseFileNameToImageFileMap.get(
+    private ImageAnnotation loadAnnotationFromFile(File file, LoadContext context) throws IOException {
+        final List<String> annotatedImageFiles = context.baseFileNameToImageFileMap().get(
                 FilenameUtils.getBaseName(file.getName()));
 
         if (annotatedImageFiles == null) {
@@ -160,11 +160,12 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
 
                 if (!line.isBlank()) {
                     try {
-                        final BoundingShapeData boundingShapeData = parseBoundingShapeData(line, counter);
+                        final BoundingShapeData boundingShapeData = parseBoundingShapeData(line, counter, context);
                         boundingShapeDataList.add(boundingShapeData);
-                        boundingShapeCountPerCategory.merge(boundingShapeData.getCategoryName(), 1, Integer::sum);
+                        context.boundingShapeCountPerCategory()
+                                .merge(boundingShapeData.getCategoryName(), 1, Integer::sum);
                     } catch (InvalidAnnotationFormatException e) {
-                        unParsedFileErrorMessages.add(new IOErrorInfoEntry(file.getName(), e.getMessage()));
+                        context.unParsedFileErrorMessages().add(new IOErrorInfoEntry(file.getName(), e.getMessage()));
                     }
                 }
 
@@ -180,11 +181,11 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
         }
     }
 
-    private BoundingShapeData parseBoundingShapeData(String line, int lineNumber) {
+    private BoundingShapeData parseBoundingShapeData(String line, int lineNumber, LoadContext context) {
         Scanner scanner = new Scanner(line);
         scanner.useLocale(Locale.ENGLISH);
 
-        int categoryId = parseCategoryIndex(scanner, lineNumber);
+        int categoryId = parseCategoryIndex(scanner, lineNumber, context.categories());
 
         List<Double> entries = new ArrayList<>();
 
@@ -197,16 +198,17 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
         }
 
         if (entries.size() == 4) {
-            return createBoundingBoxData(
+            return createBoundingBoxData(context,
                     categoryId, entries.get(0), entries.get(1), entries.get(2), entries.get(3), lineNumber);
         } else if(entries.size() >= 6 && entries.size() % 2 == 0) {
-            return createBoundingPolygonData(categoryId, entries);
+            return createBoundingPolygonData(context, categoryId, entries);
         }
 
         throw new InvalidAnnotationFormatException("Invalid number of bounds values on line " + lineNumber + ".");
     }
 
-    private BoundingBoxData createBoundingBoxData(int categoryId, double xMidRelative, double yMidRelative,
+    private BoundingBoxData createBoundingBoxData(LoadContext context, int categoryId,
+                                                  double xMidRelative, double yMidRelative,
                                                   double widthRelative, double heightRelative,
                                                   int lineNumber) {
         double xMinRelative = xMidRelative - widthRelative / 2;
@@ -233,9 +235,9 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
         }
         assertRatio(yMaxRelative, INVALID_BOUNDING_BOX_COORDINATES_MESSAGE + lineNumber + ".");
 
-        String categoryName = categories.get(categoryId);
+        String categoryName = context.categories().get(categoryId);
 
-        ObjectCategory objectCategory = categoryNameToCategoryMap.computeIfAbsent(
+        ObjectCategory objectCategory = context.categoryNameToCategoryMap().computeIfAbsent(
                 categoryName,
                 key -> new ObjectCategory(key,
                         ColorUtils
@@ -247,10 +249,10 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
                 Collections.emptyList());
     }
 
-    private BoundingPolygonData createBoundingPolygonData(int categoryId, List<Double> entries) {
-        String categoryName = categories.get(categoryId);
+    private BoundingPolygonData createBoundingPolygonData(LoadContext context, int categoryId, List<Double> entries) {
+        String categoryName = context.categories().get(categoryId);
 
-        ObjectCategory objectCategory = categoryNameToCategoryMap.computeIfAbsent(categoryName,
+        ObjectCategory objectCategory = context.categoryNameToCategoryMap().computeIfAbsent(categoryName,
                 key -> new ObjectCategory(key,
                         ColorUtils
                                 .createRandomColor()));
@@ -259,7 +261,7 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
         return new BoundingPolygonData(objectCategory, entries, Collections.emptyList());
     }
 
-    private int parseCategoryIndex(Scanner scanner, int lineNumber) {
+    private static int parseCategoryIndex(Scanner scanner, int lineNumber, List<String> categories) {
         if (!scanner.hasNextInt()) {
             throw new InvalidAnnotationFormatException("Missing or invalid category index on line " + lineNumber + ".");
         }
@@ -279,5 +281,14 @@ public class YOLOLoadStrategy implements ImageAnnotationLoadStrategy {
         if (ratio < 0 || ratio > 1) {
             throw new InvalidAnnotationFormatException(message);
         }
+    }
+
+    /**
+     * The state of a single call to {@link #load}, shared by the (parallel) parsing of the annotation files.
+     */
+    private record LoadContext(List<String> categories, Map<String, List<String>> baseFileNameToImageFileMap,
+                               Map<String, ObjectCategory> categoryNameToCategoryMap,
+                               Map<String, Integer> boundingShapeCountPerCategory,
+                               List<IOErrorInfoEntry> unParsedFileErrorMessages) {
     }
 }
