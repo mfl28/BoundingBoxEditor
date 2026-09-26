@@ -40,7 +40,7 @@ public class KeyCombinations {
     public static final KeyCombination hideAllBoundingShapes =
             new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN);
     public static final KeyCombination showSelectedBoundingShape =
-            new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN);
+            new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN);
     public static final KeyCombination hideSelectedBoundingShape =
             new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN);
 
@@ -81,6 +81,11 @@ public class KeyCombinations {
     public static final KeyCombination undo = new KeyCodeCombination(KeyCode.Z, KeyCombination.SHORTCUT_DOWN);
     public static final KeyCombination redo =
             new KeyCodeCombination(KeyCode.Z, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN);
+
+    public static final KeyCombination copyBoundingShape =
+            new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN);
+    public static final KeyCombination pasteBoundingShape =
+            new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN);
 
     // Handled by the accelerators of their menu items.
     public static final KeyCombination openImageFolder =

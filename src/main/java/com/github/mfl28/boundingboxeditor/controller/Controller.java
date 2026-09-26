@@ -35,6 +35,7 @@ import com.github.mfl28.boundingboxeditor.model.io.services.*;
 import com.github.mfl28.boundingboxeditor.ui.*;
 import com.github.mfl28.boundingboxeditor.ui.settings.InferenceSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.BoundingBoxPredictionSuccessfulEvent;
+import com.github.mfl28.boundingboxeditor.ui.statusevents.BoundingShapeClipboardEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsImportingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsSavingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageFilesLoadingSuccessfulEvent;
@@ -133,6 +134,8 @@ public class Controller {
     private boolean imageFilterUpdating = false;
     private final EditHistoryController editHistoryController =
             new EditHistoryController(new EditHistoryOperations());
+    private final ShapeClipboardController shapeClipboardController =
+            new ShapeClipboardController(new ShapeClipboardOperations());
     private boolean editCheckpointScheduled = false;
     private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener =
             createBoundingShapeCountPerCategoryListener();
@@ -177,7 +180,8 @@ public class Controller {
         this.inferenceController = new InferenceController(model, dialogService, new InferenceOperations());
         this.keyboardShortcutHandler = new KeyboardShortcutHandler(model, new KeyboardShortcutEditor(),
                 KeyboardShortcutHandler.createViewActionShortcuts(view, this::onRegisterSettingsAction,
-                        this::onRegisterUndoAction, this::onRegisterRedoAction));
+                        this::onRegisterUndoAction, this::onRegisterRedoAction, shapeClipboardController::copySelectedShape,
+                        shapeClipboardController::paste));
         this.keyCombinationHandlers = keyboardShortcutHandler.getKeyCombinationHandlers();
 
         setupStage();
@@ -1414,6 +1418,29 @@ public class Controller {
         @Override
         public void selectShape(List<Integer> path) {
             view.getObjectTree().selectBoundingShapeTreeItem(path);
+        }
+    }
+
+    /**
+     * The shapes as seen by the {@link ShapeClipboardController}: like undo and redo, it changes the shown image's
+     * shapes by restoring snapshots.
+     */
+    private class ShapeClipboardOperations extends EditHistoryOperations
+            implements ShapeClipboardController.Operations {
+        @Override
+        public Optional<BoundingShapeData> getSelectedShape() {
+            return view.getObjectTree().getSelectedBoundingShapeData();
+        }
+
+        @Override
+        public void onShapeCopied(BoundingShapeData shape) {
+            view.getStatusBar().setStatusEvent(BoundingShapeClipboardEvent.copied(shape.getCategoryName()));
+        }
+
+        @Override
+        public void onShapePasted(BoundingShapeData shape) {
+            scheduleEditCheckpoint();
+            view.getStatusBar().setStatusEvent(BoundingShapeClipboardEvent.pasted(shape.getCategoryName()));
         }
     }
 

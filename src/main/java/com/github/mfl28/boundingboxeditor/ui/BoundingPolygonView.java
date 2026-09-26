@@ -366,6 +366,39 @@ public class BoundingPolygonView extends Polygon implements
                         .otherwise(Bindings.min(xMax.subtract(xMin), yMax.subtract(yMin))));
     }
 
+    @Override
+    public void moveBy(double dx, double dy) {
+        if(vertexHandles.isEmpty()) {
+            return;
+        }
+
+        final Bounds imageViewBounds = boundingShapeViewData.autoScaleBounds().getValue();
+        double minX = Double.POSITIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+
+        for(VertexHandle vertexHandle : vertexHandles) {
+            minX = Math.min(minX, vertexHandle.getCenterX());
+            minY = Math.min(minY, vertexHandle.getCenterY());
+            maxX = Math.max(maxX, vertexHandle.getCenterX());
+            maxY = Math.max(maxY, vertexHandle.getCenterY());
+        }
+
+        // The whole polygon stays inside the image.
+        final double clampedDx = Math.clamp(dx, Math.min(0, imageViewBounds.getMinX() - minX),
+                                            Math.max(0, imageViewBounds.getMaxX() - maxX));
+        final double clampedDy = Math.clamp(dy, Math.min(0, imageViewBounds.getMinY() - minY),
+                                            Math.max(0, imageViewBounds.getMaxY() - maxY));
+
+        for(VertexHandle vertexHandle : vertexHandles) {
+            vertexHandle.setCenterX(vertexHandle.getCenterX() + clampedDx);
+            vertexHandle.setCenterY(vertexHandle.getCenterY() + clampedDy);
+        }
+
+        updateOutlineBox();
+    }
+
     private void updateOutlineBox() {
         double newXMin = Double.MAX_VALUE;
         double newYMin = Double.MAX_VALUE;

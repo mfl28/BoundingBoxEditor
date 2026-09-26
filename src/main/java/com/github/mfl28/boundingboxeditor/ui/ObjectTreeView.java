@@ -316,6 +316,21 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         }
     }
 
+    /**
+     * Returns the data of the selected bounding shape, with its parts.
+     *
+     * @return the data, or an empty optional if no bounding shape is selected
+     */
+    public Optional<BoundingShapeData> getSelectedBoundingShapeData() {
+        final TreeItem<Object> selectedItem = getSelectionModel().getSelectedItem();
+
+        if(selectedItem == null || !(selectedItem.getValue() instanceof BoundingShapeDataConvertible)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(treeItemToBoundingShapeData(selectedItem));
+    }
+
     private static List<TreeItem<Object>> getBoundingShapeTreeItemsBelow(TreeItem<Object> treeItem) {
         // Shape tree items are grouped by category below the root and below their enclosing shape.
         return treeItem.getChildren().stream()
