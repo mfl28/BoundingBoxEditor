@@ -312,6 +312,15 @@ tasks.register('packagedAppSmokeTest', Exec) {
     executable layout.buildDirectory.file("image/bin/${javaExecutable}").get().asFile.absolutePath
     args(['--module-path', smokeTestClassesDir.get().asFile.absolutePath] + smokeTestExports
             + ['--module', 'smoketest/smoketest.PackagedAppSmokeTest'])
+    // Runs the packaged runtime like an installed app, without JVM options or libraries injected through the
+    // environment: on CI, CodeQL's build tracing (inherited through the Gradle daemon) adds a Java agent, which the
+    // image, lacking java.instrument, can't even start with.
+    doFirst {
+        environment.keySet().removeIf {
+            it in ['JAVA_TOOL_OPTIONS', 'JDK_JAVA_OPTIONS', '_JAVA_OPTIONS', 'LD_PRELOAD', 'DYLD_INSERT_LIBRARIES'] ||
+                    it.startsWith('CODEQL_')
+        }
+    }
 }
 
 tasks.register('dist') {
