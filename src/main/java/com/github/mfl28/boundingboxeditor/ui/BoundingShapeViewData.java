@@ -23,17 +23,23 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
+import javafx.beans.binding.Bindings;
 import javafx.scene.Group;
+import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.TreeItem;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Shape;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /**
  * Class holding common data and methods of bounding shape objects.
  */
 public class BoundingShapeViewData {
+    private static final String CATEGORY_LABEL_STYLE_CLASS = "shape-category-label";
+    private static final double LABEL_TEXT_BRIGHTNESS_THRESHOLD = 0.75;
     private final Property<Bounds> autoScaleBounds = new SimpleObjectProperty<>();
     private final Group nodeGroup = new Group();
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
@@ -42,6 +48,9 @@ public class BoundingShapeViewData {
     private final ObservableList<String> tags = FXCollections.observableArrayList();
     private final Shape baseShape;
     private final ObjectProperty<ObjectCategory> objectCategory = new SimpleObjectProperty<>();
+    // Created when labels are first shown: a control needs the JavaFX toolkit, which shapes otherwise don't.
+    private Label categoryLabel;
+    private final BooleanProperty categoryLabelShown = new SimpleBooleanProperty(false);
     private String previousObjectCategoryName;
     private BoundingShapeTreeItem treeItem;
 
@@ -50,6 +59,11 @@ public class BoundingShapeViewData {
         nodeGroup.getChildren().add(shape);
 
         setUpInternalListeners();
+        categoryLabelShown.addListener((observable, oldValue, newValue) -> {
+            if(Boolean.TRUE.equals(newValue) && categoryLabel == null) {
+                createCategoryLabel();
+            }
+        });
         this.objectCategory.set(objectCategory);
     }
 
@@ -181,6 +195,79 @@ public class BoundingShapeViewData {
      */
     Group getNodeGroup() {
         return nodeGroup;
+    }
+
+    /**
+     * Returns the property that switches the label with the category name at the shape on and off.
+     *
+     * @return the property
+     */
+    public BooleanProperty categoryLabelShownProperty() {
+        return categoryLabelShown;
+    }
+
+    /**
+     * Returns the label with the category name.
+     *
+     * @return the label, or null if labels were never shown for this shape
+     */
+    Label getCategoryLabel() {
+        return categoryLabel;
+    }
+
+    private void createCategoryLabel() {
+        categoryLabel = new Label();
+        categoryLabel.getStyleClass().add(CATEGORY_LABEL_STYLE_CLASS);
+        categoryLabel.setMouseTransparent(true);
+        bindCategoryLabelToCategory(objectCategory.get());
+        objectCategory.addListener((observable, oldValue, newValue) -> bindCategoryLabelToCategory(newValue));
+        categoryLabel.visibleProperty().bind(categoryLabelShown.and(baseShape.visibleProperty()));
+        // Above the shape's left end, or at the inside of its upper edge if there is no room above it; always
+        // within the image (so that it doesn't enlarge the scrollable area).
+        final Runnable relocateLabel = () -> {
+            final Bounds shapeBounds = baseShape.getBoundsInParent();
+            final Bounds imageBounds = autoScaleBounds.getValue();
+            final double labelHeight = categoryLabel.getHeight();
+
+            if(imageBounds == null) {
+                categoryLabel.relocate(shapeBounds.getMinX(), shapeBounds.getMinY() - labelHeight);
+                return;
+            }
+
+            final boolean roomAbove = shapeBounds.getMinY() - labelHeight >= imageBounds.getMinY();
+            // (A label wider than the image starts at the image's left edge.)
+            categoryLabel.relocate(Math.clamp(shapeBounds.getMinX(), imageBounds.getMinX(),
+                                              Math.max(imageBounds.getMinX(),
+                                                       imageBounds.getMaxX() - categoryLabel.getWidth())),
+                                   roomAbove ? shapeBounds.getMinY() - labelHeight : shapeBounds.getMinY());
+        };
+        baseShape.boundsInParentProperty().addListener((observable, oldValue, newValue) -> relocateLabel.run());
+        categoryLabel.widthProperty().addListener((observable, oldValue, newValue) -> relocateLabel.run());
+        categoryLabel.heightProperty().addListener((observable, oldValue, newValue) -> relocateLabel.run());
+        autoScaleBounds.addListener((observable, oldValue, newValue) -> relocateLabel.run());
+
+        nodeGroup.getChildren().add(categoryLabel);
+    }
+
+    private void bindCategoryLabelToCategory(ObjectCategory category) {
+        if(category == null) {
+            categoryLabel.textProperty().unbind();
+            categoryLabel.styleProperty().unbind();
+            return;
+        }
+
+        categoryLabel.textProperty().bind(category.nameProperty());
+        categoryLabel.styleProperty().bind(Bindings.createStringBinding(() -> {
+            final Color color = category.getColor();
+            final Color textColor = color.getBrightness() > LABEL_TEXT_BRIGHTNESS_THRESHOLD ? Color.BLACK : Color.WHITE;
+            return "-fx-background-color: " + toCssColor(color) + "; -fx-text-fill: " + toCssColor(textColor) + ";";
+        }, category.colorProperty()));
+    }
+
+    private static String toCssColor(Color color) {
+        return String.format(Locale.ROOT, "rgba(%d, %d, %d, %.2f)", (int) Math.round(color.getRed() * 255),
+                             (int) Math.round(color.getGreen() * 255), (int) Math.round(color.getBlue() * 255),
+                             color.getOpacity());
     }
 
     private void setUpInternalListeners() {

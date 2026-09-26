@@ -400,6 +400,8 @@ public class MainView extends BorderPane implements View {
         workspaceSplitPane.showObjectPopoverProperty().bind(uiSettingsConfig.showObjectPopoverProperty());
         workspaceSplitPane.getEditor().getEditorImagePane().autoSimplifyPolygonsProperty()
                 .bind(editorSettingsConfig.autoSimplifyPolygonsProperty());
+        workspaceSplitPane.getEditor().getEditorImagePane().showCategoryLabelsProperty()
+                .bind(editorSettingsConfig.showCategoryLabelsProperty());
         workspaceSplitPane.getEditor().getEditorImagePane().simplifyRelativeDistanceToleranceProperty()
                 .bind(editorSettingsConfig.simplifyRelativeDistanceToleranceProperty());
 

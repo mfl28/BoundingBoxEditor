@@ -75,6 +75,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private final ObjectProperty<ObjectCategory> selectedCategory = new SimpleObjectProperty<>(null);
     private final DoubleProperty simplifyRelativeDistanceTolerance = new SimpleDoubleProperty(0.0);
     private final BooleanProperty autoSimplifyPolygons = new SimpleBooleanProperty(true);
+    private final BooleanProperty showCategoryLabels = new SimpleBooleanProperty(false);
     private final ProgressIndicator imageLoadingProgressIndicator = new ProgressIndicator();
     private final StackPane contentPane = new StackPane(imageView, boundingShapeSceneGroup,
             imageLoadingProgressIndicator);
@@ -122,6 +123,10 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
     public BooleanProperty autoSimplifyPolygonsProperty() {
         return autoSimplifyPolygons;
+    }
+
+    public BooleanProperty showCategoryLabelsProperty() {
+        return showCategoryLabels;
     }
 
     public void initializeBoundingShapeDrawing(MouseEvent event) {
@@ -276,6 +281,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
      * @param boundingShapes the objects to add
      */
     void addBoundingShapesToSceneGroup(Collection<? extends BoundingShapeViewable> boundingShapes) {
+        boundingShapes.forEach(viewable -> viewable.getViewData().categoryLabelShownProperty().bind(showCategoryLabels));
         boundingShapeSceneGroup.getChildren().addAll(boundingShapes.stream()
                 .map(viewable -> viewable.getViewData()
                         .getNodeGroup()).toList());
@@ -288,6 +294,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
      * @param boundingShapes the objects to remove
      */
     void removeBoundingShapesFromSceneGroup(Collection<? extends BoundingShapeViewable> boundingShapes) {
+        boundingShapes.forEach(viewable -> viewable.getViewData().categoryLabelShownProperty().unbind());
         boundingShapeSceneGroup.getChildren().removeAll(boundingShapes.stream()
                 .map(viewable -> viewable.getViewData()
                         .getNodeGroup()).toList());

@@ -38,7 +38,6 @@ import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -117,6 +116,15 @@ class EditingShortcutTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         verifyThat(after.getRelativeBoundsInImage().getWidth(),
                    Matchers.closeTo(before.getRelativeBoundsInImage().getWidth(), 1e-9), saveScreenshot(testinfo));
+
+        // And back.
+        robot.type(KeyCode.LEFT);
+        robot.press(KeyCode.SHIFT).type(KeyCode.UP).release(KeyCode.SHIFT);
+        final BoundingBoxData movedBack = (BoundingBoxData) mainView.extractCurrentBoundingShapeData().getFirst();
+        verifyThat(movedBack.getXMinRelative(), Matchers.closeTo(before.getXMinRelative(), 1e-9),
+                   saveScreenshot(testinfo));
+        verifyThat(movedBack.getYMinRelative(), Matchers.closeTo(before.getYMinRelative(), 1e-9),
+                   saveScreenshot(testinfo));
 
         // Not beyond the image's edge.
         robot.interact(() -> mainView.getCurrentBoundingShapes().getFirst().moveBy(-1e6, 0));
