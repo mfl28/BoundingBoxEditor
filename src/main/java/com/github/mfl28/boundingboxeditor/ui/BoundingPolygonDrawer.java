@@ -26,6 +26,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
 import java.util.List;
+import java.util.Optional;
 
 public class BoundingPolygonDrawer implements BoundingShapeDrawer {
     private final ImageView imageView;
@@ -75,6 +76,19 @@ public class BoundingPolygonDrawer implements BoundingShapeDrawer {
         boundingPolygonView.setEditing(false);
 
         drawingInProgress = false;
+    }
+
+    @Override
+    public Optional<BoundingShapeViewable> undoLastStep() {
+        if(boundingPolygonView.getVertexHandles().size() > 1) {
+            boundingPolygonView.removeLastVertex();
+            return Optional.empty();
+        }
+
+        boundingPolygonView.setConstructing(false);
+        boundingPolygonView.setEditing(false);
+        drawingInProgress = false;
+        return Optional.of(boundingPolygonView);
     }
 
     @Override

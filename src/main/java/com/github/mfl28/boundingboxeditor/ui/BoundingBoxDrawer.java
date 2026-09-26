@@ -27,6 +27,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public class BoundingBoxDrawer implements BoundingShapeDrawer {
@@ -88,6 +89,12 @@ public class BoundingBoxDrawer implements BoundingShapeDrawer {
     @Override
     public void finalizeShape() {
         drawingInProgress = false;
+    }
+
+    @Override
+    public Optional<BoundingShapeViewable> undoLastStep() {
+        drawingInProgress = false;
+        return Optional.of(boundingBoxView);
     }
 
     @Override

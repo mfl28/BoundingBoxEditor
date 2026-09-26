@@ -75,7 +75,8 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                         KeyCombinations.selectFreehandDrawingMode, KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected,
                         KeyCombinations.changeSelectedBoundingShapeCategory,
                         KeyCombinations.hideNonSelectedBoundingShapes, KeyCombinations.simplifyPolygon,
-                        KeyCombinations.saveBoundingShapeAsImage, KeyCombinations.openSettings
+                        KeyCombinations.saveBoundingShapeAsImage, KeyCombinations.openSettings,
+                        KeyCombinations.undo, KeyCombinations.redo
                 ));
 
         testOpenSettingsKeyEvent(robot, testinfo);

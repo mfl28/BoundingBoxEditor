@@ -78,6 +78,10 @@ public class KeyCombinations {
     public static final KeyCombination openSettings =
             new KeyCodeCombination(KeyCode.COMMA, KeyCombination.SHORTCUT_DOWN);
 
+    public static final KeyCombination undo = new KeyCodeCombination(KeyCode.Z, KeyCombination.SHORTCUT_DOWN);
+    public static final KeyCombination redo =
+            new KeyCodeCombination(KeyCode.Z, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN);
+
     private KeyCombinations() {
         throw new IllegalStateException("Key Combination Class");
     }

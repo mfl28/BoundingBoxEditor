@@ -72,6 +72,14 @@ class HeaderView extends VBox implements View {
      *
      * @return the menu-item
      */
+    MenuItem getUndoMenuItem() {
+        return menuBar.getUndoMenuItem();
+    }
+
+    MenuItem getRedoMenuItem() {
+        return menuBar.getRedoMenuItem();
+    }
+
     CheckMenuItem getViewShowImagesPanelItem() {
         return menuBar.getViewShowImagesPanelItem();
     }

@@ -73,6 +73,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     private final ImageFileExplorerView imageFileExplorer = new ImageFileExplorerView();
     private final BooleanProperty showObjectPopover = new SimpleBooleanProperty();
     private final DialogService dialogService = new JavaFxDialogService();
+    private Runnable onContextMenuActionFinished = () -> {};
     private boolean treeUpdateEnabled = true;
     private double[] savedDividerPositions = {DEFAULT_FIRST_DIVIDER_RATIO, DEFAULT_SECOND_DIVIDER_RATIO};
 
@@ -98,6 +99,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     public void connectToController(final Controller controller) {
         editorsSplitPane.connectToController(controller);
         editor.connectToController(controller);
+        onContextMenuActionFinished = controller::onRegisterBoundingShapeEditFinished;
     }
 
     @Override
@@ -389,6 +391,9 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         @Override
         public TreeCell<Object> call(TreeView<Object> treeView) {
             final ObjectTreeElementCell cell = new ObjectTreeElementCell();
+            // The context menu's actions (e.g. deleting or simplifying shapes) run in its own window, outside the
+            // main scene's event handling, so the controller is told separately when they may have changed shapes.
+            cell.setOnContextMenuHidden(() -> onContextMenuActionFinished.run());
 
             applyOnDeleteBoundingShapeMenuItemListener(cell);
             applyChangeObjectCategoryMenuItemListener(cell);
@@ -565,6 +570,13 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         }
 
         private void handlePopoverTimerFinished(ObjectTreeElementCell cell) {
+            // The tree may have been rebuilt since the timer started (e.g. by an undo or an image change), which
+            // leaves the cell off-screen or holding another item.
+            if(!(cell.getItem() instanceof BoundingShapeViewable)
+                    || cell.localToScreen(cell.getBoundsInLocal()) == null) {
+                return;
+            }
+
             final Image currentImage = getEditor().getEditorImagePane().getCurrentImage();
             final String currentEditorImageUrl = getEditor().getEditorImagePane().getCurrentImageUrl();
             final ImageView imageView = cell.getPopOverImageView();
