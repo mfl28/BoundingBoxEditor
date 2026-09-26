@@ -36,6 +36,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +52,7 @@ class LitServeRestClientHttpTest {
     private static final String PREDICTIONS_JSON =
             "[{\"foo\": [1.0, 2.0, 3.0, 4.0], \"score\": 0.9}, {\"bar\": [5.0, 6.0, 7.0, 8.0], \"score\": 0.4}]";
     private final AtomicReference<RecordedRequest> lastRequest = new AtomicReference<>();
+    private final CountDownLatch releaseSlowResponse = new CountDownLatch(1);
     private HttpServer server;
     private ExecutorService serverExecutor;
     private Client client;
@@ -65,12 +67,13 @@ class LitServeRestClientHttpTest {
         server.createContext("/predict", exchange -> respond(exchange, 200, PREDICTIONS_JSON));
         server.createContext("/health", exchange -> respond(exchange, 200, "ok"));
         server.createContext("/slow", exchange -> {
+            // Never answers before the test is over, so the client's read timeout expires.
             try {
-                Thread.sleep(2000);
-            } catch(InterruptedException e) {
+                releaseSlowResponse.await();
+            } catch(InterruptedException _) {
                 Thread.currentThread().interrupt();
             }
-            respond(exchange, 200, PREDICTIONS_JSON);
+            exchange.close();
         });
         server.start();
 
@@ -89,6 +92,7 @@ class LitServeRestClientHttpTest {
     @AfterEach
     void tearDown() {
         client.close();
+        releaseSlowResponse.countDown();
         server.stop(0);
         serverExecutor.shutdownNow();
     }
