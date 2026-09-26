@@ -58,7 +58,7 @@ final class RestRequests {
             throws PredictionClientException {
         try {
             return client.target(address);
-        } catch(IllegalArgumentException | NullPointerException e) {
+        } catch(IllegalArgumentException | NullPointerException _) {
             throw new PredictionClientException(errorMessages.invalidAddress());
         }
     }
@@ -99,9 +99,9 @@ final class RestRequests {
             }
 
             return entityReader.apply(response);
-        } catch(ProcessingException | IllegalStateException e) {
+        } catch(ProcessingException | IllegalStateException _) {
             throw new PredictionClientException(errorMessages.requestFailed());
-        } catch(JsonSyntaxException e) {
+        } catch(JsonSyntaxException _) {
             throw new PredictionClientException(errorMessages.invalidResponseFormat());
         }
     }
