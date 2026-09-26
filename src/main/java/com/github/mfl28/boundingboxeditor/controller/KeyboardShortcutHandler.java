@@ -70,6 +70,20 @@ class KeyboardShortcutHandler {
          * Shows the previous image.
          */
         void showPreviousImage();
+
+        /**
+         * Returns whether there is a next image to navigate to (taking the image file filter into account).
+         *
+         * @return true if there is a next image
+         */
+        boolean hasNextImage();
+
+        /**
+         * Returns whether there is a previous image to navigate to (taking the image file filter into account).
+         *
+         * @return true if there is a previous image
+         */
+        boolean hasPreviousImage();
     }
 
     /**
@@ -240,7 +254,7 @@ class KeyboardShortcutHandler {
     }
 
     private void handleNavigateNextKeyPressed() {
-        if(model.containsImageFiles() && model.hasNextImageFile()
+        if(model.containsImageFiles() && editor.hasNextImage()
                 && !navigatePreviousKeyPressed.get()) {
             navigateNextKeyPressed.set(true);
             editor.showNextImage();
@@ -250,7 +264,7 @@ class KeyboardShortcutHandler {
     }
 
     private void handleNavigatePreviousKeyPressed() {
-        if(model.containsImageFiles() && model.hasPreviousImageFile()
+        if(model.containsImageFiles() && editor.hasPreviousImage()
                 && !navigateNextKeyPressed.get()) {
             navigatePreviousKeyPressed.set(true);
             editor.showPreviousImage();

@@ -97,11 +97,26 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
         private final String fileName;
         private final BooleanProperty hasAssignedBoundingBoxes = new SimpleBooleanProperty(false);
         private final int orientation;
+        private final int fileIndex;
 
         public FileInfo(String fileUrl, String fileName, int orientation) {
+            this(fileUrl, fileName, orientation, 0);
+        }
+
+        /**
+         * Creates the list entry of an image file.
+         *
+         * @param fileUrl     the file's url
+         * @param fileName    the file's name
+         * @param orientation the image's EXIF orientation
+         * @param fileIndex   the file's index among all loaded image files (the model's file index), which differs
+         *                    from its position in the list while a filter hides images
+         */
+        public FileInfo(String fileUrl, String fileName, int orientation, int fileIndex) {
             this.fileUrl = fileUrl;
             this.fileName = fileName;
             this.orientation = orientation;
+            this.fileIndex = fileIndex;
         }
 
         public String getFileUrl() {
@@ -114,6 +129,10 @@ public class ImageFileListView extends ListView<ImageFileListView.FileInfo> impl
 
         public int getOrientation() {
             return orientation;
+        }
+
+        public int getFileIndex() {
+            return fileIndex;
         }
 
         public boolean isHasAssignedBoundingShapes() {
