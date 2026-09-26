@@ -227,6 +227,12 @@ jlink {
 
     mergedModule {
         additive = true
+        // The plugin derives the merged module's requires from the JDK's jmods, which JDK 24+ builds (e.g. Temurin 25)
+        // no longer ship ("Cannot find module exporting ..."), so the JDK modules are listed here. Without them the
+        // packaged app can't create the REST client (IllegalAccessError: the merged module does not read java.logging).
+        // Found with jdeps; javassist's hot-swap agent (java.instrument, jdk.attach, jdk.jdi) is never used.
+        requires 'java.logging'
+        requires 'java.desktop'
         uses 'jakarta.ws.rs.client.ClientBuilder'
         uses 'jakarta.ws.rs.ext.RuntimeDelegate'
     }
