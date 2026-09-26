@@ -86,6 +86,7 @@ public class Controller {
             "You cannot delete a category that has existing bounding-boxes assigned to it.";
 
     private static final String SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE = "Save Error";
+    private static final String RECENT_IMAGE_FOLDER_NOT_FOUND_ERROR_DIALOG_TITLE = "Image Folder Not Found";
     private static final String NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT =
             "There are no image annotations to save.";
     private static final String ANNOTATION_IMPORT_ERROR_TITLE = "Annotation Import Error";
@@ -139,6 +140,7 @@ public class Controller {
     private final ChangeListener<Boolean> imageNavigationKeyPressedListener = createImageNavigationKeyPressedListener();
     private final IoMetaData ioMetaData = new IoMetaData();
     private final PreferencesStore preferencesStore = PreferencesStore.forApplication();
+    private final RecentImageFolders recentImageFolders = new RecentImageFolders(preferencesStore);
     final List<KeyCombinationEventHandler> keyCombinationHandlers;
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
@@ -245,6 +247,30 @@ public class Controller {
      */
     public void onRegisterOpenImageFolderAction() {
         imageFolderController.openImageFolder();
+    }
+
+    /**
+     * Handles the event of the user requesting to open a recently opened image folder.
+     *
+     * @param folder the folder
+     */
+    public void onRegisterOpenRecentImageFolderAction(File folder) {
+        if(!folder.isDirectory()) {
+            recentImageFolders.remove(folder);
+            dialogService.displayErrorAlert(RECENT_IMAGE_FOLDER_NOT_FOUND_ERROR_DIALOG_TITLE,
+                    String.format("The folder \"%s\" doesn't exist anymore. It was removed from the recent folders.",
+                                  folder.getPath()), stage);
+            return;
+        }
+
+        imageFolderController.openImageFolder(folder);
+    }
+
+    /**
+     * Handles the event of the user requesting to clear the list of recently opened image folders.
+     */
+    public void onRegisterClearRecentImageFoldersAction() {
+        recentImageFolders.clear();
     }
 
     public void onRegisterPerformCurrentImageBoundingBoxPredictionAction() {
@@ -886,6 +912,7 @@ public class Controller {
     }
 
     private void setUpModelListeners() {
+        view.setRecentImageFolders(recentImageFolders.getFolders());
         view.getUndoMenuItem().disableProperty().bind(editHistoryController.undoAvailableProperty().not());
         view.getRedoMenuItem().disableProperty().bind(editHistoryController.redoAvailableProperty().not());
         view.getCurrentBoundingShapes().addListener((ListChangeListener<BoundingShapeViewable>) change ->
@@ -1289,6 +1316,7 @@ public class Controller {
             model.fileIndexProperty().addListener(selectedFileIndexListener);
 
             updateViewImageFiles();
+            recentImageFolders.add(folder);
 
             view.getStatusBar().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(result, folder));
         }

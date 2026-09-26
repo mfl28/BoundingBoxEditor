@@ -19,10 +19,13 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
+import javafx.collections.ObservableList;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.VBox;
+
+import java.io.File;
 
 /**
  * The UI-element serving as a container for UI-elements at the top of
@@ -78,6 +81,10 @@ class HeaderView extends VBox implements View {
 
     MenuItem getRedoMenuItem() {
         return menuBar.getRedoMenuItem();
+    }
+
+    void setRecentImageFolders(ObservableList<File> recentImageFolders) {
+        menuBar.setRecentImageFolders(recentImageFolders);
     }
 
     CheckMenuItem getViewShowImagesPanelItem() {

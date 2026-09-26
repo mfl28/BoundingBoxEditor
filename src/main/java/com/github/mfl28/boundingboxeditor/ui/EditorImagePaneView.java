@@ -58,7 +58,6 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private static final String IMAGE_PANE_ID = "image-pane-view";
     private static final int MAXIMUM_IMAGE_WIDTH = 3072;
     private static final int MAXIMUM_IMAGE_HEIGHT = 3072;
-    private static final double ZOOM_SCALE_DELTA = 0.05;
     private static final String BOUNDING_SHAPE_SCENE_GROUP_ID = "bounding-shape-scene-group";
 
     private final ImageView imageView = new ImageView();
@@ -439,7 +438,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 double minimumFitHeight =
                         Math.min(ZOOM_MIN_WINDOW_RATIO * getHeight(), imageView.getImage().getHeight());
 
-                double zoomFactor = 1.0 + Math.signum(event.getDeltaY()) * ZOOM_SCALE_DELTA;
+                double zoomFactor = ScrollZoom.computeZoomFactor(event.getDeltaY(), event.getMultiplierY());
 
                 imageView.setFitWidth(Math.max(imageView.getFitWidth() * zoomFactor, minimumFitWidth));
                 imageView.setFitHeight(Math.max(imageView.getFitHeight() * zoomFactor, minimumFitHeight));

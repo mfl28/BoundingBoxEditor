@@ -24,7 +24,10 @@ import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredic
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.prefs.Preferences;
 
 /**
@@ -38,6 +41,8 @@ class PreferencesStore {
             "currentAnnotationLoadingDirectory";
     private static final String CURRENT_ANNOTATION_SAVING_DIRECTORY_PREFERENCE_NAME =
             "currentAnnotationSavingDirectory";
+    private static final String RECENT_IMAGE_FOLDERS_PREFERENCE_NAME = "recentImageFolders";
+    private static final String RECENT_IMAGE_FOLDERS_SEPARATOR = "\n";
     private static final String INFERENCE_ENABLED = "inferenceEnabled";
     private static final String INFERENCE_SERVICE_TYPE = "inferenceServiceType";
     private static final String INFERENCE_URL = "inferenceUrl";
@@ -175,6 +180,34 @@ class PreferencesStore {
         preferences.putInt(INFERENCE_RESIZE_WIDTH, predictorConfig.getImageResizeWidth());
         preferences.putInt(INFERENCE_RESIZE_HEIGHT, predictorConfig.getImageResizeHeight());
         preferences.putBoolean(INFERENCE_RESIZE_KEEP_RATIO, predictorConfig.getImageResizeKeepRatio());
+    }
+
+    /**
+     * Loads the recently opened image folders that still exist.
+     *
+     * @return the folders, most recent first
+     */
+    List<File> loadRecentImageFolders() {
+        final String folders = preferences.get(RECENT_IMAGE_FOLDERS_PREFERENCE_NAME, null);
+
+        if(folders == null || folders.isEmpty()) {
+            return List.of();
+        }
+
+        return Arrays.stream(folders.split(RECENT_IMAGE_FOLDERS_SEPARATOR))
+                     .map(File::new)
+                     .filter(File::isDirectory)
+                     .toList();
+    }
+
+    /**
+     * Saves the recently opened image folders.
+     *
+     * @param folders the folders, most recent first
+     */
+    void saveRecentImageFolders(List<File> folders) {
+        putOrRemove(RECENT_IMAGE_FOLDERS_PREFERENCE_NAME, folders.isEmpty() ? null :
+                folders.stream().map(File::getPath).collect(Collectors.joining(RECENT_IMAGE_FOLDERS_SEPARATOR)));
     }
 
     private void putOrRemove(String preferenceName, String value) {
