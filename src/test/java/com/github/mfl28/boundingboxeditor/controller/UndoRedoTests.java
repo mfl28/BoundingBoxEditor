@@ -25,7 +25,6 @@ import com.github.mfl28.boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Toggle;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;

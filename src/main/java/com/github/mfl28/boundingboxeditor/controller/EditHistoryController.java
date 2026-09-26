@@ -110,7 +110,7 @@ class EditHistoryController {
             currentHistory = new UndoHistory(shapes, MAX_UNDO_STEPS);
             imageFileToHistory.put(imageFile, currentHistory);
         } else {
-            currentHistory.record(shapes);
+            currentHistory.recordState(shapes);
         }
 
         updateAvailability();
@@ -130,7 +130,7 @@ class EditHistoryController {
      */
     void checkpoint() {
         if(currentHistory != null && operations.isEditingPossible()) {
-            currentHistory.record(operations.extractShapes());
+            currentHistory.recordState(operations.extractShapes());
             updateAvailability();
         }
     }

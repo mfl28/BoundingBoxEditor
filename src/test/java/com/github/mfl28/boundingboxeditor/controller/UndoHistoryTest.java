@@ -41,15 +41,15 @@ class UndoHistoryTest {
     void onRecord_WhenStateUnchanged_ShouldNotAddStep() {
         final UndoHistory history = new UndoHistory(ONE_BOX, 10);
 
-        assertFalse(history.record(List.of(box(0.1))));
+        assertFalse(history.recordState(List.of(box(0.1))));
         assertFalse(history.canUndo());
     }
 
     @Test
     void onUndoAndRedo_ShouldStepThroughRecordedStates() {
         final UndoHistory history = new UndoHistory(EMPTY, 10);
-        history.record(ONE_BOX);
-        history.record(TWO_BOXES);
+        history.recordState(ONE_BOX);
+        history.recordState(TWO_BOXES);
 
         assertEquals(Optional.of(ONE_BOX), history.undo());
         assertEquals(Optional.of(EMPTY), history.undo());
@@ -64,10 +64,10 @@ class UndoHistoryTest {
     @Test
     void onRecord_AfterUndo_ShouldDiscardRedoSteps() {
         final UndoHistory history = new UndoHistory(EMPTY, 10);
-        history.record(ONE_BOX);
+        history.recordState(ONE_BOX);
         history.undo();
 
-        assertTrue(history.record(TWO_BOXES));
+        assertTrue(history.recordState(TWO_BOXES));
         assertFalse(history.canRedo());
         assertEquals(Optional.of(EMPTY), history.undo());
     }
@@ -75,9 +75,9 @@ class UndoHistoryTest {
     @Test
     void onRecord_WhenLimitReached_ShouldDropOldestStep() {
         final UndoHistory history = new UndoHistory(EMPTY, 2);
-        history.record(ONE_BOX);
-        history.record(TWO_BOXES);
-        history.record(List.of(box(0.7)));
+        history.recordState(ONE_BOX);
+        history.recordState(TWO_BOXES);
+        history.recordState(List.of(box(0.7)));
 
         assertEquals(Optional.of(TWO_BOXES), history.undo());
         assertEquals(Optional.of(ONE_BOX), history.undo());
@@ -87,13 +87,13 @@ class UndoHistoryTest {
     @Test
     void onReplaceCurrentState_ShouldKeepSteps() {
         final UndoHistory history = new UndoHistory(EMPTY, 10);
-        history.record(ONE_BOX);
+        history.recordState(ONE_BOX);
         history.undo();
 
         history.replaceCurrentState(List.of(box(0.0000001)));
 
         assertTrue(history.canRedo());
-        assertFalse(history.record(List.of(box(0.0000001))));
+        assertFalse(history.recordState(List.of(box(0.0000001))));
     }
 
     private static BoundingShapeData box(double minX) {

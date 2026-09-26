@@ -54,7 +54,7 @@ final class UndoHistory {
      * @param state the image's shapes
      * @return true if the state was recorded, false if nothing changed
      */
-    boolean record(List<BoundingShapeData> state) {
+    boolean recordState(List<BoundingShapeData> state) {
         if(currentState.equals(state)) {
             return false;
         }
