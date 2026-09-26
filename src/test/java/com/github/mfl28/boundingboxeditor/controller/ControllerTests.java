@@ -91,9 +91,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "#pvoc-import-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        robot.push(KeyCode.ESCAPE);
+        try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
+            timeOutClickOn(robot, "#pvoc-import-menu-item", testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
+            verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
+        }
 
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
@@ -236,9 +238,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "#yolo-import-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        robot.push(KeyCode.ESCAPE);
+        try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
+            timeOutClickOn(robot, "#yolo-import-menu-item", testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
+            verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
+        }
 
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
@@ -370,9 +374,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "#json-import-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        robot.push(KeyCode.ESCAPE);
+        try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
+            timeOutClickOn(robot, "#json-import-menu-item", testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
+            verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
+        }
 
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
@@ -1197,9 +1203,11 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
-        timeOutClickOn(robot, "#csv-import-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        robot.push(KeyCode.ESCAPE);
+        try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
+            timeOutClickOn(robot, "#csv-import-menu-item", testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
+            verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
+        }
 
         // Load bounding-boxes defined in the reference annotation-file.
         Platform.runLater(() -> controller
