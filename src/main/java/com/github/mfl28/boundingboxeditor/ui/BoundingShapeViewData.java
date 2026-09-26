@@ -235,8 +235,10 @@ public class BoundingShapeViewData {
             }
 
             final boolean roomAbove = shapeBounds.getMinY() - labelHeight >= imageBounds.getMinY();
-            categoryLabel.relocate(Math.max(imageBounds.getMinX(), Math.min(shapeBounds.getMinX(),
-                                           imageBounds.getMaxX() - categoryLabel.getWidth())),
+            // (A label wider than the image starts at the image's left edge.)
+            categoryLabel.relocate(Math.clamp(shapeBounds.getMinX(), imageBounds.getMinX(),
+                                              Math.max(imageBounds.getMinX(),
+                                                       imageBounds.getMaxX() - categoryLabel.getWidth())),
                                    roomAbove ? shapeBounds.getMinY() - labelHeight : shapeBounds.getMinY());
         };
         baseShape.boundsInParentProperty().addListener((observable, oldValue, newValue) -> relocateLabel.run());
