@@ -135,7 +135,9 @@ jobs:
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Smoke-test packaged app
-        run: ./gradlew --info --stacktrace packagedAppSmokeTest
+        # A fresh Gradle process: the daemon started during CodeQL's build tracing keeps injecting its Java agent into
+        # the programs it runs, and the packaged runtime (without java.instrument) can't start with it.
+        run: ./gradlew --no-daemon --info --stacktrace packagedAppSmokeTest
       - name: Upload installer (deb)
         uses: actions/upload-artifact@v4
         with:
