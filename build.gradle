@@ -190,8 +190,9 @@ compileTestJava {
     dependsOn compileSass
 
     moduleOptions {
-        addModules = ['org.mockito.junit.jupiter']
-        addReads = ['com.github.mfl28.boundingboxeditor': 'org.mockito.junit.jupiter']
+        // jdk.httpserver: a local HTTP server standing in for inference servers in tests.
+        addModules = ['org.mockito.junit.jupiter', 'jdk.httpserver']
+        addReads = ['com.github.mfl28.boundingboxeditor': 'org.mockito.junit.jupiter,jdk.httpserver']
     }
 }
 

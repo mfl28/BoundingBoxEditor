@@ -107,12 +107,15 @@ public class Controller {
     private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER = "Predicting bounding boxes";
     private static final String FETCHING_MODELS_PROGRESS_DIALOG_TITLE = "Fetching Models";
     private static final String FETCHING_MODELS_PROGRESS_DIALOG_HEADER = "Fetching model names from server";
+    private static final String CONNECTION_CHECK_PROGRESS_DIALOG_TITLE = "Checking Connection";
+    private static final String CONNECTION_CHECK_PROGRESS_DIALOG_HEADER = "Checking the inference server";
 
     private final ImageAnnotationExportService annotationExportService = new ImageAnnotationExportService();
     private final ImageAnnotationImportService annotationImportService = new ImageAnnotationImportService();
     private final ImageMetaDataLoadingService imageMetaDataLoadingService = new ImageMetaDataLoadingService();
     private final BoundingBoxPredictorService boundingBoxPredictorService = new BoundingBoxPredictorService();
     private final ModelNameFetchService modelNameFetchService = new ModelNameFetchService();
+    private final ServerConnectionCheckService serverConnectionCheckService = new ServerConnectionCheckService();
     private final Stage stage;
     private final HostServices hostServices;
     private final MainView view;
@@ -202,8 +205,7 @@ public class Controller {
                 return;
             }
 
-            if(inferenceSettingsView.getInferenceEnabledControl().isSelected() &&
-                    inferenceSettingsView.getSelectedModelLabel().getText().equals("None")) {
+            if(inferenceSettingsView.isModelSelectionMissing()) {
                 dialogService.displayErrorAlert(SETTINGS_APPLICATION_ERROR_DIALOG_TITLE,
                         SETTINGS_APPLICATION_NO_MODEL_SELECTED_ERROR_DIALOG_CONTENT,
                         view.getSettingsWindow().orElse(stage));
@@ -313,6 +315,15 @@ public class Controller {
         final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
         view.getInferenceSettingsView().applyDisplayedSettingsToPredictorClientConfig(clientConfig);
         inferenceController.fetchModelNames(clientConfig);
+    }
+
+    /**
+     * Handles the user's request to check the connection to the inference server with the displayed settings.
+     */
+    public void onRegisterServerConnectionCheckAction() {
+        final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
+        view.getInferenceSettingsView().applyDisplayedSettingsToPredictorClientConfig(clientConfig);
+        inferenceController.checkConnection(clientConfig);
     }
 
     /**
@@ -597,6 +608,10 @@ public class Controller {
         return modelNameFetchService;
     }
 
+    ServerConnectionCheckService getServerConnectionCheckService() {
+        return serverConnectionCheckService;
+    }
+
     Stage getStage() {
         return stage;
     }
@@ -676,6 +691,8 @@ public class Controller {
                 BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER, this::onBoundingBoxPredictionSucceeded, true);
         setUpService(modelNameFetchService, FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
                 FETCHING_MODELS_PROGRESS_DIALOG_HEADER, this::onModelNameFetchingSucceeded, true);
+        setUpService(serverConnectionCheckService, CONNECTION_CHECK_PROGRESS_DIALOG_TITLE,
+                CONNECTION_CHECK_PROGRESS_DIALOG_HEADER, this::onServerConnectionCheckSucceeded, true);
     }
 
     /**
@@ -701,6 +718,12 @@ public class Controller {
     private void onModelNameFetchingSucceeded(WorkerStateEvent event) {
         modelNameFetchService.getProgressViewer().hideProgress();
         inferenceController.onModelNamesFetched(modelNameFetchService.getValue(), view.getSettingsWindow().orElse(stage));
+    }
+
+    private void onServerConnectionCheckSucceeded(WorkerStateEvent event) {
+        serverConnectionCheckService.getProgressViewer().hideProgress();
+        inferenceController.onConnectionChecked(serverConnectionCheckService.getValue(),
+                view.getSettingsWindow().orElse(stage));
     }
 
     private void onImageMetaDataLoadingSucceeded(WorkerStateEvent workerStateEvent) {
@@ -1181,7 +1204,7 @@ public class Controller {
     }
 
     /**
-     * Runs the model fetching and predictions initiated by the {@link InferenceController}.
+     * Runs the model fetching, connection checks and predictions initiated by the {@link InferenceController}.
      */
     private class InferenceOperations implements InferenceController.Operations {
         @Override
@@ -1206,6 +1229,13 @@ public class Controller {
             boundingBoxPredictorService.setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
             boundingBoxPredictorService.setPredictorClient(predictorClient);
             boundingBoxPredictorService.restart();
+        }
+
+        @Override
+        public void startConnectionCheck(BoundingBoxPredictorClient predictorClient) {
+            serverConnectionCheckService.reset();
+            serverConnectionCheckService.setClient(predictorClient);
+            serverConnectionCheckService.restart();
         }
 
         @Override

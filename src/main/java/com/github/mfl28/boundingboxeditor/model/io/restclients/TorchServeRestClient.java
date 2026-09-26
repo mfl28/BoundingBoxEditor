@@ -18,7 +18,6 @@
  */
 package com.github.mfl28.boundingboxeditor.model.io.restclients;
 
-import com.google.gson.JsonSyntaxException;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
@@ -28,24 +27,24 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+
+import com.github.mfl28.boundingboxeditor.model.io.restclients.RestRequests.ServerErrorMessages;
+
+import static com.github.mfl28.boundingboxeditor.model.io.restclients.RestRequests.createTarget;
+import static com.github.mfl28.boundingboxeditor.model.io.restclients.RestRequests.readEntity;
+import static com.github.mfl28.boundingboxeditor.model.io.restclients.RestRequests.toRequestException;
 
 public class TorchServeRestClient implements BoundingBoxPredictorClient {
     private static final String MODELS_RESOURCE_NAME = "models";
     private static final String DATA_BODY_PART_NAME = "data";
     private static final String PREDICTIONS_RESOURCE_NAME = "predictions";
     private static final String TORCH_SERVE_NAME = "Torch serve";
-    private static final String SERVER_ERROR_REASON = " Reason: ";
-    private static final GenericType<List<BoundingBoxPredictionEntry>> PREDICTIONS_TYPE = new GenericType<>() {};
     private static final ServerErrorMessages INFERENCE_SERVER_ERROR_MESSAGES = new ServerErrorMessages(
             "Invalid inference address or port.",
             "Could not connect to inference server.",
@@ -58,6 +57,13 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
             "Management server did not respond in time.",
             "Could not fetch models from management server.",
             "Invalid management server response format for resource \"" + MODELS_RESOURCE_NAME + "\".");
+    private static final String PING_RESOURCE_NAME = "ping";
+    private static final ServerErrorMessages HEALTH_CHECK_ERROR_MESSAGES = new ServerErrorMessages(
+            "Invalid inference address or port.",
+            "Could not connect to inference server.",
+            "Inference server did not respond in time.",
+            "Inference server is not healthy.",
+            "Invalid inference server response format for resource \"" + PING_RESOURCE_NAME + "\".");
     private final Client client;
     private final BoundingBoxPredictorClientConfig clientConfig;
 
@@ -69,7 +75,7 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
     @Override
     public List<BoundingBoxPredictionEntry> predict(InputStream input) throws PredictionClientException {
         final WebTarget predictionTarget =
-                createTarget(clientConfig.getInferenceAddress(), INFERENCE_SERVER_ERROR_MESSAGES);
+                createTarget(client, clientConfig.getInferenceAddress(), INFERENCE_SERVER_ERROR_MESSAGES);
 
         Invocation.Builder invocationBuilder;
 
@@ -90,13 +96,13 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
             throw toRequestException(e, INFERENCE_SERVER_ERROR_MESSAGES);
         }
 
-        return readEntity(response, r -> r.readEntity(PREDICTIONS_TYPE), INFERENCE_SERVER_ERROR_MESSAGES);
+        return readEntity(response, r -> r.readEntity(RestRequests.PREDICTIONS_TYPE), INFERENCE_SERVER_ERROR_MESSAGES);
     }
 
     @Override
     public List<ModelEntry> models() throws PredictionClientException {
         final WebTarget managementTarget =
-                createTarget(clientConfig.getManagementAddress(), MANAGEMENT_SERVER_ERROR_MESSAGES);
+                createTarget(client, clientConfig.getManagementAddress(), MANAGEMENT_SERVER_ERROR_MESSAGES);
 
         Response response;
 
@@ -114,51 +120,24 @@ public class TorchServeRestClient implements BoundingBoxPredictorClient {
     }
 
     @Override
+    public void checkConnection() throws PredictionClientException {
+        final WebTarget inferenceTarget =
+                createTarget(client, clientConfig.getInferenceAddress(), HEALTH_CHECK_ERROR_MESSAGES);
+
+        Response response;
+
+        try {
+            response = inferenceTarget.path(PING_RESOURCE_NAME).request(MediaType.APPLICATION_JSON).get();
+        } catch(ProcessingException | IllegalArgumentException | IllegalStateException e) {
+            throw toRequestException(e, HEALTH_CHECK_ERROR_MESSAGES);
+        }
+
+        readEntity(response, r -> null, HEALTH_CHECK_ERROR_MESSAGES);
+    }
+
+    @Override
     public String getName() {
         return TORCH_SERVE_NAME;
-    }
-
-    private WebTarget createTarget(String address, ServerErrorMessages errorMessages)
-            throws PredictionClientException {
-        try {
-            return client.target(address);
-        } catch(IllegalArgumentException | NullPointerException e) {
-            throw new PredictionClientException(errorMessages.invalidAddress());
-        }
-    }
-
-    private static PredictionClientException toRequestException(Exception exception,
-                                                                ServerErrorMessages errorMessages) {
-        if(exception.getCause() instanceof ConnectException) {
-            return new PredictionClientException(errorMessages.connectionFailed());
-        } else if(exception.getCause() instanceof SocketTimeoutException) {
-            return new PredictionClientException(errorMessages.timedOut());
-        } else {
-            return new PredictionClientException(errorMessages.requestFailed());
-        }
-    }
-
-    private static <T> T readEntity(Response response, Function<Response, T> entityReader,
-                                    ServerErrorMessages errorMessages) throws PredictionClientException {
-        try(response) {
-            if(!response.getStatusInfo().equals(Response.Status.OK)) {
-                throw new PredictionClientException(errorMessages.requestFailed() + SERVER_ERROR_REASON
-                        + response.getStatusInfo().getReasonPhrase());
-            }
-
-            return entityReader.apply(response);
-        } catch(ProcessingException | IllegalStateException e) {
-            throw new PredictionClientException(errorMessages.requestFailed());
-        } catch(JsonSyntaxException e) {
-            throw new PredictionClientException(errorMessages.invalidResponseFormat());
-        }
-    }
-
-    /**
-     * The error messages reported for one of the servers (inference or management).
-     */
-    private record ServerErrorMessages(String invalidAddress, String connectionFailed, String timedOut,
-                                       String requestFailed, String invalidResponseFormat) {
     }
 
     public static class ModelsWrapper {

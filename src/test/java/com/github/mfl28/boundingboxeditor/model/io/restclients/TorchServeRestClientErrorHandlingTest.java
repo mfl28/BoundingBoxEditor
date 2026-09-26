@@ -156,6 +156,31 @@ class TorchServeRestClientErrorHandlingTest {
         verify(response, times(2)).close();
     }
 
+    @Test
+    void onConnectionCheck_WhenServerHealthy_ShouldPingInferenceServerAndCloseResponse()
+            throws PredictionClientException {
+        restClient.checkConnection();
+
+        verify(client).target("http://localhost:8080");
+        verify(target).path("ping");
+        verify(response).close();
+    }
+
+    @Test
+    void onConnectionCheck_WhenServerUnhealthyOrUnreachable_ShouldReportError() {
+        when(response.getStatusInfo()).thenReturn(Response.Status.INTERNAL_SERVER_ERROR);
+        assertConnectionCheckError("Inference server is not healthy. Reason: Internal Server Error");
+
+        when(invocationBuilder.get()).thenThrow(new ProcessingException(new ConnectException()));
+        assertConnectionCheckError("Could not connect to inference server.");
+    }
+
+    private void assertConnectionCheckError(String expectedMessage) {
+        final PredictionClientException exception = assertThrows(PredictionClientException.class,
+                restClient::checkConnection);
+        assertEquals(expectedMessage, exception.getMessage());
+    }
+
     private void assertModelsError(String expectedMessage) {
         final PredictionClientException exception = assertThrows(PredictionClientException.class, restClient::models);
         assertEquals(expectedMessage, exception.getMessage());
