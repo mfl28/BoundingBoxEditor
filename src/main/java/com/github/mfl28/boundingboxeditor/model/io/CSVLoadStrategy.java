@@ -18,11 +18,11 @@
  */
 package com.github.mfl28.boundingboxeditor.model.io;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
-import com.fasterxml.jackson.dataformat.csv.CsvReadException;
 import com.github.mfl28.boundingboxeditor.model.data.*;
 import com.github.mfl28.boundingboxeditor.model.io.data.CSVRow;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
@@ -123,24 +123,34 @@ public class CSVLoadStrategy implements ImageAnnotationLoadStrategy {
                 .with(CsvParser.Feature.FAIL_ON_MISSING_COLUMNS)
                 .with(CsvParser.Feature.FAIL_ON_MISSING_HEADER_COLUMNS)
                 .readValues(inputStream)) {
-            it.forEachRemaining(csvRow -> {
-                        try {
-                            if (filterRow(filesToLoad, csvRow, errorInfoEntries)) {
-                                updateAnnotations(csvRow, filenameAnnotationMap,
-                                        existingCategoryNameToCategoryMap,
-                                        categoryNameToBoundingShapesCountMap);
-                            }
+            // A row that can't be read throws while advancing the iterator (not in the code handling the row),
+            // so the reading itself is guarded, and the remaining rows are still imported.
+            while (it.hasNextValue()) {
+                final CSVRow csvRow;
 
-                        } catch (RuntimeJsonMappingException exception) {
-                            errorInfoEntries.add(new IOErrorInfoEntry(path.getFileName().toString(),
-                                    exception.getMessage()));
-                        } catch (InvalidAnnotationFormatException exception) {
-                            errorInfoEntries.add(new IOErrorInfoEntry(csvRow.filename(),
-                                    exception.getMessage()));
-                        }
+                try {
+                    csvRow = it.nextValue();
+                } catch (JsonMappingException exception) {
+                    final String row = exception.getLocation() == null
+                            ? "Invalid row" : "Invalid row on line " + exception.getLocation().getLineNr();
+                    errorInfoEntries.add(new IOErrorInfoEntry(path.getFileName().toString(),
+                            row + ": " + exception.getOriginalMessage()));
+                    continue;
+                }
+
+                try {
+                    if (filterRow(filesToLoad, csvRow, errorInfoEntries)) {
+                        updateAnnotations(csvRow, filenameAnnotationMap,
+                                existingCategoryNameToCategoryMap,
+                                categoryNameToBoundingShapesCountMap);
                     }
-            );
-        } catch (CsvReadException exception) {
+                } catch (InvalidAnnotationFormatException exception) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(csvRow.filename(),
+                            exception.getMessage()));
+                }
+            }
+        } catch (JsonProcessingException exception) {
+            // E.g. a missing column in the header, or broken quoting: the rows read so far are kept.
             errorInfoEntries.add(new IOErrorInfoEntry(path.getFileName().toString(),
                     exception.getMessage()));
         }

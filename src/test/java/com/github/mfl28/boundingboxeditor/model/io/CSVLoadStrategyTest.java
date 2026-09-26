@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -94,5 +95,49 @@ class CSVLoadStrategyTest {
                 result.getErrorTableEntries().stream().map(IOErrorInfoEntry::getSourceName).toList());
         assertTrue(result.getErrorTableEntries().getFirst().getErrorDescription().contains("ymax"),
                 () -> result.getErrorTableEntries().getFirst().getErrorDescription());
+    }
+
+    /**
+     * A row whose values can't be read must be reported, and the rows after it must still be imported.
+     */
+    @Test
+    void onLoading_WhenRowHasMalformedValue_ShouldReportItAndLoadTheOtherRows(@TempDir Path tempDir)
+            throws IOException {
+        Path csvFile = tempDir.resolve("annotations.csv");
+        Files.writeString(csvFile, """
+                filename,width,height,class,xmin,ymin,xmax,ymax
+                first.jpg,100,200,catA,10,20,50,100
+                broken.jpg,100,200,catA,abc,20,50,100
+                last.jpg,100,200,catA,10,20,50,100
+                """);
+
+        ImageAnnotationImportResult result = new CSVLoadStrategy().load(csvFile,
+                Set.of("first.jpg", "broken.jpg", "last.jpg"), new HashMap<>(), new SimpleDoubleProperty(0));
+
+        assertEquals(Set.of("first.jpg", "last.jpg"), result.getImageAnnotationData().imageAnnotations().stream()
+                .map(ImageAnnotation::getImageFileName).collect(Collectors.toSet()));
+        assertEquals(1, result.getErrorTableEntries().size());
+        assertEquals("annotations.csv", result.getErrorTableEntries().getFirst().getSourceName());
+        assertTrue(result.getErrorTableEntries().getFirst().getErrorDescription().contains("line 3"),
+                () -> result.getErrorTableEntries().getFirst().getErrorDescription());
+    }
+
+    /**
+     * Other tools often write fractional pixel coordinates.
+     */
+    @Test
+    void onLoading_WhenCoordinatesHaveDecimals_ShouldLoadThem(@TempDir Path tempDir) throws IOException {
+        Path csvFile = tempDir.resolve("annotations.csv");
+        Files.writeString(csvFile, """
+                filename,width,height,class,xmin,ymin,xmax,ymax
+                valid.jpg,100,200,catA,10.4,20.6,50.5,100
+                """);
+
+        ImageAnnotationImportResult result = new CSVLoadStrategy().load(csvFile, Set.of("valid.jpg"),
+                new HashMap<>(), new SimpleDoubleProperty(0));
+
+        assertEquals(List.of(), result.getErrorTableEntries().stream().map(IOErrorInfoEntry::getErrorDescription)
+                .toList());
+        assertEquals(1, result.getNrSuccessfullyProcessedItems());
     }
 }
