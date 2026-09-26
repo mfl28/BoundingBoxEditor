@@ -30,6 +30,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.ClosePath;
 
 import java.util.List;
+import java.util.Optional;
 
 public class BoundingFreeHandShapeDrawer implements BoundingShapeDrawer {
 
@@ -124,6 +125,12 @@ public class BoundingFreeHandShapeDrawer implements BoundingShapeDrawer {
         boundingPolygonView.setEditing(false);
 
         drawingInProgress = false;
+    }
+
+    @Override
+    public Optional<BoundingShapeViewable> undoLastStep() {
+        drawingInProgress = false;
+        return Optional.of(boundingFreehandShapeView);
     }
 
     @Override

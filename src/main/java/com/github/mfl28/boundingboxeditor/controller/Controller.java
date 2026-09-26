@@ -20,6 +20,7 @@ package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.controller.utils.KeyCombinationEventHandler;
 import com.github.mfl28.boundingboxeditor.model.Model;
+import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.IoMetaData;
@@ -124,6 +125,9 @@ public class Controller {
     private final InferenceController inferenceController;
     private final KeyboardShortcutHandler keyboardShortcutHandler;
     private final Model model = new Model();
+    private final EditHistoryController editHistoryController =
+            new EditHistoryController(new EditHistoryOperations());
+    private boolean editCheckpointScheduled = false;
     private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener =
             createBoundingShapeCountPerCategoryListener();
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
@@ -165,7 +169,8 @@ public class Controller {
                 annotationIoController, new ImageFolderOperations());
         this.inferenceController = new InferenceController(model, dialogService, new InferenceOperations());
         this.keyboardShortcutHandler = new KeyboardShortcutHandler(model, new KeyboardShortcutEditor(),
-                KeyboardShortcutHandler.createViewActionShortcuts(view, this::onRegisterSettingsAction));
+                KeyboardShortcutHandler.createViewActionShortcuts(view, this::onRegisterSettingsAction,
+                        this::onRegisterUndoAction, this::onRegisterRedoAction));
         this.keyCombinationHandlers = keyboardShortcutHandler.getKeyCombinationHandlers();
 
         setupStage();
@@ -282,6 +287,28 @@ public class Controller {
      */
     public void onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type loadFormat) {
         annotationIoController.importAnnotations(loadFormat);
+    }
+
+    /**
+     * Handles the user's request to undo the last edit of the bounding shapes. While a shape is being drawn, the last
+     * drawing step (e.g. a polygon vertex) is undone instead.
+     */
+    public void onRegisterUndoAction() {
+        editHistoryController.undo();
+    }
+
+    /**
+     * Handles the user's request to redo the last undone edit of the bounding shapes.
+     */
+    public void onRegisterRedoAction() {
+        editHistoryController.redo();
+    }
+
+    /**
+     * Handles the end of a user interaction that may have changed the bounding shapes, so the change can be undone.
+     */
+    public void onRegisterBoundingShapeEditFinished() {
+        scheduleEditCheckpoint();
     }
 
     public void onRegisterModelNameFetchingAction() {
@@ -573,6 +600,10 @@ public class Controller {
         return boundingBoxPredictorService;
     }
 
+    EditHistoryController getEditHistoryController() {
+        return editHistoryController;
+    }
+
     ModelNameFetchService getModelNameFetchService() {
         return modelNameFetchService;
     }
@@ -711,6 +742,7 @@ public class Controller {
         updateViewFileExplorerFileInfoElements();
 
         reloadCurrentAnnotationInView();
+        restartEditHistory();
 
         if(!importResult.getErrorTableEntries().isEmpty()) {
             annotationImportService.getProgressViewer().hideProgress();
@@ -768,6 +800,7 @@ public class Controller {
     }
 
     private void clearModelAndViewAnnotationData() {
+        editHistoryController.clear();
         model.clearAnnotationData(false);
         view.reset();
         view.getEditorImagePane().removeAllCurrentBoundingShapes();
@@ -782,6 +815,11 @@ public class Controller {
     }
 
     private void setUpModelListeners() {
+        view.getUndoMenuItem().disableProperty().bind(editHistoryController.undoAvailableProperty().not());
+        view.getRedoMenuItem().disableProperty().bind(editHistoryController.redoAvailableProperty().not());
+        view.getCurrentBoundingShapes().addListener((ListChangeListener<BoundingShapeViewable>) change ->
+                scheduleEditCheckpoint());
+
         view.getEditor().getEditorToolBar()
                 .getIndexLabel()
                 .textProperty()
@@ -888,6 +926,7 @@ public class Controller {
                 }
 
                 view.getCurrentBoundingShapes().addListener(boundingShapeCountPerCategoryListener);
+                editHistoryController.onImageShown(model.getCurrentImageFile());
             }
         };
     }
@@ -895,6 +934,8 @@ public class Controller {
     @SuppressWarnings("UnnecessaryLambda")
     private ChangeListener<Number> createSelectedFileIndexListener() {
         return (value, oldValue, newValue) -> {
+            // Records pending edits of the old image while its shapes are still shown.
+            editHistoryController.onImageHidden();
             // Update selected item in image-file-list-view.
             view.getImageFileExplorer().getImageFileListView().getSelectionModel().select(newValue.intValue());
             // Show the progress spinner.
@@ -1027,6 +1068,7 @@ public class Controller {
     }
 
     private void clearViewAndModel() {
+        editHistoryController.clear();
         model.fileIndexProperty().removeListener(selectedFileIndexListener);
         model.clear();
 
@@ -1063,6 +1105,35 @@ public class Controller {
                 view.getEditorImagePane().finalizeBoundingShapeDrawing();
             }
         });
+
+        // Edits of the bounding shapes end with one of these events; checkpoints that find no change are ignored.
+        stage.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> scheduleEditCheckpoint());
+        stage.addEventFilter(KeyEvent.KEY_RELEASED, event -> scheduleEditCheckpoint());
+        stage.addEventFilter(DragEvent.DRAG_DROPPED, event -> scheduleEditCheckpoint());
+    }
+
+    /**
+     * Records the bounding shapes in the edit history once the current event has been handled completely.
+     */
+    private void scheduleEditCheckpoint() {
+        if(!editCheckpointScheduled) {
+            editCheckpointScheduled = true;
+            Platform.runLater(() -> {
+                editCheckpointScheduled = false;
+                editHistoryController.checkpoint();
+            });
+        }
+    }
+
+    /**
+     * Discards all edit histories and starts a new one for the shown image, e.g. after annotations were imported.
+     */
+    private void restartEditHistory() {
+        editHistoryController.clear();
+
+        if(model.containsImageFiles() && view.getEditorImagePane().isImageFullyLoaded()) {
+            editHistoryController.onImageShown(model.getCurrentImageFile());
+        }
     }
 
     /**
@@ -1112,6 +1183,7 @@ public class Controller {
 
         @Override
         public void showLoadedImageFiles(ImageMetaDataLoadingResult result, File folder, boolean keepCategories) {
+            editHistoryController.clear();
             model.clearAnnotationData(keepCategories);
             model.getImageFileNameToMetaDataMap().clear();
             model.getImageFileNameToMetaDataMap().putAll(result.getFileNameToMetaDataMap());
@@ -1169,6 +1241,55 @@ public class Controller {
         @Override
         public void showSelectedModel(String modelName) {
             view.getInferenceSettingsView().getSelectedModelLabel().setText(modelName);
+        }
+    }
+
+    /**
+     * The shown bounding shapes as seen by the {@link EditHistoryController}.
+     */
+    private class EditHistoryOperations implements EditHistoryController.Operations {
+        @Override
+        public boolean isEditingPossible() {
+            return model.containsImageFiles() && view.getEditorImagePane().isImageFullyLoaded()
+                    && !view.getEditorImagePane().isDrawingInProgress();
+        }
+
+        @Override
+        public boolean isDrawingInProgress() {
+            return view.getEditorImagePane().isDrawingInProgress();
+        }
+
+        @Override
+        public void undoDrawingStep() {
+            view.undoBoundingShapeDrawingStep();
+        }
+
+        @Override
+        public List<BoundingShapeData> extractShapes() {
+            return view.extractCurrentBoundingShapeData();
+        }
+
+        @Override
+        public void restoreShapes(List<BoundingShapeData> shapes) {
+            // A category may have been deleted after its last shape was, and an undo brings the shape back.
+            shapes.stream()
+                  .flatMap(BoundingShapeData::flatten)
+                  .map(BoundingShapeData::getCategory)
+                  .distinct()
+                  .filter(category -> !model.getCategoryNameToCategoryMap().containsKey(category.getName()))
+                  .forEach(category -> model.getObjectCategories().add(category));
+
+            view.getEditorImagePane().removeAllCurrentBoundingShapes();
+            view.getObjectTree().reset();
+            view.loadBoundingShapeViewsFromAnnotation(
+                    new ImageAnnotation(model.getCurrentImageMetaData(), new ArrayList<>(shapes)));
+            view.getObjectCategoryTable().refresh();
+            view.getObjectTree().refresh();
+        }
+
+        @Override
+        public void selectShape(List<Integer> path) {
+            view.getObjectTree().selectBoundingShapeTreeItem(path);
         }
     }
 

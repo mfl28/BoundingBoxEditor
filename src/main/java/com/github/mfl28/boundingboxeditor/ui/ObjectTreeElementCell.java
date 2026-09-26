@@ -482,6 +482,15 @@ class ObjectTreeElementCell extends TreeCell<Object> {
         }
     }
 
+    /**
+     * Registers a handler that is called when the cell's context menu closes, e.g. after one of its actions ran.
+     *
+     * @param handler the handler
+     */
+    void setOnContextMenuHidden(Runnable handler) {
+        contextMenu.setOnHidden(event -> handler.run());
+    }
+
     private class ObjectTreeElementContextMenu extends ContextMenu {
         private static final int CHANGE_OBJECT_CATEGORY_ITEM_POSITION = 5;
 

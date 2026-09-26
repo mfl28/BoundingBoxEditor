@@ -168,6 +168,22 @@ public class MainView extends BorderPane implements View {
     }
 
     /**
+     * Undoes the last step of the shape that is being drawn, e.g. removes the last vertex of a polygon. A shape of
+     * which nothing is left is removed.
+     */
+    public void undoBoundingShapeDrawingStep() {
+        getEditorImagePane().undoBoundingShapeDrawingStep().ifPresent(shape -> {
+            final BoundingShapeTreeItem treeItem = shape.getViewData().getTreeItem();
+
+            if(treeItem != null) {
+                workspaceSplitPane.removeBoundingShapeWithTreeItemRecursively(treeItem);
+            } else {
+                getEditorImagePane().removeAllFromCurrentBoundingShapes(List.of(shape));
+            }
+        });
+    }
+
+    /**
      * If a {@link BoundingPolygonTreeItem} is currently selected, removes its vertices with state 'editing'.
      */
     public void removeEditingVerticesWhenPolygonViewSelected() {
@@ -256,6 +272,14 @@ public class MainView extends BorderPane implements View {
 
     public Image getCurrentImage() {
         return workspaceSplitPane.getEditor().getEditorImagePane().getCurrentImage();
+    }
+
+    public MenuItem getUndoMenuItem() {
+        return header.getUndoMenuItem();
+    }
+
+    public MenuItem getRedoMenuItem() {
+        return header.getRedoMenuItem();
     }
 
     public MenuItem getFileImportAnnotationsItem() {

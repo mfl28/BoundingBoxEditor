@@ -291,6 +291,15 @@ public class BoundingPolygonView extends Polygon implements
         setEditing(false);
     }
 
+    /**
+     * Removes the most recently appended vertex, e.g. to undo a click while constructing the polygon.
+     */
+    void removeLastVertex() {
+        if(!vertexHandles.isEmpty()) {
+            vertexHandles.remove(vertexHandles.size() - 1);
+        }
+    }
+
     void removeEditingVertices() {
         long numToRemove = editingIndices.size();
 

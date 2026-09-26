@@ -158,6 +158,35 @@ class KeyboardShortcutHandlerTest {
         assertTrue(actionEvents.isEmpty());
     }
 
+    @Test
+    void onUndoShortcut_WhileDrawing_ShouldStillBeHandledWithoutZoomAndPanMode() {
+        final List<KeyEvent> undoEvents = new ArrayList<>();
+        keyboardShortcutHandler = new KeyboardShortcutHandler(model, editor,
+                List.of(new KeyCombinationEventHandler(KeyCombinations.undo, null, undoEvents::add)));
+        when(editor.isDrawingInProgress()).thenReturn(true);
+
+        keyboardShortcutHandler.onKeyPressed(shortcutEvent(KeyEvent.KEY_PRESSED, KeyCode.Z));
+        keyboardShortcutHandler.onKeyReleased(shortcutEvent(KeyEvent.KEY_RELEASED, KeyCode.Z));
+
+        assertEquals(1, undoEvents.size());
+        verify(editor, never()).setZoomableAndPannable(anyBoolean());
+    }
+
+    @Test
+    void onUndoAndRedoShortcuts_ShouldBeDistinguishedByShift() {
+        final List<KeyEvent> undoEvents = new ArrayList<>();
+        final List<KeyEvent> redoEvents = new ArrayList<>();
+        keyboardShortcutHandler = new KeyboardShortcutHandler(model, editor,
+                List.of(new KeyCombinationEventHandler(KeyCombinations.undo, null, undoEvents::add),
+                        new KeyCombinationEventHandler(KeyCombinations.redo, null, redoEvents::add)));
+
+        keyboardShortcutHandler.onKeyReleased(new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.Z, true, !IS_MAC,
+                false, IS_MAC));
+
+        assertTrue(undoEvents.isEmpty());
+        assertEquals(1, redoEvents.size());
+    }
+
     private void givenImages(int nrImages) {
         final List<File> imageFiles = new ArrayList<>();
 

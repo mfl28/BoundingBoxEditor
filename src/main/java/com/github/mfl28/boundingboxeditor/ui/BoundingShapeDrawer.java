@@ -21,11 +21,21 @@ package com.github.mfl28.boundingboxeditor.ui;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import javafx.scene.input.MouseEvent;
 
+import java.util.Optional;
+
 public interface BoundingShapeDrawer {
     void initializeShape(MouseEvent event, ObjectCategory objectCategory);
     void updateShape(MouseEvent event);
     void finalizeShape();
     boolean isDrawingInProgress();
+
+    /**
+     * Undoes the last step of the shape that is being drawn. If nothing is left of the shape, the drawing is
+     * cancelled.
+     *
+     * @return the shape if the drawing was cancelled (the caller removes it), otherwise an empty optional
+     */
+    Optional<BoundingShapeViewable> undoLastStep();
 
     EditorImagePaneView.DrawingMode getDrawingMode();
 }

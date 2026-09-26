@@ -33,6 +33,12 @@ import javafx.scene.layout.Region;
 class MenuBarView extends MenuBar implements View {
     private static final String FILE_MENU_TEXT = "_File";
     private static final String VIEW_MENU_TEXT = "_View";
+    private static final String EDIT_MENU_TEXT = "_Edit";
+    private static final String UNDO_TEXT = "_Undo";
+    private static final String REDO_TEXT = "_Redo";
+    private static final String EDIT_MENU_ID = "edit-menu";
+    private static final String UNDO_MENU_ITEM_ID = "undo-menu-item";
+    private static final String REDO_MENU_ITEM_ID = "redo-menu-item";
     private static final String OPEN_FOLDER_TEXT = "_Open Folder...";
     private static final String SAVE_TEXT = "_Export Annotations";
     private static final String MAXIMIZE_IMAGES_TEXT = "_Maximize Images";
@@ -93,6 +99,8 @@ class MenuBarView extends MenuBar implements View {
     private final MenuItem jsonImportMenuItem = new MenuItem(JSON_FORMAT_IMPORT_TEXT);
     private final MenuItem csvImportMenuItem = new MenuItem(CSV_FORMAT_IMPORT_TEXT);
     private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT, createIconRegion(EXIT_ICON_ID));
+    private final MenuItem undoMenuItem = new MenuItem(UNDO_TEXT);
+    private final MenuItem redoMenuItem = new MenuItem(REDO_TEXT);
     private final CheckMenuItem viewMaximizeImagesItem = new CheckMenuItem(MAXIMIZE_IMAGES_TEXT);
     private final CheckMenuItem viewShowImagesPanelItem = new CheckMenuItem(SHOW_IMAGE_FILE_EXPLORER_TEXT);
     private final MenuItem documentationMenuItem = new MenuItem(DOCUMENTATION_TEXT);
@@ -102,7 +110,7 @@ class MenuBarView extends MenuBar implements View {
      * Creates a new menu-bar UI-element.
      */
     MenuBarView() {
-        getMenus().addAll(createFileMenu(), createViewMenu(), createHelpMenu());
+        getMenus().addAll(createFileMenu(), createEditMenu(), createViewMenu(), createHelpMenu());
         setId(MAIN_MENU_BAR_ID);
         viewShowImagesPanelItem.setSelected(true);
         viewMaximizeImagesItem.setSelected(true);
@@ -159,6 +167,8 @@ class MenuBarView extends MenuBar implements View {
                 controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.CSV));
         fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
         settingsMenuItem.setOnAction(action -> controller.onRegisterSettingsAction());
+        undoMenuItem.setOnAction(action -> controller.onRegisterUndoAction());
+        redoMenuItem.setOnAction(action -> controller.onRegisterRedoAction());
         documentationMenuItem.setOnAction(action -> controller.onRegisterDocumentationAction());
         aboutMenuItem.setOnAction(action -> controller.onRegisterAboutAction());
     }
@@ -210,6 +220,35 @@ class MenuBarView extends MenuBar implements View {
         fileExitItem.setId(FILE_EXIT_MENU_ITEM_ID);
 
         return fileMenu;
+    }
+
+    /**
+     * Returns the menu-item which undoes the last edit of the bounding shapes.
+     *
+     * @return the menu-item
+     */
+    MenuItem getUndoMenuItem() {
+        return undoMenuItem;
+    }
+
+    /**
+     * Returns the menu-item which redoes the last undone edit of the bounding shapes.
+     *
+     * @return the menu-item
+     */
+    MenuItem getRedoMenuItem() {
+        return redoMenuItem;
+    }
+
+    private Menu createEditMenu() {
+        final Menu editMenu = new Menu(EDIT_MENU_TEXT);
+        editMenu.setId(EDIT_MENU_ID);
+        editMenu.getItems().addAll(undoMenuItem, redoMenuItem);
+
+        undoMenuItem.setId(UNDO_MENU_ITEM_ID);
+        redoMenuItem.setId(REDO_MENU_ITEM_ID);
+
+        return editMenu;
     }
 
     private Menu createViewMenu() {

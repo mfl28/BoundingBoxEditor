@@ -91,9 +91,12 @@ class KeyboardShortcutHandler {
      *
      * @param view         the main view
      * @param openSettings opens the settings dialog
+     * @param undo         undoes the last edit of the bounding shapes
+     * @param redo         redoes the last undone edit of the bounding shapes
      * @return the shortcut handlers
      */
-    static List<KeyCombinationEventHandler> createViewActionShortcuts(MainView view, Runnable openSettings) {
+    static List<KeyCombinationEventHandler> createViewActionShortcuts(MainView view, Runnable openSettings,
+                                                                     Runnable undo, Runnable redo) {
         return List.of(
                 new KeyCombinationEventHandler(KeyCombinations.deleteSelectedBoundingShape,
                         null, event -> view.removeSelectedTreeItemAndChildren()),
@@ -132,7 +135,11 @@ class KeyboardShortcutHandler {
                 new KeyCombinationEventHandler(KeyCombinations.saveBoundingShapeAsImage,
                         null, event -> view.saveCurrentSelectedBoundingShapeAsImage()),
                 new KeyCombinationEventHandler(KeyCombinations.openSettings,
-                        null, event -> openSettings.run())
+                        null, event -> openSettings.run()),
+                new KeyCombinationEventHandler(KeyCombinations.undo,
+                        null, event -> undo.run()),
+                new KeyCombinationEventHandler(KeyCombinations.redo,
+                        null, event -> redo.run())
         );
     }
 
@@ -175,11 +182,14 @@ class KeyboardShortcutHandler {
      * @param event the key event
      */
     void onKeyReleased(KeyEvent event) {
-        if(editor.isDrawingInProgress()) {
+        final boolean drawingInProgress = editor.isDrawingInProgress();
+
+        // While drawing, only undo is handled: it undoes the last drawing step (e.g. a polygon vertex).
+        if(drawingInProgress && !KeyCombinations.undo.match(event)) {
             return;
         }
 
-        if(!event.isShortcutDown()) {
+        if(!drawingInProgress && !event.isShortcutDown()) {
             editor.setZoomableAndPannable(false);
         }
 

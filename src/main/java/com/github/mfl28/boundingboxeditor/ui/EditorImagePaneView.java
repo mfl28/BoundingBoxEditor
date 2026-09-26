@@ -41,6 +41,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * A UI-element responsible for displaying the currently selected image on which the
@@ -147,6 +148,25 @@ public class EditorImagePaneView extends ScrollPane implements View {
             boundingShapeDrawer.finalizeShape();
             boundingShapeSceneGroup.setMouseTransparent(false);
         }
+    }
+
+    /**
+     * Undoes the last step of the shape that is being drawn.
+     *
+     * @return the shape if nothing is left of it and the drawing was cancelled, otherwise an empty optional
+     */
+    Optional<BoundingShapeViewable> undoBoundingShapeDrawingStep() {
+        if(!isDrawingInProgress()) {
+            return Optional.empty();
+        }
+
+        final Optional<BoundingShapeViewable> cancelledShape = boundingShapeDrawer.undoLastStep();
+
+        if(cancelledShape.isPresent()) {
+            boundingShapeSceneGroup.setMouseTransparent(false);
+        }
+
+        return cancelledShape;
     }
 
     public DrawingMode getCurrentBoundingShapeDrawingMode() {
