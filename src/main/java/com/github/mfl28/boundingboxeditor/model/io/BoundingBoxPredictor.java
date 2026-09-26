@@ -36,10 +36,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class BoundingBoxPredictor {
     private static final String DEFAULT_IMAGE_STREAM_FORMAT_NAME = "png";
     private static final String NON_EXISTENT_IMAGE_ERROR_MESSAGE = "Image file does not exist.";
+    private static final String INVALID_PREDICTIONS_ERROR_MESSAGE = " predicted object(s) had an unexpected format "
+            + "and were skipped. Expected: {\"<category>\": [xmin, ymin, xmax, ymax], \"score\": <score>}.";
+    private static final String OUTSIDE_PREDICTIONS_ERROR_MESSAGE =
+            " predicted box(es) did not overlap the image and were skipped.";
     private final BoundingBoxPredictorClient client;
     private final BoundingBoxPredictorConfig predictorConfig;
     private double predictedImageWidth;
@@ -81,14 +86,13 @@ public class BoundingBoxPredictor {
             final PredictionExtractor predictionExtractor = new PredictionExtractor(existingCategoryNameToCategoryMap,
                     categoryToCount);
 
-            imageAnnotation.getBoundingShapeData()
-                    .addAll(boundingBoxPredictions.stream()
-                            .filter(prediction ->
-                                    Double.compare(prediction.score(),
-                                            predictorConfig
-                                                    .getMinimumScore()) >=
-                                            0)
-                            .map(predictionExtractor::extract).toList());
+            for(BoundingBoxPredictionEntry prediction : boundingBoxPredictions) {
+                if(Double.compare(prediction.score(), predictorConfig.getMinimumScore()) >= 0) {
+                    predictionExtractor.extract(prediction).ifPresent(imageAnnotation.getBoundingShapeData()::add);
+                }
+            }
+
+            predictionExtractor.reportSkippedPredictions(errorInfoEntries);
 
             return new BoundingBoxPredictionResult(1, errorInfoEntries,
                     new ImageAnnotationData(List.of(imageAnnotation), categoryToCount,
@@ -145,6 +149,8 @@ public class BoundingBoxPredictor {
         private final Map<String, ObjectCategory> existingCategoryNameToCategoryMap;
         private final Map<String, Integer> categoryNameToShapeCount;
         private CaseInsensitiveMap<String, ObjectCategory> mergedCategoryNameToCategoryMap;
+        private int nrInvalidPredictions = 0;
+        private int nrPredictionsOutsideImage = 0;
 
         PredictionExtractor(
                 Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
@@ -157,11 +163,32 @@ public class BoundingBoxPredictor {
             }
         }
 
-        BoundingBoxData extract(BoundingBoxPredictionEntry prediction) {
-            final Map.Entry<String, List<Double>> boundingBoxCoordinatesEntry =
-                    prediction.categoryToBoundingBoxes().entrySet().iterator().next();
+        /**
+         * Converts a prediction into a bounding box, clamped to the image. Predictions without a category and at
+         * least four coordinates, and boxes that don't overlap the image, are skipped and counted.
+         */
+        Optional<BoundingBoxData> extract(BoundingBoxPredictionEntry prediction) {
+            final Optional<Map.Entry<String, List<Double>>> boundingBoxCoordinatesEntry =
+                    prediction.categoryToBoundingBoxes().entrySet().stream().findFirst();
 
-            final String predictedCategory = boundingBoxCoordinatesEntry.getKey();
+            if(boundingBoxCoordinatesEntry.isEmpty() || !hasCoordinates(boundingBoxCoordinatesEntry.get().getValue())) {
+                ++nrInvalidPredictions;
+                return Optional.empty();
+            }
+
+            final List<Double> coordinates = boundingBoxCoordinatesEntry.get().getValue();
+            // Models may predict boxes that extend past the image; they are cut off at its borders.
+            final double xMin = clampToImage(coordinates.get(0) / predictedImageWidth);
+            final double yMin = clampToImage(coordinates.get(1) / predictedImageHeight);
+            final double xMax = clampToImage(coordinates.get(2) / predictedImageWidth);
+            final double yMax = clampToImage(coordinates.get(3) / predictedImageHeight);
+
+            if(!(xMax > xMin && yMax > yMin)) {
+                ++nrPredictionsOutsideImage;
+                return Optional.empty();
+            }
+
+            final String predictedCategory = boundingBoxCoordinatesEntry.get().getKey();
 
             ObjectCategory objectCategory;
 
@@ -180,14 +207,30 @@ public class BoundingBoxPredictor {
                                         ColorUtils.createRandomColor()));
             }
 
-            double xMin = boundingBoxCoordinatesEntry.getValue().get(0) / predictedImageWidth;
-            double yMin = boundingBoxCoordinatesEntry.getValue().get(1) / predictedImageHeight;
-            double xMax = boundingBoxCoordinatesEntry.getValue().get(2) / predictedImageWidth;
-            double yMax = boundingBoxCoordinatesEntry.getValue().get(3) / predictedImageHeight;
-
             categoryNameToShapeCount.merge(objectCategory.getName(), 1, Integer::sum);
 
-            return new BoundingBoxData(objectCategory, xMin, yMin, xMax, yMax, new ArrayList<>());
+            return Optional.of(new BoundingBoxData(objectCategory, xMin, yMin, xMax, yMax, new ArrayList<>()));
+        }
+
+        void reportSkippedPredictions(List<IOErrorInfoEntry> errorInfoEntries) {
+            if(nrInvalidPredictions != 0) {
+                errorInfoEntries.add(new IOErrorInfoEntry(client.getName(),
+                        nrInvalidPredictions + INVALID_PREDICTIONS_ERROR_MESSAGE));
+            }
+
+            if(nrPredictionsOutsideImage != 0) {
+                errorInfoEntries.add(new IOErrorInfoEntry(client.getName(),
+                        nrPredictionsOutsideImage + OUTSIDE_PREDICTIONS_ERROR_MESSAGE));
+            }
+        }
+
+        private static boolean hasCoordinates(List<Double> coordinates) {
+            return coordinates != null && coordinates.size() >= 4
+                    && coordinates.subList(0, 4).stream().allMatch(value -> value != null && Double.isFinite(value));
+        }
+
+        private static double clampToImage(double relativeCoordinate) {
+            return Math.clamp(relativeCoordinate, 0.0, 1.0);
         }
     }
 }

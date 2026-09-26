@@ -20,22 +20,24 @@ package com.github.mfl28.boundingboxeditor.model.io.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingBoxData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 
 /**
- * A row of a CSV annotation file: one bounding box in absolute pixel coordinates.
+ * A row of a CSV annotation file: one bounding box in absolute pixel coordinates. Sizes and coordinates written
+ * with decimals are rounded when read.
  */
 @JsonPropertyOrder({ "filename", "width", "height", "class" , "xmin", "ymin", "xmax", "ymax" })
 public record CSVRow(
         @JsonProperty(required = true) String filename,
-        @JsonProperty(required = true) int width,
-        @JsonProperty(required = true) int height,
+        @JsonProperty(required = true) @JsonDeserialize(using = RoundingIntDeserializer.class) int width,
+        @JsonProperty(required = true) @JsonDeserialize(using = RoundingIntDeserializer.class) int height,
         @JsonProperty(value = "class", required = true) String categoryName,
-        @JsonProperty(value = "xmin", required = true) int xMin,
-        @JsonProperty(value = "ymin", required = true) int yMin,
-        @JsonProperty(value = "xmax", required = true) int xMax,
-        @JsonProperty(value = "ymax", required = true) int yMax) {
+        @JsonProperty(value = "xmin", required = true) @JsonDeserialize(using = RoundingIntDeserializer.class) int xMin,
+        @JsonProperty(value = "ymin", required = true) @JsonDeserialize(using = RoundingIntDeserializer.class) int yMin,
+        @JsonProperty(value = "xmax", required = true) @JsonDeserialize(using = RoundingIntDeserializer.class) int xMax,
+        @JsonProperty(value = "ymax", required = true) @JsonDeserialize(using = RoundingIntDeserializer.class) int yMax) {
 
     public static CSVRow fromData(ImageAnnotation imageAnnotation, BoundingBoxData boundingBoxData) {
         double imageWidth = imageAnnotation.getImageMetaData().getImageWidth();

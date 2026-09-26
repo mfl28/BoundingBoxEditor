@@ -261,7 +261,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 }
             }
             case "truncated", "occluded", "difficult" -> {
-                if(Integer.parseInt(tagElement.getTextContent()) == 1) {
+                if(parseInt(tagElement.getTextContent(), tagElement.getTagName()) == 1) {
                     boxDataParseResult.getTags().add(tagElement.getTagName());
                 }
             }
@@ -324,7 +324,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
             Element childElement = (Element) childNode;
 
-            if(Integer.parseInt(childElement.getTextContent()) == 1) {
+            if(parseInt(childElement.getTextContent(), childElement.getTagName()) == 1) {
                 actions.add("action: " + childElement.getTagName());
             }
         }
@@ -353,8 +353,8 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         List<Double> points = new ArrayList<>();
 
         for(int i = 0; i != xNodes.getLength(); ++i) {
-            points.add(Double.parseDouble(xNodes.item(i).getTextContent()));
-            points.add(Double.parseDouble(yNodes.item(i).getTextContent()));
+            points.add(parseDouble(xNodes.item(i).getTextContent(), "x"));
+            points.add(parseDouble(yNodes.item(i).getTextContent(), "y"));
         }
 
         return points;
@@ -367,7 +367,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             throw new InvalidAnnotationFormatException(MISSING_ELEMENT_PREFIX + tagName);
         }
 
-        return Double.parseDouble(doubleNode.getTextContent());
+        return parseDouble(doubleNode.getTextContent(), tagName);
     }
 
     private double parseDoubleElement(Element element, String tagName) {
@@ -377,7 +377,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             throw new InvalidAnnotationFormatException(MISSING_ELEMENT_PREFIX + tagName);
         }
 
-        return Double.parseDouble(doubleNode.getTextContent());
+        return parseDouble(doubleNode.getTextContent(), tagName);
     }
 
     private int parseIntElement(Document document, String tagName) {
@@ -387,7 +387,28 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
             throw new InvalidAnnotationFormatException(MISSING_ELEMENT_PREFIX + tagName);
         }
 
-        return Integer.parseInt(intNode.getTextContent());
+        return parseInt(intNode.getTextContent(), tagName);
+    }
+
+    // Malformed numbers are reported like other format errors, so that they only affect their object or file.
+    private static double parseDouble(String text, String tagName) {
+        try {
+            return Double.parseDouble(text.strip());
+        } catch(NumberFormatException _) {
+            throw new InvalidAnnotationFormatException(invalidNumberMessage(text, tagName));
+        }
+    }
+
+    private static int parseInt(String text, String tagName) {
+        try {
+            return Integer.parseInt(text.strip());
+        } catch(NumberFormatException _) {
+            throw new InvalidAnnotationFormatException(invalidNumberMessage(text, tagName));
+        }
+    }
+
+    private static String invalidNumberMessage(String text, String tagName) {
+        return "Invalid number \"" + text.strip() + "\" in <" + tagName + ">.";
     }
 
     private static class BoundingShapeDataParseResult {

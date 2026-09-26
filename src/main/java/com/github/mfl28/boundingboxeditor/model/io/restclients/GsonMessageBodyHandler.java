@@ -74,8 +74,19 @@ public class GsonMessageBodyHandler implements MessageBodyReader<Object>, Messag
         @Override
         public BoundingBoxPredictionEntry deserialize(JsonElement json, Type typeOfT,
                                                       JsonDeserializationContext context) {
+            // Unexpected entries are reported as a format error, which the clients turn into a clear message.
+            if(!json.isJsonObject()) {
+                throw new JsonSyntaxException("A prediction is not a JSON object: " + json);
+            }
+
             final JsonObject jsonObject = json.getAsJsonObject();
-            double score = jsonObject.get(SCORE_FIELD_NAME).getAsDouble();
+            final JsonElement scoreElement = jsonObject.get(SCORE_FIELD_NAME);
+
+            if(scoreElement == null || !scoreElement.isJsonPrimitive() || !scoreElement.getAsJsonPrimitive().isNumber()) {
+                throw new JsonSyntaxException("A prediction has no numeric \"" + SCORE_FIELD_NAME + "\": " + json);
+            }
+
+            final double score = scoreElement.getAsDouble();
 
             final Map<String, List<Double>> categoryToBoundingBox = new HashMap<>();
 

@@ -66,6 +66,7 @@ class LitServeRestClientHttpTest {
         server.setExecutor(serverExecutor);
         server.createContext("/predict", exchange -> respond(exchange, 200, PREDICTIONS_JSON));
         server.createContext("/health", exchange -> respond(exchange, 200, "ok"));
+        server.createContext("/no-score", exchange -> respond(exchange, 200, "[{\"foo\": [1.0, 2.0, 3.0, 4.0]}]"));
         server.createContext("/slow", exchange -> {
             // Never answers before the test is over, so the client's read timeout expires.
             try {
@@ -95,6 +96,17 @@ class LitServeRestClientHttpTest {
         releaseSlowResponse.countDown();
         server.stop(0);
         serverExecutor.shutdownNow();
+    }
+
+    @Test
+    void onPredictionRequested_WhenScoreIsMissing_ShouldReportInvalidResponse() {
+        clientConfig.setPredictionPath("/no-score");
+        final BoundingBoxPredictorClient predictorClient = BoundingBoxPredictorClient.create(client, clientConfig);
+
+        final PredictionClientException exception = assertThrows(PredictionClientException.class,
+                () -> predictorClient.predict(new ByteArrayInputStream(new byte[0])));
+
+        assertTrue(exception.getMessage().contains("format"), exception.getMessage());
     }
 
     @Test
