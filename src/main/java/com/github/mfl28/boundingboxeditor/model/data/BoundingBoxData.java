@@ -151,12 +151,8 @@ public final class BoundingBoxData extends BoundingShapeData {
             return false;
         }
 
-        if(relativeBoundsInImage == that.relativeBoundsInImage) {
-            return true;
-        }
-
         if(relativeBoundsInImage == null || that.relativeBoundsInImage == null) {
-            return false;
+            return relativeBoundsInImage == null && that.relativeBoundsInImage == null;
         }
 
         return MathUtils.doubleAlmostEqual(relativeBoundsInImage.getMinX(), that.relativeBoundsInImage.getMinX()) &&

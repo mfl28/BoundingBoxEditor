@@ -100,12 +100,8 @@ public final class BoundingPolygonData extends BoundingShapeData {
             return false;
         }
 
-        if(relativePointsInImage == that.relativePointsInImage) {
-            return true;
-        }
-
         if((relativePointsInImage == null) || (that.relativePointsInImage == null)) {
-            return false;
+            return relativePointsInImage == null && that.relativePointsInImage == null;
         }
 
         if(relativePointsInImage.size() != that.relativePointsInImage.size()) {

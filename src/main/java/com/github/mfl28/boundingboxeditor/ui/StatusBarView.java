@@ -117,11 +117,11 @@ public class StatusBarView extends HBox implements View {
             setId(SAVE_STATUS_INDICATOR_ID);
         }
 
-        public boolean isSaved() {
+        boolean isSaved() {
             return saved.get();
         }
 
-        public BooleanProperty savedProperty() {
+        BooleanProperty savedProperty() {
             return saved;
         }
     }

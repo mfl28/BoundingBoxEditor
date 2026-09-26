@@ -61,7 +61,7 @@ class LitServeClientTest extends BoundingBoxEditorTestBase {
 
     @Start
     void start(Stage stage) throws IOException {
-        fakeLitServe = HttpServer.create(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0), 0);
+        fakeLitServe = HttpServer.create(new InetSocketAddress(InetAddress.getByAddress(new byte[]{127, 0, 0, 1}), 0), 0);
         fakeLitServe.createContext("/health", exchange -> respondIfAuthorized(exchange, "ok"));
         fakeLitServe.createContext("/predict", exchange -> {
             lastPredictionBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.ISO_8859_1));
