@@ -155,10 +155,11 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertFalse(openFolderItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Open folder item not " +
                 "enabled"));
 
-        timeOutClickOn(robot, "#file-open-folder-menu-item", testinfo);
-        robot.push(KeyCode.ESCAPE);
-
-        WaitForAsyncUtils.waitForFxEvents();
+        try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
+            timeOutClickOn(robot, "#file-open-folder-menu-item", testinfo);
+            WaitForAsyncUtils.waitForFxEvents();
+            verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
+        }
 
         MenuItem saveItem = getSubMenuItem(robot, "File", "Export Annotations");
         assertTrue(saveItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Save item not visible"));

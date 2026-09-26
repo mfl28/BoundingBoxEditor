@@ -45,6 +45,7 @@ import javafx.stage.*;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -247,6 +248,33 @@ public class BoundingBoxEditorTestBase {
                 throw new RuntimeException("Could not create test-screenshot directory.");
             }
 
+    }
+
+    private static boolean applicationActivated = false;
+
+    /**
+     * Clicks the application's window once per test run (JVM), on the empty end of the menu bar.
+     * <p>
+     * Tests start while another application is in front. The first click into the window then only activates
+     * the application, and until that has finished, the robot's mouse movements over the just opened menu are
+     * lost: pointing at a submenu didn't open it, and clicking it closed the whole menu. Whichever test used a menu
+     * first could therefore fail (the flaky File-menu tests). JavaFX reports the window as focused even before, so
+     * this can't be waited for.
+     *
+     * @param robot the robot
+     */
+    @BeforeEach
+    void activateApplication(FxRobot robot) {
+        if(applicationActivated) {
+            return;
+        }
+
+        applicationActivated = true;
+        final Bounds menuBarBounds = robot.lookup("#main-menu-bar").query().getBoundsInLocal();
+        final Point2D emptyMenuBarEnd = robot.lookup("#main-menu-bar").query()
+                                             .localToScreen(menuBarBounds.getMaxX() - 10, menuBarBounds.getCenterY());
+        robot.clickOn(emptyMenuBarEnd);
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     @AfterEach
@@ -644,7 +672,34 @@ public class BoundingBoxEditorTestBase {
         return true;
     }
 
-    protected static AtomicReference<MockedConstruction<FileChooser>> createMockedFileChooser(File outputFile) {
+    /**
+     * Replaces the native folder and file dialogs with mocks that act as if the user cancelled them, until closed.
+     * <p>
+     * Tests must not open real native dialogs: they can't tell when one has appeared, so pressing Escape to close
+     * it could come too early. The dialog then stayed open and blocked the application, e.g. every later click on a
+     * menu (the cause of the flaky File-menu tests).
+     *
+     * @return the mocks, which count the dialogs that were requested
+     */
+    protected static MockedFileDialogs mockCancelledFileDialogs() {
+        final AtomicReference<MockedConstruction<DirectoryChooser>> directoryChoosers = new AtomicReference<>();
+        final AtomicReference<MockedConstruction<FileChooser>> fileChoosers = new AtomicReference<>();
+
+        // Construction mocks only apply to the thread that creates them, and the dialogs are created on the FX thread.
+        Platform.runLater(() -> {
+            directoryChoosers.set(Mockito.mockConstruction(DirectoryChooser.class));
+            fileChoosers.set(Mockito.mockConstruction(FileChooser.class, (mock, context) -> {
+                @SuppressWarnings("unchecked")
+                final ObservableList<FileChooser.ExtensionFilter> extensionFiltersMock = mock(ObservableList.class);
+                when(mock.getExtensionFilters()).thenReturn(extensionFiltersMock);
+            }));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        return new MockedFileDialogs(directoryChoosers.get(), fileChoosers.get());
+    }
+
+        protected static AtomicReference<MockedConstruction<FileChooser>> createMockedFileChooser(File outputFile) {
         final AtomicReference<MockedConstruction<FileChooser>> mockedFileChooser = new AtomicReference<>();
 
         Platform.runLater(() -> {
@@ -658,5 +713,29 @@ public class BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         return mockedFileChooser;
+    }
+
+    /**
+     * Mocked native folder and file dialogs, see {@link #mockCancelledFileDialogs()}.
+     */
+    protected record MockedFileDialogs(MockedConstruction<DirectoryChooser> directoryChoosers,
+                                       MockedConstruction<FileChooser> fileChoosers) implements AutoCloseable {
+        /**
+         * Returns how many folder or file dialogs the application requested.
+         *
+         * @return the number of dialogs
+         */
+        public int nrRequested() {
+            return directoryChoosers.constructed().size() + fileChoosers.constructed().size();
+        }
+
+        @Override
+        public void close() {
+            Platform.runLater(() -> {
+                directoryChoosers.close();
+                fileChoosers.close();
+            });
+            WaitForAsyncUtils.waitForFxEvents();
+        }
     }
 }
