@@ -232,6 +232,8 @@ public class Controller {
 
         inferenceController.onInferenceSettingsApplied(inferenceWasEnabled,
                 model.getBoundingBoxPredictorConfig().isInferenceEnabled());
+        preferencesStore.saveInferenceSettings(model.getBoundingBoxPredictorClientConfig(),
+                model.getBoundingBoxPredictorConfig());
 
         if(buttonType.equals(ButtonType.APPLY)) {
             event.consume();
@@ -1149,6 +1151,10 @@ public class Controller {
     private void loadPreferences() {
         stage.setMaximized(preferencesStore.loadWindowMaximized());
         preferencesStore.loadDirectories(ioMetaData);
+        preferencesStore.loadInferenceSettings(model.getBoundingBoxPredictorClientConfig(),
+                model.getBoundingBoxPredictorConfig());
+        // Inference that was switched on in an earlier run needs its client right away.
+        inferenceController.onInferenceSettingsApplied(false, model.getBoundingBoxPredictorConfig().isInferenceEnabled());
     }
 
     private void savePreferences() {
