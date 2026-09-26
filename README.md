@@ -30,9 +30,9 @@ This is an image annotation desktop-application written in Java using the JavaFX
 Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format XML-files or [YOLO](https://pjreddie.com/darknet/yolo/) format TXT-files.
 
 <p align="center">
-  <img src="demo-media/demo_v2_0_0.png" align="center">
+  <img src="demo-media/demo_v3_0_0.png" align="center">
   </br>
-  <em>Demo screenshot of release v2.0.0.</em>
+  <em>Demo screenshot of release v3.0.0.</em>
 </p>
 
 ## Main Features
