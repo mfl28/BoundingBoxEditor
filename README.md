@@ -39,7 +39,7 @@ Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://ho
 * Create rectangular and polygonal ("vertices-clicking" and "freehand-drawing" modes) bounding box annotations for objects in images
 * Export and import  rectangular and polygonal bounding box annotations to and from JSON and XML files (using [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format)
 * Export and import rectangular bounding box annotations using the [YOLO](https://pjreddie.com/darknet/yolo/) format
-* Connect your own [Torch Serve](https://pytorch.org/serve/) or [LitServe](https://github.com/Lightning-AI/LitServe) prediction endpoint and use bounding box predictions as annotation hints
+* Connect your own [Torch Serve](https://pytorch.org/serve/) or [LitServe](https://github.com/Lightning-AI/LitServe) prediction endpoint and use bounding box predictions as annotation hints (see [Predictions](https://github.com/mfl28/BoundingBoxEditor/wiki/Predictions) in the Wiki for the setup, including an example LitServe server)
 * Format validation and error reporting when importing annotations
 * Nest bounding box labels (which is then reflected in the output XML-file if using Pascal VOC format)
 * Easily and swiftly navigate and search the loaded image files via a side-panel with thumbnails
@@ -71,45 +71,6 @@ Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wik
 
 ## Using annotations for object detection
 After having created annotations for your images, you can use the saved bounding boxes as ground-truths in the training and evaluation of neural networks in order to perform object-detection tasks. How this can be done for any kind of labeled objects using Python and the [Pytorch](https://pytorch.org/) deep learning library is shown exemplarily in the [Humpback Whale Fluke Detection - Jupyter notebook](https://nbviewer.jupyter.org/github/mfl28/MachineLearning/blob/master/notebooks/Humpback_Whale_Fluke_Detection.ipynb) which you can find in my [Machine Learning repo](https://github.com/mfl28/MachineLearning).
-
-## Bounding box predictions with LitServe
-Besides Torch serve, the editor can get bounding box predictions from a [LitServe](https://github.com/Lightning-AI/LitServe) server. In the settings, enable inference, choose *LitServe* as the server and enter its address, port (LitServe's default is `8000`) and endpoint path (the `LitAPI`'s `api_path`, `/predict` by default). If the server requires an API key (`LIT_SERVER_API_KEY`), enter it as well; *Check* tests the connection.
-
-LitServe does not prescribe a request or response format, so your `LitAPI` has to use the one the editor expects:
-* **Request:** the image is uploaded as a file in the multipart form field `data`.
-* **Response:** a JSON list with one object per predicted box, mapping the category name to the box's `[xmin, ymin, xmax, ymax]` pixel coordinates, plus its `score`, e.g. `[{"cat": [12.0, 30.5, 200.0, 180.0], "score": 0.93}]` (the same format as Torch serve's object detector).
-
-The following example serves torchvision's pretrained Faster R-CNN (`pip install litserve python-multipart torch torchvision pillow`; `python-multipart` is needed for file uploads):
-```python
-import litserve as ls
-import torch
-from PIL import Image
-from torchvision.models.detection import FasterRCNN_ResNet50_FPN_V2_Weights, fasterrcnn_resnet50_fpn_v2
-
-
-class ObjectDetectionAPI(ls.LitAPI):
-    def setup(self, device):
-        weights = FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT
-        self.model = fasterrcnn_resnet50_fpn_v2(weights=weights).eval().to(device)
-        self.transform = weights.transforms()
-        self.categories = weights.meta["categories"]
-        self.device = device
-
-    def decode_request(self, request):
-        return Image.open(request["data"].file).convert("RGB")
-
-    def predict(self, image):
-        with torch.no_grad():
-            return self.model([self.transform(image).to(self.device)])[0]
-
-    def encode_response(self, output):
-        return [{self.categories[label]: box.tolist(), "score": score.item()}
-                for box, label, score in zip(output["boxes"], output["labels"], output["scores"])]
-
-
-if __name__ == "__main__":
-    ls.LitServer(ObjectDetectionAPI()).run(port=8000)
-```
 
 ## How to build the application
 The project uses [Gradle](https://gradle.org/) as build-system.
