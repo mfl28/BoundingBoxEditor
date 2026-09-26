@@ -125,18 +125,14 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
 
         // Setup
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.equalTo(true));
 
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getInferenceSettingsView().getInferenceEnabledControl());
-        WaitForAsyncUtils.waitForFxEvents();
 
         setUpAndVerifyManagementServerSettings(robot, testinfo);
 
@@ -156,21 +152,16 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
 
         // Setup
         enterNewCategory(robot, "Foo", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(model.getObjectCategories().size(), Matchers.equalTo(1));
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getInferenceSettingsView().getInferenceEnabledControl());
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(model.getBoundingBoxPredictorConfig().isMergeCategories(), Matchers.is(true));
 
@@ -207,7 +198,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getInferenceSettingsView().getSelectModelButton());
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
@@ -223,7 +213,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         final DialogPane settingsPane = (DialogPane) settingsStage.getScene().getRoot();
 
         robot.clickOn(settingsPane.lookupButton(ButtonType.OK));
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertNoTopModelStage(robot, testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.is(false), saveScreenshot(testinfo));
@@ -266,19 +255,14 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded(testinfo);
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(mainView.getInferenceSettingsView().getResizeImagesControl());
-        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(((DialogPane) settingsStage.getScene().getRoot()).lookupButton(ButtonType.OK));
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertNoTopModelStage(robot, testinfo);
 
@@ -312,7 +296,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
                 .thenThrow(new ProcessingException(new ConnectException()));
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
@@ -328,7 +311,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         when(mockInferenceInvocationBuilder.post(Mockito.any())).thenThrow(new ProcessingException("foo"));
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
@@ -345,7 +327,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         when(mockPredictionResponse.getStatusInfo()).thenReturn(Response.Status.NOT_FOUND);
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
@@ -366,7 +347,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
                 .thenThrow(new ProcessingException("bar"));
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
@@ -387,7 +367,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
                 .thenThrow(new JsonSyntaxException("bar"));
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
@@ -409,7 +388,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
                 .thenReturn(new ArrayList<>());
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
@@ -434,7 +412,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
@@ -467,7 +444,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }
 
         robot.clickOn(mainView.getInferenceSettingsView().getSelectModelButton());
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
@@ -497,7 +473,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }
 
         robot.clickOn(mainView.getInferenceSettingsView().getSelectModelButton());
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
@@ -527,7 +502,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }
 
         robot.clickOn(mainView.getInferenceSettingsView().getSelectModelButton());
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
@@ -559,7 +533,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }
 
         robot.clickOn(mainView.getInferenceSettingsView().getSelectModelButton());
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
@@ -591,7 +564,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }
 
         robot.clickOn(mainView.getInferenceSettingsView().getSelectModelButton());
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
@@ -623,7 +595,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }
 
         robot.clickOn(mainView.getInferenceSettingsView().getSelectModelButton());
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
@@ -633,7 +604,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
 
         timeOutClickOnButtonInDialogStage(robot, errorDialogStage, ButtonType.OK, testinfo);
 
-        WaitForAsyncUtils.waitForFxEvents();
         resetAllMocks();
     }
 
@@ -658,11 +628,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }
 
         robot.clickOn(mainView.getInferenceSettingsView().getSelectModelButton());
-        WaitForAsyncUtils.waitForFxEvents();
 
         final Stage progressDialogStage = timeOutGetTopModalStage(robot, "Fetching Models", testinfo);
         timeOutClickOnButtonInDialogStage(robot, progressDialogStage, ButtonType.CANCEL, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertTopModalStageClosed(robot, "Fetching Models", testinfo);
 
@@ -698,7 +666,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }
 
         robot.clickOn(mainView.getInferenceSettingsView().getSelectModelButton());
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertServiceSucceeded(controller.getModelNameFetchService(), testinfo);
 
@@ -727,7 +694,6 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         verifyThat(comboBox, ComboBoxMatchers.hasSelectedItem("foo-model"), saveScreenshot(testinfo));
 
         timeOutClickOnButtonInDialogStage(robot, modelSelectionDialogStage, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertTopModalStageClosed(robot, "Model Choice", testinfo);
 
@@ -759,9 +725,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         mainView.getInferenceSettingsView().getManagementAddressField().clear();
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.clickOn(mainView.getInferenceSettingsView().getManagementAddressField())
-                .write(MANAGEMENT_SERVER);
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot.clickOn(mainView.getInferenceSettingsView().getManagementAddressField()), MANAGEMENT_SERVER);
 
         verifyThat(mainView.getInferenceSettingsView().getManagementAddressField(),
                 TextInputControlMatchers.hasText(MANAGEMENT_SERVER), saveScreenshot(testinfo));
@@ -769,9 +733,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         mainView.getInferenceSettingsView().getManagementPortField().clear();
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.clickOn(mainView.getInferenceSettingsView().getManagementPortField())
-                .write(MANAGEMENT_PORT);
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot.clickOn(mainView.getInferenceSettingsView().getManagementPortField()), MANAGEMENT_PORT);
 
         verifyThat(mainView.getInferenceSettingsView().getManagementPortField(),
                 TextInputControlMatchers.hasText(MANAGEMENT_PORT), saveScreenshot(testinfo));
@@ -781,9 +743,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         mainView.getInferenceSettingsView().getInferenceAddressField().clear();
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.clickOn(mainView.getInferenceSettingsView().getInferenceAddressField())
-                .write(INFERENCE_SERVER);
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot.clickOn(mainView.getInferenceSettingsView().getInferenceAddressField()), INFERENCE_SERVER);
 
         verifyThat(mainView.getInferenceSettingsView().getInferenceAddressField(),
                 TextInputControlMatchers.hasText(INFERENCE_SERVER), saveScreenshot(testinfo));
@@ -791,9 +751,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         mainView.getInferenceSettingsView().getInferencePortField().clear();
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.clickOn(mainView.getInferenceSettingsView().getInferencePortField())
-                .write(INFERENCE_PORT);
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot.clickOn(mainView.getInferenceSettingsView().getInferencePortField()), INFERENCE_PORT);
 
         verifyThat(mainView.getInferenceSettingsView().getInferencePortField(),
                 TextInputControlMatchers.hasText(INFERENCE_PORT), saveScreenshot(testinfo));

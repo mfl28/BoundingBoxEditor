@@ -56,7 +56,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
 
         String testCategoryName = "Test";
         enterNewCategory(robot, testCategoryName, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                            .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false),
@@ -73,7 +72,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
 
         // Select polygon drawing mode:
         timeOutClickOn(robot, "#polygon-mode-button-icon", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         // Draw a bounding polygon.
         Double[] targetImageViewPointRatios = {0.25, 0.25, 0.1, 0.6, 0.4, 0.75, 0.75, 0.3};
@@ -84,7 +82,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                                         new Point2D(targetImageViewPointRatios[4], targetImageViewPointRatios[5]),
                                         new Point2D(targetImageViewPointRatios[6], targetImageViewPointRatios[7]));
 
-        WaitForAsyncUtils.waitForFxEvents();
         int drawnBoundingPolygonFileIndex = model.getCurrentFileIndex();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
@@ -132,7 +129,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(robot.lookup("#bounding-shape-scene-group").query().isMouseTransparent(), Matchers.is(true));
 
         robot.rightClickOn(mainView.getEditorImageView());
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(drawnBoundingPolygon.isSelected(), Matchers.equalTo(false), saveScreenshot(testinfo));
         verifyThat(drawnBoundingPolygon.isConstructing(), Matchers.equalTo(false), saveScreenshot(testinfo));
@@ -144,9 +140,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                 Matchers.equalTo(EditorImagePaneView.DrawingMode.NONE));
         verifyThat(robot.lookup("#bounding-shape-scene-group").query().isMouseTransparent(), Matchers.is(false));
 
-
         robot.clickOn(drawnBoundingPolygon, MouseButton.MIDDLE);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(drawnBoundingPolygon.isSelected(), Matchers.equalTo(true), saveScreenshot(testinfo));
         verifyThat(drawnBoundingPolygon.isConstructing(), Matchers.equalTo(false), saveScreenshot(testinfo));
@@ -201,7 +195,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
 
         // Move handle.
         robot.clickOn(reloadedBoundingPolygon);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(reloadedBoundingPolygon.isSelected(), Matchers.equalTo(true), saveScreenshot(testinfo));
         verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(),
@@ -210,7 +203,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         Point2D dragEndRatiosPoint = new Point2D(0.1, 0.1);
 
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), dragEndRatiosPoint);
-        WaitForAsyncUtils.waitForFxEvents();
 
         List<Double> actualRatios = reloadedBoundingPolygon.getRelativePointsInImageView();
         targetImageViewPointRatios[0] = 0.1;
@@ -223,7 +215,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         moveAndClickRelativeToImageView(robot, MouseButton.MIDDLE,
                                         new Point2D(targetImageViewPointRatios[0], targetImageViewPointRatios[1]),
                                         new Point2D(targetImageViewPointRatios[4], targetImageViewPointRatios[5]));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(reloadedBoundingPolygon.getVertexHandles().get(0).isEditing(), Matchers.equalTo(true),
                    saveScreenshot(testinfo));
@@ -241,7 +232,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         moveAndClickRelativeToImageView(robot, MouseButton.MIDDLE,
                                         new Point2D(targetImageViewPointRatios[2], targetImageViewPointRatios[3]),
                                         new Point2D(targetImageViewPointRatios[6], targetImageViewPointRatios[7]));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(reloadedBoundingPolygon.getVertexHandles().get(0).isEditing(), Matchers.equalTo(true),
                    saveScreenshot(testinfo));
@@ -258,7 +248,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
 
         // Splice.
         robot.press(KeyCode.SHIFT).clickOn(reloadedBoundingPolygon, MouseButton.MIDDLE).release(KeyCode.SHIFT);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(reloadedBoundingPolygon.getVertexHandles(), Matchers.hasSize(6), saveScreenshot(testinfo));
         verifyThat(reloadedBoundingPolygon.getVertexHandles().stream()
@@ -273,13 +262,11 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
 
         // Remove polygon.
         robot.rightClickOn(reloadedBoundingPolygon);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat("#add-vertices-context-menu", NodeMatchers.isVisible(), saveScreenshot(testinfo));
         verifyThat("#delete-vertices-context-menu", NodeMatchers.isVisible(), saveScreenshot(testinfo));
 
         timeOutClickOn(robot, "Delete", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.empty(), saveScreenshot(testinfo));
         verifyThat(mainView.getEditorImagePane().getBoundingShapeSelectionGroup().getSelectedToggle(),
@@ -291,11 +278,9 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                                         new Point2D(targetImageViewPointRatios[2], targetImageViewPointRatios[3]),
                                         new Point2D(targetImageViewPointRatios[4], targetImageViewPointRatios[5]),
                                         new Point2D(targetImageViewPointRatios[6], targetImageViewPointRatios[7]));
-        WaitForAsyncUtils.waitForFxEvents();
 
         // Change drawing mode while construction is in progress.
         timeOutClickOn(robot, "#rectangle-mode-button-icon", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingShapes(), Matchers.hasSize(1), saveScreenshot(testinfo));
 
@@ -315,7 +300,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                                         new Point2D(targetImageViewPointRatios[2], targetImageViewPointRatios[3]),
                                         new Point2D(targetImageViewPointRatios[4], targetImageViewPointRatios[5]),
                                         new Point2D(targetImageViewPointRatios[6], targetImageViewPointRatios[7]));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(newBoundingPolygonView.getVertexHandles().stream()
                                          .allMatch(BoundingPolygonView.VertexHandle::isEditing),
@@ -325,7 +309,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
 
         // Add vertices.
         robot.press(KeyCode.SHIFT).clickOn(newBoundingPolygonView, MouseButton.MIDDLE).release(KeyCode.SHIFT);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(newBoundingPolygonView.getVertexHandles(), Matchers.hasSize(8), saveScreenshot(testinfo));
         verifyThat(newBoundingPolygonView.getVertexHandles().stream()
@@ -343,20 +326,16 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         final BoundingPolygonView.VertexHandle vertexHandle2 = newBoundingPolygonView.getVertexHandles().get(1);
 
         robot.clickOn(vertexHandle1, MouseButton.MIDDLE);
-        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(vertexHandle2, MouseButton.MIDDLE);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(vertexHandle1.isEditing(), Matchers.equalTo(true), saveScreenshot(testinfo));
         verifyThat(vertexHandle2.isEditing(), Matchers.equalTo(true), saveScreenshot(testinfo));
 
         // Delete selected vertices.
         robot.rightClickOn(newBoundingPolygonView);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutClickOn(robot, "#delete-vertices-context-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(newBoundingPolygonView.getVertexHandles(), Matchers.hasSize(6), saveScreenshot(testinfo));
         verifyThat(newBoundingPolygonView.getVertexHandles(),
@@ -378,11 +357,9 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
 
         String testCategoryName = "Test";
         enterNewCategory(robot, testCategoryName, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         // Select polygon drawing mode:
         timeOutClickOn(robot, "#freehand-mode-button-icon", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         // Draw a bounding polygon.
         Double[] targetImageViewPointRatios = {0.25, 0.25, 0.1, 0.6, 0.4, 0.75, 0.75, 0.3};
@@ -394,7 +371,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
 
         robot.moveTo(screenPoints.get(0)).press(MouseButton.PRIMARY);
 
-        WaitForAsyncUtils.waitForFxEvents();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                         () -> mainView.getCurrentBoundingShapes()
                                 .size() == 1 && mainView.getCurrentBoundingShapes().get(0) instanceof BoundingFreehandShapeView),
@@ -430,9 +406,7 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
                 Matchers.equalTo(EditorImagePaneView.DrawingMode.FREEHAND));
         verifyThat(robot.lookup("#bounding-shape-scene-group").query().isMouseTransparent(), Matchers.is(true));
 
-
         robot.moveTo(screenPoints.get(1));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(boundingFreehandShapeView.getElements().size(), Matchers.greaterThan(numPathElements));
         verifyThat(boundingFreehandShapeView.getElements().get(boundingFreehandShapeView.getElements().size() - 1),
@@ -441,8 +415,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(boundingFreehandShapeView.getRelativeOutlineRectangle(), Matchers.nullValue());
 
         robot.moveTo(screenPoints.get(2)).moveTo(screenPoints.get(3)).release(MouseButton.PRIMARY);
-
-        WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                         () -> mainView.getCurrentBoundingShapes()
@@ -492,8 +464,6 @@ class BoundingPolygonDrawingTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.rightClickOn(drawnBoundingPolygon).clickOn("Simplify");
-
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(drawnBoundingPolygon.getRelativePointsInImageView().toArray(Double[]::new),
                 ratioListCloseTo(targetImageViewPointRatios), saveScreenshot(testinfo));

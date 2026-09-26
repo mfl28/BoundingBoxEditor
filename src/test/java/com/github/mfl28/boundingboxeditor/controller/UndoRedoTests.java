@@ -64,7 +64,6 @@ class UndoRedoTests extends BoundingBoxEditorTestBase {
     void onUndoAndRedo_ShouldRestoreDrawnShapes(FxRobot robot, TestInfo testinfo) {
         waitUntilCurrentImageIsLoaded(testinfo);
         enterNewCategory(robot, CATEGORY_NAME, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getUndoMenuItem().isDisable(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(mainView.getRedoMenuItem().isDisable(), Matchers.is(true), saveScreenshot(testinfo));
@@ -89,7 +88,6 @@ class UndoRedoTests extends BoundingBoxEditorTestBase {
         // Undo can bring back shapes of a category that was deleted meanwhile.
         final ObjectCategory category = model.getCategoryNameToCategoryMap().get(CATEGORY_NAME);
         robot.interact(() -> model.getObjectCategories().remove(category));
-        WaitForAsyncUtils.waitForFxEvents();
 
         pressShortcut(KeyCombinations.redo);
         waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1, "one box after redo", testinfo);
@@ -117,10 +115,8 @@ class UndoRedoTests extends BoundingBoxEditorTestBase {
     void onUndoWhileDrawingPolygon_ShouldRemoveLastVertexAndFinallyTheShape(FxRobot robot, TestInfo testinfo) {
         waitUntilCurrentImageIsLoaded(testinfo);
         enterNewCategory(robot, CATEGORY_NAME, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutClickOn(robot, "#polygon-mode-button-icon", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         moveAndClickRelativeToImageView(robot, MouseButton.PRIMARY,
                 new Point2D(0.25, 0.25), new Point2D(0.1, 0.6), new Point2D(0.4, 0.75));
@@ -168,7 +164,6 @@ class UndoRedoTests extends BoundingBoxEditorTestBase {
     void onUndoAfterSwitchingImages_ShouldUndoEditsOfShownImage(FxRobot robot, TestInfo testinfo) {
         waitUntilCurrentImageIsLoaded(testinfo);
         enterNewCategory(robot, CATEGORY_NAME, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         moveRelativeToImageView(robot, new Point2D(0.2, 0.2), new Point2D(0.4, 0.4));
         waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1 && isUndoAvailable(), "box drawn", testinfo);
@@ -193,7 +188,6 @@ class UndoRedoTests extends BoundingBoxEditorTestBase {
     void onUndoAfterMovingAndDeletingViaContextMenu_ShouldRestoreShape(FxRobot robot, TestInfo testinfo) {
         waitUntilCurrentImageIsLoaded(testinfo);
         enterNewCategory(robot, CATEGORY_NAME, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         moveRelativeToImageView(robot, new Point2D(0.2, 0.2), new Point2D(0.4, 0.4));
         waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1 && isUndoAvailable(), "box drawn", testinfo);
@@ -215,9 +209,7 @@ class UndoRedoTests extends BoundingBoxEditorTestBase {
 
         // The context menu's actions run in their own window.
         robot.rightClickOn(CATEGORY_NAME + " 1");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Delete", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         waitUntil(() -> mainView.getCurrentBoundingShapes().isEmpty(), "box deleted", testinfo);
 
         pressShortcut(KeyCombinations.undo);

@@ -88,12 +88,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFile = new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
             timeOutClickOn(robot, "#pvoc-import-menu-item", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
             verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
         }
 
@@ -161,10 +158,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
-                .scroll(-30)
+                .scroll(-3)
                 .release(KeyCode.SHORTCUT);
 
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                 Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
 
@@ -187,7 +183,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                         "Output-file was not created within " +
                                 TIMEOUT_DURATION_IN_SEC + " sec."));
 
-
         // The output file should be exactly the same as the reference file.
         final File referenceFile = new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
         final byte[] referenceArray = Files.readAllBytes(referenceFile.toPath());
@@ -202,7 +197,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                         "Expected annotation output-file " +
                                 "content was not created within " +
                                 TIMEOUT_DURATION_IN_SEC + " sec."));
-
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                         () -> controller.getIoMetaData()
@@ -233,14 +227,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationDirectoryPath)).getFile());
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
             timeOutClickOn(robot, "#yolo-import-menu-item", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
             verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
         }
 
@@ -293,10 +283,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
-                .scroll(-30)
+                .scroll(-3)
                 .release(KeyCode.SHORTCUT);
 
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                 Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
 
@@ -333,7 +322,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                                 "content was not created within " +
                                 TIMEOUT_DURATION_IN_SEC + " sec."));
 
-
         // The output file should be exactly the same as the reference file.
         final File referenceFile = referenceAnnotationFolder.toPath().resolve(expectedAnnotationFileName).toFile();
         final byte[] referenceArray = Files.readAllBytes(referenceFile.toPath());
@@ -369,14 +357,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
             timeOutClickOn(robot, "#json-import-menu-item", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
             verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
         }
 
@@ -429,10 +413,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
-                .scroll(-30)
+                .scroll(-3)
                 .release(KeyCode.SHORTCUT);
 
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                 Matchers.startsWith("Successfully imported annotations for 1 image in"), saveScreenshot(testinfo));
 
@@ -521,7 +504,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         // Check if closed
         timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
@@ -606,7 +588,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 
@@ -677,7 +658,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 
         final Map<String, Integer> counts = model.getCategoryToAssignedBoundingShapesCountMap();
@@ -751,7 +731,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 
@@ -788,14 +767,12 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         String testCategoryName = "Test";
         enterNewCategory(robot, testCategoryName, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap(), Matchers.hasEntry("Test", 0),
                 saveScreenshot(testinfo));
 
         // Draw a bounding box.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
-        WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                         () -> mainView.getCurrentBoundingShapes()
@@ -952,7 +929,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 
@@ -1103,7 +1079,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 testinfo);
 
         timeOutLookUpInStageAndClickOn(robot, keepExistingCategoriesDialogStage, "No", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
@@ -1198,14 +1173,10 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
             timeOutClickOn(robot, "#csv-import-menu-item", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
             verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
         }
 
@@ -1251,10 +1222,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
-                .scroll(-30)
+                .scroll(-3)
                 .release(KeyCode.SHORTCUT);
 
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                 Matchers.startsWith("Successfully imported annotations for 3 images in"), saveScreenshot(testinfo));
 
@@ -1347,7 +1317,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 () -> saveScreenshotAndReturnMessage(testinfo, "Actual files " +
                         "directory does not exist."));
 
-
         // Save the annotations to the temporary folder.
         Platform.runLater(
                 () -> controller.initiateAnnotationExport(actualDir.toFile(), ImageAnnotationSaveStrategy.Type.YOLO));
@@ -1380,7 +1349,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                         "Expected object-data output-file " +
                                 "content was not created within " +
                                 TIMEOUT_DURATION_IN_SEC + " sec."));
-
 
         // The output file should be exactly the same as the reference file.
         final File referenceFile = referenceAnnotationFolder.toPath().resolve(expectedAnnotationFileName).toFile();
@@ -1512,8 +1480,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         robot.rightClickOn(mainView.getObjectTree().getRoot().getChildren().getFirst().getGraphic())
                 .clickOn("Delete");
 
-        WaitForAsyncUtils.waitForFxEvents();
-
         for (int i = 0; i != 3; ++i) {
             NodeQuery nodeQuery = robot.from(mainView.getObjectCategoryTable()).lookup("#delete-button").nth(1);
             robot.clickOn((Node) nodeQuery.query(), MouseButton.PRIMARY);
@@ -1567,7 +1533,6 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         Stage topModalStage = timeOutGetTopModalStage(robot, "Import Annotation Data", testinfo);
         timeOutLookUpInStageAndClickOn(robot, topModalStage, userChoice, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertTopModalStageClosed(robot, "Import Annotation Data", testinfo);
 

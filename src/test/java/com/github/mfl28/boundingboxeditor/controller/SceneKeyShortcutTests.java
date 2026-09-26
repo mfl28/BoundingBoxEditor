@@ -96,7 +96,6 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
 
         // Draw a bounding polygon.
         enterNewCategory(robot, "dummy", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         Double[] targetImageViewPointRatios = {0.25, 0.25, 0.1, 0.6, 0.4, 0.75, 0.75, 0.3};
 
@@ -105,8 +104,6 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                 new Point2D(targetImageViewPointRatios[2], targetImageViewPointRatios[3]),
                 new Point2D(targetImageViewPointRatios[4], targetImageViewPointRatios[5]),
                 new Point2D(targetImageViewPointRatios[6], targetImageViewPointRatios[7]));
-
-        WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                         () -> mainView.getCurrentBoundingShapes()
@@ -123,7 +120,6 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
 
         // Clicking outside the imageview should finalize any drawn shapes.
         robot.clickOn(mainView.getStatusBar());
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.equalTo(false));
         verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
@@ -151,10 +147,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                 new Point2D(targetImageViewPointRatios2[4], targetImageViewPointRatios2[5]),
                 new Point2D(targetImageViewPointRatios2[6], targetImageViewPointRatios2[7]));
 
-        WaitForAsyncUtils.waitForFxEvents();
-
         robot.clickOn(mainView.getStatusBar());
-        WaitForAsyncUtils.waitForFxEvents();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                         () -> mainView.getCurrentBoundingShapes()
@@ -212,8 +205,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         double originalFitHeight = mainView.getEditorImageView().getFitHeight();
 
         robot.moveTo(mainView.getEditorImageView())
-                .scroll(-30);
-        WaitForAsyncUtils.waitForFxEvents();
+                .scroll(-3);
 
         verifyThat(mainView.getEditorImageView().getFitWidth(), Matchers.equalTo(originalFitWidth));
         verifyThat(mainView.getEditorImageView().getFitHeight(), Matchers.equalTo(originalFitHeight));
@@ -223,20 +215,16 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                 .press(MouseButton.PRIMARY)
                         .moveBy(10, 10);
 
-        WaitForAsyncUtils.waitForFxEvents();
-
         verifyThat(mainView.getEditorImageView().getCursor(), Matchers.equalTo(Cursor.CLOSED_HAND));
 
         robot.release(MouseButton.PRIMARY).release(KeyCode.SHORTCUT);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getEditorImageView().getCursor(), Matchers.equalTo(Cursor.OPEN_HAND));
 
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
-                .scroll(-30)
+                .scroll(-3)
                 .release(KeyCode.SHORTCUT);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getEditorImageView().getFitWidth(), Matchers.not(Matchers.equalTo(originalFitWidth)));
         verifyThat(mainView.getEditorImageView().getFitHeight(), Matchers.not(Matchers.equalTo(originalFitHeight)));
@@ -274,7 +262,6 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         final Stage changeCategoryStage = timeOutGetTopModalStage(robot, "Change Category", testinfo);
         verifyThat(changeCategoryStage, Matchers.notNullValue(), saveScreenshot(testinfo));
         timeOutLookUpInStageAndClickOn(robot, changeCategoryStage, "Cancel", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Change Category", testinfo);
     }
 
@@ -290,7 +277,6 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     private void testRemovePolygonVerticesKeyEvent(FxRobot robot, Double[] targetImageViewPointRatios, BoundingPolygonView polygon) {
         int numInitialVertices = targetImageViewPointRatios.length / 2;
         robot.clickOn("#vertex-handle", MouseButton.MIDDLE);
-        WaitForAsyncUtils.waitForFxEvents();
 
         KeyEvent removeEditingVerticesEvent = buildKeyEventFromCombination((KeyCodeCombination) KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected, KeyEvent.KEY_RELEASED);
         Platform.runLater(() -> controller.onRegisterSceneKeyReleased(removeEditingVerticesEvent));
@@ -360,7 +346,6 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         verifyThat(controller.getView().getTagInputField().isFocused(), Matchers.is(true));
 
         robot.push(KeyCode.ESCAPE);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(controller.getView().getTagInputField().isFocused(), Matchers.is(false));
         verifyThat(controller.getView().getTagInputField().getText(), Matchers.nullValue());
@@ -374,7 +359,6 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         verifyThat(controller.getView().getObjectCategoryInputField().isFocused(), Matchers.is(true));
 
         robot.push(KeyCode.ESCAPE);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(controller.getView().getObjectCategoryInputField().isFocused(), Matchers.is(false));
         verifyThat(controller.getView().getObjectCategoryInputField().getText(), Matchers.nullValue());
@@ -388,7 +372,6 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         verifyThat(controller.getView().getImageFileSearchField().isFocused(), Matchers.is(true));
 
         robot.push(KeyCode.ESCAPE);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(controller.getView().getImageFileSearchField().isFocused(), Matchers.is(false));
         verifyThat(controller.getView().getImageFileSearchField().getText(), Matchers.nullValue());
@@ -402,7 +385,6 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         verifyThat(controller.getView().getCategorySearchField().isFocused(), Matchers.is(true));
 
         robot.push(KeyCode.ESCAPE);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(controller.getView().getCategorySearchField().isFocused(), Matchers.is(false));
         verifyThat(controller.getView().getCategorySearchField().getText(), Matchers.nullValue());

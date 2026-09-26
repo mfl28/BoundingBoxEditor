@@ -171,8 +171,6 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     private void verifyMenuBarFunctionality(FxRobot robot, TestInfo testinfo) {
         timeOutClickOn(robot, "View", testinfo);
 
-        WaitForAsyncUtils.waitForFxEvents();
-
         CheckMenuItem fitWindowItem = (CheckMenuItem) getSubMenuItem(robot, "View", "Maximize Images");
         assertTrue(fitWindowItem.getParentMenu().isShowing(), () -> saveScreenshotAndReturnMessage(testinfo, "View " +
                 "menu not showing"));
@@ -196,14 +194,11 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         robot.rightClickOn();
 
-        WaitForAsyncUtils.waitForFxEvents();
-
         assertFalse(fitWindowItem.getParentMenu().isShowing(), () -> saveScreenshotAndReturnMessage(testinfo,
                                                                                                     "View menu is " +
                                                                                                             "showing"));
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem openFolderItem = getSubMenuItem(robot, "File", "Open Folder...");
         assertTrue(openFolderItem.getParentMenu().isShowing(), () -> saveScreenshotAndReturnMessage(testinfo, "File " +
@@ -215,7 +210,6 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
             timeOutClickOn(robot, "#file-open-folder-menu-item", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
             verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
         }
 
@@ -229,19 +223,14 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         for(var exportItemName : List.of("pvoc", "yolo", "json", "csv")) {
             timeOutClickOn(robot, "#file-menu", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
             timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
             timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
             timeOutClickOn(robot, String.format("#%s-export-menu-item", exportItemName), testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
 
             Stage errorDialogStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
             verifyThat(errorDialogStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
             timeOutClickOnButtonInDialogStage(robot, errorDialogStage, ButtonType.OK, testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
             timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
         }
 
@@ -264,62 +253,51 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     private void verifyCategorySelectorEnterNewCategoryFunctionality(FxRobot robot, TestInfo testinfo) {
         // Enter category without valid name
         enterNewCategory(robot, null, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         Stage categoryCreationErrorStage = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
         verifyThat(categoryCreationErrorStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         timeOutClickOnButtonInDialogStage(robot, categoryCreationErrorStage, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0), saveScreenshot(testinfo));
 
         // Enter valid category name
         enterNewCategory(robot, "Test", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(1), saveScreenshot(testinfo));
         verifyThat("#category-selector", TableViewMatchers.hasTableCell("Test"), saveScreenshot(testinfo));
 
         // Enter duplicate category name
         enterNewCategory(robot, "Test", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         Stage categoryCreationErrorStage2 = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
         verifyThat(categoryCreationErrorStage2, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         timeOutClickOnButtonInDialogStage(robot, categoryCreationErrorStage2, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(1), saveScreenshot(testinfo));
 
         // Renaming a category
         timeOutClickOn(robot, "Test", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        robot.write("Dummy").push(KeyCode.ENTER);
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot, "Dummy").push(KeyCode.ENTER);
 
         verifyThat("#category-selector", TableViewMatchers.hasTableCell("Dummy"), saveScreenshot(testinfo));
 
         // Entering a category with a name that previously existed but is not currently in the category-selector
         enterNewCategory(robot, "Test", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         // There should be no error message
         verifyThat(getTopModalStage(robot, "Category Creation Error"), Matchers.nullValue(), saveScreenshot(testinfo));
 
         // Renaming a category to a name that already exists
         timeOutClickOn(robot, "Test", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
-        robot.write("Dummy").push(KeyCode.ENTER);
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot, "Dummy").push(KeyCode.ENTER);
 
         Stage categoryCreationErrorStage3 = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
         verifyThat(categoryCreationErrorStage3, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         timeOutClickOnButtonInDialogStage(robot, categoryCreationErrorStage3, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
         verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Test"),
@@ -327,33 +305,27 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         // Renaming a category to a blank string
         timeOutClickOn(robot, "Dummy", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Dummy"),
                    saveScreenshot(testinfo));
 
         timeOutClickOn(robot, "Dummy", testinfo);
-        robot.write("    ").push(KeyCode.ENTER);
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot, "    ").push(KeyCode.ENTER);
 
         Stage categoryCreationErrorStage4 = timeOutGetTopModalStage(robot, "Category Creation Error", testinfo);
         verifyThat(categoryCreationErrorStage4, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         timeOutClickOnButtonInDialogStage(robot, categoryCreationErrorStage4, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Category Creation Error", testinfo);
 
         // Deleting remaining categories
         timeOutClickOnNth(robot, "#delete-button", 1, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         robot.rightClickOn();
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getObjectCategoryTable().getRowContextMenu().isShowing(), Matchers.equalTo(false),
                    saveScreenshot(testinfo));
 
         timeOutClickOn(robot, "#delete-button", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getObjectCategoryTable(), TableViewMatchers.hasNumRows(0), saveScreenshot(testinfo));
     }
@@ -367,8 +339,7 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         robot.clickOn(fileSearchField);
         verifyThat(fileSearchField, NodeMatchers.isFocused(), saveScreenshot(testinfo));
 
-        robot.write("nico");
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot, "nico");
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
@@ -387,18 +358,15 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         final TextField categorySearchField = mainView.getCategorySearchField();
         verifyThat(categorySearchField.getPromptText(), Matchers.equalTo("Search Category"), saveScreenshot(testinfo));
 
-        robot.clickOn(categorySearchField).write("A");
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot.clickOn(categorySearchField), "A");
         verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("AAA"),
                    saveScreenshot(testinfo));
 
-        robot.write("B");
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot, "B");
         verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("ABB"),
                    saveScreenshot(testinfo));
 
-        robot.write("C");
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot, "C");
         verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("ABC"),
                    saveScreenshot(testinfo));
     }

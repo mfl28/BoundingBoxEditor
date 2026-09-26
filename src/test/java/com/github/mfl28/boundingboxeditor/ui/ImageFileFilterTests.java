@@ -79,7 +79,6 @@ class ImageFileFilterTests extends BoundingBoxEditorTestBase {
         // Annotated images: the unannotated one is skipped when navigating.
         timeOutClickOn(robot, "#image-file-filter-button", testinfo);
         timeOutClickOn(robot, "#image-file-filter-status-annotated", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(shownFileNames(), Matchers.contains(AUSTIN, NICO, TYLER), saveScreenshot(testinfo));
         verifyThat(explorer.getFilterMatchLabel().isVisible(), Matchers.is(true), saveScreenshot(testinfo));
@@ -89,9 +88,7 @@ class ImageFileFilterTests extends BoundingBoxEditorTestBase {
 
         // The first click outside the filter popup only closes it.
         robot.push(KeyCode.ESCAPE);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#next-button", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(model.getCurrentImageFileName(), Matchers.equalTo(NICO), saveScreenshot(testinfo));
         verifyThat(indexLabelText(), Matchers.equalTo("2 | 3"), saveScreenshot(testinfo));
 
@@ -103,7 +100,6 @@ class ImageFileFilterTests extends BoundingBoxEditorTestBase {
         // Not annotated: the current image doesn't match, so the only matching image is shown instead.
         timeOutClickOn(robot, "#image-file-filter-button", testinfo);
         timeOutClickOn(robot, "#image-file-filter-status-not-annotated", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(model.getCurrentImageFileName(), Matchers.equalTo(CALEB), saveScreenshot(testinfo));
         verifyThat(shownFileNames(), Matchers.contains(CALEB), saveScreenshot(testinfo));
         verifyThat(indexLabelText(), Matchers.equalTo("1 | 1"), saveScreenshot(testinfo));
@@ -118,12 +114,10 @@ class ImageFileFilterTests extends BoundingBoxEditorTestBase {
         verifyThat(shownFileNames(), Matchers.contains(AUSTIN, NICO, TYLER), saveScreenshot(testinfo));
 
         timeOutClickOn(robot, "#image-file-filter-category-all", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(shownFileNames(), Matchers.contains(NICO), saveScreenshot(testinfo));
 
         // Clearing the filter shows all images again, the current image stays.
         timeOutClickOn(robot, "#image-file-filter-clear-button", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(shownFileNames(), Matchers.contains(AUSTIN, CALEB, NICO, TYLER), saveScreenshot(testinfo));
         verifyThat(model.getCurrentImageFileName(), Matchers.equalTo(NICO), saveScreenshot(testinfo));
         verifyThat(indexLabelText(), Matchers.equalTo("3 | 4"), saveScreenshot(testinfo));
@@ -131,9 +125,7 @@ class ImageFileFilterTests extends BoundingBoxEditorTestBase {
 
         // The search field filters by file name.
         robot.push(KeyCode.ESCAPE);
-        WaitForAsyncUtils.waitForFxEvents();
-        robot.clickOn(explorer.getImageFileSearchField()).write("TYL");
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot.clickOn(explorer.getImageFileSearchField()), "TYL");
         verifyThat(shownFileNames(), Matchers.contains(TYLER), saveScreenshot(testinfo));
         verifyThat(model.getCurrentImageFileName(), Matchers.equalTo(TYLER), saveScreenshot(testinfo));
     }
