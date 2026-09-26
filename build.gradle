@@ -128,6 +128,8 @@ test {
 
     jvmArgs = ['-Dtestfx.robot=awt', '-Dprism.forceGPU=true']
     maxHeapSize = '3072m'
+    // Tests get their own, in-memory preferences instead of reading and changing the user's.
+    systemProperty 'java.util.prefs.PreferencesFactory', 'com.github.mfl28.boundingboxeditor.InMemoryPreferencesFactory'
 
     moduleOptions {
         runOnClasspath = true

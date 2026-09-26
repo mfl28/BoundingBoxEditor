@@ -19,6 +19,9 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.model.data.IoMetaData;
+import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorConfig;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -28,6 +31,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -127,5 +132,97 @@ class PreferencesStoreTest {
         // Earlier versions stored the preferences in the node of the Controller's package.
         assertEquals(Preferences.userNodeForPackage(Controller.class).absolutePath(),
                 Preferences.userNodeForPackage(PreferencesStore.class).absolutePath());
+    }
+
+    @Test
+    void onLoadInferenceSettings_WhenNothingStored_ShouldKeepDefaults() {
+        final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
+        final BoundingBoxPredictorConfig predictorConfig = new BoundingBoxPredictorConfig();
+
+        preferencesStore.loadInferenceSettings(clientConfig, predictorConfig);
+
+        assertEquals(BoundingBoxPredictorClient.ServiceType.TORCH_SERVE, clientConfig.getServiceType());
+        assertEquals("http://localhost", clientConfig.getInferenceUrl());
+        assertEquals(8080, clientConfig.getInferencePort());
+        assertEquals(8081, clientConfig.getManagementPort());
+        assertNull(clientConfig.getInferenceModelName());
+        assertEquals(BoundingBoxPredictorClientConfig.DEFAULT_PREDICTION_PATH, clientConfig.getPredictionPath());
+        assertFalse(predictorConfig.isInferenceEnabled());
+        assertEquals(0.5, predictorConfig.getMinimumScore());
+        assertTrue(predictorConfig.isMergeCategories());
+        assertTrue(predictorConfig.isResizeImages());
+        assertEquals(600, predictorConfig.getImageResizeWidth());
+    }
+
+    @Test
+    void onSaveAndLoadInferenceSettings_ShouldRestoreAllButTheApiKey() {
+        final BoundingBoxPredictorClientConfig savedClientConfig = new BoundingBoxPredictorClientConfig();
+        savedClientConfig.setServiceType(BoundingBoxPredictorClient.ServiceType.LIT_SERVE);
+        savedClientConfig.setInferenceUrl("http://gpu-server");
+        savedClientConfig.setInferencePort(8000);
+        savedClientConfig.setManagementUrl("http://gpu-server");
+        savedClientConfig.setManagementPort(9001);
+        savedClientConfig.setInferenceModelName("detector");
+        savedClientConfig.setPredictionPath("/detect");
+        savedClientConfig.setApiKey("secret");
+
+        final BoundingBoxPredictorConfig savedPredictorConfig = new BoundingBoxPredictorConfig();
+        savedPredictorConfig.setInferenceEnabled(true);
+        savedPredictorConfig.setMinimumScore(0.75);
+        savedPredictorConfig.setMergeCategories(false);
+        savedPredictorConfig.setResizeImages(false);
+        savedPredictorConfig.setImageResizeWidth(800);
+        savedPredictorConfig.setImageResizeHeight(400);
+        savedPredictorConfig.setImageResizeKeepRatio(false);
+
+        preferencesStore.saveInferenceSettings(savedClientConfig, savedPredictorConfig);
+
+        final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
+        final BoundingBoxPredictorConfig predictorConfig = new BoundingBoxPredictorConfig();
+        preferencesStore.loadInferenceSettings(clientConfig, predictorConfig);
+
+        assertEquals(BoundingBoxPredictorClient.ServiceType.LIT_SERVE, clientConfig.getServiceType());
+        assertEquals("http://gpu-server", clientConfig.getInferenceUrl());
+        assertEquals(8000, clientConfig.getInferencePort());
+        assertEquals("http://gpu-server", clientConfig.getManagementUrl());
+        assertEquals(9001, clientConfig.getManagementPort());
+        assertEquals("detector", clientConfig.getInferenceModelName());
+        assertEquals("/detect", clientConfig.getPredictionPath());
+        assertNull(clientConfig.getApiKey());
+        assertTrue(predictorConfig.isInferenceEnabled());
+        assertEquals(0.75, predictorConfig.getMinimumScore());
+        assertFalse(predictorConfig.isMergeCategories());
+        assertFalse(predictorConfig.isResizeImages());
+        assertEquals(800, predictorConfig.getImageResizeWidth());
+        assertEquals(400, predictorConfig.getImageResizeHeight());
+        assertFalse(predictorConfig.getImageResizeKeepRatio());
+
+        assertTrue(Arrays.stream(assertDoesNotThrow(preferences::keys))
+                                   .noneMatch(key -> key.toLowerCase(Locale.ROOT).contains("key")),
+                "The API key must not be stored.");
+    }
+
+    @Test
+    void onSaveInferenceSettings_WhenModelNameCleared_ShouldRemoveStoredName() {
+        final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
+        clientConfig.setInferenceModelName("detector");
+        preferencesStore.saveInferenceSettings(clientConfig, new BoundingBoxPredictorConfig());
+
+        clientConfig.setInferenceModelName(null);
+        preferencesStore.saveInferenceSettings(clientConfig, new BoundingBoxPredictorConfig());
+
+        final BoundingBoxPredictorClientConfig loadedClientConfig = new BoundingBoxPredictorClientConfig();
+        preferencesStore.loadInferenceSettings(loadedClientConfig, new BoundingBoxPredictorConfig());
+        assertNull(loadedClientConfig.getInferenceModelName());
+    }
+
+    @Test
+    void onLoadInferenceSettings_WhenStoredServiceTypeIsUnknown_ShouldKeepTheCurrentOne() {
+        preferences.put("inferenceServiceType", "TRITON");
+
+        final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
+        preferencesStore.loadInferenceSettings(clientConfig, new BoundingBoxPredictorConfig());
+
+        assertEquals(BoundingBoxPredictorClient.ServiceType.TORCH_SERVE, clientConfig.getServiceType());
     }
 }

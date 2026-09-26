@@ -68,6 +68,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -226,6 +228,7 @@ public class BoundingBoxEditorTestBase {
         scene.getStylesheets().add(getClass().getResource(STYLESHEET_PATH).toExternalForm());
         stage.setScene(scene);
 
+        clearTestPreferences();
         controller = new Controller(stage, mainView, null);
         model = controller.getModel();
         // To make sure that the window is on top of all other windows at the start.
@@ -255,6 +258,23 @@ public class BoundingBoxEditorTestBase {
         Thread.currentThread().getThreadGroup().enumerate(list);
         Arrays.stream(list).filter(thread -> thread != null && thread.getName().equals("ImageFileChangeWatcher"))
                 .forEach(Thread::interrupt);
+    }
+
+    /**
+     * Makes every test start with the default preferences, e.g. inference settings applied by an earlier test.
+     * Only the in-memory preferences set up for the tests in build.gradle are cleared, never the user's.
+     */
+    private static void clearTestPreferences() {
+        if(!(Preferences.userRoot().getClass().getEnclosingClass() == InMemoryPreferencesFactory.class)) {
+            throw new IllegalStateException("Tests must run with the in-memory preferences "
+                    + "(java.util.prefs.PreferencesFactory=" + InMemoryPreferencesFactory.class.getName() + ").");
+        }
+
+        try {
+            Preferences.userNodeForPackage(Controller.class).clear();
+        } catch(BackingStoreException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     protected Point2D getScreenPointFromRatios(Node node, Point2D ratios) {
