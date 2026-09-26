@@ -20,23 +20,56 @@ package com.github.mfl28.boundingboxeditor.model.io.restclients;
 
 import jakarta.ws.rs.client.Client;
 import java.io.InputStream;
-import java.security.InvalidParameterException;
 import java.util.List;
 
 public interface BoundingBoxPredictorClient {
     static BoundingBoxPredictorClient create(Client client, BoundingBoxPredictorClientConfig clientConfig) {
-        if(clientConfig.getServiceType().equals(ServiceType.TORCH_SERVE)) {
-            return new TorchServeRestClient(client, clientConfig);
-        }
-
-        throw new InvalidParameterException();
+        return switch(clientConfig.getServiceType()) {
+            case TORCH_SERVE -> new TorchServeRestClient(client, clientConfig);
+            case LIT_SERVE -> new LitServeRestClient(client, clientConfig);
+        };
     }
 
     List<BoundingBoxPredictionEntry> predict(InputStream input) throws PredictionClientException;
 
     List<ModelEntry> models() throws PredictionClientException;
 
+    /**
+     * Checks that the inference server is reachable and ready to make predictions.
+     *
+     * @throws PredictionClientException if the server is not reachable or not ready
+     */
+    void checkConnection() throws PredictionClientException;
+
     String getName();
 
-    enum ServiceType {TORCH_SERVE}
+    /**
+     * The supported inference servers.
+     */
+    enum ServiceType {
+        TORCH_SERVE("TorchServe", 8080),
+        LIT_SERVE("LitServe", 8000);
+
+        private final String displayName;
+        private final int defaultInferencePort;
+
+        ServiceType(String displayName, int defaultInferencePort) {
+            this.displayName = displayName;
+            this.defaultInferencePort = defaultInferencePort;
+        }
+
+        /**
+         * Returns the port the server listens on for predictions by default.
+         *
+         * @return the default port
+         */
+        public int getDefaultInferencePort() {
+            return defaultInferencePort;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
 }

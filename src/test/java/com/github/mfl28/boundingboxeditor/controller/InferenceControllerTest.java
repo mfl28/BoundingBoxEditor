@@ -19,10 +19,13 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.model.Model;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.LitServeRestClient;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.TorchServeRestClient;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ModelNameFetchResult;
+import com.github.mfl28.boundingboxeditor.model.io.results.ServerConnectionCheckResult;
 import com.github.mfl28.boundingboxeditor.ui.DialogService;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -116,6 +119,37 @@ class InferenceControllerTest {
 
         verify(clientBuilder).build();
         verify(operations).startModelNameFetching(isA(TorchServeRestClient.class));
+    }
+
+    @Test
+    void onCheckConnection_ShouldCreateClientForServiceTypeAndStartCheck() {
+        final BoundingBoxPredictorClientConfig clientConfig = new BoundingBoxPredictorClientConfig();
+        clientConfig.setServiceType(BoundingBoxPredictorClient.ServiceType.LIT_SERVE);
+
+        inferenceController.checkConnection(clientConfig);
+
+        verify(clientBuilder).build();
+        verify(operations).startConnectionCheck(isA(LitServeRestClient.class));
+    }
+
+    @Test
+    void onConnectionChecked_WhenErrorsOccurred_ShouldReportErrors() {
+        final ServerConnectionCheckResult result = new ServerConnectionCheckResult(0,
+                List.of(new IOErrorInfoEntry("LitServe", "Could not connect to inference server.")), "LitServe");
+
+        inferenceController.onConnectionChecked(result, null);
+
+        verify(dialogService).displayIOResultErrorInfoAlert(result, null);
+        verify(dialogService, never()).displayTextInfoDialog(any(), any(), any(), any());
+    }
+
+    @Test
+    void onConnectionChecked_WhenServerAvailable_ShouldTellUser() {
+        inferenceController.onConnectionChecked(new ServerConnectionCheckResult(1, List.of(), "LitServe"), null);
+
+        verify(dialogService).displayTextInfoDialog("Connection Check", "The inference server is available.",
+                "Connected to the LitServe server.", null);
+        verify(dialogService, never()).displayIOResultErrorInfoAlert(any(), any());
     }
 
     @Test

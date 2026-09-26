@@ -21,13 +21,17 @@ package com.github.mfl28.boundingboxeditor.model.io.restclients;
 import javafx.beans.property.*;
 
 public class BoundingBoxPredictorClientConfig {
-    private final ObjectProperty<BoundingBoxPredictorClient.ServiceType> serviceName = new SimpleObjectProperty<>(
+    public static final String DEFAULT_PREDICTION_PATH = "/predict";
+
+    private final ObjectProperty<BoundingBoxPredictorClient.ServiceType> serviceType = new SimpleObjectProperty<>(
             BoundingBoxPredictorClient.ServiceType.TORCH_SERVE);
     private final StringProperty inferenceUrl = new SimpleStringProperty("http://localhost");
     private final IntegerProperty inferencePort = new SimpleIntegerProperty(8080);
     private final StringProperty managementUrl = new SimpleStringProperty("http://localhost");
     private final IntegerProperty managementPort = new SimpleIntegerProperty(8081);
     private final StringProperty inferenceModelName = new SimpleStringProperty();
+    private final StringProperty predictionPath = new SimpleStringProperty(DEFAULT_PREDICTION_PATH);
+    private final StringProperty apiKey = new SimpleStringProperty();
 
     public String getInferenceAddress() {
         return inferenceUrl.get() + ":" + inferencePort.get();
@@ -78,6 +82,36 @@ public class BoundingBoxPredictorClientConfig {
     }
 
     public BoundingBoxPredictorClient.ServiceType getServiceType() {
-        return serviceName.get();
+        return serviceType.get();
+    }
+
+    public void setServiceType(BoundingBoxPredictorClient.ServiceType serviceType) {
+        this.serviceType.set(serviceType);
+    }
+
+    /**
+     * Returns the path of the prediction endpoint, used by servers without a fixed one (LitServe).
+     *
+     * @return the path, starting with '/'
+     */
+    public String getPredictionPath() {
+        return predictionPath.get();
+    }
+
+    public void setPredictionPath(String predictionPath) {
+        this.predictionPath.set(predictionPath);
+    }
+
+    /**
+     * Returns the key sent to authenticate with the server, used by LitServe.
+     *
+     * @return the key, or null if the server needs none
+     */
+    public String getApiKey() {
+        return apiKey.get();
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey.set(apiKey);
     }
 }

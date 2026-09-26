@@ -20,12 +20,17 @@ package com.github.mfl28.boundingboxeditor.ui.settings;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
 import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictorConfig;
+import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient.ServiceType;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.ui.View;
 import com.github.mfl28.boundingboxeditor.utils.UiUtils;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.StringBinding;
+import javafx.collections.FXCollections;
 import javafx.css.PseudoClass;
 import javafx.scene.control.*;
+import javafx.scene.Node;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -51,7 +56,20 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private static final String MERGE_CATEGORIES_LABEL_TEXT = "Merge categories";
     private static final String SUBGROUP_TITLE_LABEL_ID = "subgroup-title-label";
     private static final String SETTINGS_SUBGROUP_BOX_ID = "settings-subgroup-box";
-    private static final String SERVERS_SUBGROUP_TITLE = "Torch serve";
+    private static final String SERVERS_SUBGROUP_TITLE = "Server";
+    private static final String SERVICE_TYPE_LABEL_TEXT = "Server";
+    private static final String LIT_SERVE_ADDRESS_LABEL_TEXT = "Address";
+    private static final String PREDICTION_PATH_LABEL_TEXT = "Endpoint path";
+    private static final String API_KEY_LABEL_TEXT = "API key";
+    private static final String SERVICE_TYPE_TOOLTIP = "Type of the inference server";
+    private static final String PREDICTION_PATH_TOOLTIP = "Path of the LitServe prediction endpoint (the LitAPI's api_path)";
+    private static final String API_KEY_TOOLTIP =
+            "Key sent in the X-API-Key header, if the server requires one (LIT_SERVER_API_KEY)";
+    private static final String CHECK_CONNECTION_TOOLTIP = "Check that the server is reachable and ready";
+    private static final String SERVICE_TYPE_COMBO_BOX_ID = "service-type-combo-box";
+    private static final String PREDICTION_PATH_FIELD_ID = "prediction-path-field";
+    private static final String API_KEY_FIELD_ID = "api-key-field";
+    private static final String CHECK_CONNECTION_BUTTON_ID = "check-connection-button";
     private static final String PREDICTION_SUBGROUP_TITLE = "Prediction";
     private static final String PREPROCESSING_SUBGROUP_TITLE = "Preprocessing";
     private static final String INFERENCE_ENABLE_TOOLTIP = "Enable bounding box predictions";
@@ -80,6 +98,15 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private final TextField imageResizeHeightField = new TextField();
     private final CheckBox keepImageRatioControl = new CheckBox();
     private final CheckBox mergeCategoriesControl = new CheckBox();
+    private final ComboBox<ServiceType> serviceTypeControl =
+            new ComboBox<>(FXCollections.observableArrayList(ServiceType.values()));
+    private final TextField predictionPathField = new TextField();
+    private final PasswordField apiKeyField = new PasswordField();
+    private final Button checkConnectionButton = new Button("Check");
+    private final BooleanBinding torchServeSelected = inferenceEnabledControl.selectedProperty()
+            .and(serviceTypeControl.valueProperty().isEqualTo(ServiceType.TORCH_SERVE));
+    private final BooleanBinding litServeSelected = inferenceEnabledControl.selectedProperty()
+            .and(serviceTypeControl.valueProperty().isEqualTo(ServiceType.LIT_SERVE));
 
     public InferenceSettingsView() {
         getStyleClass().add(GRID_PANE_STYLE_CLASS);
@@ -90,6 +117,10 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     }
 
     public void setDisplayedSettingsFromPredictorClientConfig(BoundingBoxPredictorClientConfig config) {
+        // Set first: changing the type may replace the displayed port with the type's default.
+        serviceTypeControl.setValue(config.getServiceType());
+        predictionPathField.setText(config.getPredictionPath());
+        apiKeyField.setText(config.getApiKey() == null ? "" : config.getApiKey());
         inferenceAddressField.setText(config.getInferenceUrl());
         inferencePortField.setText(Integer.toString(config.getInferencePort()));
         managementAddressField.setText(config.getManagementUrl());
@@ -108,12 +139,23 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         }
 
         boolean inferenceDataValid = validateInferenceServerData();
-        boolean managementServerDataValid = validateManagementServerData();
+        boolean managementServerDataValid = !isTorchServeSelected() || validateManagementServerData();
+        boolean predictionPathValid = isTorchServeSelected() || validatePredictionPathData();
         boolean minimumScoreControlDataValid = validateMinimumScoreControlData();
         boolean resizeImagesControlDataValid = validateResizeImagesControlData();
 
-        return inferenceDataValid && managementServerDataValid &&
+        return inferenceDataValid && managementServerDataValid && predictionPathValid &&
                 minimumScoreControlDataValid && resizeImagesControlDataValid;
+    }
+
+    /**
+     * Returns whether inference is enabled for a server that needs a model to be selected, but none is.
+     *
+     * @return true if a model must be selected before the settings can be applied
+     */
+    public boolean isModelSelectionMissing() {
+        return inferenceEnabledControl.isSelected() && isTorchServeSelected()
+                && selectedModelLabel.getText().equals(NO_MODEL_SELECTED_TEXT);
     }
 
     public void setAllFieldsValid() {
@@ -121,6 +163,7 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         inferencePortField.pseudoClassStateChanged(invalidValuePseudoClass, false);
         managementAddressField.pseudoClassStateChanged(invalidValuePseudoClass, false);
         managementPortField.pseudoClassStateChanged(invalidValuePseudoClass, false);
+        predictionPathField.pseudoClassStateChanged(invalidValuePseudoClass, false);
         minimumScoreControl.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, false);
         imageResizeWidthField.pseudoClassStateChanged(invalidValuePseudoClass, false);
         imageResizeHeightField.pseudoClassStateChanged(invalidValuePseudoClass, false);
@@ -131,10 +174,18 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
             return;
         }
 
+        config.setServiceType(serviceTypeControl.getValue());
         config.setInferenceUrl(inferenceAddressField.getText());
         config.setInferencePort(Integer.parseUnsignedInt(inferencePortField.getText()));
-        config.setManagementUrl(managementAddressField.getText());
-        config.setManagementPort(Integer.parseUnsignedInt(managementPortField.getText()));
+
+        if(isTorchServeSelected()) {
+            config.setManagementUrl(managementAddressField.getText());
+            config.setManagementPort(Integer.parseUnsignedInt(managementPortField.getText()));
+        } else {
+            config.setPredictionPath(predictionPathField.getText());
+            config.setApiKey(apiKeyField.getText() == null || apiKeyField.getText().isBlank()
+                    ? null : apiKeyField.getText());
+        }
 
         if(selectedModelLabel.getText().equals(NO_MODEL_SELECTED_TEXT)) {
             config.setInferenceModelName(null);
@@ -197,6 +248,12 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
                              .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
         mergeCategoriesControl.selectedProperty()
                               .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
+        serviceTypeControl.valueProperty()
+                          .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
+        predictionPathField.textProperty()
+                           .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
+        apiKeyField.textProperty()
+                   .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
     }
 
     public Button getSelectModelButton() {
@@ -251,10 +308,28 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         return mergeCategoriesControl;
     }
 
+    public ComboBox<ServiceType> getServiceTypeControl() {
+        return serviceTypeControl;
+    }
+
+    public TextField getPredictionPathField() {
+        return predictionPathField;
+    }
+
+    public PasswordField getApiKeyField() {
+        return apiKeyField;
+    }
+
+    public Button getCheckConnectionButton() {
+        return checkConnectionButton;
+    }
+
     @Override
     public void connectToController(Controller controller) {
         selectModelButton
                 .setOnAction(action -> controller.onRegisterModelNameFetchingAction());
+        checkConnectionButton
+                .setOnAction(action -> controller.onRegisterServerConnectionCheckAction());
     }
 
     private boolean validateMinimumScoreControlData() {
@@ -292,6 +367,17 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         return valid;
     }
 
+    private boolean validatePredictionPathData() {
+        final String path = predictionPathField.getText();
+        final boolean valid = path != null && path.startsWith("/");
+        predictionPathField.pseudoClassStateChanged(invalidValuePseudoClass, !valid);
+        return valid;
+    }
+
+    private boolean isTorchServeSelected() {
+        return serviceTypeControl.getValue() == ServiceType.TORCH_SERVE;
+    }
+
     private boolean validateManagementServerData() {
         return validateAddressPortTextFields(managementAddressField, managementPortField);
     }
@@ -322,9 +408,13 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
 
         addInferenceControlRow(++rowIndex);
         addSubgroupTitleRow(SERVERS_SUBGROUP_TITLE, ++rowIndex);
+        addServiceTypeRow(++rowIndex);
         addInferenceAddressRow(++rowIndex);
+        // The server types' own rows share grid rows, so switching the type does not change the layout's size.
         addManagementAddressRow(++rowIndex);
+        addPredictionPathRow(rowIndex);
         addModelSelectionRow(++rowIndex);
+        addApiKeyAndConnectionCheckRow(rowIndex);
         addSubgroupTitleRow(PREDICTION_SUBGROUP_TITLE, ++rowIndex);
         addMinimumPredictionScoreRow(++rowIndex);
         addPredictionMergeCategoryChoiceRow(++rowIndex);
@@ -357,7 +447,10 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         inferenceBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
         inferenceBox.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
 
-        final Label inferenceAddressLabel = new Label(INFERENCE_ADDRESS_LABEL_TEXT);
+        final Label inferenceAddressLabel = new Label();
+        final StringBinding inferenceAddressLabelText = Bindings.when(litServeSelected)
+                .then(LIT_SERVE_ADDRESS_LABEL_TEXT).otherwise(INFERENCE_ADDRESS_LABEL_TEXT);
+        inferenceAddressLabel.textProperty().bind(inferenceAddressLabelText);
         Tooltip.install(inferenceAddressLabel, UiUtils.createTooltip(INFERENCE_ADDRESS_TOOLTIP));
         inferenceAddressLabel.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
 
@@ -373,11 +466,10 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
 
         final HBox managementBox = new HBox(managementAddressField, managementPortLabel, managementPortField);
         managementBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
-        managementBox.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
 
         final Label managementAddressLabel = new Label(MANAGEMENT_ADDRESS_LABEL_TEXT);
         Tooltip.install(managementAddressLabel, UiUtils.createTooltip(MANAGEMENT_ADDRESS_TOOLTIP));
-        managementAddressLabel.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
+        showOnlyWhen(torchServeSelected, managementAddressLabel, managementBox);
 
         addRow(row, managementAddressLabel, managementBox);
     }
@@ -396,15 +488,82 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
 
         final HBox modelSelectionBox = new HBox(selectedModelLabel, selectModelButton);
         modelSelectionBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
-        modelSelectionBox.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
 
         final Label modelLabel = new Label(MODEL_LABEL_TEXT);
         Tooltip.install(modelLabel, UiUtils.createTooltip(MODEL_TOOLTIP));
-        modelLabel.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
+        showOnlyWhen(torchServeSelected, modelLabel, modelSelectionBox);
 
         addRow(row, modelLabel, modelSelectionBox);
         selectedModelLabel.disableProperty().bind(selectedModelLabel.textProperty().isEqualTo(NO_MODEL_SELECTED_TEXT));
         selectedModelLabel.setId(SELECTED_MODEL_LABEL_ID);
+    }
+
+    private void addServiceTypeRow(int row) {
+        serviceTypeControl.setValue(ServiceType.TORCH_SERVE);
+        serviceTypeControl.setId(SERVICE_TYPE_COMBO_BOX_ID);
+        serviceTypeControl.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
+        // Keep a port the user has not changed at the selected server type's default.
+        serviceTypeControl.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if(oldValue != null && newValue != null
+                    && Integer.toString(oldValue.getDefaultInferencePort()).equals(inferencePortField.getText())) {
+                inferencePortField.setText(Integer.toString(newValue.getDefaultInferencePort()));
+            }
+        });
+
+        final Label serviceTypeLabel = new Label(SERVICE_TYPE_LABEL_TEXT);
+        Tooltip.install(serviceTypeLabel, UiUtils.createTooltip(SERVICE_TYPE_TOOLTIP));
+        serviceTypeLabel.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
+
+        addRow(row, serviceTypeLabel, serviceTypeControl);
+    }
+
+    private void addPredictionPathRow(int row) {
+        predictionPathField.setId(PREDICTION_PATH_FIELD_ID);
+
+        final Label predictionPathLabel = new Label(PREDICTION_PATH_LABEL_TEXT);
+        Tooltip.install(predictionPathLabel, UiUtils.createTooltip(PREDICTION_PATH_TOOLTIP));
+        showOnlyWhen(litServeSelected, predictionPathLabel, predictionPathField);
+
+        // Shares the grid row with the management address: addRow would append further columns.
+        add(predictionPathLabel, 0, row);
+        add(predictionPathField, 1, row);
+    }
+
+    private void addApiKeyAndConnectionCheckRow(int row) {
+        apiKeyField.setId(API_KEY_FIELD_ID);
+        apiKeyField.setPromptText("Optional");
+        HBox.setHgrow(apiKeyField, Priority.ALWAYS);
+
+        checkConnectionButton.setId(CHECK_CONNECTION_BUTTON_ID);
+        checkConnectionButton.disableProperty().bind(
+                Bindings.createBooleanBinding(
+                        () -> inferenceAddressField.getText() == null
+                                || inferenceAddressField.getText().isBlank()
+                                || inferencePortField.getText() == null
+                                || inferencePortField.getText().isBlank(),
+                        inferenceAddressField.textProperty(),
+                        inferencePortField.textProperty()));
+        Tooltip.install(checkConnectionButton, UiUtils.createTooltip(CHECK_CONNECTION_TOOLTIP));
+
+        final HBox apiKeyBox = new HBox(apiKeyField, checkConnectionButton);
+        apiKeyBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
+
+        final Label apiKeyLabel = new Label(API_KEY_LABEL_TEXT);
+        Tooltip.install(apiKeyLabel, UiUtils.createTooltip(API_KEY_TOOLTIP));
+        showOnlyWhen(litServeSelected, apiKeyLabel, apiKeyBox);
+
+        // Shares the grid row with the model selection: addRow would append further columns.
+        add(apiKeyLabel, 0, row);
+        add(apiKeyBox, 1, row);
+    }
+
+    /**
+     * Shows the nodes only while the condition holds.
+     */
+    private static void showOnlyWhen(BooleanBinding condition, Node... nodes) {
+        for(Node node : nodes) {
+            node.visibleProperty().bind(condition);
+        }
     }
 
     private void addMinimumPredictionScoreRow(int row) {

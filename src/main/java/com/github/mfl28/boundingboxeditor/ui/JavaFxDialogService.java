@@ -170,6 +170,9 @@ public class JavaFxDialogService implements DialogService {
             case MODEL_NAME_FETCHING -> displayInfoAlert("Model Fetching Error Report",
                     "There were errors while fetching model names from the server",
                     null, errorTable, owner);
+            case SERVER_CONNECTION_CHECK -> displayInfoAlert("Connection Check Error Report",
+                    "The inference server is not available",
+                    null, errorTable, owner);
         }
     }
 
