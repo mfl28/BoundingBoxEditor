@@ -18,6 +18,11 @@ on:
     branches:
       - master
 
+# A new push to a pull request cancels the run for its previous commit. Runs on master and tags always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   JAVA_VERSION: '25'
   JAVA_DISTRIBUTION: 'temurin'

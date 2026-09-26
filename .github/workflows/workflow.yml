@@ -20,6 +20,11 @@ on:
   # Started by the Version Bump workflow for its pull request (pull requests opened by workflows run no checks).
   workflow_dispatch:
 
+# A new push to a pull request cancels the run for its previous commit. Runs on master and tags always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   JAVA_VERSION: '25'
   JAVA_DISTRIBUTION: 'temurin'
@@ -27,6 +32,7 @@ env:
   TEST_SCREEN_HEIGHT: '1080'
 
 jobs:
+  # Testing and packaging run in separate jobs per platform, so the installers don't wait for the (UI) tests.
   Build-and-Test-Windows:
     runs-on: windows-latest
     name: Build and Test (Windows)
@@ -66,6 +72,25 @@ jobs:
           directory: build/reports/
           token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: OS
+      - name: Stop Gradle daemons
+        # Releases their files in the Gradle User Home, so setup-gradle can save it to the cache.
+        run: ./gradlew --stop
+
+  Package-Windows:
+    runs-on: windows-latest
+    name: Package (Windows)
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Smoke-test packaged app
@@ -81,6 +106,7 @@ jobs:
           name: boundingboxeditor-portable-windows
           path: build/jpackage/BoundingBoxEditor
       - name: Stop Gradle daemons
+        # Releases their files in the Gradle User Home, so setup-gradle can save it to the cache.
         run: ./gradlew --stop
 
   Build-and-Test-Linux:
@@ -98,14 +124,8 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: java
       - name: Build
         run: ./gradlew --info --stacktrace build -x test
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
       - name: Test setup
         run: |
           sudo apt-get update
@@ -130,15 +150,32 @@ jobs:
           directory: build/reports/
           token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: OS
+      - name: Sonarqube analysis
+        if: github.event_name != 'workflow_dispatch'
+        run: ./gradlew sonar '-Dsonar.host.url=https://sonarcloud.io'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  Package-Linux:
+    runs-on: ubuntu-latest
+    name: Package (Linux)
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Smoke-test packaged app
-        # Without CodeQL's build tracing, which stays enabled (LD_PRELOAD) for the rest of the job and also in the
-        # daemon started during the build: it adds a Java agent to every JVM, and the packaged runtime (without
-        # java.instrument) can't start with it.
-        env:
-          LD_PRELOAD: ''
-        run: ./gradlew --no-daemon --info --stacktrace packagedAppSmokeTest
+        run: ./gradlew --info --stacktrace packagedAppSmokeTest
       - name: Upload installer (deb)
         uses: actions/upload-artifact@v7
         with:
@@ -154,12 +191,6 @@ jobs:
         with:
           name: boundingboxeditor-portable-linux
           path: build/jpackage/BoundingBoxEditor
-      - name: Sonarqube analysis
-        if: github.event_name != 'workflow_dispatch'
-        run: ./gradlew sonar '-Dsonar.host.url=https://sonarcloud.io'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   Build-and-Test-macOS:
     runs-on: macos-latest
@@ -190,6 +221,22 @@ jobs:
           directory: build/reports/
           token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: OS
+
+  Package-macOS:
+    runs-on: macos-latest
+    name: Package (macOS)
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
       - name: Smoke-test packaged app
@@ -205,7 +252,8 @@ jobs:
           name: boundingboxeditor-portable-macos
           path: build/jpackage/BoundingBoxEditor.app
   Release:
-    needs: [Build-and-Test-Windows, Build-and-Test-Linux, Build-and-Test-macOS]
+    needs: [Build-and-Test-Windows, Build-and-Test-Linux, Build-and-Test-macOS, Package-Windows, Package-Linux,
+            Package-macOS]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     name: Github Release
