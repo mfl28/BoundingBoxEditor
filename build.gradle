@@ -206,7 +206,8 @@ jar {
 application {
     mainModule = "com.github.mfl28.boundingboxeditor"
     mainClass = "com.github.mfl28.boundingboxeditor.BoundingBoxEditorApp"
-    applicationDefaultJvmArgs = ['-Dprism.forceGPU=true', '-Djava.net.preferIPv6Addresses=system']
+    applicationDefaultJvmArgs = ['-Dprism.forceGPU=true', '-Djava.net.preferIPv6Addresses=system',
+                                 '--enable-native-access=javafx.graphics']
 }
 
 java {
@@ -220,7 +221,10 @@ jlink {
     options = ['--strip-debug', '--compress', 'zip-6', '--no-header-files', '--no-man-pages']
     launcher {
         name = 'BoundingBoxEditor'
-        jvmArgs = ['-Dprism.forceGPU=true', '-Djava.net.preferIPv6Addresses=system']
+        // JavaFX loads its native libraries, which the JDK only allows with a warning (to be blocked later) unless
+        // native access is enabled for the module.
+        jvmArgs = ['-Dprism.forceGPU=true', '-Djava.net.preferIPv6Addresses=system',
+                   '--enable-native-access=javafx.graphics']
     }
 
     forceMerge 'jakarta'
@@ -275,6 +279,39 @@ jlink {
             installerType = project.property('installerType')
         }
     }
+}
+
+// A smoke test of the packaged app, run with the Java runtime of the jlink image (see src/smokeTest). It covers what
+// only breaks there, like missing module declarations of the merged module, which the tests (run on the classpath)
+// can't notice.
+def smokeTestSources = fileTree('src/smokeTest/java') { include '**/*.java' }
+def smokeTestClassesDir = layout.buildDirectory.dir('smokeTest/classes')
+def smokeTestExports = ['model.io', 'model.io.results', 'model.io.restclients'].collect {
+    "--add-exports=com.github.mfl28.boundingboxeditor/com.github.mfl28.boundingboxeditor.${it}=smoketest".toString()
+}
+
+tasks.register('compilePackagedAppSmokeTest', Exec) {
+    description = 'Compiles the smoke test of the packaged app against the modules of the jlink image.'
+    dependsOn 'jlink'
+    inputs.files smokeTestSources
+    outputs.dir smokeTestClassesDir
+    def javac = javaToolchains.compilerFor(java.toolchain).map { it.executablePath.asFile.absolutePath }
+    doFirst {
+        executable javac.get()
+    }
+    args(['--module-path', layout.buildDirectory.dir('jlinkbase/jlinkjars').get().asFile.absolutePath,
+          '-d', smokeTestClassesDir.get().asFile.absolutePath] + smokeTestExports)
+    argumentProviders.add({ smokeTestSources.files*.absolutePath } as CommandLineArgumentProvider)
+}
+
+tasks.register('packagedAppSmokeTest', Exec) {
+    group = 'verification'
+    description = 'Runs the smoke test of the packaged app with the Java runtime of the jlink image.'
+    dependsOn 'compilePackagedAppSmokeTest'
+    def javaExecutable = org.gradle.internal.os.OperatingSystem.current().windows ? 'java.exe' : 'java'
+    executable layout.buildDirectory.file("image/bin/${javaExecutable}").get().asFile.absolutePath
+    args(['--module-path', smokeTestClassesDir.get().asFile.absolutePath] + smokeTestExports
+            + ['--module', 'smoketest/smoketest.PackagedAppSmokeTest'])
 }
 
 tasks.register('dist') {

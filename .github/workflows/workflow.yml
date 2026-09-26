@@ -69,6 +69,8 @@ jobs:
           env_vars: OS
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
+      - name: Smoke-test packaged app
+        run: ./gradlew --info --stacktrace packagedAppSmokeTest
       - name: Upload installer (exe)
         uses: actions/upload-artifact@v4
         with:
@@ -132,6 +134,8 @@ jobs:
           env_vars: OS
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
+      - name: Smoke-test packaged app
+        run: ./gradlew --info --stacktrace packagedAppSmokeTest
       - name: Upload installer (deb)
         uses: actions/upload-artifact@v4
         with:
@@ -186,6 +190,8 @@ jobs:
           env_vars: OS
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
+      - name: Smoke-test packaged app
+        run: ./gradlew --info --stacktrace packagedAppSmokeTest
       - name: Upload installer (dmg)
         uses: actions/upload-artifact@v4
         with:
