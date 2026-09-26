@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Locale;
 
 @Tag("unit")
 class UtilsTests {
@@ -81,5 +82,25 @@ class UtilsTests {
     void isWithin0And1_onWithinIntervalArgument_ShouldReturnTrue() {
         Assertions.assertTrue(MathUtils.isWithin(0.00001, 0.0, 1.0));
         Assertions.assertTrue(MathUtils.isWithin(0.99999, 0.0, 1.0));
+    }
+
+    @Test
+    void onFloatConversion_WithCommaDecimalSeparatorLocale_ShouldUseDot() {
+        final Locale defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.GERMANY);
+
+        try {
+            final var converter = UiUtils.createFloatConverter();
+
+            MatcherAssert.assertThat(converter.toString(0.5), Matchers.equalTo("0.5"));
+            MatcherAssert.assertThat(converter.toString(0.05), Matchers.equalTo("0.05"));
+            MatcherAssert.assertThat(converter.toString(1.0), Matchers.equalTo("1"));
+            MatcherAssert.assertThat(converter.toString(null), Matchers.equalTo(""));
+            MatcherAssert.assertThat(converter.fromString("0.75"), Matchers.equalTo(0.75));
+            MatcherAssert.assertThat(converter.fromString(".5"), Matchers.equalTo(0.5));
+            MatcherAssert.assertThat(converter.fromString(" "), Matchers.nullValue());
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 }
