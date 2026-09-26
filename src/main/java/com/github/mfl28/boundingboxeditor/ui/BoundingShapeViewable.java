@@ -34,4 +34,12 @@ public interface BoundingShapeViewable {
     Rectangle2D getRelativeOutlineRectangle();
 
     BoundingShapeTreeItem toTreeItem();
+
+    /**
+     * Moves the shape by the provided distance, but not beyond the image.
+     *
+     * @param dx the horizontal distance in the coordinates of the editor's image view
+     * @param dy the vertical distance in the coordinates of the editor's image view
+     */
+    void moveBy(double dx, double dy);
 }

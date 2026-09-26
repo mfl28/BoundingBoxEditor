@@ -36,6 +36,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
@@ -59,6 +60,9 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private static final int MAXIMUM_IMAGE_WIDTH = 3072;
     private static final int MAXIMUM_IMAGE_HEIGHT = 3072;
     private static final String BOUNDING_SHAPE_SCENE_GROUP_ID = "bounding-shape-scene-group";
+    // Arrow keys move the selected shape by this many image pixels (with Shift by the larger distance).
+    private static final double NUDGE_DISTANCE = 1;
+    private static final double LARGE_NUDGE_DISTANCE = 10;
 
     private final ImageView imageView = new ImageView();
     private final SimpleBooleanProperty maximizeImageView = new SimpleBooleanProperty(true);
@@ -76,6 +80,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
             imageLoadingProgressIndicator);
     private final ObjectProperty<DrawingMode> drawingMode = new SimpleObjectProperty<>(DrawingMode.BOX);
     private String currentImageUrl = null;
+    // The size of the image file (oriented as shown): large images are loaded scaled down.
+    private Dimension2D currentImageFileSize = null;
 
     private BoundingShapeDrawer boundingShapeDrawer = null;
 
@@ -299,6 +305,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 dimension.getWidth(), dimension.getHeight(), true, true, true));
 
         currentImageUrl = imageMetaData.getFileUrl();
+        currentImageFileSize = new Dimension2D(imageMetaData.getOrientedWidth(), imageMetaData.getOrientedHeight());
 
         resetImageViewSize();
     }
@@ -407,6 +414,35 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
         setUpImageViewListeners();
         setUpContentPaneListeners();
+        // A filter, because the scroll pane itself scrolls with the arrow keys.
+        addEventFilter(KeyEvent.KEY_PRESSED, this::handleNudgeKeyPressed);
+    }
+
+    private void handleNudgeKeyPressed(KeyEvent event) {
+        if(event.isShortcutDown() || event.isAltDown() || isDrawingInProgress() || !isImageFullyLoaded()
+                || !(boundingShapeSelectionGroup.getSelectedToggle() instanceof BoundingShapeViewable selectedShape)) {
+            return;
+        }
+
+        final double distance = event.isShiftDown() ? LARGE_NUDGE_DISTANCE : NUDGE_DISTANCE;
+        final double dx;
+        final double dy;
+
+        switch(event.getCode()) {
+            case LEFT -> { dx = -distance; dy = 0; }
+            case RIGHT -> { dx = distance; dy = 0; }
+            case UP -> { dx = 0; dy = -distance; }
+            case DOWN -> { dx = 0; dy = distance; }
+            default -> { return; }
+        }
+
+        // Pixels of the image file to image-view coordinates.
+        final Bounds imageViewBounds = imageView.getBoundsInParent();
+        final Dimension2D imageSize = currentImageFileSize != null ? currentImageFileSize :
+                new Dimension2D(imageView.getImage().getWidth(), imageView.getImage().getHeight());
+        selectedShape.moveBy(dx * imageViewBounds.getWidth() / imageSize.getWidth(),
+                             dy * imageViewBounds.getHeight() / imageSize.getHeight());
+        event.consume();
     }
 
     private void setUpImageViewListeners() {

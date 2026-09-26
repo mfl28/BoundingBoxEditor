@@ -257,6 +257,13 @@ public class BoundingBoxView extends Rectangle implements
         });
     }
 
+    @Override
+    public void moveBy(double dx, double dy) {
+        final Point2D movedXY = MathUtils.clampWithinBounds(getX() + dx, getY() + dy, constructCurrentMoveBounds());
+        setX(movedXY.getX());
+        setY(movedXY.getY());
+    }
+
     private Bounds constructCurrentMoveBounds() {
         final Bounds confinementBoundsValue = boundingShapeViewData.autoScaleBounds().getValue();
         return new BoundingBox(confinementBoundsValue.getMinX(), confinementBoundsValue.getMinY(),

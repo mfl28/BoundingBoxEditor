@@ -85,6 +85,11 @@ public class BoundingFreehandShapeView extends Path implements View, BoundingSha
         return new BoundingPolygonTreeItem(this);
     }
 
+    @Override
+    public void moveBy(double dx, double dy) {
+        // Only exists while being drawn and is then replaced by a polygon, so it is never moved.
+    }
+
     public void addMoveTo(double x, double y) {
         getElements().add(new MoveTo(x, y));
     }

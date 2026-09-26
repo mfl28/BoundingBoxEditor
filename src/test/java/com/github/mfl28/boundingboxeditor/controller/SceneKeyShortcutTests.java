@@ -42,6 +42,8 @@ import org.testfx.matcher.base.NodeMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -62,8 +64,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
-        verifyThat(controller.keyCombinationHandlers.stream().map(KeyCombinationEventHandler::getKeyCombination).toList(),
-                Matchers.containsInAnyOrder(
+        final List<KeyCombination> expectedShortcuts = new ArrayList<>(List.of(
                         KeyCombination.NO_MATCH,
                         KeyCombinations.navigateNext, KeyCombinations.navigatePrevious,
                         KeyCombinations.showAllBoundingShapes, KeyCombinations.hideAllBoundingShapes,
@@ -76,8 +77,16 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                         KeyCombinations.changeSelectedBoundingShapeCategory,
                         KeyCombinations.hideNonSelectedBoundingShapes, KeyCombinations.simplifyPolygon,
                         KeyCombinations.saveBoundingShapeAsImage, KeyCombinations.openSettings,
-                        KeyCombinations.undo, KeyCombinations.redo
-                ));
+                        KeyCombinations.undo, KeyCombinations.redo,
+                        KeyCombinations.copyBoundingShape, KeyCombinations.pasteBoundingShape));
+        // The number keys (also on the numeric keypad) select a category.
+        for(int number = 1; number <= 9; ++number) {
+            expectedShortcuts.add(new KeyCodeCombination(KeyCode.valueOf("DIGIT" + number)));
+            expectedShortcuts.add(new KeyCodeCombination(KeyCode.valueOf("NUMPAD" + number)));
+        }
+
+        verifyThat(controller.keyCombinationHandlers.stream().map(KeyCombinationEventHandler::getKeyCombination).toList(),
+                Matchers.containsInAnyOrder(expectedShortcuts.toArray()));
 
         testOpenSettingsKeyEvent(robot, testinfo);
         testNavigateNextKeyEvent(testinfo, true, true, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");

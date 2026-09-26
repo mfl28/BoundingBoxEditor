@@ -24,11 +24,15 @@ import com.github.mfl28.boundingboxeditor.ui.MainView;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputControl;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
 import java.util.List;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -114,11 +118,14 @@ class KeyboardShortcutHandler {
      * @param openSettings opens the settings dialog
      * @param undo         undoes the last edit of the bounding shapes
      * @param redo         redoes the last undone edit of the bounding shapes
+     * @param copy         copies the selected bounding shape
+     * @param paste        pastes the copied bounding shape
      * @return the shortcut handlers
      */
     static List<KeyCombinationEventHandler> createViewActionShortcuts(MainView view, Runnable openSettings,
-                                                                     Runnable undo, Runnable redo) {
-        return List.of(
+                                                                     Runnable undo, Runnable redo, Runnable copy,
+                                                                     Runnable paste) {
+        return Stream.concat(Stream.of(
                 new KeyCombinationEventHandler(KeyCombinations.deleteSelectedBoundingShape,
                         null, event -> view.removeSelectedTreeItemAndChildren()),
                 new KeyCombinationEventHandler(KeyCombinations.removeEditingVerticesWhenBoundingPolygonSelected,
@@ -160,8 +167,32 @@ class KeyboardShortcutHandler {
                 new KeyCombinationEventHandler(KeyCombinations.undo,
                         null, event -> undo.run()),
                 new KeyCombinationEventHandler(KeyCombinations.redo,
-                        null, event -> redo.run())
-        );
+                        null, event -> redo.run()),
+                new KeyCombinationEventHandler(KeyCombinations.copyBoundingShape,
+                        null, event -> copy.run()),
+                new KeyCombinationEventHandler(KeyCombinations.pasteBoundingShape,
+                        null, event -> paste.run())
+        ), createCategorySelectionShortcuts(view)).toList();
+    }
+
+    /**
+     * Creates the shortcuts that select a category by its position in the category table: the number keys 1-9
+     * (also on the numeric keypad), without modifiers.
+     *
+     * @param view the main view
+     * @return the shortcut handlers
+     */
+    private static Stream<KeyCombinationEventHandler> createCategorySelectionShortcuts(MainView view) {
+        return IntStream.rangeClosed(1, 9).boxed().flatMap(number -> Stream.of("DIGIT", "NUMPAD")
+                .map(keyName -> new KeyCombinationEventHandler(new KeyCodeCombination(KeyCode.valueOf(keyName + number)),
+                        null, event -> selectCategory(view.getObjectCategoryTable(), number - 1))));
+    }
+
+    private static void selectCategory(TableView<?> categoryTable, int index) {
+        if(index < categoryTable.getItems().size()) {
+            categoryTable.getSelectionModel().select(index);
+            categoryTable.scrollTo(index);
+        }
     }
 
     /**
