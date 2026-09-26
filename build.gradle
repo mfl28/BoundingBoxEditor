@@ -32,7 +32,7 @@ plugins {
 }
 
 group = 'com.github.mfl28'
-version = '2.8.0'
+version = '3.0.0'
 
 def currentYear = Calendar.getInstance().get(Calendar.YEAR)
 
