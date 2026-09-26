@@ -88,11 +88,9 @@ class LitServeClientTest extends BoundingBoxEditorTestBase {
 
         final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         final InferenceSettingsView inferenceSettingsView = mainView.getInferenceSettingsView();
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
-        WaitForAsyncUtils.waitForFxEvents();
 
         // Torch serve is the default and shows its management server and model selection.
         verifyThat(inferenceSettingsView.getServiceTypeControl().getValue(), Matchers.equalTo(ServiceType.TORCH_SERVE),
@@ -103,7 +101,6 @@ class LitServeClientTest extends BoundingBoxEditorTestBase {
                 saveScreenshot(testinfo));
 
         robot.interact(() -> inferenceSettingsView.getServiceTypeControl().setValue(ServiceType.LIT_SERVE));
-        WaitForAsyncUtils.waitForFxEvents();
 
         // LitServe has no model registry: its endpoint path, API key and connection check are shown instead.
         verifyThat(inferenceSettingsView.getManagementAddressField().getParent().isVisible(), Matchers.is(false),
@@ -130,7 +127,6 @@ class LitServeClientTest extends BoundingBoxEditorTestBase {
 
         // A rejected API key is reported.
         robot.clickOn(inferenceSettingsView.getCheckConnectionButton());
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertServiceSucceeded(controller.getServerConnectionCheckService(), testinfo);
 
         final Stage errorReportStage = timeOutGetTopModalStage(robot, "Connection Check Error Report", testinfo);
@@ -142,10 +138,8 @@ class LitServeClientTest extends BoundingBoxEditorTestBase {
         timeOutAssertTopModalStageClosed(robot, "Connection Check Error Report", testinfo);
 
         robot.interact(() -> inferenceSettingsView.getApiKeyField().setText(API_KEY));
-        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(inferenceSettingsView.getCheckConnectionButton());
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertServiceSucceeded(controller.getServerConnectionCheckService(), testinfo);
 
         final Stage connectionCheckStage = timeOutGetTopModalStage(robot, "Connection Check", testinfo);
@@ -154,7 +148,6 @@ class LitServeClientTest extends BoundingBoxEditorTestBase {
 
         // No model needs to be selected for LitServe.
         robot.clickOn(((DialogPane) settingsStage.getScene().getRoot()).lookupButton(ButtonType.OK));
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertNoTopModelStage(robot, testinfo);
 
         final BoundingBoxPredictorClientConfig clientConfig = model.getBoundingBoxPredictorClientConfig();
@@ -165,7 +158,6 @@ class LitServeClientTest extends BoundingBoxEditorTestBase {
                 saveScreenshot(testinfo));
 
         robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
 
         // The prediction below the minimum score (0.5) is dropped.

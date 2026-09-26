@@ -52,9 +52,7 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded(testinfo);
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
@@ -92,14 +90,12 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(showObjectPopoverControl.isSelected(), Matchers.is(true), saveScreenshot(testinfo));
 
         robot.clickOn(uiSettingsView.getShowObjectPopoverControl());
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(showObjectPopoverControl.isSelected(), Matchers.is(false), saveScreenshot(testinfo));
         verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(false),
                    saveScreenshot(testinfo));
 
         robot.clickOn(settingsPane.lookupButton(ButtonType.APPLY));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(true),
@@ -118,9 +114,7 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded(testinfo);
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
@@ -145,7 +139,6 @@ class SettingsTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
 
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(categoriesListView.getSelectionModel().getSelectedItem(), Matchers.equalTo("Inference"),
                 saveScreenshot(testinfo));
@@ -160,7 +153,6 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyDefaultInferenceSettingsStates(testinfo);
 
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(inferenceSettingsView.getInferenceEnabledControl().isSelected(), Matchers.is(true),
                    saveScreenshot(testinfo));
@@ -223,14 +215,12 @@ class SettingsTests extends BoundingBoxEditorTestBase {
 
         inferenceSettingsView.getImageResizeWidthField().clear();
         WaitForAsyncUtils.waitForFxEvents();
-        robot.clickOn(inferenceSettingsView.getImageResizeWidthField()).write("777");
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot.clickOn(inferenceSettingsView.getImageResizeWidthField()), "777");
 
         verifyThat(inferenceSettingsView.getImageResizeWidthField().getText(), Matchers.equalTo("777"),
                    saveScreenshot(testinfo));
 
         robot.clickOn(settingsPane.lookupButton(ButtonType.CANCEL));
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertNoTopModelStage(robot, testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.is(false));
@@ -263,21 +253,17 @@ class SettingsTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         final Stage settingsStageReopened = timeOutGetTopModalStage(robot, "Settings", testinfo);
         verifyThat(settingsStageReopened.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(settingsStageReopened.getScene().getRoot(), Matchers.instanceOf(DialogPane.class));
 
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyDefaultInferenceSettingsStates(testinfo);
 
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
-        WaitForAsyncUtils.waitForFxEvents();
 
         inferenceSettingsView.getManagementPortField().clear();
         WaitForAsyncUtils.waitForFxEvents();
@@ -285,8 +271,7 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(inferenceSettingsView.getSelectModelButton().isDisable(), Matchers.is(true),
                    saveScreenshot(testinfo));
 
-        robot.clickOn(inferenceSettingsView.getManagementPortField()).write("1234");
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot.clickOn(inferenceSettingsView.getManagementPortField()), "1234");
 
         verifyThat(inferenceSettingsView.getManagementPortField().getText(), Matchers.equalTo("1234"),
                    saveScreenshot(testinfo));
@@ -295,7 +280,6 @@ class SettingsTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
 
         robot.clickOn(inferenceSettingsView.getResizeImagesControl());
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(inferenceSettingsView.getResizeImagesControl().isSelected(), Matchers.equalTo(false),
                    saveScreenshot(testinfo));
@@ -308,10 +292,8 @@ class SettingsTests extends BoundingBoxEditorTestBase {
 
         final Stage errorStage = timeOutGetTopModalStage(robot, "Settings Application Error", testinfo);
         timeOutClickOnButtonInDialogStage(robot, errorStage, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutClickOnButtonInDialogStage(robot, settingsStageReopened, ButtonType.OK, testinfo);
 
@@ -329,27 +311,22 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded(testinfo);
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(settingsStage.getScene().getRoot(), Matchers.instanceOf(DialogPane.class));
 
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         final InferenceSettingsView inferenceSettingsView = mainView.getInferenceSettingsView();
 
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(inferenceSettingsView.getInferenceEnabledControl().isSelected(), Matchers.is(true),
                    saveScreenshot(testinfo));
 
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "UI", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         final UISettingsView uiSettingsView = mainView.getUiSettingsView();
         verifyThat(uiSettingsView.isVisible(), Matchers.is(true), saveScreenshot(testinfo));
@@ -366,14 +343,12 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         timeOutClickOnButtonInDialogStage(robot, errorStage, ButtonType.OK, testinfo);
 
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(inferenceSettingsView.isVisible(), Matchers.is(true), saveScreenshot(testinfo));
         inferenceSettingsView.getInferenceAddressField().clear();
         WaitForAsyncUtils.waitForFxEvents();
 
         timeOutLookUpInStageAndClickOn(robot, settingsStage, "UI", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(uiSettingsView.isVisible(), Matchers.is(true), saveScreenshot(testinfo));
 
@@ -385,10 +360,8 @@ class SettingsTests extends BoundingBoxEditorTestBase {
                    Matchers.equalTo("Please provide valid values for the indicated fields."), saveScreenshot(testinfo));
 
         timeOutClickOnButtonInDialogStage(robot, errorStage1, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutClickOnButtonInDialogStage(robot, settingsStage, ButtonType.CANCEL, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertNoTopModelStage(robot, testinfo);
     }
@@ -398,9 +371,7 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded(testinfo);
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
@@ -436,14 +407,12 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(autoSimplifyPolygonsControl.isSelected(), Matchers.is(true), saveScreenshot(testinfo));
 
         robot.clickOn(autoSimplifyPolygonsControl);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(autoSimplifyPolygonsControl.isSelected(), Matchers.is(false), saveScreenshot(testinfo));
         verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(false),
                 saveScreenshot(testinfo));
 
         robot.clickOn(settingsPane.lookupButton(ButtonType.APPLY));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(true),
@@ -455,7 +424,6 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(simplifyToleranceControl.getValue(), Matchers.equalTo(0.1), saveScreenshot(testinfo));
 
         robot.moveTo(simplifyToleranceControl.lookup(".thumb")).drag(MouseButton.PRIMARY).moveTo("Medium").drop();
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(simplifyToleranceControl.getValue(), Matchers.equalTo(0.5), saveScreenshot(testinfo));
 
@@ -463,7 +431,6 @@ class SettingsTests extends BoundingBoxEditorTestBase {
                 saveScreenshot(testinfo));
 
         robot.clickOn(settingsPane.lookupButton(ButtonType.APPLY));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(settingsStage.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(true),

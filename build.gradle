@@ -130,6 +130,9 @@ test {
     maxHeapSize = '3072m'
     // Tests get their own, in-memory preferences instead of reading and changing the user's.
     systemProperty 'java.util.prefs.PreferencesFactory', 'com.github.mfl28.boundingboxeditor.InMemoryPreferencesFactory'
+    // TestFX moves the mouse in one step per pixel (at most 200), each followed by a short sleep. Fewer steps make
+    // every robot move considerably faster; the tests only depend on the start and end points.
+    systemProperty 'testfx.robot.move_max_count', '20'
 
     moduleOptions {
         runOnClasspath = true

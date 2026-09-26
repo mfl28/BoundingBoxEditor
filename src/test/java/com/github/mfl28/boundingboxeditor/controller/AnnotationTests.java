@@ -108,7 +108,6 @@ class AnnotationTests extends BoundingBoxEditorTestBase {
 
         // Close error report dialog.
         timeOutLookUpInStageAndClickOn(robot, errorReportStage, "OK", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertTopModalStageClosed(robot, "Annotation Import Error Report", testinfo);
 

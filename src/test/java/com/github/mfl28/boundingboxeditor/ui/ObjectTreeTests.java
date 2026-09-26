@@ -75,14 +75,12 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         // Enter new category
         enterNewCategory(robot, "Test", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(true), saveScreenshot(testinfo));
 
         /* ----Drawing---- */
         // Draw first bounding-box.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(false), saveScreenshot(testinfo));
 
@@ -112,7 +110,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         // Draw second bounding-box.
         moveRelativeToImageView(robot, new Point2D(0.6, 0.25), new Point2D(0.85, 0.5));
-        WaitForAsyncUtils.waitForFxEvents();
         // Still there should be only one category...
         verifyThat(topLevelTreeItems.size(), Matchers.equalTo(1), saveScreenshot(testinfo));
         verifyThat(topLevelTreeItems.get(0), Matchers.equalTo(testCategoryTreeItem), saveScreenshot(testinfo));
@@ -137,7 +134,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         /* ----Hiding And Showing---- */
         // Hide first bounding-box by right-clicking.
         robot.rightClickOn("Test 1");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Hide", testinfo);
 
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.equalTo(false), saveScreenshot(testinfo));
@@ -148,7 +144,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(secondTestChildTreeItem.toggleIcon, Matchers.instanceOf(ToggleSquare.class),
                    saveScreenshot(testinfo));
         robot.clickOn((ToggleSquare) secondTestChildTreeItem.toggleIcon);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.equalTo(false), saveScreenshot(testinfo));
         verifyThat((BoundingBoxView) secondTestChildTreeItem.getValue(), NodeMatchers.isInvisible(),
@@ -159,7 +154,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         // Now toggle the category-item's icon to on.
         robot.clickOn(testCategoryTreeItem.getGraphic());
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(testCategoryTreeItem.isIconToggledOn(), Matchers.equalTo(true), saveScreenshot(testinfo));
         // This should toggle on all child-items.
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.equalTo(true), saveScreenshot(testinfo));
@@ -171,27 +165,21 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         // Hide all except Test 1
         robot.rightClickOn("Test 1");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Hide others", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(false), saveScreenshot(testinfo));
 
         // Show all via context menu
         robot.rightClickOn("Test 1");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Show all", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
 
         // Hide all via context menu
         robot.rightClickOn("Test 2");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Hide all", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.is(false), saveScreenshot(testinfo));
         verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(false), saveScreenshot(testinfo));
@@ -199,17 +187,13 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         // Show via context menu
         robot.rightClickOn("Test 1");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Show", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(false), saveScreenshot(testinfo));
 
         robot.rightClickOn("Test 2");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Show", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(firstTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
@@ -218,21 +202,18 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         /* ----Nesting---- */
         // Draw another bounding-box belonging to the Test-category.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
-        WaitForAsyncUtils.waitForFxEvents();
 
         final BoundingBoxTreeItem thirdTestChildTreeItem =
                 (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(2);
 
         // Enter new category
         enterNewCategory(robot, "Dummy", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getObjectCategoryTable().getSelectedCategory().getName(), Matchers.equalTo("Dummy"),
                    saveScreenshot(testinfo));
 
         // Draw a bounding-box belonging to the Dummy-category
         moveRelativeToImageView(robot, new Point2D(0.6, 0.6), new Point2D(0.85, 0.85));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(topLevelTreeItems.size(), Matchers.equalTo(2), saveScreenshot(testinfo));
         verifyThat(topLevelTreeItems.get(0), Matchers.equalTo(testCategoryTreeItem), saveScreenshot(testinfo));
@@ -252,7 +233,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         // Make the third child of the Test-category a nested part of the first item of the Dummy-category.
         robot.moveTo("Test 3").press(MouseButton.PRIMARY).moveTo("Dummy 1").release(MouseButton.PRIMARY);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(testCategoryTreeItem.getChildren().size(), Matchers.equalTo(2), saveScreenshot(testinfo));
         verifyThat(dummyCategoryTreeItem.getChildren().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
@@ -303,9 +283,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         // Delete first Test-bounding-box via context-menu on the tree-cell.
         robot.rightClickOn("Test 1");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Delete", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         // There should still be two categories...
         verifyThat(newTopLevelTreeItems.size(), Matchers.equalTo(2), saveScreenshot(testinfo));
@@ -325,7 +303,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         // Leaving the tree hides its hover pop-over. A still showing (auto-hiding) popup would consume the
         // right-click, so the bounding box would neither be selected nor show its context-menu.
         robot.moveTo(secondTestBoundingBoxView);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertNoPopupWindowShowing(testinfo);
 
         // Diagnostics for an intermittent CI failure: record where the right-click actually lands.
@@ -335,7 +312,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
                 () -> mainView.getScene().addEventFilter(MouseEvent.MOUSE_PRESSED, mousePressRecorder));
 
         robot.rightClickOn(secondTestBoundingBoxView);
-        WaitForAsyncUtils.waitForFxEvents();
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                         () -> robot.lookup("Delete").tryQuery().filter(Node::isVisible).isPresent()),
                 () -> saveScreenshotAndReturnMessage(testinfo, "Context-menu of bounding box was not shown within " +
@@ -348,7 +324,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L,
                 () -> mainView.getScene().removeEventFilter(MouseEvent.MOUSE_PRESSED, mousePressRecorder));
         timeOutClickOn(robot, "Delete", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         // Now just the Dummy-category item should be left.
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1),
                    saveScreenshot(testinfo));
@@ -360,7 +335,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         // Delete Dummy-category-item. This should delete all children recursively.
         robot.rightClickOn(newDummyCategoryTreeItem.getGraphic());
-        WaitForAsyncUtils.waitForFxEvents();
         verifyThat(robot.lookup("Change Category").tryQuery().isEmpty(), Matchers.is(true),
                 saveScreenshot(testinfo));
         verifyThat(robot.lookup("Add Vertices").tryQuery().isEmpty(), Matchers.is(true),
@@ -368,7 +342,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(robot.lookup("Remove Vertices").tryQuery().isEmpty(), Matchers.is(true),
                 saveScreenshot(testinfo));
         timeOutClickOn(robot, "Delete", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         // Now the tree-view should be empty (besides the invisible root-item).
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(0),
                    saveScreenshot(testinfo));
@@ -391,9 +364,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
                    Matchers.equalTo("Dummy"));
 
         robot.rightClickOn("Dummy 1");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Change Category", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         final Stage changeCategoryStage = timeOutGetTopModalStage(robot, "Change Category", testinfo);
         verifyThat(changeCategoryStage, Matchers.notNullValue(), saveScreenshot(testinfo));
@@ -425,13 +396,14 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(comboBox, ComboBoxMatchers.hasSelectedItem(dummyCategory), saveScreenshot(testinfo));
 
         robot.interact(() -> comboBox.getSelectionModel().select(testCategory));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(comboBox, ComboBoxMatchers.hasSelectedItem(testCategory), saveScreenshot(testinfo));
 
         timeOutLookUpInStageAndClickOn(robot, changeCategoryStage, "OK", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Change Category", testinfo);
+        // The main window gets the focus back asynchronously after the dialog closed.
+        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1),
                    saveScreenshot(testinfo));
@@ -448,8 +420,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(false), saveScreenshot(testinfo));
         verifyThat(mainView.getTagInputField().getPromptText(), Matchers.equalTo("New Tag"), saveScreenshot(testinfo));
 
-        robot.clickOn("New Tag").write(testTagName).press(KeyCode.ENTER);
-        WaitForAsyncUtils.waitForFxEvents();
+        typeText(robot.clickOn("New Tag"), testTagName).press(KeyCode.ENTER);
 
         final BoundingShapeViewData currentBoundingShape = mainView.getCurrentBoundingShapes().get(0).getViewData();
 
@@ -466,7 +437,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat("#tag-label", LabeledMatchers.hasText(testTagName), saveScreenshot(testinfo));
 
         robot.clickOn("#tag #delete-button");
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(robot.lookup("#tag").queryAll(), Matchers.empty(), saveScreenshot(testinfo));
         verifyThat(currentBoundingShape.getTags(), Matchers.empty(), saveScreenshot(testinfo));
@@ -478,10 +448,8 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
         enterNewCategory(robot, "Dummy", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
-        WaitForAsyncUtils.waitForFxEvents();
         final String expectedFilename = "austin-neill-685084-unsplash_Dummy_1.png";
 
         final AtomicReference<MockedConstruction<FileChooser>> mockedFileChooser = createMockedFileChooser(
@@ -491,9 +459,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         try {
             robot.rightClickOn("Dummy 1");
-            WaitForAsyncUtils.waitForFxEvents();
             timeOutClickOn(robot, "Save as Image...", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
 
             verifyThat(mockedFileChooser.get().constructed().size(), Matchers.equalTo(1));
             verify(mockedFileChooser.get().constructed().get(0)).setInitialFileName(expectedFilename);
@@ -504,19 +470,14 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         }
 
         robot.rightClickOn("Dummy 1");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Delete", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0));
 
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.25, 0.25));
-        WaitForAsyncUtils.waitForFxEvents();
 
         robot.rightClickOn("Dummy 1");
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Save as Image...", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertDialogOpenedAndGetStage(robot, "Image Saving Error", "Bounding shape region is too small.",
                 testinfo);

@@ -66,7 +66,6 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
             robot.moveTo(getScreenPointFromRatios(mainView, new Point2D(0.5, 0.25)))
                     .press(MouseButton.PRIMARY).drag(mainView, MouseButton.PRIMARY).dropTo(mainView).release(MouseButton.PRIMARY);
-            WaitForAsyncUtils.waitForFxEvents();
 
             waitUntilCurrentImageIsLoaded(testInfo);
 
@@ -90,14 +89,12 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
             robot.moveTo(getScreenPointFromRatios(mainView, new Point2D(0.5, 0.25)))
                     .press(MouseButton.PRIMARY).drag(mainView, MouseButton.PRIMARY).dropTo(mainView).release(MouseButton.PRIMARY);
-            WaitForAsyncUtils.waitForFxEvents();
 
             verifyThat(model.getImageFileNameSet(), Matchers.empty());
         } finally {
             mainView.setOnDragDetected(dragDetectedHandler);
         }
     }
-
 
     @Test
     void onDragNonFolderFileIntoView_ShouldDoNothing(FxRobot robot) {
@@ -111,7 +108,6 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
             robot.moveTo(getScreenPointFromRatios(mainView, new Point2D(0.5, 0.25)))
                     .press(MouseButton.PRIMARY).drag(mainView, MouseButton.PRIMARY).dropTo(mainView).release(MouseButton.PRIMARY);
-            WaitForAsyncUtils.waitForFxEvents();
 
             verifyThat(model.getImageFileNameSet(), Matchers.empty());
         } finally {
@@ -129,7 +125,6 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
             robot.moveTo(getScreenPointFromRatios(mainView, new Point2D(0.5, 0.25)))
                     .press(MouseButton.PRIMARY).drag(mainView, MouseButton.PRIMARY).dropTo(mainView).release(MouseButton.PRIMARY);
-            WaitForAsyncUtils.waitForFxEvents();
 
             verifyThat(model.getImageFileNameSet(), Matchers.empty());
         } finally {
@@ -147,8 +142,6 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
     private void verifyMenuBarFunctionality(FxRobot robot, TestInfo testinfo) {
         timeOutClickOn(robot, "#file-menu", testinfo);
 
-        WaitForAsyncUtils.waitForFxEvents();
-
         MenuItem openFolderItem = getSubMenuItem(robot, "File", "Open Folder...");
         assertTrue(openFolderItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Open folder item not " +
                 "visible"));
@@ -157,7 +150,6 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
             timeOutClickOn(robot, "#file-open-folder-menu-item", testinfo);
-            WaitForAsyncUtils.waitForFxEvents();
             verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
         }
 
@@ -166,34 +158,25 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertFalse(saveItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Save item not enabled"));
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#pvoc-export-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         Stage categoryCreationErrorStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
         verifyThat(categoryCreationErrorStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage, "OK", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
         timeOutClickOn(robot, "#file-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#yolo-export-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         Stage categoryCreationErrorStage2 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
         verifyThat(categoryCreationErrorStage2, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         timeOutLookUpInStageAndClickOn(robot, categoryCreationErrorStage2, "OK", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
         MenuItem exitItem = getSubMenuItem(robot, "File", "Exit");
@@ -201,8 +184,6 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertFalse(exitItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Exit item not enabled"));
 
         timeOutClickOn(robot, "#view-menu", testinfo);
-
-        WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem fitWindowItem = getSubMenuItem(robot, "View", "Maximize Images");
         assertTrue(fitWindowItem.isVisible(),
@@ -220,10 +201,7 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
                 () -> saveScreenshotAndReturnMessage(testinfo, "Image explorer item not " +
                         "disabled"));
 
-
         timeOutClickOn(robot, "#help-menu", testinfo);
-
-        WaitForAsyncUtils.waitForFxEvents();
 
         MenuItem documentationItem = getSubMenuItem(robot, "Help", "Documentation");
         assertTrue(documentationItem.isVisible(),
@@ -242,15 +220,12 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
                         "enabled"));
 
         timeOutClickOn(robot, "#help-menu", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "#about-menu-item", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         Stage aboutStage = timeOutGetTopModalStage(robot, "About Bounding Box Editor", testinfo);
         verifyThat(aboutStage, Matchers.notNullValue(), saveScreenshot(testinfo));
 
         timeOutLookUpInStageAndClickOn(robot, aboutStage, "OK", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertTopModalStageClosed(robot, "About Bounding Box Editor", testinfo);
     }
 

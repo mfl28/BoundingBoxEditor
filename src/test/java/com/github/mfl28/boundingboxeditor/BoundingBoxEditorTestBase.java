@@ -52,6 +52,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
 import org.testfx.api.FxRobot;
+import org.testfx.api.FxRobotInterface;
 import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -167,30 +168,50 @@ public class BoundingBoxEditorTestBase {
 
     protected void enterNewCategory(FxRobot robot, String categoryName, TestInfo testinfo) {
         timeOutClickOn(robot, "#category-input-field", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         if(categoryName != null) {
-            robot.write(categoryName);
-            WaitForAsyncUtils.waitForFxEvents();
+            typeText(robot, categoryName);
         }
 
         timeOutClickOn(robot, "#add-button", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    /**
+     * Enters text into the focused text field, like typing it (it replaces the selection). Faster than
+     * {@link FxRobotInterface#write(String)}, which waits for the JavaFX thread after every single character.
+     *
+     * @param robot the robot
+     * @param text  the text
+     * @return the robot, for chaining
+     */
+    protected FxRobotInterface typeText(FxRobotInterface robot, String text) {
+        // A click that focuses the field may still be on its way (the robot's events arrive asynchronously).
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> getFocusedTextInput().isPresent()),
+                () -> "No text field has the focus within " + TIMEOUT_DURATION_IN_SEC + " sec.");
+
+        return robot.interact(() -> getFocusedTextInput().orElseThrow().replaceSelection(text));
+    }
+
+    private static Optional<TextInputControl> getFocusedTextInput() {
+        return Window.getWindows().stream()
+                     .filter(Window::isFocused)
+                     .map(window -> window.getScene().getFocusOwner())
+                     .filter(TextInputControl.class::isInstance)
+                     .map(TextInputControl.class::cast)
+                     .findFirst();
     }
 
     protected void enterNewCategoryWithColor(FxRobot robot, String categoryName, Color color, TestInfo testinfo) {
         mainView.getObjectCategoryColorPicker().setValue(color);
 
         timeOutClickOn(robot, "#category-input-field", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         if(categoryName != null) {
-            robot.write(categoryName);
-            WaitForAsyncUtils.waitForFxEvents();
+            typeText(robot, categoryName);
         }
 
         timeOutClickOn(robot, "#add-button", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
     }
 
     protected void waitUntilCurrentImageIsLoaded(TestInfo testinfo) {
@@ -274,7 +295,6 @@ public class BoundingBoxEditorTestBase {
         final Point2D emptyMenuBarEnd = robot.lookup("#main-menu-bar").query()
                                              .localToScreen(menuBarBounds.getMaxX() - 10, menuBarBounds.getCenterY());
         robot.clickOn(emptyMenuBarEnd);
-        WaitForAsyncUtils.waitForFxEvents();
     }
 
     @AfterEach
@@ -465,7 +485,6 @@ public class BoundingBoxEditorTestBase {
                 testinfo);
 
         timeOutLookUpInStageAndClickOn(robot, keepExistingCategoriesDialogStage, keepCategoriesOption, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         Stage saveAnnotationsDialogStage = timeOutAssertDialogOpenedAndGetStage(robot, "Open Image Folder",
                 "Opening a new image folder will remove any existing annotation data. " +
@@ -474,7 +493,6 @@ public class BoundingBoxEditorTestBase {
                         "annotation data?", testinfo);
 
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsDialogStage, saveAnnotationsOption, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();

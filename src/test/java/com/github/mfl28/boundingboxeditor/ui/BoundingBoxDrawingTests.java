@@ -69,7 +69,6 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         String testCategoryName = "Test";
         enterNewCategory(robot, testCategoryName, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                            .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(false),
@@ -87,7 +86,6 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         // Draw a bounding box.
         moveRelativeToImageViewNoRelease(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
-        WaitForAsyncUtils.waitForFxEvents();
 
         int drawnBoundingBoxFileIndex = model.getCurrentFileIndex();
 
@@ -105,7 +103,6 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(robot.lookup("#bounding-shape-scene-group").query().isMouseTransparent(), Matchers.is(true));
 
         robot.release(MouseButton.PRIMARY);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.is(false));
         verifyThat(mainView.getEditorImagePane().getCurrentBoundingShapeDrawingMode(),
@@ -167,7 +164,6 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         double boundingBoxWidth = boundingBoxView.getWidth();
         double boundingBoxHeight = boundingBoxView.getHeight();
         moveRelativeToImageView(robot, new Point2D(0.5, 0.5), new Point2D(0.0, 0.0));
-        WaitForAsyncUtils.waitForFxEvents();
 
         Point2D imageViewRelativePointTopLeft = getParentPointFromImageViewRatios(new Point2D(0.0, 0.0));
         verifyThat(boundingBoxView.getX(),
@@ -181,7 +177,6 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         // Move bounding box to bottom right corner.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(1.0, 1.0));
-        WaitForAsyncUtils.waitForFxEvents();
 
         Point2D imageViewRelativePointBottomRight = getParentPointFromImageViewRatios(new Point2D(1.0, 1.0));
         verifyThat(boundingBoxView.getX() + boundingBoxView.getWidth(),
@@ -229,7 +224,6 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
 
         timeOutClickOnButtonInDialogStage(robot, errorReportStage, ButtonType.OK, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat("#category-selector", TableViewMatchers.hasNumRows(0), saveScreenshot(testinfo));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0), saveScreenshot(testinfo));
@@ -243,12 +237,10 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                    Matchers.is(true));
 
         enterNewCategory(robot, testCategoryName, testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(0),
                    saveScreenshot(testinfo));
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
-        WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(1),
@@ -263,7 +255,6 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         // Resize test:
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.0, 0.0));
-        WaitForAsyncUtils.waitForFxEvents();
 
         imageViewRelativePointTopLeft = getParentPointFromImageViewRatios(new Point2D(0.0, 0.0));
         verifyThat(boundingBoxView3.getX(),
@@ -310,9 +301,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
     private Stage tryExitAndGetDialog(FxRobot robot, TestInfo testinfo) {
         timeOutClickOn(robot, "File", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
         timeOutClickOn(robot, "Exit", testinfo);
-        WaitForAsyncUtils.waitForFxEvents();
 
         return timeOutGetTopModalStage(robot, "Exit Application", testinfo);
     }
