@@ -23,6 +23,7 @@ import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredic
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.GsonMessageBodyHandler;
 import com.github.mfl28.boundingboxeditor.model.io.results.ModelNameFetchResult;
+import com.github.mfl28.boundingboxeditor.model.io.results.ServerConnectionCheckResult;
 import com.github.mfl28.boundingboxeditor.ui.DialogService;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -49,6 +50,8 @@ class InferenceController {
     private static final String MODEL_CHOICE_DIALOG_TITLE = "Model Choice";
     private static final String MODEL_CHOICE_DIALOG_HEADER = "Choose the model used for performing predictions.";
     private static final String MODEL_CHOICE_DIALOG_CONTENT = "Model:";
+    private static final String CONNECTION_CHECK_DIALOG_TITLE = "Connection Check";
+    private static final String CONNECTION_CHECK_SUCCESS_DIALOG_HEADER = "The inference server is available.";
 
     private final Model model;
     private final DialogService dialogService;
@@ -79,6 +82,14 @@ class InferenceController {
          * @param predictorClient the client to use
          */
         void startPrediction(File imageFile, BoundingBoxPredictorClient predictorClient);
+
+        /**
+         * Starts checking that the inference server is available. The result is expected to be passed to
+         * {@link #onConnectionChecked}.
+         *
+         * @param predictorClient the client to use
+         */
+        void startConnectionCheck(BoundingBoxPredictorClient predictorClient);
 
         /**
          * Shows the chosen model as the selected one in the inference settings.
@@ -140,6 +151,32 @@ class InferenceController {
     void fetchModelNames(BoundingBoxPredictorClientConfig clientConfig) {
         makeClientAvailable();
         operations.startModelNameFetching(BoundingBoxPredictorClient.create(client, clientConfig));
+    }
+
+    /**
+     * Starts checking that the inference server is available.
+     *
+     * @param clientConfig the connection settings to use
+     */
+    void checkConnection(BoundingBoxPredictorClientConfig clientConfig) {
+        makeClientAvailable();
+        operations.startConnectionCheck(BoundingBoxPredictorClient.create(client, clientConfig));
+    }
+
+    /**
+     * Tells the user whether the inference server is available.
+     *
+     * @param result the result of the connection check
+     * @param owner  the owner window of the shown dialogs
+     */
+    void onConnectionChecked(ServerConnectionCheckResult result, Window owner) {
+        if(!result.getErrorTableEntries().isEmpty()) {
+            dialogService.displayIOResultErrorInfoAlert(result, owner);
+            return;
+        }
+
+        dialogService.displayTextInfoDialog(CONNECTION_CHECK_DIALOG_TITLE, CONNECTION_CHECK_SUCCESS_DIALOG_HEADER,
+                "Connected to the " + result.getServerName() + " server.", owner);
     }
 
     /**
