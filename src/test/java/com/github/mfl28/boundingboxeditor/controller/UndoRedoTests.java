@@ -24,6 +24,7 @@ import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.ui.BoundingPolygonView;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
+import javafx.scene.control.Toggle;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -150,6 +151,18 @@ class UndoRedoTests extends BoundingBoxEditorTestBase {
         waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1
                 && !mainView.getEditorImagePane().isDrawingInProgress() && isUndoAvailable(), "polygon finished",
                 testinfo);
+
+        // Undoing the deletion of a polygon selects it, which shows its vertex handles.
+        robot.interact(() -> mainView.getObjectTree().getSelectionModel().select(
+                mainView.getObjectTree().getRoot().getChildren().getFirst().getChildren().getFirst()));
+        pressShortcut(KeyCombinations.deleteSelectedBoundingShape);
+        waitUntil(() -> mainView.getCurrentBoundingShapes().isEmpty(), "polygon deleted", testinfo);
+
+        pressShortcut(KeyCombinations.undo);
+        waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1
+                && isSelected(mainView.getCurrentBoundingShapes().getFirst()), "restored polygon selected", testinfo);
+        verifyThat(mainView.getObjectTree().getSelectionModel().getSelectedItem().getValue(),
+                Matchers.sameInstance(mainView.getCurrentBoundingShapes().getFirst()), saveScreenshot(testinfo));
     }
 
     @Test
@@ -192,8 +205,12 @@ class UndoRedoTests extends BoundingBoxEditorTestBase {
         waitUntil(() -> !shownShapes().equals(drawnShapes), "box moved", testinfo);
         final List<BoundingShapeData> movedShapes = shownShapes();
 
+        robot.interact(() -> mainView.getObjectTree().getSelectionModel().clearSelection());
         pressShortcut(KeyCombinations.undo);
         waitUntil(() -> shownShapes().equals(drawnShapes), "move undone", testinfo);
+        // The moved-back box is selected.
+        waitUntil(() -> isSelected(mainView.getCurrentBoundingShapes().getFirst()), "restored box selected",
+                testinfo);
         pressShortcut(KeyCombinations.redo);
         waitUntil(() -> shownShapes().equals(movedShapes), "move redone", testinfo);
 
@@ -217,6 +234,10 @@ class UndoRedoTests extends BoundingBoxEditorTestBase {
         } catch(ExecutionException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    private static boolean isSelected(Object shape) {
+        return shape instanceof Toggle toggle && toggle.isSelected();
     }
 
     private boolean isUndoAvailable() {

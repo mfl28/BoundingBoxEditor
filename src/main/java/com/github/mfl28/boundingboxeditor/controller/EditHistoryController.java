@@ -24,9 +24,11 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Undoes and redoes edits of the bounding shapes. Every image keeps its own {@link UndoHistory} while the image
@@ -79,6 +81,14 @@ class EditHistoryController {
          * @param shapes the shapes to show
          */
         void restoreShapes(List<BoundingShapeData> shapes);
+
+        /**
+         * Selects a shown shape.
+         *
+         * @param path the shape's position: its index among the top-level shapes, followed by its index among the
+         *             parts of each enclosing shape (in the order of {@link #extractShapes()})
+         */
+        void selectShape(List<Integer> path);
     }
 
     EditHistoryController(Operations operations) {
@@ -182,8 +192,52 @@ class EditHistoryController {
     }
 
     private void restore(List<BoundingShapeData> shapes) {
+        final List<BoundingShapeData> shownShapes = operations.extractShapes();
         operations.restoreShapes(shapes);
-        currentHistory.replaceCurrentState(operations.extractShapes());
+
+        final List<BoundingShapeData> restoredShapes = operations.extractShapes();
+        currentHistory.replaceCurrentState(restoredShapes);
+        // Selecting the restored shape shows it with its handles (e.g. a polygon's vertices).
+        findChangedShapePath(shownShapes, restoredShapes).ifPresent(operations::selectShape);
+    }
+
+    /**
+     * Finds the shape that an undo or redo step brought back or changed: the most deeply nested shape of the
+     * restored shapes that does not occur among the previously shown ones.
+     *
+     * @param shownShapes    the shapes shown before the step
+     * @param restoredShapes the shapes shown after the step
+     * @return the path of the shape (see {@link Operations#selectShape}), or an empty optional if the step only
+     * removed shapes
+     */
+    static Optional<List<Integer>> findChangedShapePath(List<BoundingShapeData> shownShapes,
+                                                        List<BoundingShapeData> restoredShapes) {
+        final List<BoundingShapeData> allShownShapes = shownShapes.stream()
+                                                                  .flatMap(BoundingShapeData::flatten)
+                                                                  .toList();
+        return findChangedShapePath(allShownShapes, restoredShapes, List.of());
+    }
+
+    private static Optional<List<Integer>> findChangedShapePath(List<BoundingShapeData> allShownShapes,
+                                                                List<BoundingShapeData> shapes,
+                                                                List<Integer> parentPath) {
+        for(int i = 0; i < shapes.size(); ++i) {
+            final BoundingShapeData shape = shapes.get(i);
+
+            if(allShownShapes.contains(shape)) {
+                continue;
+            }
+
+            final List<Integer> path = new ArrayList<>(parentPath);
+            path.add(i);
+
+            // A changed part also changes its parents, so the deepest changed shape is the one that was edited.
+            final Optional<List<Integer>> changedPartPath = findChangedShapePath(allShownShapes, shape.getParts(),
+                    path);
+            return changedPartPath.isPresent() ? changedPartPath : Optional.of(List.copyOf(path));
+        }
+
+        return Optional.empty();
     }
 
     private void updateAvailability() {

@@ -290,6 +290,40 @@ public class ObjectTreeView extends TreeView<Object> implements View {
         }
     }
 
+    /**
+     * Selects the tree item of a bounding shape, which also selects the shape in the editor.
+     *
+     * @param path the shape's position: its index among the top-level shapes, followed by its index among the
+     *             parts of each enclosing shape, in the order of {@link #extractCurrentBoundingShapeData()}
+     */
+    public void selectBoundingShapeTreeItem(List<Integer> path) {
+        TreeItem<Object> treeItem = getRoot();
+
+        for(int index : path) {
+            final List<TreeItem<Object>> shapeTreeItems = getBoundingShapeTreeItemsBelow(treeItem);
+
+            if(index >= shapeTreeItems.size()) {
+                return;
+            }
+
+            treeItem = shapeTreeItems.get(index);
+        }
+
+        if(treeItem != getRoot()) {
+            getSelectionModel().select(treeItem);
+            scrollTo(getRow(treeItem));
+        }
+    }
+
+    private static List<TreeItem<Object>> getBoundingShapeTreeItemsBelow(TreeItem<Object> treeItem) {
+        // Shape tree items are grouped by category below the root and below their enclosing shape.
+        return treeItem.getChildren().stream()
+                       .map(TreeItem::getChildren)
+                       .flatMap(Collection::stream)
+                       .filter(child -> child.getValue() instanceof BoundingShapeDataConvertible)
+                       .toList();
+    }
+
     private BoundingShapeData treeItemToBoundingShapeData(TreeItem<Object> treeItem) {
         if(!(treeItem.getValue() instanceof BoundingShapeDataConvertible)) {
             throw new IllegalStateException("Invalid tree item class type.");

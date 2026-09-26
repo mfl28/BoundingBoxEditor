@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -163,6 +164,59 @@ class EditHistoryControllerTest {
         assertTrue(editHistoryController.redoAvailableProperty().get());
     }
 
+    @Test
+    void onUndoAndRedo_ShouldSelectRestoredShape() {
+        editHistoryController.onImageShown(IMAGE_1);
+        editor.shownShapes = List.of(box(0.1));
+        editHistoryController.checkpoint();
+        editor.shownShapes = List.of(box(0.1), box(0.5));
+        editHistoryController.checkpoint();
+        editor.shownShapes = List.of(box(0.1), box(0.6));
+        editHistoryController.checkpoint();
+
+        // Undoing the move of the second box selects it.
+        editHistoryController.undo();
+        assertEquals(List.of(1), editor.selectedShapePath);
+
+        // Undoing the drawing of the second box only removes a shape: nothing to select.
+        editor.selectedShapePath = null;
+        editHistoryController.undo();
+        assertNull(editor.selectedShapePath);
+
+        // Redoing it brings the box back and selects it.
+        editHistoryController.redo();
+        assertEquals(List.of(1), editor.selectedShapePath);
+    }
+
+    @Test
+    void onFindChangedShapePath_ShouldFindDeepestChangedShape() {
+        final BoundingShapeData unchangedTop = box(0.0);
+        final BoundingShapeData shownParent = box(0.1);
+        shownParent.setParts(List.of(box(0.2), box(0.3)));
+        final BoundingShapeData restoredParent = box(0.1);
+        restoredParent.setParts(List.of(box(0.2), box(0.35)));
+
+        assertEquals(Optional.of(List.of(1, 1)), EditHistoryController.findChangedShapePath(
+                List.of(unchangedTop, shownParent), List.of(unchangedTop, restoredParent)));
+    }
+
+    @Test
+    void onFindChangedShapePath_WhenPartRemoved_ShouldFindParent() {
+        final BoundingShapeData shownParent = box(0.1);
+        shownParent.setParts(List.of(box(0.2)));
+
+        assertEquals(Optional.of(List.of(0)), EditHistoryController.findChangedShapePath(
+                List.of(shownParent), List.of(box(0.1))));
+    }
+
+    @Test
+    void onFindChangedShapePath_WhenShapesOnlyRemovedOrReordered_ShouldFindNothing() {
+        assertEquals(Optional.empty(), EditHistoryController.findChangedShapePath(
+                List.of(box(0.1), box(0.5)), List.of(box(0.5))));
+        assertEquals(Optional.empty(), EditHistoryController.findChangedShapePath(
+                List.of(box(0.1), box(0.5)), List.of(box(0.5), box(0.1))));
+    }
+
     private static BoundingShapeData box(double minX) {
         return new BoundingBoxData(CATEGORY, minX, 0.1, minX + 0.2, 0.3, List.of());
     }
@@ -173,6 +227,7 @@ class EditHistoryControllerTest {
         boolean drawingInProgress = false;
         int drawingStepsUndone = 0;
         double restoreOffset = 0;
+        List<Integer> selectedShapePath = null;
 
         @Override
         public boolean isEditingPossible() {
@@ -205,6 +260,11 @@ class EditHistoryControllerTest {
             }
 
             shownShapes = restored;
+        }
+
+        @Override
+        public void selectShape(List<Integer> path) {
+            selectedShapePath = path;
         }
     }
 }

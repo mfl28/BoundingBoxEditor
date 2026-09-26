@@ -1256,6 +1256,11 @@ public class Controller {
             view.getObjectCategoryTable().refresh();
             view.getObjectTree().refresh();
         }
+
+        @Override
+        public void selectShape(List<Integer> path) {
+            view.getObjectTree().selectBoundingShapeTreeItem(path);
+        }
     }
 
     /**
