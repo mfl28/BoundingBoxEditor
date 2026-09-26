@@ -229,10 +229,13 @@ jobs:
 
           body_text="$(echo "$body_text" | sed '1i## Changes:\n')"
 
-          body_text="${body_text//'%'/'%25'}"
-          body_text="${body_text//$'\n'/'%0A'}"
-          body_text="${body_text//$'\r'/'%0D'}"
-          echo "::set-output name=body::$body_text"
+          # A multiline output; the random delimiter can't occur in the commit messages.
+          delimiter="EOF_$(openssl rand -hex 16)"
+          {
+            echo "body<<$delimiter"
+            echo "$body_text"
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
       - name: Prepare artifacts
