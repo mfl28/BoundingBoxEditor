@@ -233,7 +233,7 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
 
     private void parseBoundingShapeDataTag(Element tagElement, BoundingShapeDataParseResult boxDataParseResult) {
         switch(tagElement.getTagName()) {
-            case "name":
+            case "name" -> {
                 String categoryName = tagElement.getTextContent();
 
                 if(categoryName == null || categoryName.isBlank()) {
@@ -241,48 +241,34 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                 }
 
                 boxDataParseResult.setCategoryName(categoryName);
-                break;
-            case "bndbox":
+            }
+            case "bndbox" -> {
                 boxDataParseResult.setBoundingBox(true);
                 boxDataParseResult.setMinX(parseDoubleElement(tagElement, "xmin"));
                 boxDataParseResult.setMaxX(parseDoubleElement(tagElement, "xmax"));
                 boxDataParseResult.setMinY(parseDoubleElement(tagElement, "ymin"));
                 boxDataParseResult.setMaxY(parseDoubleElement(tagElement, "ymax"));
-                break;
-            case "polygon":
+            }
+            case "polygon" -> {
                 boxDataParseResult.setBoundingPolygon(true);
                 boxDataParseResult.setPoints(parsePointList(tagElement));
-                break;
-            case "pose":
+            }
+            case "pose" -> {
                 String poseValue = tagElement.getTextContent();
 
                 if(poseValue != null && !poseValue.equalsIgnoreCase("unspecified")) {
                     boxDataParseResult.getTags().add("pose: " + poseValue.toLowerCase(Locale.ENGLISH));
                 }
-
-                break;
-            case "truncated":
+            }
+            case "truncated", "occluded", "difficult" -> {
                 if(Integer.parseInt(tagElement.getTextContent()) == 1) {
-                    boxDataParseResult.getTags().add("truncated");
+                    boxDataParseResult.getTags().add(tagElement.getTagName());
                 }
-
-                break;
-            case "occluded":
-                if(Integer.parseInt(tagElement.getTextContent()) == 1) {
-                    boxDataParseResult.getTags().add("occluded");
-                }
-
-                break;
-            case "difficult":
-                if(Integer.parseInt(tagElement.getTextContent()) == 1) {
-                    boxDataParseResult.getTags().add("difficult");
-                }
-
-                break;
-            case "actions":
-                boxDataParseResult.getTags().addAll(parseActions(tagElement));
-                break;
-            default: // Unknown tags are ignored!
+            }
+            case "actions" -> boxDataParseResult.getTags().addAll(parseActions(tagElement));
+            default -> {
+                // Unknown tags are ignored!
+            }
         }
     }
 
@@ -416,75 +402,75 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
         private boolean isBoundingBox = false;
         private boolean isBoundingPolygon = false;
 
-        public String getCategoryName() {
+        String getCategoryName() {
             return categoryName;
         }
 
-        public void setCategoryName(String categoryName) {
+        void setCategoryName(String categoryName) {
             this.categoryName = categoryName;
         }
 
-        public Double getMinX() {
+        Double getMinX() {
             return xMin;
         }
 
-        public void setMinX(Double xMin) {
+        void setMinX(Double xMin) {
             this.xMin = xMin;
         }
 
-        public Double getMaxX() {
+        Double getMaxX() {
             return xMax;
         }
 
-        public void setMaxX(Double xMax) {
+        void setMaxX(Double xMax) {
             this.xMax = xMax;
         }
 
-        public Double getMinY() {
+        Double getMinY() {
             return yMin;
         }
 
-        public void setMinY(Double yMin) {
+        void setMinY(Double yMin) {
             this.yMin = yMin;
         }
 
-        public Double getMaxY() {
+        Double getMaxY() {
             return yMax;
         }
 
-        public void setMaxY(Double yMax) {
+        void setMaxY(Double yMax) {
             this.yMax = yMax;
         }
 
-        public List<String> getTags() {
+        List<String> getTags() {
             return tags;
         }
 
-        public List<BoundingShapeData> getParts() {
+        List<BoundingShapeData> getParts() {
             return parts;
         }
 
-        public List<Double> getPoints() {
+        List<Double> getPoints() {
             return points;
         }
 
-        public void setPoints(List<Double> points) {
+        void setPoints(List<Double> points) {
             this.points = points;
         }
 
-        public boolean isBoundingBox() {
+        boolean isBoundingBox() {
             return isBoundingBox;
         }
 
-        public void setBoundingBox(boolean boundingBox) {
+        void setBoundingBox(boolean boundingBox) {
             isBoundingBox = boundingBox;
         }
 
-        public boolean isBoundingPolygon() {
+        boolean isBoundingPolygon() {
             return isBoundingPolygon;
         }
 
-        public void setBoundingPolygon(boolean boundingPolygon) {
+        void setBoundingPolygon(boolean boundingPolygon) {
             isBoundingPolygon = boundingPolygon;
         }
 

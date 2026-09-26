@@ -146,7 +146,7 @@ public class BoundingBoxPredictor {
         private final Map<String, Integer> categoryNameToShapeCount;
         private CaseInsensitiveMap<String, ObjectCategory> mergedCategoryNameToCategoryMap;
 
-        public PredictionExtractor(
+        PredictionExtractor(
                 Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
                 Map<String, Integer> categoryNameToShapeCount) {
             this.existingCategoryNameToCategoryMap = existingCategoryNameToCategoryMap;
@@ -157,7 +157,7 @@ public class BoundingBoxPredictor {
             }
         }
 
-        public BoundingBoxData extract(BoundingBoxPredictionEntry prediction) {
+        BoundingBoxData extract(BoundingBoxPredictionEntry prediction) {
             final Map.Entry<String, List<Double>> boundingBoxCoordinatesEntry =
                     prediction.categoryToBoundingBoxes().entrySet().iterator().next();
 

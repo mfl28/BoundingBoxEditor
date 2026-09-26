@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Bounding Box Editor. If not, see <http://www.gnu.org/licenses/>.
  */
+// The name follows the GitHub user name (mfl28), whose terminal digits javac warns about.
+@SuppressWarnings("module")
 module com.github.mfl28.boundingboxeditor {
     requires javafx.controls;
     requires org.controlsfx.controls;

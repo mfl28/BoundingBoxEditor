@@ -489,7 +489,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
                 TreeItem<Object> thisItem = cell.getTreeItem();
 
-                if(draggedItem == null || draggedItem == thisItem || thisItem instanceof ObjectCategoryTreeItem) {
+                if(draggedItem == null || isSameItem(draggedItem, thisItem) || thisItem instanceof ObjectCategoryTreeItem) {
                     return;
                 }
 
@@ -510,11 +510,20 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             });
         }
 
+        /**
+         * Tree items compare their shapes' data in equals(), so a different item with equal content would count as
+         * equal. Dropping onto an item is only prevented for the dragged item itself.
+         */
+        @SuppressWarnings("ReferenceEquality")
+        private static boolean isSameItem(TreeItem<Object> item, TreeItem<Object> other) {
+            return item == other;
+        }
+
         private void applyOnDragEnteredListener(ObjectTreeElementCell cell) {
             cell.setOnDragEntered(event -> {
                 TreeItem<Object> thisItem = cell.getTreeItem();
 
-                if(draggedItem == null || thisItem == null || draggedItem == thisItem
+                if(draggedItem == null || thisItem == null || isSameItem(draggedItem, thisItem)
                         || thisItem instanceof ObjectCategoryTreeItem
                         || thisItem.getChildren().contains(draggedItem)
                         || (draggedItem instanceof ObjectCategoryTreeItem

@@ -309,7 +309,8 @@ public class ObjectTreeView extends TreeView<Object> implements View {
             treeItem = shapeTreeItems.get(index);
         }
 
-        if(treeItem != getRoot()) {
+        // An empty path denotes the root, which is not selected.
+        if(!path.isEmpty()) {
             getSelectionModel().select(treeItem);
             scrollTo(getRow(treeItem));
         }

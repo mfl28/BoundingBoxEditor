@@ -1197,7 +1197,7 @@ public class Controller {
         });
 
         stage.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
-            if (event.getTarget() != view.getEditorImageView()) {
+            if (!Objects.equals(event.getTarget(), view.getEditorImageView())) {
                 view.getEditorImagePane().finalizeBoundingShapeDrawing();
             }
         });

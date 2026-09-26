@@ -69,7 +69,7 @@ public class FileChangeWatcher implements Runnable {
 
     static boolean affectsWatchedFiles(List<WatchEvent<?>> events, Path directory, Set<String> fileNamesToWatch) {
         for(WatchEvent<?> event : events) {
-            if(event.kind() == StandardWatchEventKinds.OVERFLOW) {
+            if(StandardWatchEventKinds.OVERFLOW.equals(event.kind())) {
                 // Events were lost and an overflow event carries no file name, so check whether any watched
                 // file was removed. Lost modification events cannot be recovered.
                 if(fileNamesToWatch.stream().anyMatch(fileName -> !Files.exists(directory.resolve(fileName)))) {
