@@ -30,8 +30,8 @@ class RecentImageFolders {
     static final int MAXIMUM_COUNT = 8;
 
     private final PreferencesStore preferencesStore;
-    private final ObservableList<File> folders = FXCollections.observableArrayList();
-    private final ObservableList<File> unmodifiableFolders = FXCollections.unmodifiableObservableList(folders);
+    private final ObservableList<File> modifiableFolders = FXCollections.observableArrayList();
+    private final ObservableList<File> folders = FXCollections.unmodifiableObservableList(modifiableFolders);
 
     /**
      * Creates the list with the folders stored in the preferences.
@@ -40,7 +40,7 @@ class RecentImageFolders {
      */
     RecentImageFolders(PreferencesStore preferencesStore) {
         this.preferencesStore = preferencesStore;
-        folders.setAll(preferencesStore.loadRecentImageFolders().stream().limit(MAXIMUM_COUNT).toList());
+        modifiableFolders.setAll(preferencesStore.loadRecentImageFolders().stream().limit(MAXIMUM_COUNT).toList());
     }
 
     /**
@@ -49,7 +49,7 @@ class RecentImageFolders {
      * @return the folders, most recent first (not modifiable)
      */
     ObservableList<File> getFolders() {
-        return unmodifiableFolders;
+        return folders;
     }
 
     /**
@@ -59,11 +59,11 @@ class RecentImageFolders {
      */
     void add(File folder) {
         final File absoluteFolder = folder.getAbsoluteFile();
-        folders.remove(absoluteFolder);
-        folders.addFirst(absoluteFolder);
+        modifiableFolders.remove(absoluteFolder);
+        modifiableFolders.addFirst(absoluteFolder);
 
-        if(folders.size() > MAXIMUM_COUNT) {
-            folders.remove(MAXIMUM_COUNT, folders.size());
+        if(modifiableFolders.size() > MAXIMUM_COUNT) {
+            modifiableFolders.remove(MAXIMUM_COUNT, modifiableFolders.size());
         }
 
         save();
@@ -75,7 +75,7 @@ class RecentImageFolders {
      * @param folder the folder
      */
     void remove(File folder) {
-        if(folders.remove(folder.getAbsoluteFile())) {
+        if(modifiableFolders.remove(folder.getAbsoluteFile())) {
             save();
         }
     }
@@ -84,11 +84,11 @@ class RecentImageFolders {
      * Removes all folders.
      */
     void clear() {
-        folders.clear();
+        modifiableFolders.clear();
         save();
     }
 
     private void save() {
-        preferencesStore.saveRecentImageFolders(folders);
+        preferencesStore.saveRecentImageFolders(modifiableFolders);
     }
 }
