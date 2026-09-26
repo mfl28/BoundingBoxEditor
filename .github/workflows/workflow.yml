@@ -69,6 +69,8 @@ jobs:
           env_vars: OS
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
+      - name: Smoke-test packaged app
+        run: ./gradlew --info --stacktrace packagedAppSmokeTest
       - name: Upload installer (exe)
         uses: actions/upload-artifact@v4
         with:
@@ -132,6 +134,13 @@ jobs:
           env_vars: OS
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
+      - name: Smoke-test packaged app
+        # Without CodeQL's build tracing, which stays enabled (LD_PRELOAD) for the rest of the job and also in the
+        # daemon started during the build: it adds a Java agent to every JVM, and the packaged runtime (without
+        # java.instrument) can't start with it.
+        env:
+          LD_PRELOAD: ''
+        run: ./gradlew --no-daemon --info --stacktrace packagedAppSmokeTest
       - name: Upload installer (deb)
         uses: actions/upload-artifact@v4
         with:
@@ -186,6 +195,8 @@ jobs:
           env_vars: OS
       - name: Jpackage
         run: ./gradlew --info --stacktrace jpackage
+      - name: Smoke-test packaged app
+        run: ./gradlew --info --stacktrace packagedAppSmokeTest
       - name: Upload installer (dmg)
         uses: actions/upload-artifact@v4
         with:
