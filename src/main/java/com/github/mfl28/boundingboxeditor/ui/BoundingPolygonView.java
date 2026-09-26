@@ -33,7 +33,6 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
@@ -58,7 +57,7 @@ import java.util.stream.IntStream;
  * @see View
  */
 public class BoundingPolygonView extends Polygon implements
-        View, Toggle, BoundingShapeDataConvertible, BoundingShapeViewable {
+        View, BoundingShapeDataConvertible, BoundingShapeToggle {
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
     private static final double MAX_SIMPLIFICATION_TOLERANCE = 0.005;
@@ -167,36 +166,6 @@ public class BoundingPolygonView extends Polygon implements
 
     public void setConstructing(boolean constructing) {
         this.constructing.set(constructing);
-    }
-
-    @Override
-    public ToggleGroup getToggleGroup() {
-        return boundingShapeViewData.getToggleGroup();
-    }
-
-    @Override
-    public void setToggleGroup(ToggleGroup toggleGroup) {
-        boundingShapeViewData.setToggleGroup(toggleGroup);
-    }
-
-    @Override
-    public ObjectProperty<ToggleGroup> toggleGroupProperty() {
-        return boundingShapeViewData.toggleGroupProperty();
-    }
-
-    @Override
-    public boolean isSelected() {
-        return boundingShapeViewData.isSelected();
-    }
-
-    @Override
-    public void setSelected(boolean selected) {
-        boundingShapeViewData.setSelected(selected);
-    }
-
-    @Override
-    public BooleanProperty selectedProperty() {
-        return boundingShapeViewData.selectedProperty();
     }
 
     public boolean isEditing() {

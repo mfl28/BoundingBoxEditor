@@ -23,9 +23,7 @@ import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.utils.MathUtils;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
@@ -34,7 +32,6 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
@@ -53,7 +50,7 @@ import java.util.List;
  * @see View
  */
 public class BoundingBoxView extends Rectangle implements
-                                               View, Toggle, BoundingShapeDataConvertible, BoundingShapeViewable {
+                                               View, BoundingShapeDataConvertible, BoundingShapeToggle {
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
     private static final String BOUNDING_BOX_VIEW_ID = "bounding-rectangle";
@@ -100,36 +97,6 @@ public class BoundingBoxView extends Rectangle implements
 
     public DragAnchor getConstructionAnchorLocal() {
         return constructionAnchorLocal;
-    }
-
-    @Override
-    public ToggleGroup getToggleGroup() {
-        return boundingShapeViewData.getToggleGroup();
-    }
-
-    @Override
-    public void setToggleGroup(ToggleGroup toggleGroup) {
-        boundingShapeViewData.setToggleGroup(toggleGroup);
-    }
-
-    @Override
-    public ObjectProperty<ToggleGroup> toggleGroupProperty() {
-        return boundingShapeViewData.toggleGroupProperty();
-    }
-
-    @Override
-    public boolean isSelected() {
-        return boundingShapeViewData.isSelected();
-    }
-
-    @Override
-    public void setSelected(boolean selected) {
-        boundingShapeViewData.setSelected(selected);
-    }
-
-    @Override
-    public BooleanProperty selectedProperty() {
-        return boundingShapeViewData.selectedProperty();
     }
 
     /**

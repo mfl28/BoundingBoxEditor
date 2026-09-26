@@ -23,16 +23,13 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BoundingFreehandShapeView extends Path implements View, Toggle,
-        BoundingShapeViewable {
+public class BoundingFreehandShapeView extends Path implements View, BoundingShapeToggle {
     private static final String BOUNDING_FREEHAND_SHAPE_ID = "bounding-freehand-shape";
     private static final double HIGHLIGHTED_FILL_OPACITY = 0.3;
     private static final double SELECTED_FILL_OPACITY = 0.5;
@@ -86,36 +83,6 @@ public class BoundingFreehandShapeView extends Path implements View, Toggle,
     @Override
     public BoundingShapeTreeItem toTreeItem() {
         return new BoundingPolygonTreeItem(this);
-    }
-
-    @Override
-    public ToggleGroup getToggleGroup() {
-        return boundingShapeViewData.getToggleGroup();
-    }
-
-    @Override
-    public void setToggleGroup(ToggleGroup toggleGroup) {
-        boundingShapeViewData.setToggleGroup(toggleGroup);
-    }
-
-    @Override
-    public ObjectProperty<ToggleGroup> toggleGroupProperty() {
-        return boundingShapeViewData.toggleGroupProperty();
-    }
-
-    @Override
-    public boolean isSelected() {
-        return boundingShapeViewData.isSelected();
-    }
-
-    @Override
-    public void setSelected(boolean selected) {
-        boundingShapeViewData.setSelected(selected);
-    }
-
-    @Override
-    public BooleanProperty selectedProperty() {
-        return boundingShapeViewData.selectedProperty();
     }
 
     public void addMoveTo(double x, double y) {
