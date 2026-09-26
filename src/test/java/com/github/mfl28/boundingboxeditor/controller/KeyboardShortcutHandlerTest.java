@@ -176,6 +176,29 @@ class KeyboardShortcutHandlerTest {
     }
 
     @Test
+    void onKeyPressed_OfShortcutsShownInMenus_ShouldBeConsumedSoTheMenuDoesNotTriggerThemToo() {
+        for(boolean drawing : List.of(false, true)) {
+            when(editor.isDrawingInProgress()).thenReturn(drawing);
+
+            for(KeyCode keyCode : List.of(KeyCode.Z, KeyCode.COMMA)) {
+                final KeyEvent pressed = shortcutEvent(KeyEvent.KEY_PRESSED, keyCode);
+                keyboardShortcutHandler.onKeyPressed(pressed);
+                assertTrue(pressed.isConsumed(), () -> keyCode + " while drawing: " + drawing);
+            }
+
+            final KeyEvent redoPressed = new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.Z, true, !IS_MAC, false,
+                    IS_MAC);
+            keyboardShortcutHandler.onKeyPressed(redoPressed);
+            assertTrue(redoPressed.isConsumed());
+        }
+
+        // Other shortcuts, e.g. the ones only the menus handle, reach the menus.
+        final KeyEvent openFolderPressed = shortcutEvent(KeyEvent.KEY_PRESSED, KeyCode.O);
+        keyboardShortcutHandler.onKeyPressed(openFolderPressed);
+        assertFalse(openFolderPressed.isConsumed());
+    }
+
+    @Test
     void onUndoAndRedoShortcuts_ShouldBeDistinguishedByShift() {
         final List<KeyEvent> undoEvents = new ArrayList<>();
         final List<KeyEvent> redoEvents = new ArrayList<>();

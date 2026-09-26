@@ -82,6 +82,12 @@ public class KeyCombinations {
     public static final KeyCombination redo =
             new KeyCodeCombination(KeyCode.Z, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN);
 
+    // Handled by the accelerators of their menu items.
+    public static final KeyCombination openImageFolder =
+            new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN);
+    public static final KeyCombination exportAnnotationsInLastFormat =
+            new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN);
+
     private KeyCombinations() {
         throw new IllegalStateException("Key Combination Class");
     }

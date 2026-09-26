@@ -37,6 +37,13 @@ import java.util.stream.Stream;
  * loading of the images that are only passed through.
  */
 class KeyboardShortcutHandler {
+    /**
+     * Shortcuts that are handled here (on key release, undo also while drawing) and are shown in the menus as the
+     * accelerators of their menu items. Their key presses are consumed so that the menu doesn't trigger them too.
+     */
+    static final List<KeyCombination> SHORTCUTS_SHOWN_IN_MENUS =
+            List.of(KeyCombinations.undo, KeyCombinations.redo, KeyCombinations.openSettings);
+
     private final Model model;
     private final Editor editor;
     private final BooleanProperty navigatePreviousKeyPressed = new SimpleBooleanProperty(false);
@@ -172,6 +179,11 @@ class KeyboardShortcutHandler {
      * @param event the key event
      */
     void onKeyPressed(KeyEvent event) {
+        if(!(event.getTarget() instanceof TextInputControl)
+                && SHORTCUTS_SHOWN_IN_MENUS.stream().anyMatch(keyCombination -> keyCombination.match(event))) {
+            event.consume();
+        }
+
         if(editor.isDrawingInProgress()) {
             return;
         }

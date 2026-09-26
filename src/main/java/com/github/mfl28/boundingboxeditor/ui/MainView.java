@@ -35,6 +35,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
@@ -284,6 +285,15 @@ public class MainView extends BorderPane implements View {
 
     public MenuItem getFileImportAnnotationsItem() {
         return header.getFileImportAnnotationsItem();
+    }
+
+    /**
+     * Shows the provided folders in the File menu's open-recent menu, and keeps it up to date.
+     *
+     * @param recentImageFolders the recently opened image folders, most recent first
+     */
+    public void setRecentImageFolders(ObservableList<File> recentImageFolders) {
+        header.setRecentImageFolders(recentImageFolders);
     }
 
     public ObjectCategoryTableView getObjectCategoryTable() {

@@ -19,10 +19,20 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
+import com.github.mfl28.boundingboxeditor.controller.KeyCombinations;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.layout.Region;
+
+import java.io.File;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents the main menu-bar UI-element of the application.
@@ -41,6 +51,16 @@ class MenuBarView extends MenuBar implements View {
     private static final String REDO_MENU_ITEM_ID = "redo-menu-item";
     private static final String OPEN_FOLDER_TEXT = "_Open Folder...";
     private static final String SAVE_TEXT = "_Export Annotations";
+    private static final String OPEN_RECENT_TEXT = "Open _Recent";
+    private static final String CLEAR_RECENT_TEXT = "_Clear Recent";
+    private static final String FILE_OPEN_RECENT_MENU_ID = "file-open-recent-menu";
+    private static final String FILE_CLEAR_RECENT_MENU_ITEM_ID = "file-clear-recent-menu-item";
+    private static final String FILE_EXPORT_IN_LAST_FORMAT_MENU_ITEM_ID = "file-export-in-last-format-menu-item";
+    private static final Map<ImageAnnotationSaveStrategy.Type, String> EXPORT_FORMAT_NAMES = Map.of(
+            ImageAnnotationSaveStrategy.Type.PASCAL_VOC, "Pascal-VOC",
+            ImageAnnotationSaveStrategy.Type.YOLO, "YOLO",
+            ImageAnnotationSaveStrategy.Type.JSON, "JSON",
+            ImageAnnotationSaveStrategy.Type.CSV, "CSV");
     private static final String MAXIMIZE_IMAGES_TEXT = "_Maximize Images";
     private static final String SHOW_IMAGE_FILE_EXPLORER_TEXT = "_Show Images Panel";
     private static final String EXIT_TEXT = "E_xit";
@@ -85,7 +105,13 @@ class MenuBarView extends MenuBar implements View {
     public static final String CSV_IMPORT_MENU_ITEM_ID = "csv-import-menu-item";
 
     private final MenuItem fileOpenFolderItem = new MenuItem(OPEN_FOLDER_TEXT, createIconRegion(OPEN_FOLDER_ICON_ID));
+    private final Menu fileOpenRecentMenu = new Menu(OPEN_RECENT_TEXT);
     private final Menu fileExportAnnotationsMenu = new Menu(SAVE_TEXT, createIconRegion(SAVE_ICON_ID));
+    private final MenuItem exportInLastFormatMenuItem = new MenuItem();
+    // The format of the last export, which the export shortcut uses again.
+    private final ObjectProperty<ImageAnnotationSaveStrategy.Type> lastExportFormat =
+            new SimpleObjectProperty<>(ImageAnnotationSaveStrategy.Type.PASCAL_VOC);
+    private Controller controller;
     private final MenuItem pvocExportMenuItem = new MenuItem(PASCAL_VOC_FORMAT_EXPORT_TEXT);
     private final MenuItem yoloExportMenuItem = new MenuItem(YOLO_FORMAT_EXPORT_TEXT);
     private final MenuItem jsonExportMenuItem = new MenuItem(JSON_FORMAT_EXPORT_TEXT);
@@ -136,24 +162,34 @@ class MenuBarView extends MenuBar implements View {
         yoloRImportMenuItem.setId(YOLO_IMPORT_MENU_ITEM_ID);
         jsonImportMenuItem.setId(JSON_IMPORT_MENU_ITEM_ID);
         csvImportMenuItem.setId(CSV_IMPORT_MENU_ITEM_ID);
+
+        exportInLastFormatMenuItem.textProperty().bind(Bindings.createStringBinding(
+                () -> String.format("Export as %s...", EXPORT_FORMAT_NAMES.get(lastExportFormat.get())),
+                lastExportFormat));
+        exportInLastFormatMenuItem.setMnemonicParsing(false);
+        exportInLastFormatMenuItem.setId(FILE_EXPORT_IN_LAST_FORMAT_MENU_ITEM_ID);
+        fileOpenRecentMenu.setId(FILE_OPEN_RECENT_MENU_ID);
+        fileOpenRecentMenu.setDisable(true);
+
+        fileOpenFolderItem.setAccelerator(KeyCombinations.openImageFolder);
+        exportInLastFormatMenuItem.setAccelerator(KeyCombinations.exportAnnotationsInLastFormat);
+        // Undo, redo and the settings shortcut are handled by the controller's key handling; their accelerators
+        // only show the shortcuts in the menus (see KeyboardShortcutHandler).
+        undoMenuItem.setAccelerator(KeyCombinations.undo);
+        redoMenuItem.setAccelerator(KeyCombinations.redo);
+        settingsMenuItem.setAccelerator(KeyCombinations.openSettings);
     }
 
     @Override
     public void connectToController(final Controller controller) {
+        this.controller = controller;
         fileOpenFolderItem.setOnAction(action ->
                 controller.onRegisterOpenImageFolderAction());
-        pvocExportMenuItem.setOnAction(action ->
-                controller.onRegisterSaveAnnotationsAction(
-                        ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
-        yoloExportMenuItem.setOnAction(action ->
-                controller.onRegisterSaveAnnotationsAction(
-                        ImageAnnotationSaveStrategy.Type.YOLO));
-        jsonExportMenuItem.setOnAction(action ->
-                controller.onRegisterSaveAnnotationsAction(
-                        ImageAnnotationSaveStrategy.Type.JSON));
-        csvExportMenuItem.setOnAction(action ->
-                controller.onRegisterSaveAnnotationsAction(
-                        ImageAnnotationSaveStrategy.Type.CSV));
+        pvocExportMenuItem.setOnAction(action -> exportAnnotations(ImageAnnotationSaveStrategy.Type.PASCAL_VOC));
+        yoloExportMenuItem.setOnAction(action -> exportAnnotations(ImageAnnotationSaveStrategy.Type.YOLO));
+        jsonExportMenuItem.setOnAction(action -> exportAnnotations(ImageAnnotationSaveStrategy.Type.JSON));
+        csvExportMenuItem.setOnAction(action -> exportAnnotations(ImageAnnotationSaveStrategy.Type.CSV));
+        exportInLastFormatMenuItem.setOnAction(action -> exportAnnotations(lastExportFormat.get()));
         pvocImportMenuItem.setOnAction(action ->
                 controller.onRegisterImportAnnotationsAction(
                         ImageAnnotationLoadStrategy.Type.PASCAL_VOC));
@@ -171,6 +207,39 @@ class MenuBarView extends MenuBar implements View {
         redoMenuItem.setOnAction(action -> controller.onRegisterRedoAction());
         documentationMenuItem.setOnAction(action -> controller.onRegisterDocumentationAction());
         aboutMenuItem.setOnAction(action -> controller.onRegisterAboutAction());
+    }
+
+    /**
+     * Shows the provided folders in the open-recent menu, and keeps it up to date.
+     *
+     * @param recentImageFolders the recently opened image folders, most recent first
+     */
+    void setRecentImageFolders(ObservableList<File> recentImageFolders) {
+        recentImageFolders.addListener((ListChangeListener<File>) change -> updateOpenRecentMenu(recentImageFolders));
+        updateOpenRecentMenu(recentImageFolders);
+    }
+
+    private void updateOpenRecentMenu(List<File> recentImageFolders) {
+        fileOpenRecentMenu.getItems().clear();
+
+        for(File folder : recentImageFolders) {
+            final MenuItem folderItem = new MenuItem(folder.getPath());
+            // Folder names may contain underscores.
+            folderItem.setMnemonicParsing(false);
+            folderItem.setOnAction(action -> controller.onRegisterOpenRecentImageFolderAction(folder));
+            fileOpenRecentMenu.getItems().add(folderItem);
+        }
+
+        final MenuItem clearItem = new MenuItem(CLEAR_RECENT_TEXT);
+        clearItem.setId(FILE_CLEAR_RECENT_MENU_ITEM_ID);
+        clearItem.setOnAction(action -> controller.onRegisterClearRecentImageFoldersAction());
+        fileOpenRecentMenu.getItems().addAll(new SeparatorMenuItem(), clearItem);
+        fileOpenRecentMenu.setDisable(recentImageFolders.isEmpty());
+    }
+
+    private void exportAnnotations(ImageAnnotationSaveStrategy.Type format) {
+        lastExportFormat.set(format);
+        controller.onRegisterSaveAnnotationsAction(format);
     }
 
     /**
@@ -207,7 +276,9 @@ class MenuBarView extends MenuBar implements View {
 
         fileMenu.getItems().addAll(
                 fileOpenFolderItem,
+                fileOpenRecentMenu,
                 fileExportAnnotationsMenu,
+                exportInLastFormatMenuItem,
                 fileImportAnnotationsMenu,
                 settingsMenuItem,
                 fileExitItem
