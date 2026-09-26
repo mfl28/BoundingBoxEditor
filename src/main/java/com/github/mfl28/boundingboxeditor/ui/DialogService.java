@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
+import javafx.concurrent.Service;
 import javafx.scene.control.ButtonBar;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -126,4 +127,15 @@ public interface DialogService {
      * @param owner   the owner window of the dialog
      */
     void displayTextInfoDialog(String title, String header, String content, Window owner);
+
+    /**
+     * Creates the dialog showing the progress of a background service.
+     *
+     * @param service the service
+     * @param title   the title of the dialog
+     * @param header  the header-text of the dialog
+     * @return the progress dialog
+     */
+    ServiceProgressDialog createServiceProgressDialog(Service<? extends IOResult> service, String title,
+                                                      String header);
 }

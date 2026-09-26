@@ -19,7 +19,7 @@
 package com.github.mfl28.boundingboxeditor.ui.settings;
 
 import com.github.mfl28.boundingboxeditor.controller.Controller;
-import com.github.mfl28.boundingboxeditor.ui.MainView;
+import com.github.mfl28.boundingboxeditor.ui.JavaFxDialogService;
 import com.github.mfl28.boundingboxeditor.ui.View;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -42,7 +42,7 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
     private final VBox contentBox = new VBox();
 
     public SettingsDialogView() {
-        MainView.applyDialogStyle(this);
+        JavaFxDialogService.applyDialogStyle(this);
         setTitle(SETTINGS_TITLE);
 
         final SplitPane settingSplitPane = new SplitPane(settingCategoriesView, contentBox);
