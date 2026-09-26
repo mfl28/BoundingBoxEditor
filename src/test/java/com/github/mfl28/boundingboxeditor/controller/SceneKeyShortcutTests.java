@@ -205,7 +205,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         double originalFitHeight = mainView.getEditorImageView().getFitHeight();
 
         robot.moveTo(mainView.getEditorImageView())
-                .scroll(-30);
+                .scroll(-3);
 
         verifyThat(mainView.getEditorImageView().getFitWidth(), Matchers.equalTo(originalFitWidth));
         verifyThat(mainView.getEditorImageView().getFitHeight(), Matchers.equalTo(originalFitHeight));
@@ -223,7 +223,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
 
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
-                .scroll(-30)
+                .scroll(-3)
                 .release(KeyCode.SHORTCUT);
 
         verifyThat(mainView.getEditorImageView().getFitWidth(), Matchers.not(Matchers.equalTo(originalFitWidth)));

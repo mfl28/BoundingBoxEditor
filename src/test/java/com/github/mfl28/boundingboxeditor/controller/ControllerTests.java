@@ -158,7 +158,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
-                .scroll(-30)
+                .scroll(-3)
                 .release(KeyCode.SHORTCUT);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
@@ -283,7 +283,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
-                .scroll(-30)
+                .scroll(-3)
                 .release(KeyCode.SHORTCUT);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
@@ -413,7 +413,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
-                .scroll(-30)
+                .scroll(-3)
                 .release(KeyCode.SHORTCUT);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
@@ -1222,7 +1222,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         // Zoom a bit to change the image-view size.
         robot.moveTo(mainView.getEditorImageView())
                 .press(KeyCode.SHORTCUT)
-                .scroll(-30)
+                .scroll(-3)
                 .release(KeyCode.SHORTCUT);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
