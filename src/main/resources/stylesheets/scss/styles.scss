@@ -1110,6 +1110,13 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-border-width: 2px;
 }
 
+// --Category labels of shapes in the editor (colors are set per category)--
+.shape-category-label {
+    -fx-font-size: 11px;
+    -fx-padding: 0 4px;
+    -fx-background-radius: 2;
+}
+
 // --Dialogs--
 
 .dialog-pane {

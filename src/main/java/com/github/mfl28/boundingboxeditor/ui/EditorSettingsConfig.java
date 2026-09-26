@@ -27,6 +27,7 @@ public class EditorSettingsConfig {
     private final BooleanProperty autoSimplifyPolygons = new SimpleBooleanProperty(true);
 
     private final DoubleProperty simplifyRelativeDistanceTolerance = new SimpleDoubleProperty(0.1);
+    private final BooleanProperty showCategoryLabels = new SimpleBooleanProperty(false);
 
 
     public double getSimplifyRelativeDistanceTolerance() {
@@ -51,5 +52,17 @@ public class EditorSettingsConfig {
 
     public BooleanProperty autoSimplifyPolygonsProperty() {
         return autoSimplifyPolygons;
+    }
+
+    public boolean isShowCategoryLabels() {
+        return showCategoryLabels.get();
+    }
+
+    public void setShowCategoryLabels(boolean showCategoryLabels) {
+        this.showCategoryLabels.set(showCategoryLabels);
+    }
+
+    public BooleanProperty showCategoryLabelsProperty() {
+        return showCategoryLabels;
     }
 }

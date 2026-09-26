@@ -33,14 +33,19 @@ public class EditorSettingsView extends GridPane implements ApplyButtonChangePro
     private static final String SIMPLIFY_RELATIVE_DISTANCE_TOLERANCE_TOOLTIP =
             "Set tolerance for polygon simplification (lower tolerance means less simplification)";
     private static final String POLYGONS_ROW_TITLE = "Polygons";
-    private static final String POLYGONS_ROW_TITLE_ID = "subgroup-title-label";
-    private static final String POLYGONS_ROW_BOX_ID = "settings-subgroup-box";
+    private static final String SUBGROUP_TITLE_ID = "subgroup-title-label";
+    private static final String SUBGROUP_BOX_ID = "settings-subgroup-box";
     private static final String AUTO_SIMPLIFY_LABEL_TEXT = "Auto-simplify freehand-drawn";
     private static final String AUTO_SIMPLIFY_POPOVER_TEXT = "Automatically simplify polygons created using freehand-drawing";
 
     private static final String SETTINGS_ENTRY_BOX_STYLE_CLASS = "settings-entry-box";
+    private static final String SHAPES_ROW_TITLE = "Shapes";
+    private static final String SHOW_CATEGORY_LABELS_LABEL_TEXT = "Show category labels";
+    private static final String SHOW_CATEGORY_LABELS_TOOLTIP = "Show the category name at each shape in the editor";
+    private static final String SHOW_CATEGORY_LABELS_CONTROL_ID = "show-category-labels-control";
     private final CheckBox autoSimplifyPolygonsControl = new CheckBox();
     private final Slider simplifyToleranceControl = new Slider(0.0, 1.0, 0.1);
+    private final CheckBox showCategoryLabelsControl = new CheckBox();
 
     public EditorSettingsView() {
         getStyleClass().add(GRID_PANE_STYLE_CLASS);
@@ -53,11 +58,13 @@ public class EditorSettingsView extends GridPane implements ApplyButtonChangePro
     public void setDisplayedSettingsFromEditorSettingsConfig(EditorSettingsConfig config) {
         autoSimplifyPolygonsControl.setSelected(config.isAutoSimplifyPolygons());
         simplifyToleranceControl.setValue(config.getSimplifyRelativeDistanceTolerance());
+        showCategoryLabelsControl.setSelected(config.isShowCategoryLabels());
     }
 
     public void applyDisplayedSettingsToEditorSettingsConfig(EditorSettingsConfig config) {
         config.setAutoSimplifyPolygons(autoSimplifyPolygonsControl.isSelected());
         config.setSimplifyRelativeDistanceTolerance(simplifyToleranceControl.getValue());
+        config.setShowCategoryLabels(showCategoryLabelsControl.isSelected());
     }
 
     public CheckBox getAutoSimplifyPolygonsControl() {
@@ -68,16 +75,22 @@ public class EditorSettingsView extends GridPane implements ApplyButtonChangePro
         return simplifyToleranceControl;
     }
 
+    public CheckBox getShowCategoryLabelsControl() {
+        return showCategoryLabelsControl;
+    }
+
     @Override
     public void registerPropertyListeners(Button applyButton) {
         autoSimplifyPolygonsControl.selectedProperty().addListener(
                 (observable, oldValue, newValue) -> applyButton.setDisable(false));
         simplifyToleranceControl.valueProperty()
                 .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
+        showCategoryLabelsControl.selectedProperty()
+                .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
     }
 
     private void setUpContent() {
-        add(UiUtils.createSettingsTitleRow(POLYGONS_ROW_TITLE, POLYGONS_ROW_TITLE_ID, POLYGONS_ROW_BOX_ID),
+        add(UiUtils.createSettingsTitleRow(POLYGONS_ROW_TITLE, SUBGROUP_TITLE_ID, SUBGROUP_BOX_ID),
                 0, 0, 2, 1);
 
         final Label autoSimplifyLabel = new Label(AUTO_SIMPLIFY_LABEL_TEXT);
@@ -122,5 +135,13 @@ public class EditorSettingsView extends GridPane implements ApplyButtonChangePro
         final HBox box = new HBox(simplifyToleranceControl);
         box.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
         addRow(2, simplifyToleranceLabel, box);
+
+        add(UiUtils.createSettingsTitleRow(SHAPES_ROW_TITLE, SUBGROUP_TITLE_ID, SUBGROUP_BOX_ID),
+                0, 3, 2, 1);
+
+        final Label showCategoryLabelsLabel = new Label(SHOW_CATEGORY_LABELS_LABEL_TEXT);
+        Tooltip.install(showCategoryLabelsLabel, UiUtils.createTooltip(SHOW_CATEGORY_LABELS_TOOLTIP));
+        showCategoryLabelsControl.setId(SHOW_CATEGORY_LABELS_CONTROL_ID);
+        addRow(4, showCategoryLabelsLabel, showCategoryLabelsControl);
     }
 }
