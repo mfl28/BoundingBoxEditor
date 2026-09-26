@@ -17,6 +17,8 @@ on:
   pull_request:
     branches:
       - master
+  # Started by the Version Bump workflow for its pull request (pull requests opened by workflows run no checks).
+  workflow_dispatch:
 
 env:
   JAVA_VERSION: '25'
@@ -146,6 +148,7 @@ jobs:
           name: boundingboxeditor-portable-linux
           path: build/jpackage/BoundingBoxEditor
       - name: Sonarqube analysis
+        if: github.event_name != 'workflow_dispatch'
         run: ./gradlew sonar '-Dsonar.host.url=https://sonarcloud.io'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -257,3 +260,15 @@ jobs:
       publish: true
     secrets:
       CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+
+  Version-Bump:
+    needs: Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    name: Version Bump
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    uses: ./.github/workflows/version-bump.yml
+    with:
+      tag: ${{ github.ref_name }}
