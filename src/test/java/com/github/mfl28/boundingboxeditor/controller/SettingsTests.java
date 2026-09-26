@@ -207,6 +207,8 @@ class SettingsTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getMinimumScoreControl().getValue(), Matchers.equalTo(0.5),
                    saveScreenshot(testinfo));
+        verifyThat(inferenceSettingsView.getMinimumScoreControl().getEditor().getText(), Matchers.equalTo("0.5"),
+                   saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getMergeCategoriesControl().isSelected(), Matchers.is(true),
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getResizeImagesControl().isSelected(), Matchers.is(true),

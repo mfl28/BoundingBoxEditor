@@ -24,7 +24,12 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.util.StringConverter;
 import org.controlsfx.dialog.ProgressDialog;
+
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 /***
  * A class that comprises general ui utility-functions.
@@ -100,6 +105,28 @@ public class UiUtils {
 
             return null;
         });
+    }
+
+    /**
+     * Creates a converter for decimal numbers that always uses '.' as the decimal
+     * separator, matching the input accepted by {@link #createFloatFormatter()}.
+     * The spinner default converter uses the default locale, whose separator
+     * may be ',' and would be rejected by that formatter.
+     */
+    public static StringConverter<Double> createFloatConverter() {
+        final DecimalFormat format = new DecimalFormat("0.##", DecimalFormatSymbols.getInstance(Locale.ROOT));
+
+        return new StringConverter<>() {
+            @Override
+            public String toString(Double value) {
+                return value == null ? "" : format.format(value);
+            }
+
+            @Override
+            public Double fromString(String text) {
+                return text == null || text.isBlank() ? null : Double.valueOf(text.strip());
+            }
+        };
     }
 
     public static void closeProgressDialog(ProgressDialog dialog) {

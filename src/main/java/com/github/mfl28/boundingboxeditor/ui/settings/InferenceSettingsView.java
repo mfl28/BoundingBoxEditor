@@ -569,6 +569,7 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private void addMinimumPredictionScoreRow(int row) {
         minimumScoreControl.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
         minimumScoreControl.setEditable(true);
+        minimumScoreControl.getValueFactory().setConverter(UiUtils.createFloatConverter());
         minimumScoreControl.getEditor().setTextFormatter(UiUtils.createFloatFormatter());
 
         final Label minimumScoreLabel = new Label(MINIMUM_SCORE_LABEL_TEXT);
