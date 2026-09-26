@@ -206,6 +206,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Check version
+        # The installers are named after build.gradle's version, so it must match the tag.
+        run: |
+          version="$(sed -nE "s/^version = '([^']+)'$/\1/p" build.gradle)"
+
+          if [[ "v$version" != "$GITHUB_REF_NAME" ]]; then
+            echo "::error::The tag $GITHUB_REF_NAME doesn't match the version '$version' in build.gradle. Nothing was released."
+            exit 1
+          fi
       - name: Create changelog
         id: changelog
         run: |

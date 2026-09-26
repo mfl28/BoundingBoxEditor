@@ -4,7 +4,8 @@ name: Version Bump
 # and points the README download links at the released version.
 # - Called by the Build workflow after a release was created.
 # - Runs on pull requests that change this workflow, as a dry run for the latest release (no branch, no pull request).
-# - Can be started manually for a release tag; it only opens the pull request if "dry run" is unchecked.
+# - Can be started manually, optionally with the version to bump to (e.g. 3.0.0 instead of the next minor version).
+#   It only opens the pull request if "dry run" is unchecked.
 #
 # Workflows don't run for pull requests opened with the GITHUB_TOKEN, so the job starts the Build workflow on the new
 # branch itself. Its checks are reported for the pull request's commit and satisfy the required checks.
@@ -18,8 +19,12 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag, e.g. v2.9.0
-        required: true
+        description: "Release tag whose files the README links to, e.g. v2.9.0 (default: the latest release)"
+        required: false
+        type: string
+      next_version:
+        description: "Version to bump to, e.g. 3.0.0 (default: the release's next minor version)"
+        required: false
         type: string
       dry_run:
         description: Only show the changes, don't push a branch or open a pull request
@@ -46,6 +51,7 @@ jobs:
     env:
       # Passed through the environment instead of being expanded into scripts.
       INPUT_TAG: ${{ inputs.tag }}
+      INPUT_NEXT_VERSION: ${{ inputs.next_version }}
       DRY_RUN: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -64,14 +70,31 @@ jobs:
           fi
 
           released="${tag#v}"
-          next="${BASH_REMATCH[1]}.$((BASH_REMATCH[2] + 1)).0"
           current="$(sed -nE "s/^version = '([^']+)'$/\1/p" build.gradle)"
 
-          if [[ "$current" != "$released" ]]; then
-            # E.g. the version was already bumped by hand.
-            echo "::notice::build.gradle has version '$current', not the released '$released'. Nothing to bump."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
+          if [[ -n "$INPUT_NEXT_VERSION" ]]; then
+            # A chosen version (e.g. a major release) is applied to whatever version master has.
+            next="$INPUT_NEXT_VERSION"
+
+            if [[ ! "$next" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::Unexpected version '$next'."
+              exit 1
+            fi
+
+            if [[ "$next" == "$current" ]]; then
+              echo "::notice::build.gradle already has version '$next'. Nothing to bump."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          else
+            next="${BASH_REMATCH[1]}.$((BASH_REMATCH[2] + 1)).0"
+
+            if [[ "$current" != "$released" ]]; then
+              # E.g. the version was already bumped by hand.
+              echo "::notice::build.gradle has version '$current', not the released '$released'. Nothing to bump."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
           fi
 
           branch="version-bump/$next"
@@ -82,8 +105,9 @@ jobs:
             exit 0
           fi
 
-          echo "Bumping $released -> $next on $branch."
+          echo "Bumping $current -> $next on $branch (README links: v$released)."
           {
+            echo "current=$current"
             echo "released=$released"
             echo "next=$next"
             echo "branch=$branch"
@@ -92,14 +116,15 @@ jobs:
       - name: Update files
         if: steps.versions.outputs.skip == 'false'
         env:
+          CURRENT: ${{ steps.versions.outputs.current }}
           RELEASED: ${{ steps.versions.outputs.released }}
           NEXT: ${{ steps.versions.outputs.next }}
         run: |
           controller=src/main/java/com/github/mfl28/boundingboxeditor/controller/Controller.java
-          released_pattern="${RELEASED//./\\.}"
+          current_pattern="${CURRENT//./\\.}"
 
-          sed -i -E "s/^version = '$released_pattern'$/version = '$NEXT'/" build.gradle
-          sed -i -E "s/PROGRAM_VERSION = \"$released_pattern\";/PROGRAM_VERSION = \"$NEXT\";/" "$controller"
+          sed -i -E "s/^version = '$current_pattern'$/version = '$NEXT'/" build.gradle
+          sed -i -E "s/PROGRAM_VERSION = \"$current_pattern\";/PROGRAM_VERSION = \"$NEXT\";/" "$controller"
 
           # The README links to the files of the latest release, whose names contain the version.
           readme_version="$(grep -oE 'boundingboxeditor-[0-9]+\.[0-9]+\.[0-9]+\.exe' README.md | head -n 1 \
@@ -116,6 +141,7 @@ jobs:
       - name: Open pull request
         if: steps.versions.outputs.skip == 'false' && env.DRY_RUN != 'true'
         env:
+          CURRENT: ${{ steps.versions.outputs.current }}
           RELEASED: ${{ steps.versions.outputs.released }}
           NEXT: ${{ steps.versions.outputs.next }}
           BRANCH: ${{ steps.versions.outputs.branch }}
@@ -127,7 +153,7 @@ jobs:
           git push origin "$BRANCH"
 
           gh pr create --base master --head "$BRANCH" --title "Bump version to $NEXT" --body \
-            "Bumps the version to $NEXT after the v$RELEASED release, and points the README download links at the v$RELEASED files. Created by the Version Bump workflow."
+            "Bumps the version from $CURRENT to $NEXT, and points the README download links at the v$RELEASED files. Created by the Version Bump workflow."
 
           # Pull requests opened with the GITHUB_TOKEN don't trigger workflows, so the checks are started directly.
           gh workflow run workflow.yml --ref "$BRANCH"
