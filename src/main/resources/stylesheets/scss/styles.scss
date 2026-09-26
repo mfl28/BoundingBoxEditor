@@ -100,6 +100,56 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-background-color: $base-background-light-color;
 }
 
+@mixin accent-check-box {
+    & .box {
+        -fx-background-color: transparent;
+        -fx-background-insets: 0;
+        -fx-border-color: $base-highlight-light-color;
+        -fx-border-radius: 3px;
+    }
+
+    & .mark {
+        -fx-background-color: transparent;
+        -fx-shape: $check-icon;
+    }
+
+    &:selected {
+        & .mark {
+            -fx-background-color: $base-background-color;
+        }
+
+        & .box {
+            -fx-background-color: $base-alt-accent-color;
+            -fx-border-color: $base-alt-accent-color;
+        }
+    }
+}
+
+@mixin accent-radio-button {
+    & .radio {
+        -fx-background-color: transparent;
+        -fx-background-insets: 0;
+        -fx-border-color: $base-highlight-light-color;
+        -fx-border-radius: 1em;
+        -fx-background-radius: 1em;
+    }
+
+    & .dot {
+        -fx-background-color: transparent;
+    }
+
+    &:selected {
+        & .radio {
+            -fx-background-color: $base-alt-accent-color;
+            -fx-border-color: $base-alt-accent-color;
+        }
+
+        & .dot {
+            -fx-background-color: $base-background-color;
+        }
+    }
+}
+
 @mixin icon-button-interaction-highlighting {
     &:hover {
         -fx-background-color: $base-alt-highlight-light-color;
@@ -753,6 +803,72 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-alignment: center;
 }
 
+// Part of the search bar: same background as the search field, the icon reacts like the show/hide buttons.
+#image-file-filter-button {
+    -fx-background-color: $base-highlight-light-color;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0 0 0 5px;
+    -fx-min-height: 25px;
+    -fx-max-height: 25px;
+
+    &:hover #image-file-filter-icon {
+        -fx-background-color: $base-alt-highlight-light-color;
+    }
+
+    &:pressed #image-file-filter-icon {
+        -fx-background-color: $base-alt-highlight-color;
+    }
+
+    &:active #image-file-filter-icon {
+        -fx-background-color: $base-alt-accent-color;
+    }
+}
+
+#image-file-filter-icon {
+    @include large-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $filter-icon;
+}
+
+#image-file-filter-match-label {
+    -fx-padding: 0 5px;
+    -fx-font-size: 0.9em;
+}
+
+#image-file-filter-box {
+    -fx-padding: 10px;
+    -fx-spacing: 6px;
+
+    .radio-button, .label {
+        -fx-text-fill: $base-font-color;
+    }
+
+    .toggle-button:selected {
+        -fx-background-color: $base-alt-accent-color;
+        -fx-text-fill: $base-background-color;
+    }
+
+    .check-box {
+        @include accent-check-box;
+    }
+
+    .radio-button {
+        @include accent-radio-button;
+    }
+}
+
+#image-file-filter-category-list {
+    -fx-pref-height: 150px;
+    -fx-pref-width: 200px;
+
+    // Rows are only checked, not selected, so a clicked row isn't highlighted.
+    & .list-cell:selected {
+        -fx-background-color: transparent;
+        -fx-text-fill: $base-font-color;
+    }
+}
+
 
 .scroll-pane {
      -fx-background-insets: 0;
@@ -1168,30 +1284,7 @@ $base-separator-line-color: derive($base-background-color, -15%);
     }
 
     & .check-box {
-
-        & .box {
-            -fx-background-color: transparent;
-            -fx-background-insets: 0;
-            -fx-border-color: $base-highlight-light-color;
-            -fx-border-radius: 3px;
-        }
-
-        & .mark {
-            -fx-background-color: transparent;
-            -fx-shape: $check-icon;
-        }
-
-        &:selected {
-            & .mark {
-                -fx-background-color: $base-background-color;
-            }
-
-            & .box {
-                -fx-background-color: $base-alt-accent-color;
-                -fx-border-color: $base-alt-accent-color;
-            }
-
-        }
+        @include accent-check-box;
     }
 
     & #selected-model-label {

@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.controller.utils.KeyCombinationEventHandler;
+import com.github.mfl28.boundingboxeditor.model.ImageFileFilter;
 import com.github.mfl28.boundingboxeditor.model.Model;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
@@ -41,6 +42,7 @@ import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.github.mfl28.boundingboxeditor.utils.ImageUtils;
 import javafx.application.HostServices;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -57,6 +59,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * The control-component of the application (as in MVC pattern). Responsible for interaction-handling
@@ -125,6 +128,8 @@ public class Controller {
     private final InferenceController inferenceController;
     private final KeyboardShortcutHandler keyboardShortcutHandler;
     private final Model model = new Model();
+    private final ImageFileFilterController imageFileFilterController = new ImageFileFilterController(model);
+    private boolean imageFilterUpdating = false;
     private final EditHistoryController editHistoryController =
             new EditHistoryController(new EditHistoryOperations());
     private boolean editCheckpointScheduled = false;
@@ -429,18 +434,30 @@ public class Controller {
      * Handles the event of the user clicking the next(-image)-button.
      */
     public void onRegisterNextImageFileRequested() {
-        model.incrementFileIndex();
-        // Keep the currently selected item in the image-gallery in view.
-        view.getImageFileListView().scrollTo(model.getCurrentFileIndex());
+        imageFileFilterController.nextItem().ifPresent(this::showImageFileItem);
     }
 
     /**
      * Handles the event of the user clicking the previous(-image)-button.
      */
     public void onRegisterPreviousImageFileRequested() {
-        model.decrementFileIndex();
-        // Keep the currently selected item in the image-gallery in view.
-        view.getImageFileListView().scrollTo(model.getCurrentFileIndex());
+        imageFileFilterController.previousItem().ifPresent(this::showImageFileItem);
+    }
+
+    /**
+     * Handles the event of the user changing the image file filter (search text, annotation status or categories).
+     * If the current image does not match the new filter, the first matching image is shown.
+     *
+     * @param filter the new filter
+     */
+    public void onRegisterImageFilterChanged(ImageFileFilter filter) {
+        if(!model.containsImageFiles()) {
+            return;
+        }
+
+        saveCurrentShapesIfImageLoaded();
+        updateImageFilter(() -> imageFileFilterController.setFilter(filter))
+                .ifPresent(this::showImageFileItem);
     }
 
     /**
@@ -484,6 +501,10 @@ public class Controller {
             }
 
             objectCategory.setName(newName);
+
+            if(oldName != null && imageFileFilterController.getFilter().categoryNames().contains(oldName)) {
+                onRegisterImageFilterChanged(view.getImageFileExplorer().getFilter());
+            }
         }
     }
 
@@ -790,12 +811,59 @@ public class Controller {
     private void updateViewFileExplorerFileInfoElements() {
         final Map<String, ImageAnnotation> fileNameToAnnotationMap = model.getImageFileNameToAnnotationMap();
 
-        for(ImageFileListView.FileInfo fileInfo : view.getImageFileListView().getItems()) {
+        for(ImageFileListView.FileInfo fileInfo : imageFileFilterController.getAllItems()) {
             ImageAnnotation annotation = fileNameToAnnotationMap.get(fileInfo.getFileName());
 
             if(annotation != null && !annotation.getBoundingShapeData().isEmpty()) {
                 fileInfo.setHasAssignedBoundingShapes(true);
             }
+        }
+
+        refreshImageFilter();
+    }
+
+    private void showImageFileItem(ImageFileListView.FileInfo item) {
+        final ImageFileListView imageFileListView = view.getImageFileListView();
+        imageFileListView.getSelectionModel().select(item);
+        // Keep the currently selected item in the image-gallery in view.
+        imageFileListView.scrollTo(item);
+    }
+
+    /**
+     * Runs a change of the image file filter. While the shown list is re-filtered, the list view's selection may
+     * change temporarily; those changes must not navigate, and the current image is re-selected afterwards.
+     */
+    private <T> T updateImageFilter(Supplier<T> update) {
+        final T result;
+        imageFilterUpdating = true;
+
+        try {
+            result = update.get();
+        } finally {
+            imageFilterUpdating = false;
+        }
+
+        imageFileFilterController.getCurrentItem().ifPresent(item -> {
+            if(!Objects.equals(view.getImageFileListView().getSelectionModel().getSelectedItem(), item)) {
+                view.getImageFileListView().getSelectionModel().select(item);
+            }
+        });
+
+        return result;
+    }
+
+    private void refreshImageFilter() {
+        updateImageFilter(() -> {
+            imageFileFilterController.refresh();
+            return null;
+        });
+    }
+
+    private void saveCurrentShapesIfImageLoaded() {
+        final Image currentImage = view.getCurrentImage();
+
+        if(currentImage != null && currentImage.getProgress() == 1.0) {
+            updateModelFromView();
         }
     }
 
@@ -805,7 +873,8 @@ public class Controller {
         view.reset();
         view.getEditorImagePane().removeAllCurrentBoundingShapes();
         // Reset all 'assigned bounding shape states' in image file explorer.
-        view.getImageFileListView().getItems().forEach(item -> item.setHasAssignedBoundingShapes(false));
+        imageFileFilterController.getAllItems().forEach(item -> item.setHasAssignedBoundingShapes(false));
+        refreshImageFilter();
     }
 
     private void updateModelFromView() {
@@ -823,21 +892,30 @@ public class Controller {
         view.getEditor().getEditorToolBar()
                 .getIndexLabel()
                 .textProperty()
-                .bind(model.fileIndexProperty().add(1).asString()
+                .bind(imageFileFilterController.currentPositionProperty().add(1).asString()
                         .concat(" | ")
-                        .concat(model.nrImageFilesProperty().asString()));
+                        .concat(imageFileFilterController.shownCountProperty().asString()));
 
-        view.getImageFileExplorer().getImageFileListView().getSelectionModel().selectedIndexProperty()
+        view.getImageFileExplorer().getImageFileListView().getSelectionModel().selectedItemProperty()
                 .addListener((observable, oldValue, newValue) -> {
-                    if(newValue.intValue() != -1) {
-                        model.fileIndexProperty().set(newValue.intValue());
+                    if(newValue != null && !imageFilterUpdating) {
+                        model.fileIndexProperty().set(newValue.getFileIndex());
                     }
                 });
 
+        view.getImageFileExplorer().getImageFileFilterView().setCategories(model.getObjectCategories());
+        view.getImageFileExplorer().getFilterMatchLabel().visibleProperty()
+                .bind(imageFileFilterController.filterActiveProperty());
+        view.getImageFileExplorer().getFilterMatchLabel().textProperty()
+                .bind(Bindings.format("%d of %d images match", imageFileFilterController.matchCountProperty(),
+                        model.nrImageFilesProperty()));
+
         view.getFileImportAnnotationsItem().disableProperty().bind(model.nrImageFilesProperty().isEqualTo(0));
 
-        view.getPreviousImageNavigationButton().disableProperty().bind(model.hasPreviousImageFileProperty().not());
-        view.getNextImageNavigationButton().disableProperty().bind(model.hasNextImageFileProperty().not());
+        view.getPreviousImageNavigationButton().disableProperty()
+                .bind(imageFileFilterController.hasPreviousProperty().not());
+        view.getNextImageNavigationButton().disableProperty()
+                .bind(imageFileFilterController.hasNextProperty().not());
 
         view.getObjectCategoryTable().getDeleteColumn().setCellFactory(column -> {
             final ObjectCategoryDeleteTableCell cell = new ObjectCategoryDeleteTableCell();
@@ -891,9 +969,11 @@ public class Controller {
         objectCategoryTableView.getSelectionModel().selectFirst();
 
         ImageFileExplorerView imageFileExplorerView = view.getImageFileExplorer();
-        imageFileExplorerView.setImageMetaData(model.getImageMetaDataList());
+        imageFileExplorerView.resetFilter();
 
         ImageFileListView imageFileListView = view.getImageFileListView();
+        imageFileListView.setItems(imageFileFilterController.setItems(
+                ImageFileExplorerView.createFileInfos(model.getImageMetaDataList()), model.getCurrentFileIndex()));
         imageFileListView.getSelectionModel().selectFirst();
         imageFileListView.scrollTo(0);
     }
@@ -937,7 +1017,8 @@ public class Controller {
             // Records pending edits of the old image while its shapes are still shown.
             editHistoryController.onImageHidden();
             // Update selected item in image-file-list-view.
-            view.getImageFileExplorer().getImageFileListView().getSelectionModel().select(newValue.intValue());
+            imageFileFilterController.getItem(newValue.intValue())
+                    .ifPresent(item -> view.getImageFileListView().getSelectionModel().select(item));
             // Show the progress spinner.
             view.getEditorImagePane().getImageLoadingProgressIndicator().setVisible(true);
             view.getEditor().getEditorToolBar().getPredictButton().setDisable(true);
@@ -967,6 +1048,13 @@ public class Controller {
                 view.getEditorImageView().setImage(null);
                 lastLoadedImageUrl = oldImageUrl;
             }
+
+            // The old image's shapes are now stored in the model, so it can be hidden if it no longer matches.
+            final int newFileIndex = newValue.intValue();
+            updateImageFilter(() -> {
+                imageFileFilterController.onCurrentImageChanged(newFileIndex);
+                return null;
+            });
 
             updateStageTitle();
 
@@ -1087,6 +1175,8 @@ public class Controller {
         ImageFileListView imageFileListView = view.getImageFileListView();
         imageFileListView.setItems(null);
         imageFileListView.getSelectionModel().clearSelection();
+        imageFileFilterController.clear();
+        view.getImageFileExplorer().resetFilter();
 
         view.getStatusBar().clear();
         view.setWorkspaceVisible(false);
@@ -1315,6 +1405,16 @@ public class Controller {
         @Override
         public void showPreviousImage() {
             onRegisterPreviousImageFileRequested();
+        }
+
+        @Override
+        public boolean hasNextImage() {
+            return imageFileFilterController.hasNextProperty().get();
+        }
+
+        @Override
+        public boolean hasPreviousImage() {
+            return imageFileFilterController.hasPreviousProperty().get();
         }
     }
 }

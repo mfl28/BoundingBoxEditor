@@ -51,6 +51,9 @@ class KeyboardShortcutHandlerTest {
 
     @BeforeEach
     void setUp() {
+        // Without a filter, the editor's navigation follows the model's file index.
+        when(editor.hasNextImage()).thenAnswer(invocation -> model.hasNextImageFile());
+        when(editor.hasPreviousImage()).thenAnswer(invocation -> model.hasPreviousImageFile());
         keyboardShortcutHandler = new KeyboardShortcutHandler(model, editor,
                 List.of(new KeyCombinationEventHandler(ACTION_KEY_COMBINATION, null, actionEvents::add)));
     }

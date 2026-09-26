@@ -99,6 +99,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
     public void connectToController(final Controller controller) {
         editorsSplitPane.connectToController(controller);
         editor.connectToController(controller);
+        imageFileExplorer.connectToController(controller);
         onContextMenuActionFinished = controller::onRegisterBoundingShapeEditFinished;
     }
 
