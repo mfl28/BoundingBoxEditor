@@ -58,8 +58,8 @@ class CategoryLabelTests extends BoundingBoxEditorTestBase {
         waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1, "drawn box", testinfo);
 
         final BoundingShapeViewData viewData = mainView.getCurrentBoundingShapes().getFirst().getViewData();
-        final Label label = viewData.getCategoryLabel();
-        verifyThat(label.isVisible(), Matchers.is(false), saveScreenshot(testinfo));
+        // Only created when labels are shown.
+        verifyThat(viewData.getCategoryLabel(), Matchers.nullValue(), saveScreenshot(testinfo));
 
         // Switched on in the settings.
         timeOutClickOn(robot, "#file-menu", testinfo);
@@ -73,6 +73,7 @@ class CategoryLabelTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getEditorSettingsConfig().isShowCategoryLabels(), Matchers.is(true),
                    saveScreenshot(testinfo));
+        final Label label = viewData.getCategoryLabel();
         verifyThat(label.isVisible(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(label.getText(), Matchers.equalTo(CATEGORY_NAME), saveScreenshot(testinfo));
         verifyThat(label.getStyle(), Matchers.containsString("-fx-background-color: rgba("), saveScreenshot(testinfo));

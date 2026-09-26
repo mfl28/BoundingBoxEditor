@@ -48,7 +48,8 @@ public class BoundingShapeViewData {
     private final ObservableList<String> tags = FXCollections.observableArrayList();
     private final Shape baseShape;
     private final ObjectProperty<ObjectCategory> objectCategory = new SimpleObjectProperty<>();
-    private final Label categoryLabel = new Label();
+    // Created when labels are first shown: a control needs the JavaFX toolkit, which shapes otherwise don't.
+    private Label categoryLabel;
     private final BooleanProperty categoryLabelShown = new SimpleBooleanProperty(false);
     private String previousObjectCategoryName;
     private BoundingShapeTreeItem treeItem;
@@ -58,7 +59,11 @@ public class BoundingShapeViewData {
         nodeGroup.getChildren().add(shape);
 
         setUpInternalListeners();
-        setUpCategoryLabel();
+        categoryLabelShown.addListener((observable, oldValue, newValue) -> {
+            if(Boolean.TRUE.equals(newValue) && categoryLabel == null) {
+                createCategoryLabel();
+            }
+        });
         this.objectCategory.set(objectCategory);
     }
 
@@ -201,11 +206,17 @@ public class BoundingShapeViewData {
         return categoryLabelShown;
     }
 
+    /**
+     * Returns the label with the category name.
+     *
+     * @return the label, or null if labels were never shown for this shape
+     */
     Label getCategoryLabel() {
         return categoryLabel;
     }
 
-    private void setUpCategoryLabel() {
+    private void createCategoryLabel() {
+        categoryLabel = new Label();
         categoryLabel.getStyleClass().add(CATEGORY_LABEL_STYLE_CLASS);
         categoryLabel.setMouseTransparent(true);
         bindCategoryLabelToCategory(objectCategory.get());
