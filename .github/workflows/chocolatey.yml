@@ -1,0 +1,116 @@
+name: Chocolatey
+
+# Builds the Chocolatey package for a GitHub release and pushes it to the community repository.
+# - Called by the Build workflow after a release was created (publishes).
+# - Runs on pull requests that change the package, packing the latest release without publishing (dry run).
+# - Can be started manually for any release tag; it only publishes if "publish" is checked.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag, e.g. v2.9.0
+        required: true
+        type: string
+      publish:
+        description: Push the package to chocolatey.org
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      CHOCOLATEY_API_KEY:
+        required: false
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, e.g. v2.9.0
+        required: true
+        type: string
+      publish:
+        description: Push the package to chocolatey.org
+        required: false
+        type: boolean
+        default: false
+  pull_request:
+    branches:
+      - master
+    paths:
+      - chocolatey/**
+      - .github/workflows/chocolatey.yml
+
+permissions:
+  contents: read
+
+jobs:
+  Chocolatey-Package:
+    runs-on: windows-latest
+    name: Chocolatey Package
+    env:
+      # Passed through the environment instead of being expanded into scripts.
+      INPUT_TAG: ${{ inputs.tag }}
+      PUBLISH: ${{ inputs.publish == true && github.event_name != 'pull_request' }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+      - name: Download release installer
+        shell: pwsh
+        run: |
+          $tag = if ($env:INPUT_TAG) { $env:INPUT_TAG } else {
+            gh release view --repo $env:GITHUB_REPOSITORY --json tagName --jq .tagName
+          }
+
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') {
+            throw "Unexpected release tag '$tag'."
+          }
+
+          $version = $tag.Substring(1)
+          $installer = "boundingboxeditor-$version.exe"
+
+          gh release download $tag --repo $env:GITHUB_REPOSITORY --pattern $installer --dir release
+          # The checksum of the published installer, i.e. of the file Chocolatey will download.
+          $checksum = (Get-FileHash "release/$installer" -Algorithm SHA256).Hash
+
+          Write-Host "Packaging $installer ($tag) with SHA-256 $checksum."
+          "VERSION=$version" >> $env:GITHUB_ENV
+          "CHECKSUM=$checksum" >> $env:GITHUB_ENV
+      - name: Fill in package files
+        shell: pwsh
+        run: |
+          $year = (Get-Date).Year
+
+          foreach ($file in 'chocolatey/boundingboxeditor.nuspec', 'chocolatey/tools/chocolateyinstall.ps1') {
+            $content = (Get-Content $file -Raw -Encoding utf8).
+              Replace('__VERSION__', $env:VERSION).
+              Replace('__CHECKSUM__', $env:CHECKSUM).
+              Replace('__YEAR__', "$year")
+
+            if ($content -match '__[A-Z]+__') {
+              throw "Unreplaced placeholder '$($Matches[0])' in $file."
+            }
+
+            # Chocolatey expects UTF-8 with BOM for its PowerShell scripts.
+            Set-Content $file $content -Encoding utf8BOM -NoNewline
+          }
+      - name: Pack
+        shell: pwsh
+        run: |
+          choco pack chocolatey/boundingboxeditor.nuspec --outputdirectory package
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem package
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: chocolatey-package
+          path: package/*.nupkg
+      - name: Push to chocolatey.org
+        if: env.PUBLISH == 'true'
+        shell: pwsh
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+        run: |
+          if (-not $env:CHOCOLATEY_API_KEY) {
+            throw 'The CHOCOLATEY_API_KEY secret is not set.'
+          }
+
+          choco push "package/boundingboxeditor.$env:VERSION.nupkg" --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
