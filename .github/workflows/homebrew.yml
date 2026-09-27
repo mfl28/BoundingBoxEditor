@@ -49,6 +49,8 @@ jobs:
       INPUT_TAG: ${{ inputs.tag }}
       PUBLISH: ${{ inputs.publish == true && github.event_name != 'pull_request' }}
       GH_TOKEN: ${{ github.token }}
+      # Without a token, the GitHub API requests of "brew audit --online" share the runner IP's rate limit.
+      HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
       HOMEBREW_NO_AUTO_UPDATE: 1
       HOMEBREW_NO_INSTALL_CLEANUP: 1
     steps:
