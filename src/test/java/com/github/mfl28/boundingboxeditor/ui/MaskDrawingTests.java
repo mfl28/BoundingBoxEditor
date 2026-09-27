@@ -108,12 +108,119 @@ class MaskDrawingTests extends BoundingBoxEditorTestBase {
         waitForShapeCount(1, testinfo);
         timeOutClickOn(robot, "#mask-eraser-button-icon", testinfo);
 
+        // Outside the mask mode, a mask can be dragged: it moves by the dragged distance, in whole pixels.
+        timeOutClickOn(robot, "#rectangle-mode-button-icon", testinfo);
+        final BoundingMaskView remaining = (BoundingMaskView) mainView.getCurrentBoundingShapes().getFirst();
+        final int minXBefore = remaining.getMask().getMinX();
+        final int minYBefore = remaining.getMask().getMinY();
+        moveRelativeToImageView(robot, new Point2D(0.45, 0.5), new Point2D(0.55, 0.6));
+        WaitForAsyncUtils.waitForFxEvents();
+        final double imageWidth = remaining.getMask().getImageWidth();
+        final double imageHeight = remaining.getMask().getImageHeight();
+        verifyThat((double) remaining.getMask().getMinX() - minXBefore, Matchers.closeTo(0.1 * imageWidth,
+                                                                                         imageWidth * 0.01),
+                   saveScreenshot(testinfo));
+        verifyThat((double) remaining.getMask().getMinY() - minYBefore, Matchers.closeTo(0.1 * imageHeight,
+                                                                                         imageHeight * 0.01),
+                   saveScreenshot(testinfo));
+        verifyThat(remaining.getViewData().getNodeGroup().getTranslateX(), Matchers.equalTo(0.0),
+                   saveScreenshot(testinfo));
+
         // The object tree shows the mask, and its data is saved with the image's annotation.
         verifyThat(mainView.getObjectTree().getRoot().getChildren().size(), Matchers.equalTo(1),
                    saveScreenshot(testinfo));
         final List<BoundingShapeData> shapes = mainView.extractCurrentBoundingShapeData();
         verifyThat(shapes.size(), Matchers.equalTo(1), saveScreenshot(testinfo));
         verifyThat(shapes.getFirst(), Matchers.instanceOf(BoundingMaskData.class), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onZoomingWhilePainting_ShouldKeepTheStrokeWhereItWasPainted(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        enterNewCategory(robot, "Line", testinfo);
+        timeOutClickOn(robot, "#mask-mode-button-icon", testinfo);
+        robot.interact(() -> mainView.getEditorImagePane().maskBrushSizeProperty().set(10));
+
+        // A horizontal stroke away from the image's center (which zooming keeps in place), zoomed in the middle of
+        // it (with the mouse button still pressed).
+        moveRelativeToImageViewNoRelease(robot, new Point2D(0.3, 0.75), new Point2D(0.4, 0.75));
+        robot.press(KeyCode.SHORTCUT).scroll(10).release(KeyCode.SHORTCUT);
+        WaitForAsyncUtils.waitForFxEvents();
+        // Zooming keeps the point under the pointer in place, so a short horizontal move continues on the same row.
+        robot.moveBy(40, 0).release(javafx.scene.input.MouseButton.PRIMARY);
+        waitForShapeCount(1, testinfo);
+
+        // All painted pixels lie on the stroke's row (no lines from points before the zoom to other places).
+        final var mask = ((BoundingMaskView) mainView.getCurrentBoundingShapes().getFirst()).getMask();
+        final double rowY = 0.75 * mask.getImageHeight();
+        final double tolerance = 0.05 * mask.getImageHeight();
+        verifyThat((double) mask.getMinY(), Matchers.greaterThan(rowY - tolerance), saveScreenshot(testinfo));
+        verifyThat((double) mask.getMinY() + mask.getHeight(), Matchers.lessThan(rowY + tolerance),
+                   saveScreenshot(testinfo));
+        verifyThat((double) mask.getMinX(), Matchers.closeTo(0.3 * mask.getImageWidth(),
+                                                             0.03 * mask.getImageWidth()), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onZoomingOutWhileDraggingMask_ShouldKeepItWithinTheImage(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        enterNewCategory(robot, "Buoy", testinfo);
+        timeOutClickOn(robot, "#mask-mode-button-icon", testinfo);
+        robot.interact(() -> mainView.getEditorImagePane().maskBrushSizeProperty().set(30));
+        paint(robot, new Point2D(0.7, 0.5), new Point2D(0.8, 0.5));
+        waitForShapeCount(1, testinfo);
+        final BoundingMaskView mask = (BoundingMaskView) mainView.getCurrentBoundingShapes().getFirst();
+
+        // Dragged to the right edge (where it is stopped), then zoomed out with the mouse button still pressed.
+        timeOutClickOn(robot, "#rectangle-mode-button-icon", testinfo);
+        moveRelativeToImageViewNoRelease(robot, new Point2D(0.75, 0.5), new Point2D(0.99, 0.5));
+        robot.press(KeyCode.SHORTCUT).scroll(-10).release(KeyCode.SHORTCUT);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final var imageBounds = mainView.getEditorImageView().getBoundsInParent();
+        final var draggedBounds = mask.getViewData().getNodeGroup().getBoundsInParent();
+        verifyThat(draggedBounds.getMaxX(), Matchers.lessThanOrEqualTo(imageBounds.getMaxX() + 1),
+                   saveScreenshot(testinfo));
+        verifyThat(draggedBounds.getMinX(), Matchers.greaterThanOrEqualTo(imageBounds.getMinX() - 1),
+                   saveScreenshot(testinfo));
+
+        robot.release(javafx.scene.input.MouseButton.PRIMARY);
+        WaitForAsyncUtils.waitForFxEvents();
+        // The mask was moved to the image's right edge.
+        verifyThat(mask.getMask().getMinX() + mask.getMask().getWidth(),
+                   Matchers.equalTo(mask.getMask().getImageWidth()), saveScreenshot(testinfo));
+        verifyThat(mask.getViewData().getNodeGroup().getTranslateX(), Matchers.equalTo(0.0),
+                   saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onHoveringMaskTreeItem_ShouldShowThePreviewClippedToTheMask(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        enterNewCategory(robot, "Mast", testinfo);
+        timeOutClickOn(robot, "#mask-mode-button-icon", testinfo);
+        robot.interact(() -> mainView.getEditorImagePane().maskBrushSizeProperty().set(20));
+        // A diagonal stroke: its bounds' upper right and lower left corners are not part of the mask.
+        paint(robot, new Point2D(0.2, 0.2), new Point2D(0.5, 0.5));
+        waitForShapeCount(1, testinfo);
+        final BoundingMaskView mask = (BoundingMaskView) mainView.getCurrentBoundingShapes().getFirst();
+
+        final ObjectTreeElementCell cell = robot.lookup(node -> node instanceof ObjectTreeElementCell treeCell
+                && treeCell.getItem() == mask).query();
+        robot.moveTo(cell);
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                        () -> cell.getPopOver().isShowing()),
+                                      () -> saveScreenshotAndReturnMessage(testinfo, "The preview was not shown."));
+
+        final var clip = cell.getPopOverImageView().getClip();
+        verifyThat(clip, Matchers.instanceOf(javafx.scene.image.ImageView.class), saveScreenshot(testinfo));
+        final var clipImage = ((javafx.scene.image.ImageView) clip).getImage();
+        final var pixels = clipImage.getPixelReader();
+        final int width = (int) clipImage.getWidth();
+        final int height = (int) clipImage.getHeight();
+        verifyThat(pixels.getArgb(width / 2, height / 2) >>> 24, Matchers.equalTo(0xFF), saveScreenshot(testinfo));
+        verifyThat(pixels.getArgb(width - 1, 0) >>> 24, Matchers.equalTo(0), saveScreenshot(testinfo));
+        verifyThat(pixels.getArgb(0, height - 1) >>> 24, Matchers.equalTo(0), saveScreenshot(testinfo));
+        robot.moveTo(mainView.getEditorImageView());
     }
 
     private void paint(FxRobot robot, Point2D from, Point2D to) {

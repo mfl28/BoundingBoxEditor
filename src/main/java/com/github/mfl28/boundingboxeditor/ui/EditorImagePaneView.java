@@ -39,6 +39,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -92,6 +93,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private final BooleanProperty maskEraser = new SimpleBooleanProperty(false);
     // Shows the brush's size under the pointer in the mask drawing mode.
     private final Circle maskBrushCursor = new Circle();
+    // Where the pointer is in the scene: when the image moves (zooming, scrolling), the circle is placed there again.
+    private Point2D maskBrushCursorScenePosition = null;
     private boolean newMaskRequested = false;
     private final BoundingMaskDrawer.Settings maskBrushSettings = new BoundingMaskDrawer.Settings() {
         @Override
@@ -302,6 +305,10 @@ public class EditorImagePaneView extends ScrollPane implements View {
         final Cursor drawingCursor = drawingMode.get() == DrawingMode.MASK ? Cursor.CROSSHAIR : Cursor.DEFAULT;
         imageView.setCursor(value ? Cursor.OPEN_HAND : drawingCursor);
         setPannable(value);
+
+        if(value) {
+            maskBrushCursor.setVisible(false);
+        }
     }
 
     /**
@@ -507,6 +514,12 @@ public class EditorImagePaneView extends ScrollPane implements View {
         });
         // A filter, because the scroll pane itself scrolls with the arrow keys.
         addEventFilter(KeyEvent.KEY_PRESSED, this::handleNudgeKeyPressed);
+        // Zooming or scrolling moves the image under the pointer, so a mask stroke goes on from the next point.
+        addEventFilter(ScrollEvent.ANY, event -> {
+            if(boundingShapeDrawer instanceof BoundingMaskDrawer maskDrawer && maskDrawer.isDrawingInProgress()) {
+                maskDrawer.pauseStroke();
+            }
+        });
     }
 
     private void handleNudgeKeyPressed(KeyEvent event) {
@@ -618,14 +631,21 @@ public class EditorImagePaneView extends ScrollPane implements View {
         imageView.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::updateMaskBrushCursor);
         imageView.addEventHandler(MouseEvent.MOUSE_EXITED, event -> maskBrushCursor.setVisible(false));
         drawingMode.addListener((observable, oldValue, newValue) -> maskBrushCursor.setVisible(false));
+        imageView.localToSceneTransformProperty().addListener((observable, oldValue, newValue) ->
+                                                                     placeMaskBrushCursor());
     }
 
     private void updateMaskBrushCursor(MouseEvent event) {
+        // Hidden while zooming or panning (with the shortcut key).
         final boolean shown = drawingMode.get() == DrawingMode.MASK && !event.isShortcutDown();
         maskBrushCursor.setVisible(shown);
+        maskBrushCursorScenePosition = new Point2D(event.getSceneX(), event.getSceneY());
+        placeMaskBrushCursor();
+    }
 
-        if(shown) {
-            final Point2D center = imageView.localToParent(event.getX(), event.getY());
+    private void placeMaskBrushCursor() {
+        if(maskBrushCursorScenePosition != null && maskBrushCursor.isVisible()) {
+            final Point2D center = boundingShapeSceneGroup.sceneToLocal(maskBrushCursorScenePosition);
             maskBrushCursor.setCenterX(center.getX());
             maskBrushCursor.setCenterY(center.getY());
         }

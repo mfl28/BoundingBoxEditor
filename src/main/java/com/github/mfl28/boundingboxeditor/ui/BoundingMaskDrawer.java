@@ -54,6 +54,7 @@ public class BoundingMaskDrawer implements BoundingShapeDrawer {
     private boolean targetIsNew;
     private boolean erasing;
     private boolean drawingInProgress = false;
+    // In image pixels; null after a pause of the stroke (see updateShape).
     private Point2D lastPoint;
 
     /**
@@ -101,19 +102,31 @@ public class BoundingMaskDrawer implements BoundingShapeDrawer {
 
         toggleGroup.selectToggle(target);
         target.startPainting();
-        target.paintLine(point.getX(), point.getY(), point.getX(), point.getY(), brushRadius(), !erasing);
-        lastPoint = point;
         drawingInProgress = true;
+        lastPoint = null;
+        paintTo(point);
     }
 
     @Override
     public void updateShape(MouseEvent event) {
         if(drawingInProgress && event.getEventType().equals(MouseEvent.MOUSE_DRAGGED)
                 && event.getButton().equals(MouseButton.PRIMARY)) {
-            final Point2D point = toParent(event);
-            target.paintLine(lastPoint.getX(), lastPoint.getY(), point.getX(), point.getY(), brushRadius(), !erasing);
-            lastPoint = point;
+            if(event.isShortcutDown()) {
+                // Zooming or panning pauses the stroke; it goes on from wherever the pointer is afterwards.
+                lastPoint = null;
+                return;
+            }
+
+            paintTo(toParent(event));
         }
+    }
+
+    /**
+     * Pauses the stroke, e.g. while the image is zoomed or scrolled: it goes on from the next point, instead of
+     * connecting the points before and after the pause.
+     */
+    void pauseStroke() {
+        lastPoint = null;
     }
 
     @Override
@@ -195,8 +208,16 @@ public class BoundingMaskDrawer implements BoundingShapeDrawer {
         return imageView.localToParent(clamped.getX(), clamped.getY());
     }
 
-    private double brushRadius() {
-        return settings.getBrushSize() / 2;
+    private void paintTo(Point2D pointInParent) {
+        final Point2D point = target.toMaskPoint(pointInParent.getX(), pointInParent.getY());
+
+        if(point == null) {
+            return;
+        }
+
+        target.paintLine(lastPoint != null ? lastPoint : point, point, target.toMaskLength(settings.getBrushSize() / 2),
+                         !erasing);
+        lastPoint = point;
     }
 
     /**

@@ -27,8 +27,10 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
@@ -46,6 +48,7 @@ import java.util.Arrays;
 public class BoundingMaskView extends ImageView implements View, BoundingShapeDataConvertible, BoundingShapeToggle {
     // The mask is rendered with at most the resolution the editor loads images with.
     static final int MAXIMUM_RENDER_SIZE = 3072;
+    private static final int MAXIMUM_CLIP_SIZE = 4096;
     private static final String BOUNDING_MASK_VIEW_ID = "bounding-mask";
     private static final String OUTLINE_STYLE_CLASS = "bounding-mask-outline";
     private static final double DEFAULT_OPACITY = 0.45;
@@ -60,8 +63,11 @@ public class BoundingMaskView extends ImageView implements View, BoundingShapeDa
     // While painting: the edited mask and an image covering the whole image area that shows it.
     private MutableMask paintedMask;
     private WritableImage paintingImage;
-    private double dragStartX;
-    private double dragStartY;
+    // While the mask is dragged: the image pixel under the pointer at the press, and the offset so far (in whole
+    // image pixels, so that zooming during the drag doesn't change it).
+    private Point2D dragStartInMask;
+    private int dragOffsetX;
+    private int dragOffsetY;
 
     /**
      * Creates a new mask view.
@@ -167,7 +173,10 @@ public class BoundingMaskView extends ImageView implements View, BoundingShapeDa
 
     void autoScaleWithBounds(ReadOnlyObjectProperty<Bounds> autoScaleBounds) {
         boundingShapeViewData.autoScaleBounds().bind(autoScaleBounds);
-        boundingShapeViewData.autoScaleBounds().addListener((observable, oldValue, newValue) -> updateLayout());
+        boundingShapeViewData.autoScaleBounds().addListener((observable, oldValue, newValue) -> {
+            updateLayout();
+            updateDragTranslation();
+        });
         updateLayout();
     }
 
@@ -186,6 +195,35 @@ public class BoundingMaskView extends ImageView implements View, BoundingShapeDa
         }
 
         return mask.get((int) Math.floor(toMaskX(x, imageBounds)), (int) Math.floor(toMaskY(y, imageBounds)));
+    }
+
+    /**
+     * Creates an image of the mask's bounds that is opaque where the mask is set and transparent elsewhere, e.g. to
+     * clip an image of the object to the mask.
+     *
+     * @param width  the width the image is shown with
+     * @param height the height the image is shown with
+     * @return the image (at most {@value #MAXIMUM_CLIP_SIZE} pixels on each side)
+     */
+    Image createClipImage(double width, double height) {
+        final int imageWidth = Math.clamp(Math.round(width), 1, MAXIMUM_CLIP_SIZE);
+        final int imageHeight = Math.clamp(Math.round(height), 1, MAXIMUM_CLIP_SIZE);
+        final WritableImage image = new WritableImage(imageWidth, imageHeight);
+        final int[] row = new int[imageWidth];
+
+        for(int y = 0; y < imageHeight; ++y) {
+            final int maskY = mask.getMinY() + (int) ((y + 0.5) * mask.getHeight() / imageHeight);
+
+            for(int x = 0; x < imageWidth; ++x) {
+                final int maskX = mask.getMinX() + (int) ((x + 0.5) * mask.getWidth() / imageWidth);
+                row[x] = mask.get(maskX, maskY) ? 0xFFFFFFFF : 0;
+            }
+
+            image.getPixelWriter().setPixels(0, y, imageWidth, 1, PixelFormat.getIntArgbInstance(), row, 0,
+                                             imageWidth);
+        }
+
+        return image;
     }
 
     /**
@@ -208,25 +246,43 @@ public class BoundingMaskView extends ImageView implements View, BoundingShapeDa
     }
 
     /**
-     * Paints or erases a line with a round brush.
+     * Converts a point to pixel coordinates of the mask's image, at the current size and position of the image.
      *
-     * @param fromX  the x-coordinate of the start (in the parent's coordinate system)
-     * @param fromY  the y-coordinate of the start
-     * @param toX    the x-coordinate of the end
-     * @param toY    the y-coordinate of the end
-     * @param radius the radius of the brush (in the parent's coordinate system)
+     * @param x the x-coordinate in the parent's coordinate system (the one of the image view's bounds)
+     * @param y the y-coordinate
+     * @return the point in image pixels, or null if the image's bounds are not known yet
+     */
+    Point2D toMaskPoint(double x, double y) {
+        final Bounds imageBounds = boundingShapeViewData.autoScaleBounds().getValue();
+        return imageBounds == null ? null : new Point2D(toMaskX(x, imageBounds), toMaskY(y, imageBounds));
+    }
+
+    /**
+     * Converts a length (e.g. the brush radius) to image pixels, at the current size of the image.
+     *
+     * @param length the length in the parent's coordinate system
+     * @return the length in image pixels
+     */
+    double toMaskLength(double length) {
+        final Bounds imageBounds = boundingShapeViewData.autoScaleBounds().getValue();
+        return imageBounds == null ? length : length * mask.getImageWidth() / imageBounds.getWidth();
+    }
+
+    /**
+     * Paints or erases a line with a round brush. The points are in image pixels (see {@link #toMaskPoint}), so
+     * that a stroke stays where it was painted when the image is zoomed or scrolled in between.
+     *
+     * @param from   the start
+     * @param to     the end
+     * @param radius the radius of the brush in image pixels
      * @param paint  true to paint, false to erase
      */
-    void paintLine(double fromX, double fromY, double toX, double toY, double radius, boolean paint) {
-        final Bounds imageBounds = boundingShapeViewData.autoScaleBounds().getValue();
-
-        if(paintedMask == null || imageBounds == null) {
+    void paintLine(Point2D from, Point2D to, double radius, boolean paint) {
+        if(paintedMask == null) {
             return;
         }
 
-        final int[] changed = paintedMask.strokeLine(toMaskX(fromX, imageBounds), toMaskY(fromY, imageBounds),
-                                                     toMaskX(toX, imageBounds), toMaskY(toY, imageBounds),
-                                                     radius * mask.getImageWidth() / imageBounds.getWidth(), paint);
+        final int[] changed = paintedMask.strokeLine(from.getX(), from.getY(), to.getX(), to.getY(), radius, paint);
 
         if(changed != null) {
             renderRegion(paintingImage, 0, 0, changed[0], changed[1], changed[2], changed[3]);
@@ -450,8 +506,9 @@ public class BoundingMaskView extends ImageView implements View, BoundingShapeDa
                 boundingShapeViewData.getToggleGroup().selectToggle(this);
 
                 if(event.getButton().equals(MouseButton.PRIMARY)) {
-                    dragStartX = event.getX();
-                    dragStartY = event.getY();
+                    dragStartInMask = pointerInMask(event.getSceneX(), event.getSceneY());
+                    dragOffsetX = 0;
+                    dragOffsetY = 0;
                 }
 
                 event.consume();
@@ -461,15 +518,12 @@ public class BoundingMaskView extends ImageView implements View, BoundingShapeDa
         // While dragging, the whole node group is shifted; the mask itself is moved on release, by whole pixels.
         setOnMouseDragged(event -> {
             if(!event.isShortcutDown() && event.getButton().equals(MouseButton.PRIMARY)) {
-                final Bounds imageBounds = boundingShapeViewData.autoScaleBounds().getValue();
+                final Point2D pointer = pointerInMask(event.getSceneX(), event.getSceneY());
 
-                if(imageBounds != null) {
-                    final double pixelWidth = imageBounds.getWidth() / mask.getImageWidth();
-                    final double pixelHeight = imageBounds.getHeight() / mask.getImageHeight();
-                    boundingShapeViewData.getNodeGroup().setTranslateX(
-                            clampMoveX((int) Math.round((event.getX() - dragStartX) / pixelWidth)) * pixelWidth);
-                    boundingShapeViewData.getNodeGroup().setTranslateY(
-                            clampMoveY((int) Math.round((event.getY() - dragStartY) / pixelHeight)) * pixelHeight);
+                if(dragStartInMask != null && pointer != null) {
+                    dragOffsetX = clampMoveX((int) Math.round(pointer.getX() - dragStartInMask.getX()));
+                    dragOffsetY = clampMoveY((int) Math.round(pointer.getY() - dragStartInMask.getY()));
+                    updateDragTranslation();
                 }
 
                 event.consume();
@@ -477,14 +531,46 @@ public class BoundingMaskView extends ImageView implements View, BoundingShapeDa
         });
 
         setOnMouseReleased(event -> {
-            final double dx = boundingShapeViewData.getNodeGroup().getTranslateX();
-            final double dy = boundingShapeViewData.getNodeGroup().getTranslateY();
+            final int dx = dragOffsetX;
+            final int dy = dragOffsetY;
+            dragStartInMask = null;
+            dragOffsetX = 0;
+            dragOffsetY = 0;
+            updateDragTranslation();
 
             if(dx != 0 || dy != 0) {
-                boundingShapeViewData.getNodeGroup().setTranslateX(0);
-                boundingShapeViewData.getNodeGroup().setTranslateY(0);
-                moveBy(dx, dy);
+                setMask(mask.translated(dx, dy));
             }
         });
+    }
+
+    /**
+     * Returns the image pixel under a point of the scene. The node group's parent is used, because the node group
+     * itself is shifted while the mask is dragged.
+     */
+    private Point2D pointerInMask(double sceneX, double sceneY) {
+        final var parent = boundingShapeViewData.getNodeGroup().getParent();
+
+        if(parent == null) {
+            return null;
+        }
+
+        final Point2D point = parent.sceneToLocal(sceneX, sceneY);
+        return toMaskPoint(point.getX(), point.getY());
+    }
+
+    /**
+     * Shifts the node group by the drag offset, at the current size of the image.
+     */
+    private void updateDragTranslation() {
+        final Bounds imageBounds = boundingShapeViewData.autoScaleBounds().getValue();
+
+        if(imageBounds == null) {
+            return;
+        }
+
+        boundingShapeViewData.getNodeGroup().setTranslateX(dragOffsetX * imageBounds.getWidth() / mask.getImageWidth());
+        boundingShapeViewData.getNodeGroup().setTranslateY(dragOffsetY * imageBounds.getHeight()
+                                                                   / mask.getImageHeight());
     }
 }
