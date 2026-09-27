@@ -192,6 +192,42 @@ jobs:
           name: boundingboxeditor-portable-linux
           path: build/jpackage/BoundingBoxEditor
 
+  Package-Linux-ARM64:
+    runs-on: ubuntu-24.04-arm
+    name: Package (Linux ARM64)
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+      - name: Jpackage
+        run: ./gradlew --info --stacktrace jpackage
+      - name: Smoke-test packaged app
+        run: ./gradlew --info --stacktrace packagedAppSmokeTest
+      # The installers' names contain the architecture (arm64, aarch64), so they don't collide with the x64 ones.
+      - name: Upload installer (deb)
+        uses: actions/upload-artifact@v7
+        with:
+          name: boundingboxeditor-installer-linux-arm64-deb
+          path: build/jpackage/*.deb
+      - name: Upload installer (rpm)
+        uses: actions/upload-artifact@v7
+        with:
+          name: boundingboxeditor-installer-linux-arm64-rpm
+          path: build/jpackage/*.rpm
+      - name: Upload image
+        uses: actions/upload-artifact@v7
+        with:
+          name: boundingboxeditor-portable-linux-arm64
+          path: build/jpackage/BoundingBoxEditor
+
   Build-and-Test-macOS:
     runs-on: macos-latest
     name: Build and Test (macOS)
@@ -251,9 +287,46 @@ jobs:
         with:
           name: boundingboxeditor-portable-macos
           path: build/jpackage/BoundingBoxEditor.app
+  Package-macOS-Intel:
+    runs-on: macos-15-intel
+    name: Package (macOS Intel)
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+      - name: Jpackage
+        run: ./gradlew --info --stacktrace jpackage
+      - name: Smoke-test packaged app
+        run: ./gradlew --info --stacktrace packagedAppSmokeTest
+      # The Apple Silicon disk image keeps the plain name (the Homebrew cask and the README link to it).
+      - name: Name disk image after the architecture
+        run: |
+          for dmg in build/jpackage/*.dmg; do
+            mv "$dmg" "${dmg%.dmg}-intel.dmg"
+          done
+          ls build/jpackage/*.dmg
+      - name: Upload installer (dmg)
+        uses: actions/upload-artifact@v7
+        with:
+          name: boundingboxeditor-installer-macos-intel-dmg
+          path: build/jpackage/*.dmg
+      - name: Upload image
+        uses: actions/upload-artifact@v7
+        with:
+          name: boundingboxeditor-portable-macos-intel
+          path: build/jpackage/BoundingBoxEditor.app
+
   Release:
     needs: [Build-and-Test-Windows, Build-and-Test-Linux, Build-and-Test-macOS, Package-Windows, Package-Linux,
-            Package-macOS]
+            Package-Linux-ARM64, Package-macOS, Package-macOS-Intel]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     name: Github Release
