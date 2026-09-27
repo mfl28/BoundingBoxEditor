@@ -110,7 +110,7 @@ public final class MaskBitmap {
                 while(position < end) {
                     final int x = (int) (position / imageHeight);
                     final int y = (int) (position % imageHeight);
-                    final int runInColumn = (int) Math.min(end - position, imageHeight - y);
+                    final int runInColumn = (int) Math.min(end - position, (long) imageHeight - y);
 
                     for(int row = y; row < y + runInColumn; ++row) {
                         mask.set(x, row, true);

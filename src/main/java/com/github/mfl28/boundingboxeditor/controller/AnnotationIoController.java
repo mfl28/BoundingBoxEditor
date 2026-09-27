@@ -230,6 +230,10 @@ class AnnotationIoController {
         }
     }
 
+    private static FileChooser.ExtensionFilter createJsonExtensionFilter() {
+        return new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON");
+    }
+
     private Optional<ImageAnnotationSaveStrategy.Type> chooseSaveFormat() {
         return dialogService.displayChoiceDialogAndGetResult(ImageAnnotationSaveStrategy.Type.PASCAL_VOC,
                 Arrays.asList(ImageAnnotationSaveStrategy.Type.values()),
@@ -243,7 +247,7 @@ class AnnotationIoController {
             case JSON -> dialogService.displayFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
                     ioMetaData.getDefaultAnnotationSavingDirectory(),
                     DEFAULT_JSON_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON"),
+                    createJsonExtensionFilter(),
                     MainView.FileChooserType.SAVE);
             case CSV -> dialogService.displayFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
                     ioMetaData.getDefaultAnnotationSavingDirectory(),
@@ -253,7 +257,7 @@ class AnnotationIoController {
             case COCO -> dialogService.displayFileChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
                     ioMetaData.getDefaultAnnotationSavingDirectory(),
                     DEFAULT_COCO_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON"),
+                    createJsonExtensionFilter(),
                     MainView.FileChooserType.SAVE);
             default -> dialogService.displayDirectoryChooserAndGetChoice(SAVE_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE,
                     stage, ioMetaData.getDefaultAnnotationSavingDirectory());
@@ -265,7 +269,7 @@ class AnnotationIoController {
             case JSON -> dialogService.displayFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
                     ioMetaData.getDefaultAnnotationLoadingDirectory(),
                     DEFAULT_JSON_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON"),
+                    createJsonExtensionFilter(),
                     MainView.FileChooserType.OPEN);
             case CSV -> dialogService.displayFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
                     ioMetaData.getDefaultAnnotationLoadingDirectory(),
@@ -275,7 +279,7 @@ class AnnotationIoController {
             case COCO -> dialogService.displayFileChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_FILE_CHOOSER_TITLE, stage,
                     ioMetaData.getDefaultAnnotationLoadingDirectory(),
                     DEFAULT_COCO_EXPORT_FILENAME,
-                    new FileChooser.ExtensionFilter("JSON files", "*.json", "*.JSON"),
+                    createJsonExtensionFilter(),
                     MainView.FileChooserType.OPEN);
             default -> dialogService.displayDirectoryChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE,
                     stage, ioMetaData.getDefaultAnnotationLoadingDirectory());

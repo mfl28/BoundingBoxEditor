@@ -391,7 +391,7 @@ public class COCOLoadStrategy implements ImageAnnotationLoadStrategy {
                 if(category.has(COLOR_KEY)) {
                     try {
                         color = Color.web(category.get(COLOR_KEY).getAsString());
-                    } catch(IllegalArgumentException | IllegalStateException | UnsupportedOperationException e) {
+                    } catch(IllegalArgumentException | IllegalStateException | UnsupportedOperationException _) {
                         // Invalid colors are replaced by random ones.
                     }
                 }

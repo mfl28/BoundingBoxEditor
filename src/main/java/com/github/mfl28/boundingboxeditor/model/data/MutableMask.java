@@ -139,7 +139,7 @@ public final class MutableMask {
         while(start < end) {
             final int word = (int) (start >>> 6);
             final int firstBit = (int) (start & 63);
-            final int nrBits = (int) Math.min(64 - firstBit, end - start);
+            final int nrBits = (int) Math.min(64L - firstBit, end - start);
             final long wordMask = (nrBits == 64 ? -1L : ((1L << nrBits) - 1)) << firstBit;
 
             if(value) {
