@@ -141,22 +141,41 @@ class MaskDrawingTests extends BoundingBoxEditorTestBase {
         timeOutClickOn(robot, "#mask-mode-button-icon", testinfo);
         robot.interact(() -> mainView.getEditorImagePane().maskBrushSizeProperty().set(10));
 
-        // A horizontal stroke away from the image's center (which zooming keeps in place), zoomed in the middle of
-        // it (with the mouse button still pressed).
+        // A horizontal stroke away from the image's center, zoomed in the middle of it (with the mouse button still
+        // pressed). Depending on the platform's scroll direction, this zooms in or out; either way the image moves
+        // under the pointer.
+        final Point2D pointer = getScreenPointFromRatios(mainView.getEditorImageView(), new Point2D(0.4, 0.75));
         moveRelativeToImageViewNoRelease(robot, new Point2D(0.3, 0.75), new Point2D(0.4, 0.75));
         robot.press(KeyCode.SHORTCUT).scroll(10).release(KeyCode.SHORTCUT);
         WaitForAsyncUtils.waitForFxEvents();
-        // Zooming keeps the point under the pointer in place, so a short horizontal move continues on the same row.
+        // The image row under the pointer now (the one the stroke continues on).
+        final var imageViewLocal = mainView.getEditorImageView().screenToLocal(pointer);
+        final double rowRatioAfterZoom =
+                imageViewLocal.getY() / mainView.getEditorImageView().getLayoutBounds().getHeight();
         robot.moveBy(40, 0).release(javafx.scene.input.MouseButton.PRIMARY);
         waitForShapeCount(1, testinfo);
 
-        // All painted pixels lie on the stroke's row (no lines from points before the zoom to other places).
+        // All painted pixels lie on the stroke's row before or after the zoom: there is no line from a point before
+        // the zoom to another place in the image.
         final var mask = ((BoundingMaskView) mainView.getCurrentBoundingShapes().getFirst()).getMask();
-        final double rowY = 0.75 * mask.getImageHeight();
-        final double tolerance = 0.05 * mask.getImageHeight();
-        verifyThat((double) mask.getMinY(), Matchers.greaterThan(rowY - tolerance), saveScreenshot(testinfo));
-        verifyThat((double) mask.getMinY() + mask.getHeight(), Matchers.lessThan(rowY + tolerance),
-                   saveScreenshot(testinfo));
+        final double rowBefore = 0.75 * mask.getImageHeight();
+        final double rowAfter = Math.clamp(rowRatioAfterZoom, 0, 1) * mask.getImageHeight();
+        final double tolerance = 0.04 * mask.getImageHeight();
+
+        for(int y = mask.getMinY(); y < mask.getMinY() + mask.getHeight(); ++y) {
+            if(Math.abs(y - rowBefore) <= tolerance || Math.abs(y - rowAfter) <= tolerance) {
+                continue;
+            }
+
+            for(int x = mask.getMinX(); x < mask.getMinX() + mask.getWidth(); ++x) {
+                final int row = y;
+                final int column = x;
+                Assertions.assertFalse(mask.get(x, y), () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Pixel " + column + ", " + row + " is off the stroke's rows (" + rowBefore + " and "
+                                + rowAfter + ")."));
+            }
+        }
+
         verifyThat((double) mask.getMinX(), Matchers.closeTo(0.3 * mask.getImageWidth(),
                                                              0.03 * mask.getImageWidth()), saveScreenshot(testinfo));
     }
@@ -205,7 +224,7 @@ class MaskDrawingTests extends BoundingBoxEditorTestBase {
         final BoundingMaskView mask = (BoundingMaskView) mainView.getCurrentBoundingShapes().getFirst();
 
         final ObjectTreeElementCell cell = robot.lookup(node -> node instanceof ObjectTreeElementCell treeCell
-                && treeCell.getItem() == mask).query();
+                && mask.equals(treeCell.getItem())).query();
         robot.moveTo(cell);
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                         () -> cell.getPopOver().isShowing()),
