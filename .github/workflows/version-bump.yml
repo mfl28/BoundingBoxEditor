@@ -56,7 +56,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Git checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: master
       - name: Determine versions

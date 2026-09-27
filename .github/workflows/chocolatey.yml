@@ -51,7 +51,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Git checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Download release installer
         shell: pwsh
         run: |
