@@ -1,0 +1,192 @@
+name: WinGet
+
+# Creates the WinGet manifests for a GitHub release and submits them to microsoft/winget-pkgs.
+# - Called by the Build workflow after a release was created (publishes).
+# - Runs on pull requests that change the manifests, validating them against the latest release without publishing.
+# - Can be started manually for any release tag; it only publishes if "publish" is checked.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag, e.g. v3.0.0
+        required: true
+        type: string
+      publish:
+        description: Submit the manifests to microsoft/winget-pkgs
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      WINGET_TOKEN:
+        required: false
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, e.g. v3.0.0
+        required: true
+        type: string
+      publish:
+        description: Submit the manifests to microsoft/winget-pkgs
+        required: false
+        type: boolean
+        default: false
+  pull_request:
+    branches:
+      - master
+    paths:
+      - winget/**
+      - .github/workflows/winget.yml
+
+permissions:
+  contents: read
+
+env:
+  PACKAGE_IDENTIFIER: mfl28.BoundingBoxEditor
+  WINGETCREATE_VERSION: 1.12.13.0
+  WINGETCREATE_SHA256: 24042bd37915805615e6cf969ac57c6439124c3fe85823327f5f3fb24bd9ffea
+
+jobs:
+  WinGet-Manifests:
+    runs-on: windows-latest
+    name: WinGet Manifests
+    env:
+      # Passed through the environment instead of being expanded into scripts.
+      INPUT_TAG: ${{ inputs.tag }}
+      PUBLISH: ${{ inputs.publish == true && github.event_name != 'pull_request' }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v7
+      - name: Download release installer
+        shell: pwsh
+        run: |
+          $tag = if ($env:INPUT_TAG) { $env:INPUT_TAG } else {
+            gh release view --repo $env:GITHUB_REPOSITORY --json tagName --jq .tagName
+          }
+
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') {
+            throw "Unexpected release tag '$tag'."
+          }
+
+          $version = $tag.Substring(1)
+          $installer = "boundingboxeditor-$version.exe"
+
+          gh release download $tag --repo $env:GITHUB_REPOSITORY --pattern $installer --dir release
+          # The checksum of the published installer, i.e. of the file WinGet will download.
+          $sha256 = (Get-FileHash "release/$installer" -Algorithm SHA256).Hash
+          $releaseDate = ([datetime](gh release view $tag --repo $env:GITHUB_REPOSITORY --json publishedAt --jq .publishedAt)).ToUniversalTime().ToString('yyyy-MM-dd')
+
+          Write-Host "Creating the manifests for $installer ($tag, released $releaseDate) with SHA-256 $sha256."
+          "VERSION=$version" >> $env:GITHUB_ENV
+          "INSTALLER=release/$installer" >> $env:GITHUB_ENV
+          "SHA256=$sha256" >> $env:GITHUB_ENV
+          "RELEASE_DATE=$releaseDate" >> $env:GITHUB_ENV
+      - name: Install and uninstall
+        shell: pwsh
+        run: |
+          # Installs silently, as WinGet does, and reads the product code from the installed app's entry.
+          function Get-UninstallEntries {
+            Get-ChildItem 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall',
+                'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall',
+                'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall' -ErrorAction SilentlyContinue |
+              Get-ItemProperty | Where-Object { $_.DisplayName -like 'BoundingBoxEditor*' }
+          }
+
+          $install = Start-Process $env:INSTALLER -ArgumentList '/quiet' -Wait -PassThru
+          if ($install.ExitCode -ne 0) {
+            throw "The installer failed with exit code $($install.ExitCode)."
+          }
+
+          $entries = @(Get-UninstallEntries)
+          if ($entries.Count -ne 1) {
+            throw "Expected one installed-apps entry, found $($entries.Count)."
+          }
+
+          $entry = $entries[0]
+          $entry | Format-List DisplayName, DisplayVersion, Publisher, InstallLocation, PSChildName, PSPath
+
+          if ($entry.DisplayVersion -ne $env:VERSION) {
+            throw "The installed version is '$($entry.DisplayVersion)', expected '$env:VERSION'."
+          }
+
+          $productCode = $entry.PSChildName
+          if ($productCode -notmatch '^\{[0-9A-Fa-f-]{36}\}$') {
+            throw "Unexpected product code '$productCode'."
+          }
+
+          $executable = Get-ChildItem $env:LOCALAPPDATA, $env:ProgramFiles -Filter 'BoundingBoxEditor.exe' -Recurse -Depth 3 -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+          if (-not $executable) {
+            throw 'BoundingBoxEditor.exe was not found after installing.'
+          }
+          Write-Host "Installed $($executable.FullName)."
+
+          $uninstall = Start-Process msiexec -ArgumentList '/x', $productCode, '/quiet' -Wait -PassThru
+          if ($uninstall.ExitCode -ne 0) {
+            throw "Uninstalling failed with exit code $($uninstall.ExitCode)."
+          }
+          if (@(Get-UninstallEntries).Count -ne 0 -or (Test-Path $executable.FullName)) {
+            throw 'The app is still installed after uninstalling.'
+          }
+
+          "PRODUCT_CODE=$productCode" >> $env:GITHUB_ENV
+      - name: Fill in manifests
+        shell: pwsh
+        run: |
+          $manifests = "manifests/$env:VERSION"
+          New-Item -ItemType Directory $manifests | Out-Null
+
+          foreach ($file in Get-ChildItem winget -Filter '*.yaml') {
+            $content = (Get-Content $file.FullName -Raw -Encoding utf8).
+              Replace('__VERSION__', $env:VERSION).
+              Replace('__SHA256__', $env:SHA256).
+              Replace('__RELEASE_DATE__', $env:RELEASE_DATE).
+              Replace('__PRODUCT_CODE__', $env:PRODUCT_CODE)
+
+            if ($content -match '__[A-Z0-9_]+__') {
+              throw "Unreplaced placeholder '$($Matches[0])' in $($file.Name)."
+            }
+
+            Set-Content (Join-Path $manifests $file.Name) $content -Encoding utf8NoBOM -NoNewline
+            Write-Host "--- $($file.Name)"
+            Write-Host $content
+          }
+
+          "MANIFESTS=$manifests" >> $env:GITHUB_ENV
+      - name: Validate manifests
+        shell: pwsh
+        run: |
+          if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+            throw 'WinGet is not available on this runner.'
+          }
+
+          winget validate --manifest $env:MANIFESTS --disable-interactivity
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload manifests
+        uses: actions/upload-artifact@v7
+        with:
+          name: winget-manifests
+          path: manifests/
+      - name: Submit to microsoft/winget-pkgs
+        if: env.PUBLISH == 'true'
+        shell: pwsh
+        env:
+          WINGET_CREATE_GITHUB_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if (-not $env:WINGET_CREATE_GITHUB_TOKEN) {
+            throw 'The WINGET_TOKEN secret is not set.'
+          }
+
+          $url = "https://github.com/microsoft/winget-create/releases/download/v$env:WINGETCREATE_VERSION/wingetcreate.exe"
+          Invoke-WebRequest $url -OutFile wingetcreate.exe
+          if ((Get-FileHash wingetcreate.exe -Algorithm SHA256).Hash -ne $env:WINGETCREATE_SHA256) {
+            throw 'Unexpected checksum of wingetcreate.exe.'
+          }
+
+          # The first version is submitted as a new package.
+          gh api "repos/microsoft/winget-pkgs/contents/manifests/m/$($env:PACKAGE_IDENTIFIER.Replace('.', '/'))" --silent 2>$null
+          $kind = if ($LASTEXITCODE -eq 0) { 'New version' } else { 'New package' }
+          $global:LASTEXITCODE = 0
+
+          .\wingetcreate.exe submit --no-open --prtitle "${kind}: $env:PACKAGE_IDENTIFIER version $env:VERSION" $env:MANIFESTS
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
