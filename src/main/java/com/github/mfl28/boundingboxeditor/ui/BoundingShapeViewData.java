@@ -25,6 +25,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.beans.binding.Bindings;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.TreeItem;
@@ -46,7 +47,8 @@ public class BoundingShapeViewData {
     private final BooleanProperty highlighted = new SimpleBooleanProperty(false);
     private final ObjectProperty<ToggleGroup> toggleGroup = new SimpleObjectProperty<>();
     private final ObservableList<String> tags = FXCollections.observableArrayList();
-    private final Shape baseShape;
+    // The node shown for the shape: a Shape for boxes and polygons, an image for masks.
+    private final Node baseShape;
     private final ObjectProperty<ObjectCategory> objectCategory = new SimpleObjectProperty<>();
     // Created when labels are first shown: a control needs the JavaFX toolkit, which shapes otherwise don't.
     private Label categoryLabel;
@@ -54,7 +56,7 @@ public class BoundingShapeViewData {
     private String previousObjectCategoryName;
     private BoundingShapeTreeItem treeItem;
 
-    public BoundingShapeViewData(Shape shape, ObjectCategory objectCategory) {
+    public BoundingShapeViewData(Node shape, ObjectCategory objectCategory) {
         this.baseShape = shape;
         nodeGroup.getChildren().add(shape);
 
@@ -84,7 +86,7 @@ public class BoundingShapeViewData {
         return highlighted;
     }
 
-    public Shape getBaseShape() {
+    public Node getBaseShape() {
         return baseShape;
     }
 
@@ -273,12 +275,15 @@ public class BoundingShapeViewData {
     private void setUpInternalListeners() {
         objectCategory.addListener((observable, oldValue, newValue) -> {
 
-            if(oldValue != null) {
-                baseShape.strokeProperty().unbind();
+            if(oldValue != null && baseShape instanceof Shape shape) {
+                shape.strokeProperty().unbind();
             }
 
             if(newValue != null) {
-                baseShape.strokeProperty().bind(newValue.colorProperty());
+                if(baseShape instanceof Shape shape) {
+                    shape.strokeProperty().bind(newValue.colorProperty());
+                }
+
                 previousObjectCategoryName = newValue.getName();
             }
         });

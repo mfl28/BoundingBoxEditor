@@ -19,7 +19,7 @@
 package com.github.mfl28.boundingboxeditor.ui;
 
 import javafx.scene.control.TreeItem;
-import javafx.scene.shape.Shape;
+import javafx.scene.Node;
 
 import java.util.Objects;
 
@@ -85,7 +85,7 @@ public abstract class BoundingShapeTreeItem extends TreeItem<Object> implements 
 
         toggleIcon.setToggledOn(toggledOn);
 
-        ((Shape) getValue()).setVisible(toggledOn);
+        ((Node) getValue()).setVisible(toggledOn);
 
         // A BoundingShapeTreeItem either does not have any children, or
         // every child is an instance of ObjectCategoryTreeItem.

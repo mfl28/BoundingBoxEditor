@@ -78,7 +78,10 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
                         KeyCombinations.hideNonSelectedBoundingShapes, KeyCombinations.simplifyPolygon,
                         KeyCombinations.saveBoundingShapeAsImage, KeyCombinations.openSettings,
                         KeyCombinations.undo, KeyCombinations.redo,
-                        KeyCombinations.copyBoundingShape, KeyCombinations.pasteBoundingShape));
+                        KeyCombinations.copyBoundingShape, KeyCombinations.pasteBoundingShape,
+                        KeyCombinations.selectMaskDrawingMode, KeyCombinations.toggleMaskEraser,
+                        KeyCombinations.startNewMask, KeyCombinations.increaseMaskBrushSize,
+                        KeyCombinations.decreaseMaskBrushSize));
         // The number keys (also on the numeric keypad) select a category.
         for(int number = 1; number <= 9; ++number) {
             expectedShortcuts.add(new KeyCodeCombination(KeyCode.valueOf("DIGIT" + number)));
@@ -96,6 +99,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         testNavigateNextKeyEvent(testinfo, true, false, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");
         testNavigatePreviousKeyEvent(testinfo, true, false, "rachel-hisko-rEM3cK8F1pk-unsplash.jpg");
         testSelectFreehandDrawingModeKeyEvent();
+        testMaskKeyEvents();
         testSelectRectangleModeKeyEvent();
         testFocusCategorySearchFieldKeyEvent(robot);
         testFocusFileSearchKeyEvent(robot);
@@ -413,6 +417,46 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
 
         verifyThat(controller.getView().getEditor().getEditorToolBar().getFreehandModeButton().isSelected(), Matchers.is(true));
+    }
+
+    private void testMaskKeyEvents() {
+        final var imagePane = controller.getView().getEditorImagePane();
+        final double brushSize = imagePane.maskBrushSizeProperty().get();
+
+        // Outside the mask mode, the mask keys do nothing.
+        releaseKeys(KeyCombinations.toggleMaskEraser, KeyCombinations.increaseMaskBrushSize);
+        verifyThat(imagePane.maskEraserProperty().get(), Matchers.is(false));
+        verifyThat(imagePane.maskBrushSizeProperty().get(), Matchers.equalTo(brushSize));
+
+        releaseKeys(KeyCombinations.selectMaskDrawingMode);
+        verifyThat(controller.getView().getEditor().getEditorToolBar().getMaskModeButton().isSelected(),
+                   Matchers.is(true));
+        verifyThat(imagePane.getDrawingMode(), Matchers.equalTo(EditorImagePaneView.DrawingMode.MASK));
+
+        releaseKeys(KeyCombinations.toggleMaskEraser);
+        verifyThat(imagePane.maskEraserProperty().get(), Matchers.is(true));
+        verifyThat(controller.getView().getEditor().getEditorToolBar().getMaskEraserButton().isSelected(),
+                   Matchers.is(true));
+        releaseKeys(KeyCombinations.toggleMaskEraser);
+        verifyThat(imagePane.maskEraserProperty().get(), Matchers.is(false));
+
+        releaseKeys(KeyCombinations.increaseMaskBrushSize);
+        verifyThat(imagePane.maskBrushSizeProperty().get(), Matchers.greaterThan(brushSize));
+        releaseKeys(KeyCombinations.decreaseMaskBrushSize, KeyCombinations.decreaseMaskBrushSize);
+        verifyThat(imagePane.maskBrushSizeProperty().get(), Matchers.lessThan(brushSize));
+
+        // Back to the default mode for the other checks.
+        releaseKeys(KeyCombinations.selectRectangleDrawingMode);
+        verifyThat(imagePane.getDrawingMode(), Matchers.equalTo(EditorImagePaneView.DrawingMode.BOX));
+    }
+
+    private void releaseKeys(KeyCombination... keyCombinations) {
+        for(KeyCombination keyCombination : keyCombinations) {
+            final KeyEvent event = buildKeyEventFromCombination((KeyCodeCombination) keyCombination,
+                                                                KeyEvent.KEY_RELEASED);
+            Platform.runLater(() -> controller.onRegisterSceneKeyReleased(event));
+            WaitForAsyncUtils.waitForFxEvents();
+        }
     }
 
     private void testNavigatePreviousKeyEvent(TestInfo testinfo, boolean keyReleased, boolean ctrlReleased, String expectedTargetImageName) {

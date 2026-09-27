@@ -103,6 +103,21 @@ public class EditorView extends BorderPane implements View {
             }
         });
 
+        editorToolBarView.getMaskModeButton().selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if(Boolean.TRUE.equals(newValue)) {
+                editorImagePaneView.setDrawingMode(EditorImagePaneView.DrawingMode.MASK);
+            }
+        });
+
+        editorImagePaneView.maskEraserProperty().bindBidirectional(editorToolBarView.getMaskEraserButton()
+                                                                                     .selectedProperty());
+        editorImagePaneView.maskBrushSizeProperty().bindBidirectional(editorToolBarView.getMaskBrushSizeSlider()
+                                                                                       .valueProperty());
+        editorToolBarView.getNewMaskButton().setOnAction(event -> editorImagePaneView.requestNewMask());
+        // Bound to the mode rather than the button: clicking the selected mode button deselects it, but the mode stays.
+        editorToolBarView.getMaskToolBox().visibleProperty().bind(
+                editorImagePaneView.drawingModeProperty().isEqualTo(EditorImagePaneView.DrawingMode.MASK));
+
         setOnMousePressed(event -> requestFocus());
     }
 }

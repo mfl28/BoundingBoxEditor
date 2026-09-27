@@ -39,7 +39,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -63,6 +66,12 @@ public class EditorImagePaneView extends ScrollPane implements View {
     // Arrow keys move the selected shape by this many image pixels (with Shift by the larger distance).
     private static final double NUDGE_DISTANCE = 1;
     private static final double LARGE_NUDGE_DISTANCE = 10;
+    // The mask brush's diameter on the screen, in pixels; [ and ] change it by this factor.
+    static final double DEFAULT_MASK_BRUSH_SIZE = 20;
+    static final double MINIMUM_MASK_BRUSH_SIZE = 2;
+    static final double MAXIMUM_MASK_BRUSH_SIZE = 200;
+    private static final double MASK_BRUSH_SIZE_STEP_FACTOR = 1.25;
+    private static final String MASK_BRUSH_CURSOR_ID = "mask-brush-cursor";
 
     private final ImageView imageView = new ImageView();
     private final SimpleBooleanProperty maximizeImageView = new SimpleBooleanProperty(true);
@@ -80,6 +89,31 @@ public class EditorImagePaneView extends ScrollPane implements View {
     private final StackPane contentPane = new StackPane(imageView, boundingShapeSceneGroup,
             imageLoadingProgressIndicator);
     private final ObjectProperty<DrawingMode> drawingMode = new SimpleObjectProperty<>(DrawingMode.BOX);
+    private final DoubleProperty maskBrushSize = new SimpleDoubleProperty(DEFAULT_MASK_BRUSH_SIZE);
+    private final BooleanProperty maskEraser = new SimpleBooleanProperty(false);
+    // Shows the brush's size under the pointer in the mask drawing mode.
+    private final Circle maskBrushCursor = new Circle();
+    // Where the pointer is in the scene: when the image moves (zooming, scrolling), the circle is placed there again.
+    private Point2D maskBrushCursorScenePosition = null;
+    private boolean newMaskRequested = false;
+    private final BoundingMaskDrawer.Settings maskBrushSettings = new BoundingMaskDrawer.Settings() {
+        @Override
+        public double getBrushSize() {
+            return maskBrushSize.get();
+        }
+
+        @Override
+        public boolean isErasing() {
+            return maskEraser.get();
+        }
+
+        @Override
+        public boolean consumeNewMaskRequest() {
+            final boolean requested = newMaskRequested;
+            newMaskRequested = false;
+            return requested;
+        }
+    };
     private String currentImageUrl = null;
     // The size of the image file (oriented as shown): large images are loaded scaled down.
     private Dimension2D currentImageFileSize = null;
@@ -129,6 +163,51 @@ public class EditorImagePaneView extends ScrollPane implements View {
         return showCategoryLabels;
     }
 
+    /**
+     * Returns the property of the mask brush's diameter on the screen, in pixels.
+     *
+     * @return the property
+     */
+    public DoubleProperty maskBrushSizeProperty() {
+        return maskBrushSize;
+    }
+
+    /**
+     * Returns the property that switches the mask brush to erasing.
+     *
+     * @return the property
+     */
+    public BooleanProperty maskEraserProperty() {
+        return maskEraser;
+    }
+
+    /**
+     * Makes the next mask stroke start a new mask (instead of painting into the selected mask or the one under the
+     * pointer), and deselects the selected shape.
+     */
+    public void requestNewMask() {
+        newMaskRequested = true;
+        boundingShapeSelectionGroup.selectToggle(null);
+    }
+
+    /**
+     * Makes the mask brush larger or smaller by one step.
+     *
+     * @param larger true to make it larger
+     */
+    public void changeMaskBrushSize(boolean larger) {
+        final double factor = larger ? MASK_BRUSH_SIZE_STEP_FACTOR : 1 / MASK_BRUSH_SIZE_STEP_FACTOR;
+        maskBrushSize.set(Math.clamp(maskBrushSize.get() * factor, MINIMUM_MASK_BRUSH_SIZE, MAXIMUM_MASK_BRUSH_SIZE));
+    }
+
+    public DrawingMode getDrawingMode() {
+        return drawingMode.get();
+    }
+
+    ReadOnlyObjectProperty<DrawingMode> drawingModeProperty() {
+        return drawingMode;
+    }
+
     public void initializeBoundingShapeDrawing(MouseEvent event) {
         if (isCategorySelected()) {
             boundingShapeDrawer = switch (drawingMode.get()) {
@@ -137,6 +216,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 case FREEHAND -> new BoundingFreeHandShapeDrawer(imageView, boundingShapeSelectionGroup,
                         currentBoundingShapes, autoSimplifyPolygons,
                         simplifyRelativeDistanceTolerance);
+                case MASK -> new BoundingMaskDrawer(imageView, boundingShapeSelectionGroup, currentBoundingShapes,
+                        getCurrentImageFileSize(), maskBrushSettings);
                 default -> null;
             };
 
@@ -156,7 +237,7 @@ public class EditorImagePaneView extends ScrollPane implements View {
     public void finalizeBoundingShapeDrawing() {
         if (boundingShapeDrawer != null && boundingShapeDrawer.isDrawingInProgress()) {
             boundingShapeDrawer.finalizeShape();
-            boundingShapeSceneGroup.setMouseTransparent(false);
+            updateShapesMouseTransparency();
         }
     }
 
@@ -172,8 +253,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
         final Optional<BoundingShapeViewable> cancelledShape = boundingShapeDrawer.undoLastStep();
 
-        if(cancelledShape.isPresent()) {
-            boundingShapeSceneGroup.setMouseTransparent(false);
+        if(cancelledShape.isPresent() || !isDrawingInProgress()) {
+            updateShapesMouseTransparency();
         }
 
         return cancelledShape;
@@ -221,8 +302,13 @@ public class EditorImagePaneView extends ScrollPane implements View {
                 viewable.getViewData().getBaseShape().setMouseTransparent(value);
             }
         });
-        imageView.setCursor(value ? Cursor.OPEN_HAND : Cursor.DEFAULT);
+        final Cursor drawingCursor = drawingMode.get() == DrawingMode.MASK ? Cursor.CROSSHAIR : Cursor.DEFAULT;
+        imageView.setCursor(value ? Cursor.OPEN_HAND : drawingCursor);
         setPannable(value);
+
+        if(value) {
+            maskBrushCursor.setVisible(false);
+        }
     }
 
     /**
@@ -421,8 +507,19 @@ public class EditorImagePaneView extends ScrollPane implements View {
 
         setUpImageViewListeners();
         setUpContentPaneListeners();
+        setUpMaskBrushCursor();
+        drawingMode.addListener((observable, oldValue, newValue) -> {
+            updateShapesMouseTransparency();
+            imageView.setCursor(newValue == DrawingMode.MASK ? Cursor.CROSSHAIR : Cursor.DEFAULT);
+        });
         // A filter, because the scroll pane itself scrolls with the arrow keys.
         addEventFilter(KeyEvent.KEY_PRESSED, this::handleNudgeKeyPressed);
+        // Zooming or scrolling moves the image under the pointer, so a mask stroke goes on from the next point.
+        addEventFilter(ScrollEvent.ANY, event -> {
+            if(boundingShapeDrawer instanceof BoundingMaskDrawer maskDrawer && maskDrawer.isDrawingInProgress()) {
+                maskDrawer.pauseStroke();
+            }
+        });
     }
 
     private void handleNudgeKeyPressed(KeyEvent event) {
@@ -512,6 +609,57 @@ public class EditorImagePaneView extends ScrollPane implements View {
         });
     }
 
+    /**
+     * In the mask drawing mode, strokes over existing shapes paint (instead of selecting the shape), so the shapes
+     * don't react to the mouse there.
+     */
+    private void updateShapesMouseTransparency() {
+        boundingShapeSceneGroup.setMouseTransparent(drawingMode.get() == DrawingMode.MASK || isDrawingInProgress());
+    }
+
+    private void setUpMaskBrushCursor() {
+        maskBrushCursor.setId(MASK_BRUSH_CURSOR_ID);
+        maskBrushCursor.setManaged(false);
+        maskBrushCursor.setMouseTransparent(true);
+        maskBrushCursor.setFill(Color.TRANSPARENT);
+        maskBrushCursor.setVisible(false);
+        maskBrushCursor.setViewOrder(-1);
+        maskBrushCursor.radiusProperty().bind(maskBrushSize.divide(2));
+        boundingShapeSceneGroup.getChildren().add(maskBrushCursor);
+
+        imageView.addEventHandler(MouseEvent.MOUSE_MOVED, this::updateMaskBrushCursor);
+        imageView.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::updateMaskBrushCursor);
+        imageView.addEventHandler(MouseEvent.MOUSE_EXITED, event -> maskBrushCursor.setVisible(false));
+        drawingMode.addListener((observable, oldValue, newValue) -> maskBrushCursor.setVisible(false));
+        imageView.localToSceneTransformProperty().addListener((observable, oldValue, newValue) ->
+                                                                     placeMaskBrushCursor());
+    }
+
+    private void updateMaskBrushCursor(MouseEvent event) {
+        // Hidden while zooming or panning (with the shortcut key).
+        final boolean shown = drawingMode.get() == DrawingMode.MASK && !event.isShortcutDown();
+        maskBrushCursor.setVisible(shown);
+        maskBrushCursorScenePosition = new Point2D(event.getSceneX(), event.getSceneY());
+        placeMaskBrushCursor();
+    }
+
+    private void placeMaskBrushCursor() {
+        if(maskBrushCursorScenePosition != null && maskBrushCursor.isVisible()) {
+            final Point2D center = boundingShapeSceneGroup.sceneToLocal(maskBrushCursorScenePosition);
+            maskBrushCursor.setCenterX(center.getX());
+            maskBrushCursor.setCenterY(center.getY());
+        }
+    }
+
+    private Dimension2D getCurrentImageFileSize() {
+        if(currentImageFileSize != null) {
+            return currentImageFileSize;
+        }
+
+        final Image image = imageView.getImage();
+        return new Dimension2D(image.getWidth(), image.getHeight());
+    }
+
     private boolean isMaximizeImageView() {
         return maximizeImageView.get();
     }
@@ -541,5 +689,5 @@ public class EditorImagePaneView extends ScrollPane implements View {
         }
     }
 
-    public enum DrawingMode {BOX, POLYGON, FREEHAND, NONE}
+    public enum DrawingMode {BOX, POLYGON, FREEHAND, MASK, NONE}
 }

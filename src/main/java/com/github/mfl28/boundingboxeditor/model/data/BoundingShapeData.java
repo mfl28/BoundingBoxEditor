@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 /**
  * Base class of data-components of a bounding-shape view objects.
  */
-public abstract sealed class BoundingShapeData permits BoundingBoxData, BoundingPolygonData {
+public abstract sealed class BoundingShapeData permits BoundingBoxData, BoundingPolygonData, BoundingMaskData {
     private final ObjectCategory category;
     private final List<String> tags;
     private List<BoundingShapeData> parts = Collections.emptyList();

@@ -651,14 +651,21 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
             imageView.setFitHeight(scaleHeight);
         }
 
-        if(boundingShapeViewable instanceof BoundingPolygonView boundingPolygonView) {
-            final List<Double> points = boundingPolygonView
-                    .getMinMaxScaledPoints(scaleWidth, scaleHeight);
-
-            final Polygon polygon = new Polygon();
-            polygon.getPoints().setAll(points);
-
-            imageView.setClip(polygon);
-        }
+        imageView.setClip(switch(boundingShapeViewable) {
+            case BoundingPolygonView boundingPolygonView -> {
+                final Polygon polygon = new Polygon();
+                polygon.getPoints().setAll(boundingPolygonView.getMinMaxScaledPoints(scaleWidth, scaleHeight));
+                yield polygon;
+            }
+            case BoundingMaskView boundingMaskView -> {
+                // Only the mask's pixels are shown (a clip uses the opacity of its node).
+                final ImageView clip = new ImageView(boundingMaskView.createClipImage(scaleWidth, scaleHeight));
+                clip.setFitWidth(scaleWidth);
+                clip.setFitHeight(scaleHeight);
+                yield clip;
+            }
+            // The image view is reused for other shapes.
+            default -> null;
+        });
     }
 }

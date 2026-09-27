@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.model.data.BoundingBoxData;
+import com.github.mfl28.boundingboxeditor.model.data.BoundingMaskData;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingPolygonData;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 
@@ -155,6 +156,9 @@ class ShapeClipboardController {
                     box.getYMinRelative(), box.getXMaxRelative(), box.getYMaxRelative(), new ArrayList<>(box.getTags()));
             case BoundingPolygonData polygon -> new BoundingPolygonData(polygon.getCategory(),
                     new ArrayList<>(polygon.getRelativePointsInImage()), new ArrayList<>(polygon.getTags()));
+            // A mask is immutable, so the copy can share it.
+            case BoundingMaskData mask -> new BoundingMaskData(mask.getCategory(), mask.getMask(),
+                    new ArrayList<>(mask.getTags()));
         };
 
         copy.setParts(shape.getParts().stream().map(ShapeClipboardController::copyOf).toList());

@@ -60,7 +60,9 @@ class MenuBarView extends MenuBar implements View {
             ImageAnnotationSaveStrategy.Type.PASCAL_VOC, "Pascal-VOC",
             ImageAnnotationSaveStrategy.Type.YOLO, "YOLO",
             ImageAnnotationSaveStrategy.Type.JSON, "JSON",
-            ImageAnnotationSaveStrategy.Type.CSV, "CSV");
+            ImageAnnotationSaveStrategy.Type.CSV, "CSV",
+            ImageAnnotationSaveStrategy.Type.COCO, "COCO",
+            ImageAnnotationSaveStrategy.Type.PNG_MASKS, "PNG masks");
     private static final String MAXIMIZE_IMAGES_TEXT = "_Maximize Images";
     private static final String SHOW_IMAGE_FILE_EXPLORER_TEXT = "_Show Images Panel";
     private static final String EXIT_TEXT = "E_xit";
@@ -78,6 +80,14 @@ class MenuBarView extends MenuBar implements View {
     private static final String CSV_FORMAT_EXPORT_TEXT = "CSV format...";
     private static final String JSON_FORMAT_IMPORT_TEXT = "JSON format...";
     private static final String CSV_FORMAT_IMPORT_TEXT = "CSV format...";
+    private static final String COCO_FORMAT_EXPORT_TEXT = "COCO format...";
+    private static final String COCO_FORMAT_IMPORT_TEXT = "COCO format...";
+    private static final String PNG_MASKS_EXPORT_TEXT = "PNG masks...";
+    private static final String PNG_MASKS_IMPORT_TEXT = "PNG masks...";
+    private static final String COCO_EXPORT_MENU_ITEM_ID = "coco-export-menu-item";
+    private static final String PNG_MASKS_EXPORT_MENU_ITEM_ID = "png-masks-export-menu-item";
+    private static final String COCO_IMPORT_MENU_ITEM_ID = "coco-import-menu-item";
+    private static final String PNG_MASKS_IMPORT_MENU_ITEM_ID = "png-masks-import-menu-item";
     private static final String FILE_MENU_ID = "file-menu";
     private static final String FILE_OPEN_FOLDER_MENU_ITEM_ID = "file-open-folder-menu-item";
     private static final String FILE_EXPORT_ANNOTATIONS_MENU_ID = "file-export-annotations-menu";
@@ -116,6 +126,8 @@ class MenuBarView extends MenuBar implements View {
     private final MenuItem yoloExportMenuItem = new MenuItem(YOLO_FORMAT_EXPORT_TEXT);
     private final MenuItem jsonExportMenuItem = new MenuItem(JSON_FORMAT_EXPORT_TEXT);
     private final MenuItem csvExportMenuItem = new MenuItem(CSV_FORMAT_EXPORT_TEXT);
+    private final MenuItem cocoExportMenuItem = new MenuItem(COCO_FORMAT_EXPORT_TEXT);
+    private final MenuItem pngMasksExportMenuItem = new MenuItem(PNG_MASKS_EXPORT_TEXT);
     private final MenuItem settingsMenuItem = new MenuItem(SETTINGS_TEXT, createIconRegion(SETTINGS_ICON_ID));
 
     private final Menu fileImportAnnotationsMenu =
@@ -124,6 +136,8 @@ class MenuBarView extends MenuBar implements View {
     private final MenuItem yoloRImportMenuItem = new MenuItem(YOLO_FORMAT_IMPORT_TEXT);
     private final MenuItem jsonImportMenuItem = new MenuItem(JSON_FORMAT_IMPORT_TEXT);
     private final MenuItem csvImportMenuItem = new MenuItem(CSV_FORMAT_IMPORT_TEXT);
+    private final MenuItem cocoImportMenuItem = new MenuItem(COCO_FORMAT_IMPORT_TEXT);
+    private final MenuItem pngMasksImportMenuItem = new MenuItem(PNG_MASKS_IMPORT_TEXT);
     private final MenuItem fileExitItem = new MenuItem(EXIT_TEXT, createIconRegion(EXIT_ICON_ID));
     private final MenuItem undoMenuItem = new MenuItem(UNDO_TEXT);
     private final MenuItem redoMenuItem = new MenuItem(REDO_TEXT);
@@ -145,23 +159,31 @@ class MenuBarView extends MenuBar implements View {
                 pvocExportMenuItem,
                 yoloExportMenuItem,
                 jsonExportMenuItem,
-                csvExportMenuItem);
+                csvExportMenuItem,
+                cocoExportMenuItem,
+                pngMasksExportMenuItem);
 
         pvocExportMenuItem.setId(PVOC_EXPORT_MENU_ITEM_ID);
         yoloExportMenuItem.setId(YOLO_EXPORT_MENU_ITEM_ID);
         jsonExportMenuItem.setId(JSON_EXPORT_MENU_ITEM_ID);
         csvExportMenuItem.setId(CSV_EXPORT_MENU_ITEM_ID);
+        cocoExportMenuItem.setId(COCO_EXPORT_MENU_ITEM_ID);
+        pngMasksExportMenuItem.setId(PNG_MASKS_EXPORT_MENU_ITEM_ID);
 
         fileImportAnnotationsMenu.getItems().addAll(
                 pvocImportMenuItem,
                 yoloRImportMenuItem,
                 jsonImportMenuItem,
-                csvImportMenuItem);
+                csvImportMenuItem,
+                cocoImportMenuItem,
+                pngMasksImportMenuItem);
 
         pvocImportMenuItem.setId(PVOC_IMPORT_MENU_ITEM_ID);
         yoloRImportMenuItem.setId(YOLO_IMPORT_MENU_ITEM_ID);
         jsonImportMenuItem.setId(JSON_IMPORT_MENU_ITEM_ID);
         csvImportMenuItem.setId(CSV_IMPORT_MENU_ITEM_ID);
+        cocoImportMenuItem.setId(COCO_IMPORT_MENU_ITEM_ID);
+        pngMasksImportMenuItem.setId(PNG_MASKS_IMPORT_MENU_ITEM_ID);
 
         exportInLastFormatMenuItem.textProperty().bind(Bindings.createStringBinding(
                 () -> String.format("Export as %s...", EXPORT_FORMAT_NAMES.get(lastExportFormat.get())),
@@ -189,6 +211,8 @@ class MenuBarView extends MenuBar implements View {
         yoloExportMenuItem.setOnAction(action -> exportAnnotations(ImageAnnotationSaveStrategy.Type.YOLO));
         jsonExportMenuItem.setOnAction(action -> exportAnnotations(ImageAnnotationSaveStrategy.Type.JSON));
         csvExportMenuItem.setOnAction(action -> exportAnnotations(ImageAnnotationSaveStrategy.Type.CSV));
+        cocoExportMenuItem.setOnAction(action -> exportAnnotations(ImageAnnotationSaveStrategy.Type.COCO));
+        pngMasksExportMenuItem.setOnAction(action -> exportAnnotations(ImageAnnotationSaveStrategy.Type.PNG_MASKS));
         exportInLastFormatMenuItem.setOnAction(action -> exportAnnotations(lastExportFormat.get()));
         pvocImportMenuItem.setOnAction(action ->
                 controller.onRegisterImportAnnotationsAction(
@@ -201,6 +225,10 @@ class MenuBarView extends MenuBar implements View {
                         ImageAnnotationLoadStrategy.Type.JSON));
         csvImportMenuItem.setOnAction(action ->
                 controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.CSV));
+        cocoImportMenuItem.setOnAction(action ->
+                controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.COCO));
+        pngMasksImportMenuItem.setOnAction(action ->
+                controller.onRegisterImportAnnotationsAction(ImageAnnotationLoadStrategy.Type.PNG_MASKS));
         fileExitItem.setOnAction(action -> controller.onRegisterExitAction());
         settingsMenuItem.setOnAction(action -> controller.onRegisterSettingsAction());
         undoMenuItem.setOnAction(action -> controller.onRegisterUndoAction());

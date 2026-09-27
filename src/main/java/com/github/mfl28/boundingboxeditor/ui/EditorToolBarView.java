@@ -81,6 +81,17 @@ public class EditorToolBarView extends ToolBar implements View {
     private static final String FREEHAND_DRAWING_MODE = "Select Freehand Drawing-Mode";
     private static final String FREEHAND_DRAWING_MODE_TOOLTIP_TEXT = FREEHAND_DRAWING_MODE;
     private static final String DRAWING_MODE_TOOLBOX_ID = "drawing-mode-toolbox";
+    private static final String MASK_MODE_BUTTON_ICON_ID = "mask-mode-button-icon";
+    private static final String MASK_DRAWING_MODE_TOOLTIP_TEXT = "Select Mask Drawing-Mode";
+    private static final String MASK_ERASER_BUTTON_ICON_ID = "mask-eraser-button-icon";
+    private static final String MASK_ERASER_BUTTON_ID = "mask-eraser-button";
+    private static final String MASK_ERASER_TOOLTIP_TEXT = "Eraser (or hold Shift while painting)";
+    private static final String NEW_MASK_BUTTON_ICON_ID = "new-mask-button-icon";
+    private static final String NEW_MASK_BUTTON_ID = "new-mask-button";
+    private static final String NEW_MASK_TOOLTIP_TEXT = "Start a New Mask";
+    private static final String MASK_BRUSH_SIZE_SLIDER_ID = "mask-brush-size-slider";
+    private static final String MASK_BRUSH_SIZE_TOOLTIP_TEXT = "Brush Size ([ and ] to change)";
+    private static final String MASK_TOOL_BOX_ID = "mask-tool-box";
 
     private final IconButton showBoundingShapesButton =
             new IconButton(SHOW_BOUNDING_BOXES_ICON_BUTTON_ID, IconButton.IconType.BACKGROUND);
@@ -92,7 +103,14 @@ public class EditorToolBarView extends ToolBar implements View {
             createDrawModeButton("", POLYGON_MODE_BUTTON_ICON_ID);
     private final ToggleButton freehandModeButton =
             createDrawModeButton("", FREEHAND_MODE_BUTTON_ICON_ID);
+    private final ToggleButton maskModeButton =
+            createDrawModeButton("", MASK_MODE_BUTTON_ICON_ID);
     private final ToggleGroup modeToggleGroup = new ToggleGroup();
+    private final ToggleButton maskEraserButton = createDrawModeButton("", MASK_ERASER_BUTTON_ICON_ID);
+    private final Button newMaskButton = createIconButton(NEW_MASK_BUTTON_ICON_ID);
+    private final Slider maskBrushSizeSlider = new Slider(EditorImagePaneView.MINIMUM_MASK_BRUSH_SIZE,
+            EditorImagePaneView.MAXIMUM_MASK_BRUSH_SIZE, EditorImagePaneView.DEFAULT_MASK_BRUSH_SIZE);
+    private final HBox maskToolBox = new HBox(maskEraserButton, newMaskButton, maskBrushSizeSlider);
 
     private final IconButton resetSizeAndCenterImageButton =
             new IconButton(RESET_IMAGE_SIZE_ICON_BUTTON_ID, IconButton.IconType.BACKGROUND);
@@ -112,7 +130,8 @@ public class EditorToolBarView extends ToolBar implements View {
     private final Label saturationLabel = new Label();
     private final Button resetAllButton = new Button(RESET_ALL_BUTTON_TEXT);
 
-    private final HBox drawingModeToolBox = new HBox(rectangleModeButton, polygonModeButton, freehandModeButton);
+    private final HBox drawingModeToolBox = new HBox(rectangleModeButton, polygonModeButton, freehandModeButton,
+            maskModeButton);
     private final HBox symmetryBox = new HBox();
     private final HBox boundingShapeToolBox = new HBox(hideBoundingShapesButton, showBoundingShapesButton);
     private final HBox imageSettingsToolBox = new HBox(resetSizeAndCenterImageButton, createImageSettingsButton());
@@ -126,6 +145,7 @@ public class EditorToolBarView extends ToolBar implements View {
         getItems().addAll(
                 boundingShapeToolBox,
                 drawingModeToolBox,
+                maskToolBox,
                 UiUtils.createHSpacer(),
                 previousButton,
                 indexLabel,
@@ -170,6 +190,26 @@ public class EditorToolBarView extends ToolBar implements View {
 
     public ToggleButton getFreehandModeButton() {
         return freehandModeButton;
+    }
+
+    public ToggleButton getMaskModeButton() {
+        return maskModeButton;
+    }
+
+    public ToggleButton getMaskEraserButton() {
+        return maskEraserButton;
+    }
+
+    public Button getNewMaskButton() {
+        return newMaskButton;
+    }
+
+    public Slider getMaskBrushSizeSlider() {
+        return maskBrushSizeSlider;
+    }
+
+    HBox getMaskToolBox() {
+        return maskToolBox;
     }
 
     public Button getPredictButton() {
@@ -307,6 +347,21 @@ public class EditorToolBarView extends ToolBar implements View {
         return button;
     }
 
+    private Button createIconButton(String iconCssId) {
+        final Button button = new Button();
+        final Region icon = new Region();
+        icon.setId(iconCssId);
+        icon.setPickOnBounds(true);
+        icon.backgroundProperty().bind(Bindings.createObjectBinding(() ->
+                        new Background(new BackgroundFill(button.getTextFill(), null, null)),
+                button.textFillProperty()));
+        button.setGraphic(icon);
+        button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        button.setFocusTraversable(false);
+        button.setPickOnBounds(true);
+        return button;
+    }
+
     private void setUpButtonsAndLabels() {
         nextButton.setId(NEXT_BUTTON_ID);
         nextButton.setTooltip(UiUtils.createTooltip(NEXT_BUTTON_TOOLTIP_TEXT,
@@ -338,6 +393,7 @@ public class EditorToolBarView extends ToolBar implements View {
         rectangleModeButton.setToggleGroup(modeToggleGroup);
         polygonModeButton.setToggleGroup(modeToggleGroup);
         freehandModeButton.setToggleGroup(modeToggleGroup);
+        maskModeButton.setToggleGroup(modeToggleGroup);
 
         rectangleModeButton.setTooltip(UiUtils.createTooltip(RECTANGLE_DRAWING_MODE_TOOLTIP_TEXT,
                 KeyCombinations.selectRectangleDrawingMode));
@@ -346,6 +402,16 @@ public class EditorToolBarView extends ToolBar implements View {
 
         freehandModeButton.setTooltip(UiUtils.createTooltip(FREEHAND_DRAWING_MODE_TOOLTIP_TEXT,
                 KeyCombinations.selectFreehandDrawingMode));
+        maskModeButton.setTooltip(UiUtils.createTooltip(MASK_DRAWING_MODE_TOOLTIP_TEXT,
+                KeyCombinations.selectMaskDrawingMode));
+        maskEraserButton.setId(MASK_ERASER_BUTTON_ID);
+        maskEraserButton.setTooltip(UiUtils.createTooltip(MASK_ERASER_TOOLTIP_TEXT, KeyCombinations.toggleMaskEraser));
+        newMaskButton.setId(NEW_MASK_BUTTON_ID);
+        newMaskButton.setTooltip(UiUtils.createTooltip(NEW_MASK_TOOLTIP_TEXT, KeyCombinations.startNewMask));
+        maskBrushSizeSlider.setId(MASK_BRUSH_SIZE_SLIDER_ID);
+        maskBrushSizeSlider.setFocusTraversable(false);
+        maskBrushSizeSlider.setTooltip(UiUtils.createTooltip(MASK_BRUSH_SIZE_TOOLTIP_TEXT));
+        maskToolBox.setId(MASK_TOOL_BOX_ID);
 
         modeToggleGroup.selectToggle(rectangleModeButton);
 
@@ -386,7 +452,13 @@ public class EditorToolBarView extends ToolBar implements View {
         imageSettingsToolBox.prefWidthProperty().bind(Bindings.max(boundingShapeToolBox.widthProperty(),
                 imageSettingsToolBox.widthProperty()));
 
+        // The mask tools are only shown in the mask drawing mode (see EditorView).
+        maskToolBox.managedProperty().bind(maskToolBox.visibleProperty());
+
         symmetryBox.prefWidthProperty()
-                .bind(drawingModeToolBox.widthProperty().subtract(predictButton.widthProperty()));
+                .bind(drawingModeToolBox.widthProperty()
+                        .add(Bindings.when(maskToolBox.visibleProperty()).then(maskToolBox.widthProperty())
+                                     .otherwise(0))
+                        .subtract(predictButton.widthProperty()));
     }
 }

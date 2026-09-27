@@ -18,7 +18,16 @@
  */
 package smoketest;
 
+import com.github.mfl28.boundingboxeditor.model.data.BoundingMaskData;
+import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
+import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotationData;
+import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
+import com.github.mfl28.boundingboxeditor.model.data.MaskBitmap;
+import com.github.mfl28.boundingboxeditor.model.data.MutableMask;
+import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
+import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
+import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaver;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictionEntry;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
@@ -27,6 +36,7 @@ import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationImport
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.scene.paint.Color;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import java.io.ByteArrayInputStream;
@@ -40,6 +50,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -71,6 +82,11 @@ public final class PackagedAppSmokeTest {
                 filename,width,height,class,xmin,ymin,xmax,ymax
                 a.jpg,100,100,cat,10,10,40,40
                 """);
+        // COCO (Gson) and PNG masks (ImageIO).
+        checkMaskRoundTrip(ImageAnnotationSaveStrategy.Type.COCO, ImageAnnotationLoadStrategy.Type.COCO,
+                           "instances.json");
+        checkMaskRoundTrip(ImageAnnotationSaveStrategy.Type.PNG_MASKS, ImageAnnotationLoadStrategy.Type.PNG_MASKS,
+                           "masks");
         System.out.println("Packaged app smoke test passed.");
     }
 
@@ -130,6 +146,46 @@ public final class PackagedAppSmokeTest {
     /**
      * Answers one HTTP request with the prediction JSON and records the request (line, headers and body).
      */
+    private static void checkMaskRoundTrip(ImageAnnotationSaveStrategy.Type saveType,
+                                           ImageAnnotationLoadStrategy.Type loadType, String destinationName)
+            throws Exception {
+        final Path directory = Files.createTempDirectory("smoketest");
+
+        try {
+            final MutableMask mutableMask = new MutableMask(20, 10);
+            mutableMask.fillCircle(8, 5, 3, true);
+            final MaskBitmap mask = mutableMask.toBitmap();
+            final ObjectCategory category = new ObjectCategory("cat", Color.RED);
+            final ImageAnnotationData data = new ImageAnnotationData(
+                    List.of(new ImageAnnotation(new ImageMetaData("a.jpg", "folder", "file:/folder/a.jpg", 20, 10, 3),
+                                                List.of(new BoundingMaskData(category, mask, List.of())))),
+                    Map.of("cat", 1), Map.of("cat", category));
+            final Path destination = directory.resolve(destinationName);
+
+            final var exportResult = new ImageAnnotationSaver(saveType).save(data, destination);
+            check(exportResult.getErrorTableEntries().isEmpty(),
+                  saveType + " export failed: " + exportResult.getErrorTableEntries());
+
+            final ImageAnnotationImportResult importResult = ImageAnnotationLoadStrategy.createStrategy(loadType)
+                    .load(destination, Set.of("a.jpg"), new HashMap<>(), new SimpleDoubleProperty(0));
+            check(importResult.getErrorTableEntries().isEmpty() && importResult.getNrSuccessfullyProcessedItems() == 1,
+                  loadType + " import failed: " + importResult.getErrorTableEntries());
+
+            final var shapes = importResult.getImageAnnotationData().imageAnnotations().iterator().next()
+                                           .getBoundingShapeData();
+            check(shapes.size() == 1 && shapes.getFirst() instanceof BoundingMaskData loaded
+                          && loaded.getMask().equals(mask), loadType + " import changed the mask: " + shapes);
+        } finally {
+            try(var paths = Files.walk(directory)) {
+                for(Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+                    Files.delete(path);
+                }
+            }
+        }
+
+        System.out.println(saveType + " mask round trip: ok");
+    }
+
     private static void answerOnce(ServerSocket server, AtomicReference<String> request) {
         try(Socket socket = server.accept()) {
             final InputStream input = socket.getInputStream();

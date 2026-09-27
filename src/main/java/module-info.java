@@ -26,6 +26,8 @@ module com.github.mfl28.boundingboxeditor {
     requires com.github.benmanes.caffeine;
     requires org.apache.commons.lang3;
     requires java.prefs;
+    // ImageIO, for PNG masks.
+    requires java.desktop;
     requires com.google.gson;
     requires jersey.client;
     requires jersey.common;

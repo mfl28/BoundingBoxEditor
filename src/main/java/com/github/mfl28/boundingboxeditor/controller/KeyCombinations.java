@@ -61,6 +61,13 @@ public class KeyCombinations {
             new KeyCodeCombination(KeyCode.DIGIT2, KeyCombination.SHORTCUT_DOWN);
     public static final KeyCombination selectFreehandDrawingMode =
             new KeyCodeCombination(KeyCode.DIGIT3, KeyCombination.SHORTCUT_DOWN);
+    public static final KeyCombination selectMaskDrawingMode =
+            new KeyCodeCombination(KeyCode.DIGIT4, KeyCombination.SHORTCUT_DOWN);
+    // In the mask drawing mode.
+    public static final KeyCombination toggleMaskEraser = new KeyCodeCombination(KeyCode.E);
+    public static final KeyCombination startNewMask = new KeyCodeCombination(KeyCode.N);
+    public static final KeyCombination increaseMaskBrushSize = new KeyCodeCombination(KeyCode.CLOSE_BRACKET);
+    public static final KeyCombination decreaseMaskBrushSize = new KeyCodeCombination(KeyCode.OPEN_BRACKET);
     public static final KeyCombination removeEditingVerticesWhenBoundingPolygonSelected =
             new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_DOWN);
     public static final KeyCombination addVerticesToPolygon =

@@ -289,7 +289,7 @@ jlink {
 // can't notice.
 def smokeTestSources = fileTree('src/smokeTest/java') { include '**/*.java' }
 def smokeTestClassesDir = layout.buildDirectory.dir('smokeTest/classes')
-def smokeTestExports = ['model.io', 'model.io.results', 'model.io.restclients'].collect {
+def smokeTestExports = ['model.data', 'model.io', 'model.io.results', 'model.io.restclients'].collect {
     "--add-exports=com.github.mfl28.boundingboxeditor/com.github.mfl28.boundingboxeditor.${it}=smoketest".toString()
 }
 
