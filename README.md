@@ -26,38 +26,41 @@
   </a>
 </p>
 
-This is an image annotation desktop-application written in Java using the JavaFX application platform. It allows you to create bounding box annotations using rectangular and polygonal shapes. 
-Annotations can be imported and saved from/to JSON files, [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format XML-files or [YOLO](https://pjreddie.com/darknet/yolo/) format TXT-files.
+Bounding Box Editor is a desktop application for annotating objects in images with rectangular and polygonal bounding boxes, e.g. to create training data for object detection. It is written in Java with JavaFX and runs on Windows, macOS and Linux.
+Annotations can be imported and exported in the [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/), [YOLO](https://docs.ultralytics.com/datasets/), JSON and CSV formats.
 
 <p align="center">
   <img src="demo-media/demo_v3_0_0.png" align="center">
-  </br>
+  <br>
   <em>Demo screenshot of release v3.0.0.</em>
 </p>
 
 ## Main Features
-* Create rectangular and polygonal ("vertices-clicking" and "freehand-drawing" modes) bounding box annotations for objects in images
-* Export and import  rectangular and polygonal bounding box annotations to and from JSON and XML files (using [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) format)
-* Export and import rectangular bounding box annotations using the [YOLO](https://pjreddie.com/darknet/yolo/) format
-* Connect your own [Torch Serve](https://pytorch.org/serve/) or [LitServe](https://github.com/Lightning-AI/LitServe) prediction endpoint and use bounding box predictions as annotation hints (see [Predictions](https://github.com/mfl28/BoundingBoxEditor/wiki/Predictions) in the Wiki for the setup, including an example LitServe server)
-* Format validation and error reporting when importing annotations
-* Nest bounding box labels (which is then reflected in the output XML-file if using Pascal VOC format)
-* Easily and swiftly navigate and search the loaded image files via a side-panel with thumbnails
-* Tag bounding boxes using tags defined in the Pascal VOC format (truncated, difficult, occluded, pose: *, action: *)
-* Color-coded, searchable and fully dynamic object categories
+* **Drawing and editing:** rectangles and polygons (by clicking vertices or drawing freehand). Move and resize boxes, add, move and remove polygon vertices, and simplify polygons.
+* **Undo and redo** for all changes to the bounding boxes, with a separate history per image.
+* **Nesting and tags:** nest bounding boxes (e.g. a wheel inside a car), and tag them with the Pascal VOC tags (truncated, difficult, occluded, pose, action).
+* **Categories:** color-coded and searchable object categories, created as you go.
+* **Import and export:**
+  * Pascal VOC (XML) and JSON: rectangles and polygons, including nesting;
+  * YOLO (TXT): rectangles, and polygons in YOLO's segmentation format;
+  * CSV: rectangles.
 
-## Latest Release 
+  Invalid files or entries are listed in an error report, and everything else is imported.
+* **Image navigation:** a side panel with thumbnails, search by file name, and a filter by annotation status (annotated or not) and by categories.
+* **Predictions:** connect a [TorchServe](https://pytorch.org/serve/) or [LitServe](https://github.com/Lightning-AI/LitServe) server and use its predicted bounding boxes as annotation hints (see [Predictions](https://github.com/mfl28/BoundingBoxEditor/wiki/Predictions) in the wiki for the setup, including an example LitServe server). The settings are remembered between runs.
+* **[Keyboard shortcuts](https://github.com/mfl28/BoundingBoxEditor/wiki/Keyboard-Shortcuts)** for navigation, drawing modes, visibility and more.
+
+## Latest Release
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/mfl28/BoundingBoxEditor?label=release&style=for-the-badge)](https://github.com/mfl28/BoundingBoxEditor/releases/latest)
 ![platform](https://img.shields.io/static/v1.svg?label=Platform&message=Linux%20|%20macOS%20|%20Win%20&style=for-the-badge)
 
-Download the latest release installer or portable image (no installation required) of *Bounding Box Editor* for your operating system from the links below. These files were created using the
-[jpackage](https://openjdk.java.net/jeps/343) packaging tool, the [Badass JLink Gradle plugin](https://github.com/beryx/badass-jlink-plugin) and [github-actions](.github/workflows/workflow.yml).
+Download the installer or the portable image (no installation required) of the latest release for your operating system. Both include the Java runtime, so no separate Java installation is needed. They are created with [jpackage](https://openjdk.org/jeps/392), the [Badass JLink Gradle plugin](https://github.com/beryx/badass-jlink-plugin) and [GitHub Actions](.github/workflows/workflow.yml).
 
 | OS            | Installer                                                                                                                                                                                                                       | Portable | Stats                                                                                                                                                      |
 | ------------- |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| -------- |------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Linux | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor_3.0.0-1_amd64.deb), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0-1.x86_64.rpm) | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-linux.zip)| ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor_3.0.0-1_amd64.deb) |
-| macOS | [dmg](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0.dmg)                                                                                                                          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-macos.zip) | ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor-3.0.0.dmg)         |
-| Windows | [exe](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0.exe)                                                                                                                          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-windows.zip) | ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor-3.0.0.exe)         | 
+| Linux (x86-64) | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor_3.0.0_amd64.deb), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0-1.x86_64.rpm) | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-linux.zip)| ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor_3.0.0_amd64.deb) |
+| macOS (Apple Silicon) | [dmg](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0.dmg)                                                                                                                          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-macos.zip) | ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor-3.0.0.dmg)         |
+| Windows (x64) | [exe](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0.exe)                                                                                                                          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-windows.zip) | ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor-3.0.0.exe)         |
 
 ### Alternative installation methods
 #### Windows
@@ -69,26 +72,31 @@ choco install boundingboxeditor
 ```
 brew install --cask mfl28/tap/boundingboxeditor
 ```
-The app is not notarized by Apple; the cask removes the quarantine attribute so that it can be opened.
+The app is not notarized by Apple, so the cask removes the quarantine attribute to allow opening it.
 
 ## How to use the application
-Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) in the Wiki for a detailed usage guide and presentation (including gifs) of the application's main functions.
+The [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) in the wiki describes all functions of the application in detail (with screenshots and GIFs), and the [Keyboard Shortcuts](https://github.com/mfl28/BoundingBoxEditor/wiki/Keyboard-Shortcuts) page lists all shortcuts.
 
 ## Using annotations for object detection
 After having created annotations for your images, you can use the saved bounding boxes as ground-truths in the training and evaluation of neural networks in order to perform object-detection tasks. How this can be done for any kind of labeled objects using Python and the [Pytorch](https://pytorch.org/) deep learning library is shown exemplarily in the [Humpback Whale Fluke Detection - Jupyter notebook](https://nbviewer.jupyter.org/github/mfl28/MachineLearning/blob/master/notebooks/Humpback_Whale_Fluke_Detection.ipynb) which you can find in my [Machine Learning repo](https://github.com/mfl28/MachineLearning).
 
 ## How to build the application
-The project uses [Gradle](https://gradle.org/) as build-system.
-You will need to have Gradle version 5+ and a Java JDK version 11+ installed on your system, e.g. from [OpenJDK](https://openjdk.java.net/). 
-After cloning the repository into a folder on your machine you may build the application from the root folder by opening a command line and using:
+You need a Java JDK version 25 or newer, e.g. [Eclipse Temurin](https://adoptium.net/). The project is built with [Gradle](https://gradle.org/); the Gradle wrapper (`gradlew`) in the repository downloads the right Gradle version, so no separate installation is needed.
+
+After cloning the repository, build the application from its root folder with:
 ```bash
-gradlew build # Add "-x test" to skip the UI-tests.
+gradlew build -x test # Without "-x test", the tests are run as well (see below).
 ```
-*Note:* The concrete way of invoking `gradlew` depends on your OS and used command line: 
-* __Linux & MacOs__: `./gradlew ...`
+*Note:* The concrete way of invoking `gradlew` depends on your OS and used command line:
+* __Linux & macOS__: `./gradlew ...`
 * __Windows__:
   - Command Prompt: `gradlew ...`
-  - Powershell: `.\gradlew ...`
+  - PowerShell: `.\gradlew ...`
+
+To create an installer for your operating system (in `build/jpackage`), use:
+```bash
+gradlew jpackage
+```
 
 ## How to run the application
 To run the app using Gradle, use:
@@ -97,11 +105,15 @@ gradlew run
 ```
 
 ## How to run the tests
-The project comes equipped with automatic UI-tests which use [TestFX](https://github.com/TestFX/TestFX) and the [JUnit 5](https://junit.org/junit5/) testing frameworks. Due to some used functionality in the implemented tests it is (currently) not possible to run the tests in headless mode.
+The project has unit tests and UI tests, which use [JUnit 5](https://junit.org/junit5/) and [TestFX](https://github.com/TestFX/TestFX). The UI tests start the application and control it with the mouse and keyboard, so they need a display (they can't run headless). Don't use the mouse or keyboard while they run.
 
-To run the tests, use :
+To run all tests, use:
 ```bash
 gradlew test
+```
+To run only some tests, e.g. the ones of the model package (which don't need a display), use:
+```bash
+gradlew test --tests '*.model.*'
 ```
 
 ## How to build the latest Linux image and installers using Docker
@@ -117,26 +129,30 @@ Finally, copy the directory containing the build artifacts to the host:
 ```bash
 docker container cp bbeditor:/artifacts .
 ```
-> **Alternative**:  
-> If you have a recent Docker version that supports BuildKit engine (version >= 19.03) you can do 
-> the whole build using a one-line command:
+> **Alternative**:
+> With Docker's BuildKit engine (the default since Docker 23), you can do the whole build with one command:
 >```bash
-> DOCKER_BUILDKIT=1 docker image build --target artifacts --output type=local,dest=. . 
+> docker image build --target artifacts --output type=local,dest=. .
 >```
 
 ## Acknowledgements
-* [OpenJDK](https://openjdk.java.net/) (open-source implementation of the Java platform)
+* [OpenJDK](https://openjdk.org/) (open-source implementation of the Java platform)
 * [OpenJFX](https://openjfx.io/) (open-source implementation of the JavaFX platform)
-* [ControlsFX](https://github.com/controlsfx/controlsfx) (used for progress dialogs)
+* [ControlsFX](https://github.com/controlsfx/controlsfx) (used for progress dialogs, popovers and the image filter)
 * [Caffeine](https://github.com/ben-manes/caffeine) (used for caching of images)
 * [Gson](https://github.com/google/gson) (used for JSON serialization & deserialization)
+* [Jackson](https://github.com/FasterXML/jackson-dataformats-text) (used for reading and writing CSV files)
+* [Eclipse Jersey](https://eclipse-ee4j.github.io/jersey/) (used as the REST client for inference servers)
+* [JTS Topology Suite](https://github.com/locationtech/jts) (used for simplifying polygons)
+* [metadata-extractor](https://github.com/drewnoakes/metadata-extractor) (used for reading the EXIF orientation of images)
 * [Apache Commons](https://commons.apache.org/) (used for ListOrderedMap data structure and String/Iterator utilities)
 * [TestFX](https://github.com/TestFX/TestFX) (used for the tests)
 * [JUnit 5](https://junit.org/junit5/) (used for the tests)
+* [Mockito](https://site.mockito.org/) (used for the tests)
 * [Jacoco](https://www.jacoco.org/jacoco/) (used for creating code coverage results)
 * [sass-gradle-plugin](https://github.com/EtienneMiret/sass-gradle-plugin) (used to compile .scss style-files into [JavaFX supported] .css files)
 * [Badass JLink Plugin](https://github.com/beryx/badass-jlink-plugin) (used to create modular runtime images of the application)
-* [Gradle Modules Plugin](https://github.com/java9-moduqlarity/gradle-modules-plugin) (used to run the tests on the classpath)
+* [Gradle Modules Plugin](https://github.com/java9-modularity/gradle-modules-plugin) (used to run the tests on the classpath)
 * [Feather Icons](https://feathericons.com/)
 * [Nord Color-Palette](https://github.com/arcticicestudio/nord)
 * [Unsplash](https://unsplash.com/) (used as source for test- & demo-images)
