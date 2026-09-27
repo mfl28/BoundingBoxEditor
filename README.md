@@ -65,6 +65,11 @@ Download the latest release installer or portable image (no installation require
 ```
 choco install boundingboxeditor
 ```
+#### macOS (Apple Silicon)
+```
+brew install --cask mfl28/tap/boundingboxeditor
+```
+The app is not notarized by Apple; the cask removes the quarantine attribute so that it can be opened.
 
 ## How to use the application
 Please refer to the [User Manual](https://github.com/mfl28/BoundingBoxEditor/wiki#user-manual) in the Wiki for a detailed usage guide and presentation (including gifs) of the application's main functions.

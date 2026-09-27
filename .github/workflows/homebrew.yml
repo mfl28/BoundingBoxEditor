@@ -1,0 +1,146 @@
+name: Homebrew
+
+# Builds the Homebrew cask for a GitHub release and pushes it to the tap mfl28/homebrew-tap.
+# - Called by the Build workflow after a release was created (publishes).
+# - Runs on pull requests that change the cask, validating it against the latest release without publishing.
+# - Can be started manually for any release tag; it only publishes if "publish" is checked.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag, e.g. v3.0.0
+        required: true
+        type: string
+      publish:
+        description: Push the cask to mfl28/homebrew-tap
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      HOMEBREW_TAP_TOKEN:
+        required: false
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, e.g. v3.0.0
+        required: true
+        type: string
+      publish:
+        description: Push the cask to mfl28/homebrew-tap
+        required: false
+        type: boolean
+        default: false
+  pull_request:
+    branches:
+      - master
+    paths:
+      - homebrew/**
+      - .github/workflows/homebrew.yml
+
+permissions:
+  contents: read
+
+jobs:
+  Homebrew-Cask:
+    runs-on: macos-latest
+    name: Homebrew Cask
+    env:
+      # Passed through the environment instead of being expanded into scripts.
+      INPUT_TAG: ${{ inputs.tag }}
+      PUBLISH: ${{ inputs.publish == true && github.event_name != 'pull_request' }}
+      GH_TOKEN: ${{ github.token }}
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v7
+      - name: Download release disk image
+        run: |
+          tag="${INPUT_TAG:-$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)}"
+
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Unexpected release tag '$tag'."
+            exit 1
+          fi
+
+          version="${tag#v}"
+          dmg="boundingboxeditor-$version.dmg"
+
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern "$dmg" --dir release
+          # The checksum of the published disk image, i.e. of the file Homebrew will download.
+          sha256="$(shasum -a 256 "release/$dmg" | cut -d ' ' -f 1)"
+
+          echo "Creating the cask for $dmg ($tag) with SHA-256 $sha256."
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "SHA256=$sha256" >> "$GITHUB_ENV"
+      - name: Fill in cask
+        run: |
+          mkdir -p cask
+          sed -e "s/__VERSION__/$VERSION/g" -e "s/__SHA256__/$SHA256/g" homebrew/boundingboxeditor.rb > cask/boundingboxeditor.rb
+
+          if placeholder="$(grep -oE '__[A-Z0-9]+__' cask/boundingboxeditor.rb)"; then
+            echo "::error::Unreplaced placeholder '$placeholder' in homebrew/boundingboxeditor.rb."
+            exit 1
+          fi
+
+          cat cask/boundingboxeditor.rb
+      - name: Check cask
+        run: |
+          brew tap-new --no-git local/test
+          tap_casks="$(brew --repository)/Library/Taps/local/homebrew-test/Casks"
+          mkdir -p "$tap_casks"
+          cp cask/boundingboxeditor.rb "$tap_casks/"
+
+          brew style --cask local/test/boundingboxeditor
+          brew audit --cask --online local/test/boundingboxeditor
+      - name: Install and uninstall cask
+        run: |
+          brew install --cask local/test/boundingboxeditor
+          app=/Applications/BoundingBoxEditor.app
+
+          test -x "$app/Contents/MacOS/BoundingBoxEditor"
+          if xattr -r "$app" | grep -q com.apple.quarantine; then
+            echo "::error::The installed app is still quarantined."
+            exit 1
+          fi
+
+          brew uninstall --cask local/test/boundingboxeditor
+          test ! -e "$app"
+      - name: Upload cask
+        uses: actions/upload-artifact@v7
+        with:
+          name: homebrew-cask
+          path: cask/boundingboxeditor.rb
+      - name: Check tap token
+        if: env.PUBLISH == 'true'
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -z "$HOMEBREW_TAP_TOKEN" ]; then
+            echo "::error::The HOMEBREW_TAP_TOKEN secret is not set."
+            exit 1
+          fi
+      - name: Check out tap
+        if: env.PUBLISH == 'true'
+        uses: actions/checkout@v7
+        with:
+          repository: mfl28/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+      - name: Push to mfl28/homebrew-tap
+        if: env.PUBLISH == 'true'
+        working-directory: tap
+        run: |
+          mkdir -p Casks
+          cp ../cask/boundingboxeditor.rb Casks/
+
+          if git diff --quiet HEAD -- Casks && [ -z "$(git status --porcelain Casks)" ]; then
+            echo "The tap already contains this cask."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/boundingboxeditor.rb
+          git commit -m "boundingboxeditor $VERSION"
+          git push
