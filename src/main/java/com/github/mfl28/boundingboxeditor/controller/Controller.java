@@ -553,9 +553,12 @@ public class Controller {
                 view.getEditorImageView().setCursor(Cursor.OPEN_HAND);
             }
 
+            final EditorImagePaneView.DrawingMode drawingMode = imagePane.getCurrentBoundingShapeDrawingMode();
+
             if(view.getObjectCategoryTable().isCategorySelected() &&
-                    (Objects.equals(imagePane.getCurrentBoundingShapeDrawingMode(), EditorImagePaneView.DrawingMode.BOX) ||
-                Objects.equals(imagePane.getCurrentBoundingShapeDrawingMode(), EditorImagePaneView.DrawingMode.FREEHAND))) {
+                    (drawingMode == EditorImagePaneView.DrawingMode.BOX
+                            || drawingMode == EditorImagePaneView.DrawingMode.FREEHAND
+                            || drawingMode == EditorImagePaneView.DrawingMode.MASK)) {
                 imagePane.finalizeBoundingShapeDrawing();
             }
         }

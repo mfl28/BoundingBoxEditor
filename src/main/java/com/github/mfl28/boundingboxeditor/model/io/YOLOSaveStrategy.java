@@ -154,6 +154,8 @@ public class YOLOSaveStrategy implements ImageAnnotationSaveStrategy {
                             when boundingPolygonData.getRelativePointsInImage().size() >= 6 ->
                             createBoundingPolygonDataEntry(boundingPolygonData, categories, decimalFormat);
                     case BoundingPolygonData _ -> null;
+                    // YOLO has no masks (ImageAnnotationSaver removes them before saving).
+                    case BoundingMaskData _ -> null;
                 };
 
                 if (entry != null) {

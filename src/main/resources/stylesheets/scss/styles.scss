@@ -507,6 +507,45 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-shape: $shape-icon;
 }
 
+#mask-mode-button-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $mask-mode-icon;
+}
+
+#mask-eraser-button-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $eraser-icon;
+}
+
+#new-mask-button-icon {
+    @include medium-icon;
+    -fx-background-color: $base-font-color;
+    -fx-shape: $plus-icon;
+}
+
+#mask-tool-box {
+    -fx-spacing: 4px;
+    -fx-alignment: center;
+}
+
+#mask-brush-size-slider {
+    -fx-pref-width: 90px;
+}
+
+#mask-brush-cursor {
+    -fx-stroke: white;
+    -fx-stroke-width: 1.5px;
+    -fx-stroke-dash-array: 4 3;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 2, 0.5, 0, 0);
+}
+
+.bounding-mask-outline {
+    -fx-stroke-width: 1.5px;
+    -fx-stroke-dash-array: 6 4;
+}
+
 #toggle-square {
     -fx-opacity: 0.3;
 

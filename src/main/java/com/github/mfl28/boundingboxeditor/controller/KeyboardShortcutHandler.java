@@ -20,6 +20,7 @@ package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.controller.utils.KeyCombinationEventHandler;
 import com.github.mfl28.boundingboxeditor.model.Model;
+import com.github.mfl28.boundingboxeditor.ui.EditorImagePaneView;
 import com.github.mfl28.boundingboxeditor.ui.MainView;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -156,6 +157,18 @@ class KeyboardShortcutHandler {
                         null, event -> view.getEditor().getEditorToolBar().getPolygonModeButton().setSelected(true)),
                 new KeyCombinationEventHandler(KeyCombinations.selectFreehandDrawingMode,
                         null, event -> view.getEditor().getEditorToolBar().getFreehandModeButton().setSelected(true)),
+                new KeyCombinationEventHandler(KeyCombinations.selectMaskDrawingMode,
+                        null, event -> view.getEditor().getEditorToolBar().getMaskModeButton().setSelected(true)),
+                new KeyCombinationEventHandler(KeyCombinations.toggleMaskEraser,
+                        null, event -> whenInMaskMode(view, () -> view.getEditorImagePane().maskEraserProperty()
+                                .set(!view.getEditorImagePane().maskEraserProperty().get()))),
+                new KeyCombinationEventHandler(KeyCombinations.startNewMask,
+                        null, event -> whenInMaskMode(view, () -> view.getEditorImagePane().requestNewMask())),
+                new KeyCombinationEventHandler(KeyCombinations.increaseMaskBrushSize,
+                        null, event -> whenInMaskMode(view, () -> view.getEditorImagePane().changeMaskBrushSize(true))),
+                new KeyCombinationEventHandler(KeyCombinations.decreaseMaskBrushSize,
+                        null, event -> whenInMaskMode(view,
+                                                      () -> view.getEditorImagePane().changeMaskBrushSize(false))),
                 new KeyCombinationEventHandler(KeyCombinations.changeSelectedBoundingShapeCategory,
                         null, event -> view.initiateCurrentSelectedBoundingBoxCategoryChange()),
                 new KeyCombinationEventHandler(KeyCombinations.simplifyPolygon,
@@ -186,6 +199,12 @@ class KeyboardShortcutHandler {
         return IntStream.rangeClosed(1, 9).boxed().flatMap(number -> Stream.of("DIGIT", "NUMPAD")
                 .map(keyName -> new KeyCombinationEventHandler(new KeyCodeCombination(KeyCode.valueOf(keyName + number)),
                         null, event -> selectCategory(view.getObjectCategoryTable(), number - 1))));
+    }
+
+    private static void whenInMaskMode(MainView view, Runnable action) {
+        if(view.getEditorImagePane().getDrawingMode() == EditorImagePaneView.DrawingMode.MASK) {
+            action.run();
+        }
     }
 
     private static void selectCategory(TableView<?> categoryTable, int index) {

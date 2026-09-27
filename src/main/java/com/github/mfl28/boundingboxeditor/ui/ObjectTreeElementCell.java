@@ -34,7 +34,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
-import javafx.scene.shape.Shape;
+import javafx.scene.Node;
 import javafx.scene.text.Text;
 import org.controlsfx.control.PopOver;
 
@@ -124,7 +124,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             return;
         }
 
-        if (oldCellObject instanceof Shape oldItem) {
+        if (oldCellObject instanceof BoundingShapeViewable && oldCellObject instanceof Node oldItem) {
             // Remove the old item's context-menu event-handler.
             oldItem.removeEventHandler(ContextMenuEvent.CONTEXT_MENU_REQUESTED, showContextMenuEventHandler);
             oldItem.visibleProperty().removeListener(boundingShapeVisibilityListener);
@@ -163,7 +163,8 @@ class ObjectTreeElementCell extends TreeCell<Object> {
             // Register the contextMenu with the cell.
             setContextMenu(contextMenu);
 
-            if (newCellObject instanceof Shape shape && !(newCellObject instanceof BoundingFreehandShapeView)) {
+            if (newCellObject instanceof BoundingShapeViewable && newCellObject instanceof Node shape
+                    && !(newCellObject instanceof BoundingFreehandShapeView)) {
                 // Register the contextMenu with the shape associated with the cell. This
                 // allows to display the contextMenu by right-clicking on the shape itself.
                 // Added as a handler (not via setOnContextMenuRequested) so that the removeEventHandler call above
@@ -383,7 +384,7 @@ class ObjectTreeElementCell extends TreeCell<Object> {
     @SuppressWarnings("UnnecessaryLambda")
     private EventHandler<ContextMenuEvent> createShowContextMenuEventHandler() {
         return event -> {
-            if (getItem() instanceof Shape shape
+            if (getItem() instanceof BoundingShapeViewable && getItem() instanceof Node shape
                     && getItem() instanceof Toggle toggle && toggle.isSelected()) {
                 contextMenu.show(shape, event.getScreenX(), event.getScreenY());
             }

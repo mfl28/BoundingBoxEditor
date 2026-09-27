@@ -23,4 +23,5 @@ module smoketest {
     requires com.github.mfl28.boundingboxeditor;
     requires com.github.mfl28.merged.module;
     requires javafx.base;
+    requires javafx.graphics;
 }

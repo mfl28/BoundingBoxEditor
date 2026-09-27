@@ -281,6 +281,9 @@ public class PVOCSaveStrategy implements ImageAnnotationSaveStrategy {
 
                 yield coordinateElement;
             }
+            // Pascal VOC has no masks (ImageAnnotationSaver removes them before saving).
+            case BoundingMaskData _ ->
+                    throw new IllegalArgumentException("Pascal VOC annotations can't contain masks.");
         };
     }
 }

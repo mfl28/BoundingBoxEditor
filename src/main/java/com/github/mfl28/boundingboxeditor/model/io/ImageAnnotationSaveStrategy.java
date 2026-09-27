@@ -41,6 +41,8 @@ public interface ImageAnnotationSaveStrategy {
             case YOLO -> new YOLOSaveStrategy();
             case JSON -> new JSONSaveStrategy();
             case CSV -> new CSVSaveStrategy();
+            case COCO -> new COCOSaveStrategy();
+            case PNG_MASKS -> new PNGMaskSaveStrategy();
         };
     }
 
@@ -78,6 +80,38 @@ public interface ImageAnnotationSaveStrategy {
             public String toString() {
                 return "CSV";
             }
+        },
+        COCO {
+            @Override
+            public String toString() {
+                return "COCO";
+            }
+
+            @Override
+            public boolean supportsMasks() {
+                return true;
+            }
+        },
+        PNG_MASKS {
+            @Override
+            public String toString() {
+                return "PNG masks";
+            }
+
+            @Override
+            public boolean supportsMasks() {
+                return true;
+            }
+        };
+
+        /**
+         * Returns whether the format can contain masks. Masks are removed from the annotations before they are
+         * saved in other formats.
+         *
+         * @return true if the format has masks
+         */
+        public boolean supportsMasks() {
+            return false;
         }
     }
 }

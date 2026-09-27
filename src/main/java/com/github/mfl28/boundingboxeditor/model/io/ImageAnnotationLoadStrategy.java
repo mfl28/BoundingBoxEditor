@@ -44,6 +44,8 @@ public interface ImageAnnotationLoadStrategy {
             case YOLO -> new YOLOLoadStrategy();
             case JSON -> new JSONLoadStrategy();
             case CSV -> new CSVLoadStrategy();
+            case COCO -> new COCOLoadStrategy();
+            case PNG_MASKS -> new PNGMaskLoadStrategy();
         };
     }
 
@@ -61,7 +63,7 @@ public interface ImageAnnotationLoadStrategy {
                                      Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
                                      DoubleProperty progress) throws IOException;
 
-    enum Type {PASCAL_VOC, YOLO, JSON, CSV}
+    enum Type {PASCAL_VOC, YOLO, JSON, CSV, COCO, PNG_MASKS}
 
     @SuppressWarnings("serial")
     class InvalidAnnotationFormatException extends RuntimeException {
