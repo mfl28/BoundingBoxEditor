@@ -160,8 +160,16 @@ jobs:
             throw 'WinGet is not available on this runner.'
           }
 
-          winget validate --manifest $env:MANIFESTS --disable-interactivity
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host "WinGet $(winget --version)"
+          $output = winget validate --manifest $env:MANIFESTS --disable-interactivity | Out-String
+          Write-Host $output
+
+          # Warnings also give a non-zero exit code, e.g. a runner's WinGet that doesn't know the manifest version's
+          # schema URL yet; only errors fail.
+          if ($output -notmatch 'Manifest validation succeeded') {
+            throw "The manifests are invalid (exit code $LASTEXITCODE)."
+          }
+          $global:LASTEXITCODE = 0
       - name: Upload manifests
         uses: actions/upload-artifact@v7
         with:
