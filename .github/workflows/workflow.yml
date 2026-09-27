@@ -340,6 +340,17 @@ jobs:
     secrets:
       HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
+  WinGet:
+    needs: Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    name: WinGet Release
+    uses: ./.github/workflows/winget.yml
+    with:
+      tag: ${{ github.ref_name }}
+      publish: true
+    secrets:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+
   Version-Bump:
     needs: Release
     if: startsWith(github.ref, 'refs/tags/v')

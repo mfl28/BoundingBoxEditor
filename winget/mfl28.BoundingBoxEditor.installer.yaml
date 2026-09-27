@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json
+
+PackageIdentifier: mfl28.BoundingBoxEditor
+PackageVersion: __VERSION__
+InstallerLocale: en-US
+InstallerType: exe
+Scope: user
+InstallModes:
+- interactive
+- silent
+- silentWithProgress
+# The jpackage installer passes its arguments on to the Windows Installer.
+InstallerSwitches:
+  Silent: /quiet
+  SilentWithProgress: /passive
+UpgradeBehavior: install
+ReleaseDate: __RELEASE_DATE__
+Installers:
+- Architecture: x64
+  InstallerUrl: https://github.com/mfl28/BoundingBoxEditor/releases/download/v__VERSION__/boundingboxeditor-__VERSION__.exe
+  InstallerSha256: __SHA256__
+  ProductCode: '__PRODUCT_CODE__'
+ManifestType: installer
+ManifestVersion: 1.12.0
