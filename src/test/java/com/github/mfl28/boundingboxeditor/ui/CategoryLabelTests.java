@@ -93,7 +93,9 @@ class CategoryLabelTests extends BoundingBoxEditorTestBase {
         verifyThat(label.isVisible(), Matchers.is(true), saveScreenshot(testinfo));
 
         // A shape drawn afterwards gets a label, too.
-        moveRelativeToImageView(robot, new Point2D(0.99, 0.0), new Point2D(1.0, 0.2));
+        // Started just inside the image's upper edge: exactly at the edge, the robot's rounding to whole screen pixels
+        // can put the press outside the image, so that no box is drawn.
+        moveRelativeToImageView(robot, new Point2D(0.99, 0.01), new Point2D(1.0, 0.2));
         waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 2, "second box", testinfo);
         final BoundingShapeViewData secondViewData = mainView.getCurrentBoundingShapes().get(1).getViewData();
         verifyThat(secondViewData.getCategoryLabel().isVisible(), Matchers.is(true), saveScreenshot(testinfo));
