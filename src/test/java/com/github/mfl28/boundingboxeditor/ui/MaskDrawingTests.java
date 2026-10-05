@@ -242,6 +242,79 @@ class MaskDrawingTests extends BoundingBoxEditorTestBase {
         robot.moveTo(mainView.getEditorImageView());
     }
 
+    @Test
+    void onUndoingDuringStrokesAndErasingNothing_ShouldRestoreTheMasks(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        enterNewCategory(robot, "Sail", testinfo);
+        timeOutClickOn(robot, "#mask-mode-button-icon", testinfo);
+
+        // Undo during the first stroke of a new mask removes the mask.
+        moveRelativeToImageViewNoRelease(robot, new Point2D(0.2, 0.2), new Point2D(0.3, 0.2));
+        robot.interact(controller::onRegisterUndoAction);
+        robot.release(javafx.scene.input.MouseButton.PRIMARY);
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(0), saveScreenshot(testinfo));
+        verifyThat(mainView.getEditorImagePane().isDrawingInProgress(), Matchers.is(false), saveScreenshot(testinfo));
+
+        // Undo during a stroke that extends a mask restores the mask from before the stroke.
+        paint(robot, new Point2D(0.2, 0.2), new Point2D(0.3, 0.2));
+        waitForShapeCount(1, testinfo);
+        final BoundingMaskView mask = (BoundingMaskView) mainView.getCurrentBoundingShapes().getFirst();
+        final var maskBefore = mask.getMask();
+        moveRelativeToImageViewNoRelease(robot, new Point2D(0.3, 0.2), new Point2D(0.3, 0.5));
+        robot.interact(controller::onRegisterUndoAction);
+        robot.release(javafx.scene.input.MouseButton.PRIMARY);
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
+        verifyThat(mask.getMask(), Matchers.equalTo(maskBefore), saveScreenshot(testinfo));
+
+        // Erasing where there is no mask (with nothing selected) does nothing.
+        robot.interact(() -> mainView.getEditorImagePane().requestNewMask());
+        robot.press(KeyCode.SHIFT);
+        paint(robot, new Point2D(0.7, 0.7), new Point2D(0.8, 0.8));
+        robot.release(KeyCode.SHIFT);
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
+        verifyThat(mask.getMask(), Matchers.equalTo(maskBefore), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onArrowKeysAndCategoryChanges_ShouldMoveAndRecolorTheMask(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        enterNewCategory(robot, "Hull", testinfo);
+        timeOutClickOn(robot, "#mask-mode-button-icon", testinfo);
+        paint(robot, new Point2D(0.4, 0.4), new Point2D(0.5, 0.4));
+        waitForShapeCount(1, testinfo);
+        final BoundingMaskView mask = (BoundingMaskView) mainView.getCurrentBoundingShapes().getFirst();
+        final int minX = mask.getMask().getMinX();
+        final int minY = mask.getMask().getMinY();
+
+        // The arrow keys move the selected mask by one image pixel, with Shift by ten.
+        robot.type(KeyCode.RIGHT);
+        robot.press(KeyCode.SHIFT).type(KeyCode.DOWN).release(KeyCode.SHIFT);
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mask.getMask().getMinX(), Matchers.equalTo(minX + 1), saveScreenshot(testinfo));
+        verifyThat(mask.getMask().getMinY(), Matchers.equalTo(minY + 10), saveScreenshot(testinfo));
+
+        // The mask is redrawn in its category's new color, and in the color of another category it is moved to.
+        final var category = mask.getViewData().getObjectCategory();
+        robot.interact(() -> category.setColor(javafx.scene.paint.Color.BLUE));
+        verifyThat(paintedColor(mask), Matchers.equalTo(0xFF0000FF), saveScreenshot(testinfo));
+
+        final var otherCategory = new com.github.mfl28.boundingboxeditor.model.data.ObjectCategory(
+                "Deck", javafx.scene.paint.Color.LIME);
+        robot.interact(() -> mask.getViewData().setObjectCategory(otherCategory));
+        verifyThat(paintedColor(mask), Matchers.equalTo(0xFF00FF00), saveScreenshot(testinfo));
+    }
+
+    /**
+     * Returns the color of the rendered mask at its center (a painted pixel of the horizontal stroke).
+     */
+    private static int paintedColor(BoundingMaskView mask) {
+        final var image = mask.getImage();
+        return image.getPixelReader().getArgb((int) image.getWidth() / 2, (int) image.getHeight() / 2);
+    }
+
     private void paint(FxRobot robot, Point2D from, Point2D to) {
         moveRelativeToImageView(robot, from, to);
     }
