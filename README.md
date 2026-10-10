@@ -26,8 +26,8 @@
   </a>
 </p>
 
-Bounding Box Editor is a desktop application for annotating objects in images with rectangular and polygonal bounding boxes, e.g. to create training data for object detection. It is written in Java with JavaFX and runs on Windows, macOS and Linux.
-Annotations can be imported and exported in the [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/), [YOLO](https://docs.ultralytics.com/datasets/), JSON and CSV formats.
+Bounding Box Editor is a desktop application for annotating objects in images with rectangular and polygonal bounding boxes and pixel masks, e.g. to create training data for object detection and instance segmentation. It is written in Java with JavaFX and runs on Windows, macOS and Linux.
+Annotations can be imported and exported in the [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/), [YOLO](https://docs.ultralytics.com/datasets/), [COCO](https://cocodataset.org/#format-data), JSON and CSV formats, and as PNG masks.
 
 <p align="center">
   <img src="demo-media/demo_v3_0_0.png" align="center">
@@ -36,17 +36,20 @@ Annotations can be imported and exported in the [Pascal VOC](http://host.robots.
 </p>
 
 ## Main Features
-* **Drawing and editing:** rectangles and polygons (by clicking vertices or drawing freehand). Move and resize boxes, add, move and remove polygon vertices, and simplify polygons.
+* **Drawing and editing:** rectangles and polygons (by clicking vertices or drawing freehand). Move and resize boxes, add, move and remove polygon vertices, and simplify polygons. Copy and paste bounding boxes (also to other images), and move the selected one with the arrow keys.
+* **[Pixel masks](https://github.com/mfl28/BoundingBoxEditor/wiki/Bounding-Boxes#shape-specific-functions---pixel-masks)** for instance segmentation: paint and erase objects with a brush of adjustable size.
 * **Undo and redo** for all changes to the bounding boxes, with a separate history per image.
 * **Nesting and tags:** nest bounding boxes (e.g. a wheel inside a car), and tag them with the Pascal VOC tags (truncated, difficult, occluded, pose, action).
-* **Categories:** color-coded and searchable object categories, created as you go.
+* **Categories:** color-coded and searchable object categories, created as you go. Select one of the first nine with the number keys, and optionally show each bounding box's category name next to it.
 * **Import and export:**
   * Pascal VOC (XML) and JSON: rectangles and polygons, including nesting;
   * YOLO (TXT): rectangles, and polygons in YOLO's segmentation format;
-  * CSV: rectangles.
+  * CSV: rectangles;
+  * COCO (JSON): rectangles, polygons and masks;
+  * PNG masks (in the layout of Pascal VOC's segmentation data): masks and polygons.
 
   Invalid files or entries are listed in an error report, and everything else is imported.
-* **Image navigation:** a side panel with thumbnails, search by file name, and a filter by annotation status (annotated or not) and by categories.
+* **Image navigation:** a side panel with thumbnails, search by file name, and a filter by annotation status (annotated or not) and by categories. Recently opened image folders are listed in the `File` menu.
 * **Predictions:** connect a [TorchServe](https://pytorch.org/serve/) or [LitServe](https://github.com/Lightning-AI/LitServe) server and use its predicted bounding boxes as annotation hints (see [Predictions](https://github.com/mfl28/BoundingBoxEditor/wiki/Predictions) in the wiki for the setup, including an example LitServe server). The settings are remembered between runs.
 * **[Keyboard shortcuts](https://github.com/mfl28/BoundingBoxEditor/wiki/Keyboard-Shortcuts)** for navigation, drawing modes, visibility and more.
 
@@ -59,7 +62,9 @@ Download the installer or the portable image (no installation required) of the l
 | OS            | Installer                                                                                                                                                                                                                       | Portable | Stats                                                                                                                                                      |
 | ------------- |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| -------- |------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Linux (x86-64) | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor_3.0.0_amd64.deb), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0-1.x86_64.rpm) | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-linux.zip)| ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor_3.0.0_amd64.deb) |
+| Linux (ARM64) | [deb](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor_3.0.0_arm64.deb), [rpm](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0-1.aarch64.rpm) | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-linux-arm64.zip) | ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor_3.0.0_arm64.deb) |
 | macOS (Apple Silicon) | [dmg](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0.dmg)                                                                                                                          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-macos.zip) | ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor-3.0.0.dmg)         |
+| macOS (Intel) | [dmg](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0-intel.dmg) | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-macos-intel.zip) | ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor-3.0.0-intel.dmg) |
 | Windows (x64) | [exe](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-3.0.0.exe)                                                                                                                          | [image](https://github.com/mfl28/BoundingBoxEditor/releases/latest/download/boundingboxeditor-portable-windows.zip) | ![GitHub release (latest by SemVer and asset)](https://img.shields.io/github/downloads/mfl28/boundingboxeditor/latest/boundingboxeditor-3.0.0.exe)         |
 
 ### Alternative installation methods
