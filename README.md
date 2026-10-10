@@ -73,7 +73,7 @@ Download the installer or the portable image (no installation required) of the l
 ```
 choco install boundingboxeditor
 ```
-#### macOS (Apple Silicon)
+#### macOS (Apple Silicon and Intel)
 ```
 brew install --cask mfl28/tap/boundingboxeditor
 ```
