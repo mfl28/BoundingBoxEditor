@@ -10,5 +10,9 @@ coverage:
         threshold: 5%
 
 codecov:
+  # Commits that only change e.g. workflows reuse the test results from the Gradle build cache, including the JaCoCo
+  # report with the times of the run that created it. With the default (12 hours), such older reports are rejected and
+  # the commit gets 0 % coverage.
+  max_report_age: off
   notify:
     after_n_builds: 3
