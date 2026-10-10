@@ -69,11 +69,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 /**
@@ -153,18 +148,14 @@ public class Controller {
     private boolean editCheckpointScheduled = false;
     // Autosave: the annotations are saved a few seconds after the last change, until they are exported.
     private static final Duration AUTOSAVE_DELAY = Duration.seconds(5);
-    private static final long AUTOSAVE_DELETION_TIMEOUT_SECONDS = 5;
     static final String RESTORE_AUTOSAVE_DIALOG_TITLE = "Restore Unsaved Annotations";
     private static final DateTimeFormatter AUTOSAVE_TIME_FORMATTER =
             DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault());
     private final AutosaveStore autosaveStore = AutosaveStore.createDefault();
     private final PauseTransition autosaveDelay = new PauseTransition(AUTOSAVE_DELAY);
     // Saves and deletes in order, off the JavaFX thread.
-    private final ExecutorService autosaveExecutor = Executors.newSingleThreadExecutor(runnable -> {
-        final Thread thread = new Thread(runnable, "autosave");
-        thread.setDaemon(true);
-        return thread;
-    });
+    private final AutosaveWriter autosaveWriter =
+            AutosaveWriter.create(autosaveStore, this::onAutosaved, this::onAutosaveFailed);
     // The folder whose images are shown, which the autosave belongs to.
     private File currentImageFolder;
     // While it is open whether to restore the shown folder's autosave, and while it is restored, nothing is saved.
@@ -1339,29 +1330,14 @@ public class Controller {
             return;
         }
 
-        final ImageAnnotationData snapshot = createAutosaveSnapshot();
-
-        autosaveExecutor.execute(() -> {
-            try {
-                autosaveStore.save(folder, snapshot);
-                Platform.runLater(this::showAutosaveTime);
-            } catch(IOException e) {
-                Platform.runLater(() -> view.getStatusBar().setStatusEvent(new AutosaveFailedEvent(e.getMessage())));
-            }
-        });
+        autosaveWriter.save(folder, createAutosaveSnapshot());
     }
 
     /**
      * Waits until the autosaves that were started are written (or deleted).
      */
     void waitForAutosave() {
-        try {
-            autosaveExecutor.submit(() -> { }).get(AUTOSAVE_DELETION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch(InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } catch(ExecutionException | TimeoutException e) {
-            // Nothing to wait for anymore.
-        }
+        autosaveWriter.awaitCompletion();
     }
 
     AutosaveStore getAutosaveStore() {
@@ -1401,16 +1377,18 @@ public class Controller {
             return;
         }
 
-        try {
-            autosaveExecutor.submit(() -> autosaveStore.delete(folder))
-                            .get(AUTOSAVE_DELETION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch(InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } catch(ExecutionException | TimeoutException e) {
-            autosaveStore.delete(folder);
-        }
-
+        autosaveWriter.delete(folder);
         showAutosaveTime();
+    }
+
+    // Called on the autosave thread.
+    private void onAutosaved() {
+        Platform.runLater(this::showAutosaveTime);
+    }
+
+    // Called on the autosave thread.
+    private void onAutosaveFailed(IOException exception) {
+        Platform.runLater(() -> view.getStatusBar().setStatusEvent(new AutosaveFailedEvent(exception.getMessage())));
     }
 
     /**
