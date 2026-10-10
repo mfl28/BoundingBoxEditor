@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mfl28/BoundingBoxEditor/actions">
-    <img src="https://github.com/mfl28/BoundingBoxEditor/workflows/Build/badge.svg" alt="Build Status">
+  <a href="https://github.com/mfl28/BoundingBoxEditor/actions/workflows/workflow.yml?query=branch%3Amaster">
+    <img src="https://github.com/mfl28/BoundingBoxEditor/actions/workflows/workflow.yml/badge.svg?branch=master" alt="Build Status">
   </a>
   <a href="https://codecov.io/gh/mfl28/BoundingBoxEditor">
     <img src="https://codecov.io/gh/mfl28/BoundingBoxEditor/branch/master/graph/badge.svg" alt="Codecov Coverage (master)">
