@@ -1,10 +1,14 @@
 cask "boundingboxeditor" do
-  version "__VERSION__"
-  sha256 "__SHA256__"
+  # The Apple Silicon disk image has no suffix, the Intel one "-intel".
+  arch intel: "-intel"
 
-  url "https://github.com/mfl28/BoundingBoxEditor/releases/download/v#{version}/boundingboxeditor-#{version}.dmg"
+  version "__VERSION__"
+  sha256 arm:   "__SHA256_ARM__",
+         intel: "__SHA256_INTEL__"
+
+  url "https://github.com/mfl28/BoundingBoxEditor/releases/download/v#{version}/boundingboxeditor-#{version}#{arch}.dmg"
   name "Bounding Box Editor"
-  desc "Image annotation tool for bounding boxes and polygons"
+  desc "Image annotation tool for bounding boxes, polygons and masks"
   homepage "https://github.com/mfl28/BoundingBoxEditor"
 
   livecheck do
@@ -13,7 +17,6 @@ cask "boundingboxeditor" do
   end
 
   depends_on :macos
-  depends_on arch: :arm64
 
   app "BoundingBoxEditor.app"
 

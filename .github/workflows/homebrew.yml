@@ -66,19 +66,24 @@ jobs:
           fi
 
           version="${tag#v}"
-          dmg="boundingboxeditor-$version.dmg"
+          # Apple Silicon and (from 3.1.0 on) Intel disk images.
+          arm_dmg="boundingboxeditor-$version.dmg"
+          intel_dmg="boundingboxeditor-$version-intel.dmg"
 
-          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern "$dmg" --dir release
-          # The checksum of the published disk image, i.e. of the file Homebrew will download.
-          sha256="$(shasum -a 256 "release/$dmg" | cut -d ' ' -f 1)"
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern "$arm_dmg" --pattern "$intel_dmg" --dir release
+          # The checksums of the published disk images, i.e. of the files Homebrew will download.
+          sha256_arm="$(shasum -a 256 "release/$arm_dmg" | cut -d ' ' -f 1)"
+          sha256_intel="$(shasum -a 256 "release/$intel_dmg" | cut -d ' ' -f 1)"
 
-          echo "Creating the cask for $dmg ($tag) with SHA-256 $sha256."
+          echo "Creating the cask for $tag: $arm_dmg ($sha256_arm), $intel_dmg ($sha256_intel)."
           echo "VERSION=$version" >> "$GITHUB_ENV"
-          echo "SHA256=$sha256" >> "$GITHUB_ENV"
+          echo "SHA256_ARM=$sha256_arm" >> "$GITHUB_ENV"
+          echo "SHA256_INTEL=$sha256_intel" >> "$GITHUB_ENV"
       - name: Fill in cask
         run: |
           mkdir -p cask
-          sed -e "s/__VERSION__/$VERSION/g" -e "s/__SHA256__/$SHA256/g" homebrew/boundingboxeditor.rb > cask/boundingboxeditor.rb
+          sed -e "s/__VERSION__/$VERSION/g" -e "s/__SHA256_ARM__/$SHA256_ARM/g" -e "s/__SHA256_INTEL__/$SHA256_INTEL/g" \
+            homebrew/boundingboxeditor.rb > cask/boundingboxeditor.rb
 
           if placeholder="$(grep -oE '__[A-Z0-9]+__' cask/boundingboxeditor.rb)"; then
             echo "::error::Unreplaced placeholder '$placeholder' in homebrew/boundingboxeditor.rb."
@@ -95,6 +100,8 @@ jobs:
 
           brew style --cask local/test/boundingboxeditor
           brew audit --cask --online local/test/boundingboxeditor
+          # The runner is an Apple Silicon Mac: the Intel disk image is only downloaded (which checks its checksum).
+          brew fetch --cask --arch intel --force local/test/boundingboxeditor
       - name: Install and uninstall cask
         run: |
           brew install --cask local/test/boundingboxeditor
