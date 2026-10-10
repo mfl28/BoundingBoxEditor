@@ -751,7 +751,8 @@ public class Controller {
     private void reloadCurrentAnnotationInView() {
         final ImageAnnotation annotation = model.getCurrentImageAnnotation();
 
-        if(annotation != null) {
+        // While the image is still loading, its load listener shows the shapes once its size is known.
+        if(annotation != null && view.getEditorImagePane().isImageFullyLoaded()) {
             view.getObjectTree().reset();
             view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
             view.loadBoundingShapeViewsFromAnnotation(annotation);
@@ -1478,9 +1479,18 @@ public class Controller {
                               folder.getPath(), AUTOSAVE_TIME_FORMATTER.format(lastSaved.get())), stage);
 
         if(answer == ButtonBar.ButtonData.YES) {
-            folderToRestoreWithoutAsking = folder;
-            loadImageFiles(folder);
+            loadImageFilesAndRestoreAutosave(folder);
         }
+    }
+
+    /**
+     * Opens an image folder and restores its autosaved annotations without asking.
+     *
+     * @param folder the image folder
+     */
+    void loadImageFilesAndRestoreAutosave(File folder) {
+        folderToRestoreWithoutAsking = folder;
+        loadImageFiles(folder);
     }
 
     /**

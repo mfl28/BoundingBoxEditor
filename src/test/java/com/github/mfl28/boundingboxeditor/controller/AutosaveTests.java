@@ -22,7 +22,9 @@ import com.github.mfl28.boundingboxeditor.BoundingBoxEditorTestBase;
 import com.github.mfl28.boundingboxeditor.model.data.*;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.hamcrest.Matchers;
@@ -125,6 +127,29 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getImageFileNameToAnnotationMap().isEmpty(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(Files.exists(controller.getAutosaveStore().fileFor(folder)), Matchers.is(false),
+                   saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onRestoringAutosaveWithoutAsking_ShouldPlaceTheShapesOnTheLoadedImage(FxRobot robot, TestInfo testinfo)
+            throws Exception {
+        final File folder = testImageFolder();
+        writeAutosave(folder);
+
+        // The annotations may be restored before the image is loaded (no dialog in between, as at startup).
+        robot.interact(() -> controller.loadImageFilesAndRestoreAutosave(folder));
+        waitUntilCurrentImageIsLoaded(testinfo);
+        waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1, "the restored box", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        final Bounds imageBounds = mainView.getEditorImageView().getBoundsInParent();
+        final Bounds boxBounds = ((Node) mainView.getCurrentBoundingShapes().getFirst()).getBoundsInParent();
+        // The autosaved box covers 20 % to 60 % of the image.
+        verifyThat(boxBounds.getMinX(),
+                   Matchers.closeTo(imageBounds.getMinX() + 0.2 * imageBounds.getWidth(), 3.0),
+                   saveScreenshot(testinfo));
+        verifyThat(boxBounds.getMaxY(),
+                   Matchers.closeTo(imageBounds.getMinY() + 0.6 * imageBounds.getHeight(), 3.0),
                    saveScreenshot(testinfo));
     }
 
