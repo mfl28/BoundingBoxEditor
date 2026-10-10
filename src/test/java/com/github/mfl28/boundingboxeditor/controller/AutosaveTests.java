@@ -73,6 +73,10 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
 
         verifyThat(Files.isRegularFile(store.fileFor(folder)), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(model.isSaved(), Matchers.is(false), saveScreenshot(testinfo));
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat(mainView.getStatusBar().getSavedStatusDescription(),
+                   Matchers.startsWith("The annotations are not exported yet. They were saved automatically at "),
+                   saveScreenshot(testinfo));
 
         // Exported annotations need no autosave.
         Platform.runLater(() -> controller.initiateAnnotationExport(tempDir.resolve("annotations.json").toFile(),
@@ -83,6 +87,8 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
 
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(Files.exists(store.fileFor(folder)), Matchers.is(false), saveScreenshot(testinfo));
+        verifyThat(mainView.getStatusBar().getSavedStatusDescription(),
+                   Matchers.equalTo("All annotations are exported."), saveScreenshot(testinfo));
     }
 
     @Test
@@ -106,6 +112,9 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
         verifyThat(model.isSaved(), Matchers.is(false), saveScreenshot(testinfo));
         controller.waitForAutosave();
         verifyThat(Files.isRegularFile(controller.getAutosaveStore().fileFor(folder)), Matchers.is(true),
+                   saveScreenshot(testinfo));
+        verifyThat(mainView.getStatusBar().getSavedStatusDescription(),
+                   Matchers.startsWith("The annotations are not exported yet. They were saved automatically "),
                    saveScreenshot(testinfo));
         // The autosave folder doesn't become the folder for importing annotations.
         verifyThat(controller.getIoMetaData().getDefaultAnnotationLoadingDirectory(),

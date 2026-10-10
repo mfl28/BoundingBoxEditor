@@ -1344,6 +1344,7 @@ public class Controller {
         autosaveExecutor.execute(() -> {
             try {
                 autosaveStore.save(folder, snapshot);
+                Platform.runLater(this::showAutosaveTime);
             } catch(IOException e) {
                 Platform.runLater(() -> view.getStatusBar().setStatusEvent(new AutosaveFailedEvent(e.getMessage())));
             }
@@ -1408,6 +1409,17 @@ public class Controller {
         } catch(ExecutionException | TimeoutException e) {
             autosaveStore.delete(folder);
         }
+
+        showAutosaveTime();
+    }
+
+    /**
+     * Shows when the annotations of the shown folder were last saved automatically (in the status bar's saved-status
+     * tooltip).
+     */
+    private void showAutosaveTime() {
+        view.getStatusBar().setAutosaveTime(currentImageFolder == null ? null
+                : autosaveStore.lastSaved(currentImageFolder).orElse(null));
     }
 
     /**
@@ -1566,12 +1578,14 @@ public class Controller {
             view.getStatusBar().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(result, folder));
             currentImageFolder = folder;
             offerToRestoreAutosave(folder);
+            showAutosaveTime();
         }
 
         @Override
         public void clearWorkspace() {
             clearViewAndModel();
             currentImageFolder = null;
+            showAutosaveTime();
         }
     }
 
