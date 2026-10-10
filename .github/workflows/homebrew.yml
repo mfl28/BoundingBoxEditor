@@ -100,8 +100,20 @@ jobs:
 
           brew style --cask local/test/boundingboxeditor
           brew audit --cask --online local/test/boundingboxeditor
-          # The runner is an Apple Silicon Mac: the Intel disk image is only downloaded (which checks its checksum).
-          brew fetch --cask --arch intel --force local/test/boundingboxeditor
+          # The runner is an Apple Silicon Mac, so the Intel variant is checked in the cask's data: its download must be
+          # the Intel disk image, with that image's checksum. (brew fetch --arch intel ignores the arch for a tap cask.)
+          brew info --cask --json=v2 --variations local/test/boundingboxeditor > cask-info.json
+          intel_url="$(jq -r '[.casks[0].variations // {} | to_entries[] | select(.key | startswith("arm64") | not)
+                               | .value.url // empty] | unique | join(" ")' cask-info.json)"
+          intel_sha256="$(jq -r '[.casks[0].variations // {} | to_entries[] | select(.key | startswith("arm64") | not)
+                                  | .value.sha256 // empty] | unique | join(" ")' cask-info.json)"
+          expected_url="https://github.com/mfl28/BoundingBoxEditor/releases/download/v$VERSION/boundingboxeditor-$VERSION-intel.dmg"
+          echo "Intel variant: $intel_url ($intel_sha256)"
+
+          if [[ "$intel_url" != "$expected_url" || "$intel_sha256" != "$SHA256_INTEL" ]]; then
+            echo "::error::The cask's Intel variant is '$intel_url' ($intel_sha256), expected '$expected_url' ($SHA256_INTEL)."
+            exit 1
+          fi
       - name: Install and uninstall cask
         run: |
           brew install --cask local/test/boundingboxeditor
