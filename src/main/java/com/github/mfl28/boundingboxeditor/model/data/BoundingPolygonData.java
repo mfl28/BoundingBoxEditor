@@ -83,7 +83,8 @@ public final class BoundingPolygonData extends BoundingShapeData {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), relativePointsInImage);
+        // equals() compares the points with a tolerance, so only their number (which it compares exactly) is used.
+        return Objects.hash(super.hashCode(), relativePointsInImage == null ? -1 : relativePointsInImage.size());
     }
 
     @Override

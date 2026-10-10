@@ -136,7 +136,9 @@ public final class BoundingBoxData extends BoundingShapeData {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), relativeBoundsInImage);
+        // equals() compares the bounds with a tolerance, so equal boxes can have slightly different bounds: they are
+        // left out, as no hash of them can be the same for all equal boxes.
+        return Objects.hash(super.hashCode(), relativeBoundsInImage == null);
     }
 
     @Override
