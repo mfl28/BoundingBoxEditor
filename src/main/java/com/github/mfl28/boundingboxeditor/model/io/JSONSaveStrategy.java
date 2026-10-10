@@ -18,14 +18,18 @@
  */
 package com.github.mfl28.boundingboxeditor.model.io;
 
+import com.github.mfl28.boundingboxeditor.model.data.BoundingMaskData;
+import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotationData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
+import com.github.mfl28.boundingboxeditor.model.data.MaskBitmap;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationExportResult;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import javafx.beans.property.DoubleProperty;
 import javafx.geometry.Bounds;
 
@@ -54,6 +58,12 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
     private static final String HEIGHT_SERIALIZED_NAME = "height";
     private static final String DEPTH_SERIALIZED_NAME = "depth";
     private static final String DETAILS_SERIALIZED_NAME = "details";
+    static final String MASK_SERIALIZED_NAME = "mask";
+    static final String MASK_SIZE_SERIALIZED_NAME = "size";
+    static final String MASK_COUNTS_SERIALIZED_NAME = "counts";
+    private static final String CATEGORY_SERIALIZED_NAME = "category";
+    private static final String TAGS_SERIALIZED_NAME = "tags";
+    private static final String PARTS_SERIALIZED_NAME = "parts";
 
     @Override
     public ImageAnnotationExportResult save(ImageAnnotationData annotations, Path destination,
@@ -104,6 +114,27 @@ public class JSONSaveStrategy implements ImageAnnotationSaveStrategy {
                             imageMetaDataObject.add(DETAILS_SERIALIZED_NAME, imageMetaDataDetailsObject);
 
                             return imageMetaDataObject;
+                        })
+                // Masks as COCO run-length encoding, with the same other keys as boxes and polygons.
+                .registerTypeAdapter(BoundingMaskData.class,
+                        (JsonSerializer<BoundingMaskData>) (src, typeOfSrc, context) -> {
+                            final MaskBitmap mask = src.getMask();
+                            final JsonObject maskObject = new JsonObject();
+                            final JsonArray size = new JsonArray();
+                            size.add(mask.getImageHeight());
+                            size.add(mask.getImageWidth());
+                            maskObject.add(MASK_SIZE_SERIALIZED_NAME, size);
+                            maskObject.addProperty(MASK_COUNTS_SERIALIZED_NAME,
+                                    COCORunLengthEncoding.encode(mask.toColumnMajorRunLengths()));
+
+                            final JsonObject shapeObject = new JsonObject();
+                            shapeObject.add(MASK_SERIALIZED_NAME, maskObject);
+                            shapeObject.add(CATEGORY_SERIALIZED_NAME, context.serialize(src.getCategory()));
+                            shapeObject.add(TAGS_SERIALIZED_NAME, context.serialize(src.getTags()));
+                            shapeObject.add(PARTS_SERIALIZED_NAME, context.serialize(src.getParts(),
+                                    new TypeToken<List<BoundingShapeData>>() {
+                                    }.getType()));
+                            return shapeObject;
                         })
                 .registerTypeHierarchyAdapter(Bounds.class, (JsonSerializer<Bounds>) (src, typeOfSrc, context) -> {
                     JsonObject boundsObject = new JsonObject();

@@ -890,7 +890,7 @@ class ControllerTests extends BoundingBoxEditorTestBase {
                 "Invalid tags value(s) in bndbox element " +
                         "in annotation for image nico-bhlr-1067059-unsplash.jpg.");
         final IOErrorInfoEntry error9 = new IOErrorInfoEntry("missing_critical_elements.json",
-                "Missing bndbox or polygon element in " +
+                "Missing bndbox, polygon or mask element in " +
                         "annotation for image austin-neill-685084-unsplash.jpg.");
         final IOErrorInfoEntry error10 = new IOErrorInfoEntry("missing_critical_elements.json",
                 "Missing maxY element in bndbox element in" +

@@ -23,6 +23,7 @@ import com.github.mfl28.boundingboxeditor.model.ImageFileFilter;
 import com.github.mfl28.boundingboxeditor.model.Model;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
+import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotationData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.IoMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
@@ -34,6 +35,7 @@ import com.github.mfl28.boundingboxeditor.model.io.results.*;
 import com.github.mfl28.boundingboxeditor.model.io.services.*;
 import com.github.mfl28.boundingboxeditor.ui.*;
 import com.github.mfl28.boundingboxeditor.ui.settings.InferenceSettingsView;
+import com.github.mfl28.boundingboxeditor.ui.statusevents.AutosaveFailedEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.BoundingBoxPredictionSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.BoundingShapeClipboardEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsImportingSuccessfulEvent;
@@ -41,6 +43,7 @@ import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsSaving
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageFilesLoadingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.github.mfl28.boundingboxeditor.utils.ImageUtils;
+import javafx.animation.PauseTransition;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -57,9 +60,20 @@ import javafx.scene.image.Image;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.File;
+import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 /**
@@ -137,6 +151,27 @@ public class Controller {
     private final ShapeClipboardController shapeClipboardController =
             new ShapeClipboardController(new ShapeClipboardOperations());
     private boolean editCheckpointScheduled = false;
+    // Autosave: the annotations are saved a few seconds after the last change, until they are exported.
+    private static final Duration AUTOSAVE_DELAY = Duration.seconds(5);
+    private static final long AUTOSAVE_DELETION_TIMEOUT_SECONDS = 5;
+    static final String RESTORE_AUTOSAVE_DIALOG_TITLE = "Restore Unsaved Annotations";
+    private static final DateTimeFormatter AUTOSAVE_TIME_FORMATTER =
+            DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault());
+    private final AutosaveStore autosaveStore = AutosaveStore.createDefault();
+    private final PauseTransition autosaveDelay = new PauseTransition(AUTOSAVE_DELAY);
+    // Saves and deletes in order, off the JavaFX thread.
+    private final ExecutorService autosaveExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        final Thread thread = new Thread(runnable, "autosave");
+        thread.setDaemon(true);
+        return thread;
+    });
+    // The folder whose images are shown, which the autosave belongs to.
+    private File currentImageFolder;
+    // While it is open whether to restore the shown folder's autosave, and while it is restored, nothing is saved.
+    private boolean autosavePaused = false;
+    private boolean restoringAutosave = false;
+    // Set when the user agreed at startup to restore the last folder's autosave, so that it isn't asked again.
+    private File folderToRestoreWithoutAsking;
     private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener =
             createBoundingShapeCountPerCategoryListener();
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
@@ -189,6 +224,9 @@ public class Controller {
         view.connectToController(this);
         setUpModelListeners();
         setUpServices();
+        setUpAutosave();
+        // After the window was shown.
+        Platform.runLater(this::offerToRestoreLastSession);
     }
 
     public void onRegisterSettingsAction() {
@@ -436,8 +474,12 @@ public class Controller {
             } else if(answer == ButtonBar.ButtonData.CANCEL_CLOSE) {
                 return;
             }
+
+            // The user decided not to keep the annotations.
+            deleteAutosave(currentImageFolder);
         }
 
+        autosaveDelay.stop();
         savePreferences();
         imageFolderController.stopWatching();
         makeClientUnavailable();
@@ -789,10 +831,21 @@ public class Controller {
 
     private void onAnnotationImportSucceeded(WorkerStateEvent workerStateEvent) {
         ImageAnnotationImportResult importResult = annotationImportService.getValue();
+        final boolean restoredAutosave = restoringAutosave;
+        restoringAutosave = false;
 
         if(importResult.getNrSuccessfullyProcessedItems() != 0) {
             model.updateFromImageAnnotationData(importResult.getImageAnnotationData(), importResult.getOperationType());
             view.getStatusBar().setStatusEvent(new ImageAnnotationsImportingSuccessfulEvent(importResult));
+        }
+
+        if(restoredAutosave) {
+            autosavePaused = false;
+
+            // Restored annotations are still not exported.
+            if(importResult.getNrSuccessfullyProcessedItems() != 0) {
+                model.setSaved(false);
+            }
         }
 
         updateViewFileExplorerFileInfoElements();
@@ -810,11 +863,18 @@ public class Controller {
             return;
         }
 
-        annotationIoController.rememberLoadingDirectory(annotationImportService.getSource());
+        if(!restoredAutosave) {
+            annotationIoController.rememberLoadingDirectory(annotationImportService.getSource());
+        }
     }
 
 
     private void onIoServiceFailed(WorkerStateEvent event) {
+        if(annotationImportService.equals(event.getSource()) && restoringAutosave) {
+            restoringAutosave = false;
+            autosavePaused = false;
+        }
+
         final Throwable exception = event.getSource().getException();
 
         if(exception != null) {
@@ -1251,7 +1311,175 @@ public class Controller {
             Platform.runLater(() -> {
                 editCheckpointScheduled = false;
                 editHistoryController.checkpoint();
+                scheduleAutosave();
             });
+        }
+    }
+
+    /**
+     * Saves the annotations of the shown folder now (as after the autosave delay), unless they are exported.
+     */
+    void autosaveNow() {
+        final File folder = currentImageFolder;
+
+        if(folder == null || autosavePaused) {
+            return;
+        }
+
+        if(view.getEditorImagePane().isDrawingInProgress()) {
+            scheduleAutosave();
+            return;
+        }
+
+        updateModelFromView();
+
+        if(model.isSaved()) {
+            deleteAutosave(folder);
+            return;
+        }
+
+        final ImageAnnotationData snapshot = createAutosaveSnapshot();
+
+        autosaveExecutor.execute(() -> {
+            try {
+                autosaveStore.save(folder, snapshot);
+            } catch(IOException e) {
+                Platform.runLater(() -> view.getStatusBar().setStatusEvent(new AutosaveFailedEvent(e.getMessage())));
+            }
+        });
+    }
+
+    /**
+     * Waits until the autosaves that were started are written (or deleted).
+     */
+    void waitForAutosave() {
+        try {
+            autosaveExecutor.submit(() -> { }).get(AUTOSAVE_DELETION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch(InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch(ExecutionException | TimeoutException e) {
+            // Nothing to wait for anymore.
+        }
+    }
+
+    AutosaveStore getAutosaveStore() {
+        return autosaveStore;
+    }
+
+    private void setUpAutosave() {
+        autosaveDelay.setOnFinished(event -> autosaveNow());
+
+        // Exported (or discarded, when another folder is opened) annotations need no autosave anymore.
+        model.savedProperty().addListener((observable, oldValue, newValue) -> {
+            if(autosavePaused) {
+                return;
+            }
+
+            if(Boolean.TRUE.equals(newValue)) {
+                autosaveDelay.stop();
+                deleteAutosave(currentImageFolder);
+            } else {
+                scheduleAutosave();
+            }
+        });
+    }
+
+    private void scheduleAutosave() {
+        if(currentImageFolder != null && !autosavePaused) {
+            autosaveDelay.playFromStart();
+        }
+    }
+
+    /**
+     * Deletes the autosave of a folder, after the autosaves that were already started, and waits for it (so that it
+     * is gone even if the app quits right afterwards).
+     */
+    private void deleteAutosave(File folder) {
+        if(folder == null) {
+            return;
+        }
+
+        try {
+            autosaveExecutor.submit(() -> autosaveStore.delete(folder))
+                            .get(AUTOSAVE_DELETION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch(InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch(ExecutionException | TimeoutException e) {
+            autosaveStore.delete(folder);
+        }
+    }
+
+    /**
+     * Copies the annotations (with their tags and parts), so that they can be saved off the JavaFX thread while the
+     * user goes on editing.
+     */
+    private ImageAnnotationData createAutosaveSnapshot() {
+        final ImageAnnotationData data = model.createImageAnnotationData();
+        final List<ImageAnnotation> annotations = data.imageAnnotations().stream()
+                .map(annotation -> new ImageAnnotation(annotation.getImageMetaData(),
+                        annotation.getBoundingShapeData().stream().map(ShapeClipboardController::copyOf).toList()))
+                .toList();
+        return new ImageAnnotationData(annotations, Map.copyOf(data.categoryNameToBoundingShapeCountMap()),
+                Map.copyOf(data.categoryNameToCategoryMap()));
+    }
+
+    /**
+     * Asks whether to restore the autosaved annotations of a folder that was opened (unless the user already agreed
+     * at startup), and restores or deletes them.
+     */
+    private void offerToRestoreAutosave(File folder) {
+        final Optional<Instant> lastSaved = autosaveStore.lastSaved(folder);
+        final boolean restoreWithoutAsking = folder.equals(folderToRestoreWithoutAsking);
+        folderToRestoreWithoutAsking = null;
+
+        if(lastSaved.isEmpty()) {
+            return;
+        }
+
+        autosavePaused = true;
+        autosaveDelay.stop();
+
+        final boolean restore = restoreWithoutAsking
+                || dialogService.displayYesNoDialogAndGetResult(RESTORE_AUTOSAVE_DIALOG_TITLE,
+                String.format("The annotations of this folder from %s were not exported. They were saved "
+                                      + "automatically. Restore them?",
+                              AUTOSAVE_TIME_FORMATTER.format(lastSaved.get())), stage) == ButtonBar.ButtonData.YES;
+
+        if(restore) {
+            restoringAutosave = true;
+            startAnnotationImportService(autosaveStore.fileFor(folder).toFile(), ImageAnnotationLoadStrategy.Type.JSON);
+        } else {
+            autosavePaused = false;
+            deleteAutosave(folder);
+        }
+    }
+
+    /**
+     * At startup, offers to reopen the most recently opened folder if its annotations were not exported.
+     */
+    private void offerToRestoreLastSession() {
+        final List<File> folders = recentImageFolders.getFolders();
+
+        if(folders.isEmpty() || currentImageFolder != null) {
+            return;
+        }
+
+        final File folder = folders.getFirst();
+        final Optional<Instant> lastSaved = autosaveStore.lastSaved(folder);
+
+        if(!folder.isDirectory() || lastSaved.isEmpty()) {
+            return;
+        }
+
+        final ButtonBar.ButtonData answer = dialogService.displayYesNoDialogAndGetResult(
+                RESTORE_AUTOSAVE_DIALOG_TITLE,
+                String.format("The annotations of the folder \"%s\" from %s were not exported. They were saved "
+                                      + "automatically. Open the folder and restore them?",
+                              folder.getPath(), AUTOSAVE_TIME_FORMATTER.format(lastSaved.get())), stage);
+
+        if(answer == ButtonBar.ButtonData.YES) {
+            folderToRestoreWithoutAsking = folder;
+            loadImageFiles(folder);
         }
     }
 
@@ -1326,11 +1554,14 @@ public class Controller {
             recentImageFolders.add(folder);
 
             view.getStatusBar().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(result, folder));
+            currentImageFolder = folder;
+            offerToRestoreAutosave(folder);
         }
 
         @Override
         public void clearWorkspace() {
             clearViewAndModel();
+            currentImageFolder = null;
         }
     }
 
