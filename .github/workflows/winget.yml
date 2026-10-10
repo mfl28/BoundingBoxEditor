@@ -180,9 +180,22 @@ jobs:
         shell: pwsh
         env:
           WINGET_CREATE_GITHUB_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          # A release calls this workflow with its own event (push); a manual run has workflow_dispatch.
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           if (-not $env:WINGET_CREATE_GITHUB_TOKEN) {
             throw 'The WINGET_TOKEN secret is not set.'
+          }
+
+          gh api "repos/microsoft/winget-pkgs/contents/manifests/m/$($env:PACKAGE_IDENTIFIER.Replace('.', '/'))" --silent 2>$null
+          $packageExists = $LASTEXITCODE -eq 0
+          $global:LASTEXITCODE = 0
+
+          # Until the first version is accepted (a new package needs a moderator's review), releases don't submit
+          # another new package; that version can be submitted with a manual run once the package exists.
+          if (-not $packageExists -and $env:EVENT_NAME -ne 'workflow_dispatch') {
+            Write-Output "::notice::$env:PACKAGE_IDENTIFIER is not in microsoft/winget-pkgs yet (its first submission is still being reviewed), so version $env:VERSION was not submitted. Run this workflow manually for this tag once the package was accepted."
+            exit 0
           }
 
           $url = "https://github.com/microsoft/winget-create/releases/download/v$env:WINGETCREATE_VERSION/wingetcreate.exe"
@@ -191,10 +204,7 @@ jobs:
             throw 'Unexpected checksum of wingetcreate.exe.'
           }
 
-          # The first version is submitted as a new package.
-          gh api "repos/microsoft/winget-pkgs/contents/manifests/m/$($env:PACKAGE_IDENTIFIER.Replace('.', '/'))" --silent 2>$null
-          $kind = if ($LASTEXITCODE -eq 0) { 'New version' } else { 'New package' }
-          $global:LASTEXITCODE = 0
+          $kind = if ($packageExists) { 'New version' } else { 'New package' }
 
           .\wingetcreate.exe submit --no-open --prtitle "${kind}: $env:PACKAGE_IDENTIFIER version $env:VERSION" $env:MANIFESTS
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
