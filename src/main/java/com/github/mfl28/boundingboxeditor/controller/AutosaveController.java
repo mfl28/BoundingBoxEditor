@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Function;
 
 /**
  * Saves the not yet exported annotations of the open folder a few seconds after the last change (into an
@@ -45,7 +44,7 @@ import java.util.function.Function;
  */
 class AutosaveController {
     static final String RESTORE_DIALOG_TITLE = "Restore Unsaved Annotations";
-    private static final Duration DELAY = Duration.seconds(5);
+    private static final Duration SAVE_DELAY = Duration.seconds(5);
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault());
 
@@ -55,7 +54,7 @@ class AutosaveController {
     private final RecentImageFolders recentImageFolders;
     private final AutosaveStore store;
     private final AutosaveWriter writer;
-    private final Timer delay;
+    private final Timer saveTimer;
     private final Operations operations;
     // The folder whose images are shown, which the autosave belongs to.
     private File currentFolder;
@@ -102,6 +101,13 @@ class AutosaveController {
         void showAutosaveTime(Instant time);
 
         void showAutosaveFailed(String reason);
+
+        /**
+         * Creates the delay after a change ({@link AutosaveController#createSaveTimer} in the app).
+         *
+         * @param action what to do when the delay runs out
+         */
+        Timer createTimer(Runnable action);
     }
 
     /**
@@ -119,18 +125,16 @@ class AutosaveController {
     static AutosaveController create(Model model, DialogService dialogService, Stage stage,
                                      RecentImageFolders recentImageFolders, Operations operations) {
         return new AutosaveController(model, dialogService, stage, recentImageFolders, AutosaveStore.createDefault(),
-                AutosaveWriter.createExecutor(), AutosaveController::createDelay, operations);
+                AutosaveWriter.createExecutor(), operations);
     }
 
     /**
      * Creates the autosave.
      *
-     * @param executor     the executor (with one thread) that writes the autosaves
-     * @param timerFactory creates the delay after a change, for the action that saves
+     * @param executor the executor (with one thread) that writes the autosaves
      */
     AutosaveController(Model model, DialogService dialogService, Stage stage, RecentImageFolders recentImageFolders,
-                       AutosaveStore store, ExecutorService executor, Function<Runnable, Timer> timerFactory,
-                       Operations operations) {
+                       AutosaveStore store, ExecutorService executor, Operations operations) {
         this.model = model;
         this.dialogService = dialogService;
         this.stage = stage;
@@ -139,7 +143,7 @@ class AutosaveController {
         this.operations = operations;
         this.writer = new AutosaveWriter(store, executor, this::onSaved,
                 exception -> onSaveFailed(exception.getMessage()));
-        this.delay = timerFactory.apply(this::saveNow);
+        this.saveTimer = operations.createTimer(this::saveNow);
 
         // Exported (or discarded, when another folder is opened) annotations need no autosave anymore.
         model.savedProperty().addListener((observable, oldValue, newValue) -> {
@@ -148,7 +152,7 @@ class AutosaveController {
             }
 
             if(Boolean.TRUE.equals(newValue)) {
-                delay.stop();
+                saveTimer.stop();
                 delete(currentFolder);
             } else {
                 schedule();
@@ -211,7 +215,7 @@ class AutosaveController {
 
         if(lastSaved.isPresent()) {
             paused = true;
-            delay.stop();
+            saveTimer.stop();
 
             final boolean restore = restoreWithoutAsking
                     || dialogService.displayYesNoDialogAndGetResult(RESTORE_DIALOG_TITLE,
@@ -275,7 +279,7 @@ class AutosaveController {
      */
     void stop() {
         stopped = true;
-        delay.stop();
+        saveTimer.stop();
         writer.awaitCompletion();
     }
 
@@ -329,7 +333,7 @@ class AutosaveController {
 
     private void schedule() {
         if(currentFolder != null && !paused && !stopped) {
-            delay.restart();
+            saveTimer.restart();
         }
     }
 
@@ -364,8 +368,14 @@ class AutosaveController {
                 Map.copyOf(data.categoryNameToCategoryMap()));
     }
 
-    private static Timer createDelay(Runnable action) {
-        final PauseTransition transition = new PauseTransition(DELAY);
+    /**
+     * Creates the delay after a change for the app: a JavaFX transition.
+     *
+     * @param action what to do when the delay runs out
+     * @return the timer
+     */
+    static Timer createSaveTimer(Runnable action) {
+        final PauseTransition transition = new PauseTransition(SAVE_DELAY);
         transition.setOnFinished(event -> action.run());
 
         return new Timer() {

@@ -741,14 +741,6 @@ public class Controller {
         annotationImportService.restart();
     }
 
-    private void startImageMetaDataLoadingService(File source, List<File> imageFiles, boolean reload) {
-        imageMetaDataLoadingService.reset();
-        imageMetaDataLoadingService.setSource(source);
-        imageMetaDataLoadingService.setImageFiles(imageFiles);
-        imageMetaDataLoadingService.setReload(reload);
-        imageMetaDataLoadingService.restart();
-    }
-
     private void setUpServices() {
         setUpService(annotationExportService, SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
                 SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER, this::onAnnotationExportSucceeded, false);
@@ -926,16 +918,6 @@ public class Controller {
         }
     }
 
-    private void clearModelAndViewAnnotationData() {
-        editHistoryController.clear();
-        model.clearAnnotationData(false);
-        view.reset();
-        view.getEditorImagePane().removeAllCurrentBoundingShapes();
-        // Reset all 'assigned bounding shape states' in image file explorer.
-        imageFileFilterController.getAllItems().forEach(item -> item.setHasAssignedBoundingShapes(false));
-        refreshImageFilter();
-    }
-
     private void updateModelFromView() {
         if(model.containsImageFiles()) {
             model.updateCurrentBoundingShapeData(view.extractCurrentBoundingShapeData());
@@ -1009,33 +991,6 @@ public class Controller {
 
         view.getEditor().getEditorToolBar().getPredictButton()
                 .visibleProperty().bind(model.getBoundingBoxPredictorConfig().inferenceEnabledProperty());
-    }
-
-    private void updateViewImageFiles() {
-        view.reset();
-
-        EditorImagePaneView imagePane = view.getEditorImagePane();
-        imagePane.removeAllCurrentBoundingShapes();
-        view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
-        imagePane.getImageLoadingProgressIndicator().setVisible(true);
-        view.getEditor().getEditorToolBar().getPredictButton().setDisable(true);
-
-        updateViewImageFromModel();
-
-        updateStageTitle();
-
-        ObjectCategoryTableView objectCategoryTableView = view.getObjectCategoryTable();
-        objectCategoryTableView.setItems(model.getObjectCategories());
-        objectCategoryTableView.getSelectionModel().selectFirst();
-
-        ImageFileExplorerView imageFileExplorerView = view.getImageFileExplorer();
-        imageFileExplorerView.resetFilter();
-
-        ImageFileListView imageFileListView = view.getImageFileListView();
-        imageFileListView.setItems(imageFileFilterController.setItems(
-                ImageFileExplorerView.createFileInfos(model.getImageMetaDataList()), model.getCurrentFileIndex()));
-        imageFileListView.getSelectionModel().selectFirst();
-        imageFileListView.scrollTo(0);
     }
 
     private void updateStageTitle() {
@@ -1159,7 +1114,7 @@ public class Controller {
 
         try {
             metaData = model.getCurrentImageMetaData();
-        } catch(Exception e) {
+        } catch(Exception _) {
             view.getEditorImagePane().getImageLoadingProgressIndicator().setVisible(false);
             dialogService.displayErrorAlert(IMAGE_LOADING_ERROR_DIALOG_TITLE,
                     "Could not read meta-data from image file \"" + model.getCurrentImageFileName() +
@@ -1217,33 +1172,6 @@ public class Controller {
 
     private void savePreferences() {
         preferencesStore.save(stage.isMaximized(), ioMetaData);
-    }
-
-    private void clearViewAndModel() {
-        editHistoryController.clear();
-        model.fileIndexProperty().removeListener(selectedFileIndexListener);
-        model.clear();
-
-        view.reset();
-
-        EditorImagePaneView imagePane = view.getEditorImagePane();
-        imagePane.removeAllCurrentBoundingShapes();
-        view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
-
-        stage.setTitle(PROGRAM_IDENTIFIER);
-
-        ObjectCategoryTableView objectCategoryTableView = view.getObjectCategoryTable();
-        objectCategoryTableView.getItems().clear();
-        objectCategoryTableView.getSelectionModel().clearSelection();
-
-        ImageFileListView imageFileListView = view.getImageFileListView();
-        imageFileListView.setItems(null);
-        imageFileListView.getSelectionModel().clearSelection();
-        imageFileFilterController.clear();
-        view.getImageFileExplorer().resetFilter();
-
-        view.getStatusBar().clear();
-        view.setWorkspaceVisible(false);
     }
 
     private void setupStage() {
@@ -1305,6 +1233,16 @@ public class Controller {
      * Runs the annotation imports and exports initiated by the {@link AnnotationIoController}.
      */
     private class AnnotationIoOperations implements AnnotationIoController.Operations {
+        private void clearModelAndViewAnnotationData() {
+            editHistoryController.clear();
+            model.clearAnnotationData(false);
+            view.reset();
+            view.getEditorImagePane().removeAllCurrentBoundingShapes();
+            // Reset all 'assigned bounding shape states' in image file explorer.
+            imageFileFilterController.getAllItems().forEach(item -> item.setHasAssignedBoundingShapes(false));
+            refreshImageFilter();
+        }
+
         @Override
         public void updateModelFromView() {
             Controller.this.updateModelFromView();
@@ -1330,6 +1268,68 @@ public class Controller {
      * Loads and shows the image folders opened by the {@link ImageFolderController}.
      */
     private class ImageFolderOperations implements ImageFolderController.Operations {
+        private void startImageMetaDataLoadingService(File source, List<File> imageFiles, boolean reload) {
+            imageMetaDataLoadingService.reset();
+            imageMetaDataLoadingService.setSource(source);
+            imageMetaDataLoadingService.setImageFiles(imageFiles);
+            imageMetaDataLoadingService.setReload(reload);
+            imageMetaDataLoadingService.restart();
+        }
+
+        private void updateViewImageFiles() {
+            view.reset();
+
+            EditorImagePaneView imagePane = view.getEditorImagePane();
+            imagePane.removeAllCurrentBoundingShapes();
+            view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
+            imagePane.getImageLoadingProgressIndicator().setVisible(true);
+            view.getEditor().getEditorToolBar().getPredictButton().setDisable(true);
+
+            updateViewImageFromModel();
+
+            updateStageTitle();
+
+            ObjectCategoryTableView objectCategoryTableView = view.getObjectCategoryTable();
+            objectCategoryTableView.setItems(model.getObjectCategories());
+            objectCategoryTableView.getSelectionModel().selectFirst();
+
+            ImageFileExplorerView imageFileExplorerView = view.getImageFileExplorer();
+            imageFileExplorerView.resetFilter();
+
+            ImageFileListView imageFileListView = view.getImageFileListView();
+            imageFileListView.setItems(imageFileFilterController.setItems(
+                    ImageFileExplorerView.createFileInfos(model.getImageMetaDataList()), model.getCurrentFileIndex()));
+            imageFileListView.getSelectionModel().selectFirst();
+            imageFileListView.scrollTo(0);
+        }
+
+        private void clearViewAndModel() {
+            editHistoryController.clear();
+            model.fileIndexProperty().removeListener(selectedFileIndexListener);
+            model.clear();
+
+            view.reset();
+
+            EditorImagePaneView imagePane = view.getEditorImagePane();
+            imagePane.removeAllCurrentBoundingShapes();
+            view.getCurrentBoundingShapes().removeListener(boundingShapeCountPerCategoryListener);
+
+            stage.setTitle(PROGRAM_IDENTIFIER);
+
+            ObjectCategoryTableView objectCategoryTableView = view.getObjectCategoryTable();
+            objectCategoryTableView.getItems().clear();
+            objectCategoryTableView.getSelectionModel().clearSelection();
+
+            ImageFileListView imageFileListView = view.getImageFileListView();
+            imageFileListView.setItems(null);
+            imageFileListView.getSelectionModel().clearSelection();
+            imageFileFilterController.clear();
+            view.getImageFileExplorer().resetFilter();
+
+            view.getStatusBar().clear();
+            view.setWorkspaceVisible(false);
+        }
+
         @Override
         public void updateModelFromView() {
             Controller.this.updateModelFromView();
@@ -1553,6 +1553,11 @@ public class Controller {
         @Override
         public void showAutosaveFailed(String reason) {
             view.getStatusBar().setStatusEvent(new AutosaveFailedEvent(reason));
+        }
+
+        @Override
+        public AutosaveController.Timer createTimer(Runnable action) {
+            return AutosaveController.createSaveTimer(action);
         }
     }
 }
