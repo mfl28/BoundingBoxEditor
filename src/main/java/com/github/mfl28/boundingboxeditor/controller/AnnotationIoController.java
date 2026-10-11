@@ -218,7 +218,8 @@ class AnnotationIoController {
 
     /**
      * Lets the user choose a format and destination and saves the annotations. The provided operation is run after
-     * the annotations were saved successfully, or right away if the user cancels choosing a format or destination.
+     * the export (also if some files couldn't be written), or right away if the user cancels choosing a format or
+     * destination.
      *
      * @param operation run after saving or cancelling
      */
@@ -227,7 +228,7 @@ class AnnotationIoController {
             final File destination = chooseSavingDestination(choice);
 
             if(destination != null) {
-                operations.startExport(destination, choice, operation);
+                operations.startExport(destination, choice, new RunInAnyCase(operation));
             } else {
                 operation.run();
             }
@@ -236,7 +237,8 @@ class AnnotationIoController {
 
     /**
      * Handles a finished export: the annotations count as saved unless some files couldn't be written (which are
-     * listed in an error report), and the operation that waited for the export runs.
+     * listed in an error report). The operation that waited for the export runs only if everything was saved (it
+     * may discard the annotations, e.g. quitting or opening another folder), unless it runs in any case.
      *
      * @param result           the export result
      * @param destination      the annotation file or folder
@@ -248,16 +250,18 @@ class AnnotationIoController {
             operations.showStatus(new ImageAnnotationsSavingSuccessfulEvent(result));
         }
 
-        if(!result.getErrorTableEntries().isEmpty()) {
+        final boolean savedCompletely = result.getErrorTableEntries().isEmpty();
+
+        if(savedCompletely) {
+            model.setSaved(true);
+        } else {
             progress.hideProgress();
             dialogService.displayIOResultErrorInfoAlert(result, stage);
-        } else {
-            model.setSaved(true);
         }
 
         rememberSavingDirectory(destination);
 
-        if(chainedOperation != null) {
+        if(chainedOperation != null && (savedCompletely || chainedOperation instanceof RunInAnyCase)) {
             chainedOperation.run();
         }
     }
@@ -377,5 +381,18 @@ class AnnotationIoController {
             default -> dialogService.displayDirectoryChooserAndGetChoice(LOAD_IMAGE_ANNOTATIONS_DIRECTORY_CHOOSER_TITLE,
                     stage, ioMetaData.getDefaultAnnotationLoadingDirectory());
         };
+    }
+
+    /**
+     * An operation that runs after an export even if some files couldn't be written (e.g. reloading a folder that
+     * changed on disk).
+     *
+     * @param operation the operation
+     */
+    private record RunInAnyCase(Runnable operation) implements Runnable {
+        @Override
+        public void run() {
+            operation.run();
+        }
     }
 }
