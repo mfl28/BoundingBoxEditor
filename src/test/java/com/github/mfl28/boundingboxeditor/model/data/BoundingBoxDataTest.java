@@ -21,10 +21,15 @@ package com.github.mfl28.boundingboxeditor.model.data;
 import javafx.geometry.BoundingBox;
 import javafx.scene.paint.Color;
 import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("unit")
 class BoundingBoxDataTest {
@@ -42,7 +47,21 @@ class BoundingBoxDataTest {
                 .withPrefabValues(ObjectCategory.class,
                         new ObjectCategory("foo", Color.RED),
                         new ObjectCategory("bar", Color.BLUE))
+                // equals() compares the coordinates with a tolerance, so hashCode() can't use them (see the test below).
+                .suppress(Warning.STRICT_HASHCODE)
                 .verify();
     }
 
+    @Test
+    void onComparingBoxesWithinTheTolerance_ShouldBeEqualWithEqualHashCodes() {
+        final ObjectCategory category = new ObjectCategory("foo", Color.RED);
+        final BoundingBoxData box = new BoundingBoxData(category, 0.1, 0.2, 0.5, 0.6, Collections.emptyList());
+        // Differs by less than MathUtils.DOUBLE_EQUAL_THRESHOLD (e.g. after rounding in a format).
+        final BoundingBoxData almostSameBox = new BoundingBoxData(category, 0.1 + 1e-10, 0.2, 0.5, 0.6 - 1e-10,
+                                                                  Collections.emptyList());
+
+        assertEquals(box, almostSameBox);
+        assertEquals(box.hashCode(), almostSameBox.hashCode());
+        assertEquals(1, new HashSet<>(List.of(box, almostSameBox)).size());
+    }
 }

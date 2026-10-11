@@ -21,11 +21,13 @@ package com.github.mfl28.boundingboxeditor.model.data;
 import javafx.geometry.BoundingBox;
 import javafx.scene.paint.Color;
 import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 @Tag("unit")
@@ -44,7 +46,22 @@ class BoundingPolygonDataTest {
                 .withPrefabValues(ObjectCategory.class,
                         new ObjectCategory("foo", Color.RED),
                         new ObjectCategory("bar", Color.BLUE))
+                // equals() compares the coordinates with a tolerance, so hashCode() can't use them (see the test below).
+                .suppress(Warning.STRICT_HASHCODE)
                 .verify();
+    }
+
+    @Test
+    void onComparingPolygonsWithinTheTolerance_ShouldBeEqualWithEqualHashCodes() {
+        final ObjectCategory category = new ObjectCategory("foo", Color.RED);
+        final BoundingPolygonData polygon = new BoundingPolygonData(category, List.of(0.1, 0.1, 0.5, 0.1, 0.3, 0.4),
+                                                                    Collections.emptyList());
+        final BoundingPolygonData almostSamePolygon = new BoundingPolygonData(category,
+                List.of(0.1 + 1e-10, 0.1, 0.5, 0.1 - 1e-10, 0.3, 0.4), Collections.emptyList());
+
+        Assertions.assertEquals(polygon, almostSamePolygon);
+        Assertions.assertEquals(polygon.hashCode(), almostSamePolygon.hashCode());
+        Assertions.assertEquals(1, new HashSet<>(List.of(polygon, almostSamePolygon)).size());
     }
 
     @Test
