@@ -73,9 +73,10 @@ class AutosaveControllerTest {
             return null;
         }).when(operations).runOnUiThread(any());
 
+        when(operations.createTimer(any())).thenAnswer(invocation -> timer = new FakeTimer(invocation.getArgument(0)));
+
         store = new AutosaveStore(tempDir.resolve("autosave"));
-        autosave = new AutosaveController(model, dialogService, null, recentImageFolders, store, executor,
-                action -> timer = new FakeTimer(action), operations);
+        autosave = new AutosaveController(model, dialogService, null, recentImageFolders, store, executor, operations);
     }
 
     @AfterEach
