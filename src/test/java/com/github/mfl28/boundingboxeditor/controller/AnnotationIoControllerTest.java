@@ -19,12 +19,19 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.model.Model;
+import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotationData;
 import com.github.mfl28.boundingboxeditor.model.data.IoMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
+import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
+import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationExportResult;
+import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationImportResult;
 import com.github.mfl28.boundingboxeditor.ui.DialogService;
 import com.github.mfl28.boundingboxeditor.ui.MainView;
+import com.github.mfl28.boundingboxeditor.ui.ProgressViewer;
+import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsImportingSuccessfulEvent;
+import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsSavingSuccessfulEvent;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,9 +45,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -281,5 +289,96 @@ class AnnotationIoControllerTest {
     private void chooseNoSaveFormat() {
         doReturn(Optional.empty()).when(dialogService)
                 .displayChoiceDialogAndGetResult(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void onExportFinished_ShouldMarkTheAnnotationsSavedAndRunTheWaitingOperation(@TempDir Path folder) {
+        final ProgressViewer progress = mock(ProgressViewer.class);
+        final Runnable chainedOperation = mock(Runnable.class);
+        model.setSaved(false);
+
+        annotationIoController.onExportFinished(new ImageAnnotationExportResult(2, List.of()), folder.toFile(),
+                                                chainedOperation, progress);
+
+        assertTrue(model.isSaved());
+        verify(operations).showStatus(any(ImageAnnotationsSavingSuccessfulEvent.class));
+        assertEquals(folder.toFile(), ioMetaData.getDefaultAnnotationSavingDirectory());
+        verify(chainedOperation).run();
+        verifyNoInteractions(progress, dialogService);
+    }
+
+    @Test
+    void onExportFinished_WithErrors_ShouldReportThemAndKeepTheAnnotationsUnsaved(@TempDir Path folder) {
+        final ProgressViewer progress = mock(ProgressViewer.class);
+        final ImageAnnotationExportResult result = new ImageAnnotationExportResult(
+                1, List.of(new IOErrorInfoEntry("b.xml", "Could not write the file.")));
+        model.setSaved(false);
+
+        annotationIoController.onExportFinished(result, folder.toFile(), null, progress);
+
+        assertFalse(model.isSaved());
+        verify(progress).hideProgress();
+        verify(dialogService).displayIOResultErrorInfoAlert(result, null);
+    }
+
+    @Test
+    void onImportFinished_ShouldShowTheAnnotationsAndRememberTheFolder(@TempDir Path folder) {
+        final ProgressViewer progress = mock(ProgressViewer.class);
+
+        annotationIoController.onImportFinished(importResult(1, List.of()), folder.toFile(), progress);
+
+        verify(operations).showStatus(any(ImageAnnotationsImportingSuccessfulEvent.class));
+        verify(operations).onAnnotationsImported(true);
+        assertEquals(folder.toFile(), ioMetaData.getDefaultAnnotationLoadingDirectory());
+        verifyNoInteractions(progress, dialogService);
+    }
+
+    @Test
+    void onImportFinished_WithoutValidAnnotations_ShouldReportItAndNotRememberTheFolder(@TempDir Path folder) {
+        final ProgressViewer progress = mock(ProgressViewer.class);
+        final File previousFolder = ioMetaData.getDefaultAnnotationLoadingDirectory();
+
+        annotationIoController.onImportFinished(importResult(0, List.of()), folder.toFile(), progress);
+
+        verify(operations, never()).showStatus(any());
+        verify(operations).onAnnotationsImported(false);
+        verify(progress).hideProgress();
+        verify(dialogService).displayErrorAlert(AnnotationIoController.ANNOTATION_IMPORT_ERROR_TITLE,
+                                                AnnotationIoController.ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT,
+                                                null);
+        assertEquals(previousFolder, ioMetaData.getDefaultAnnotationLoadingDirectory());
+    }
+
+    @Test
+    void onImportFinished_WithInvalidEntries_ShouldReportThemAndKeepTheRest(@TempDir Path folder) {
+        final ProgressViewer progress = mock(ProgressViewer.class);
+        final ImageAnnotationImportResult result =
+                importResult(1, List.of(new IOErrorInfoEntry("b.xml", "Missing bndbox element.")));
+
+        annotationIoController.onImportFinished(result, folder.toFile(), progress);
+
+        verify(operations).onAnnotationsImported(true);
+        verify(progress).hideProgress();
+        verify(dialogService).displayIOResultErrorInfoAlert(result, null);
+        assertEquals(folder.toFile(), ioMetaData.getDefaultAnnotationLoadingDirectory());
+    }
+
+    @Test
+    void onImportFinished_WhenRestoringAnAutosave_ShouldNotRememberItsFolder(@TempDir Path folder) {
+        final File previousFolder = ioMetaData.getDefaultAnnotationLoadingDirectory();
+        when(operations.isRestoringAutosave()).thenReturn(true);
+
+        annotationIoController.onImportFinished(importResult(1, List.of()), folder.toFile(),
+                                                mock(ProgressViewer.class));
+
+        // Whether it is a restore is asked before the restore is finished.
+        final InOrder inOrder = inOrder(operations);
+        inOrder.verify(operations).isRestoringAutosave();
+        inOrder.verify(operations).onAnnotationsImported(true);
+        assertEquals(previousFolder, ioMetaData.getDefaultAnnotationLoadingDirectory());
+    }
+
+    private static ImageAnnotationImportResult importResult(int nrImported, List<IOErrorInfoEntry> errors) {
+        return new ImageAnnotationImportResult(nrImported, errors, ImageAnnotationData.empty());
     }
 }

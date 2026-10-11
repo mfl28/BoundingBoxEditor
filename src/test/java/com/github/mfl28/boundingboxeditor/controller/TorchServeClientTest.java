@@ -23,7 +23,9 @@ import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictionEntry;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.ModelEntry;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.TorchServeRestClient;
+import com.github.mfl28.boundingboxeditor.model.io.results.BoundingBoxPredictionResult;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
+import com.github.mfl28.boundingboxeditor.model.io.services.BoundingBoxPredictorService;
 import com.google.gson.JsonSyntaxException;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
@@ -295,9 +297,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         when(mockInferenceInvocationBuilder.post(Mockito.any()))
                 .thenThrow(new ProcessingException(new ConnectException()));
 
-        robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-
-        timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
+        clickPredictAndWaitForANewResult(robot, testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
                 "There were errors while performing the prediction",
@@ -310,9 +310,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
     private void verifyInferenceProcessingErrorHandling(FxRobot robot, TestInfo testinfo) {
         when(mockInferenceInvocationBuilder.post(Mockito.any())).thenThrow(new ProcessingException("foo"));
 
-        robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-
-        timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
+        clickPredictAndWaitForANewResult(robot, testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
                 "There were errors while performing the prediction",
@@ -326,9 +324,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         when(mockInferenceInvocationBuilder.post(Mockito.any())).thenReturn(mockPredictionResponse);
         when(mockPredictionResponse.getStatusInfo()).thenReturn(Response.Status.NOT_FOUND);
 
-        robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-
-        timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
+        clickPredictAndWaitForANewResult(robot, testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
                 "There were errors while performing the prediction",
@@ -346,9 +342,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }))
                 .thenThrow(new ProcessingException("bar"));
 
-        robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-
-        timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
+        clickPredictAndWaitForANewResult(robot, testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
                 "There were errors while performing the prediction",
@@ -366,9 +360,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }))
                 .thenThrow(new JsonSyntaxException("bar"));
 
-        robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-
-        timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
+        clickPredictAndWaitForANewResult(robot, testinfo);
 
         verifyErrorReportStage(robot, testinfo, "Bounding Box Prediction Error Report",
                 "There were errors while performing the prediction",
@@ -387,9 +379,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         }))
                 .thenReturn(new ArrayList<>());
 
-        robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-
-        timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
+        clickPredictAndWaitForANewResult(robot, testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                 Matchers.startsWith("Successfully predicted 0 bounding boxes for 1 image in"),
@@ -411,9 +401,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
                 .thenReturn(testPredictions);
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
-
-        timeOutAssertServiceSucceeded(controller.getBoundingBoxPredictorService(), testinfo);
+        clickPredictAndWaitForANewResult(robot, testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
                 Matchers.startsWith("Successfully predicted 3 bounding boxes for 1 image in"),
@@ -760,5 +748,25 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
     private void resetAllMocks() {
         reset(mockClientBuilder, mockClient, mockManagementTarget,
                 mockModelsTarget, mockModelInvocationBuilder, mockModelResponse);
+    }
+
+    /**
+     * Clicks the predict button and waits until the prediction succeeded. The service still holds the previous
+     * prediction's successful result until the click has restarted it, so a new result is waited for.
+     */
+    // A new run's result can equal the previous one (same predictions), so it is told apart by identity.
+    @SuppressWarnings("ReferenceEquality")
+    private void clickPredictAndWaitForANewResult(FxRobot robot, TestInfo testinfo) {
+        final BoundingBoxPredictorService service = controller.getBoundingBoxPredictorService();
+        final BoundingBoxPredictionResult previousResult =
+                WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L, service::getValue);
+
+        robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> WaitForAsyncUtils.asyncFx(() -> service.getState() == Worker.State.SUCCEEDED
+                                && service.getValue() != previousResult).get()),
+                () -> saveScreenshotAndReturnMessage(testinfo, "The prediction did not succeed within "
+                        + TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 }

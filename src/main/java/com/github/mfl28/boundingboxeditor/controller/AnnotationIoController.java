@@ -22,8 +22,14 @@ import com.github.mfl28.boundingboxeditor.model.Model;
 import com.github.mfl28.boundingboxeditor.model.data.IoMetaData;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationLoadStrategy;
 import com.github.mfl28.boundingboxeditor.model.io.ImageAnnotationSaveStrategy;
+import com.github.mfl28.boundingboxeditor.model.io.results.IOResult;
+import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationImportResult;
 import com.github.mfl28.boundingboxeditor.ui.DialogService;
 import com.github.mfl28.boundingboxeditor.ui.MainView;
+import com.github.mfl28.boundingboxeditor.ui.ProgressViewer;
+import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsImportingSuccessfulEvent;
+import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsSavingSuccessfulEvent;
+import com.github.mfl28.boundingboxeditor.ui.statusevents.StatusEvent;
 import javafx.scene.control.ButtonBar;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -39,6 +45,9 @@ import java.util.Optional;
  */
 class AnnotationIoController {
     private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_TITLE = "Import Annotation Data";
+    static final String ANNOTATION_IMPORT_ERROR_TITLE = "Annotation Import Error";
+    static final String ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT =
+            "The source does not contain any valid annotations.";
     private static final String IMPORT_ANNOTATION_DATA_OPTION_DIALOG_CONTENT =
             "Do you want to keep existing categories and annotation data?";
     private static final String ANNOTATIONS_SAVE_FORMAT_DIALOG_TITLE = "Save Annotations";
@@ -91,6 +100,27 @@ class AnnotationIoController {
          * @param chainedOperation run after the export succeeded, may be null
          */
         void startExport(File destination, ImageAnnotationSaveStrategy.Type format, Runnable chainedOperation);
+
+        /**
+         * Shows an event in the status bar.
+         *
+         * @param event the event
+         */
+        void showStatus(StatusEvent event);
+
+        /**
+         * Returns whether the running import restores an autosave.
+         *
+         * @return whether it does
+         */
+        boolean isRestoringAutosave();
+
+        /**
+         * Called once imported annotations are in the model, to show them.
+         *
+         * @param anyImported whether any annotations were imported
+         */
+        void onAnnotationsImported(boolean anyImported);
     }
 
     AnnotationIoController(Model model, IoMetaData ioMetaData, DialogService dialogService, Stage stage,
@@ -202,6 +232,69 @@ class AnnotationIoController {
                 operation.run();
             }
         }, operation);
+    }
+
+    /**
+     * Handles a finished export: the annotations count as saved unless some files couldn't be written (which are
+     * listed in an error report), and the operation that waited for the export runs.
+     *
+     * @param result           the export result
+     * @param destination      the annotation file or folder
+     * @param chainedOperation run after the export, may be null
+     * @param progress         the export's progress dialog
+     */
+    void onExportFinished(IOResult result, File destination, Runnable chainedOperation, ProgressViewer progress) {
+        if(result.getNrSuccessfullyProcessedItems() != 0) {
+            operations.showStatus(new ImageAnnotationsSavingSuccessfulEvent(result));
+        }
+
+        if(!result.getErrorTableEntries().isEmpty()) {
+            progress.hideProgress();
+            dialogService.displayIOResultErrorInfoAlert(result, stage);
+        } else {
+            model.setSaved(true);
+        }
+
+        rememberSavingDirectory(destination);
+
+        if(chainedOperation != null) {
+            chainedOperation.run();
+        }
+    }
+
+    /**
+     * Handles a finished import: the imported annotations are added to the model and shown, invalid files or entries
+     * are listed in an error report, and an import without any valid annotations is reported.
+     *
+     * @param result   the import result
+     * @param source   the annotation file or folder
+     * @param progress the import's progress dialog
+     */
+    void onImportFinished(ImageAnnotationImportResult result, File source, ProgressViewer progress) {
+        // An autosave isn't where the user keeps annotations, so its folder isn't remembered.
+        final boolean restoredAutosave = operations.isRestoringAutosave();
+        final boolean anyImported = result.getNrSuccessfullyProcessedItems() != 0;
+
+        if(anyImported) {
+            model.updateFromImageAnnotationData(result.getImageAnnotationData(), result.getOperationType());
+            operations.showStatus(new ImageAnnotationsImportingSuccessfulEvent(result));
+        }
+
+        operations.onAnnotationsImported(anyImported);
+
+        if(!result.getErrorTableEntries().isEmpty()) {
+            progress.hideProgress();
+            dialogService.displayIOResultErrorInfoAlert(result, stage);
+        } else if(!anyImported) {
+            progress.hideProgress();
+            dialogService.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE,
+                    ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT, stage);
+            return;
+        }
+
+        if(!restoredAutosave) {
+            rememberLoadingDirectory(source);
+        }
     }
 
     /**
