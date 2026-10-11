@@ -84,12 +84,6 @@ public class Controller {
     private static final String PROGRAM_VERSION = "3.3.0";
     private static final String PROGRAM_LICENSE = "GPL-3.0";
     private static final String PROGRAM_IDENTIFIER = PROGRAM_NAME + " " + PROGRAM_VERSION;
-    private static final String CATEGORY_INPUT_ERROR_DIALOG_TITLE = "Category Creation Error";
-    private static final String INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT =
-            "Please provide a non-blank category name.";
-    private static final String CATEGORY_DELETION_ERROR_DIALOG_TITLE = "Category Deletion Error";
-    private static final String CATEGORY_DELETION_ERROR_DIALOG_CONTENT =
-            "You cannot delete a category that has existing bounding-boxes assigned to it.";
 
     private static final String SAVE_IMAGE_ANNOTATIONS_ERROR_DIALOG_TITLE = "Save Error";
     private static final String RECENT_IMAGE_FOLDER_NOT_FOUND_ERROR_DIALOG_TITLE = "Image Folder Not Found";
@@ -130,6 +124,7 @@ public class Controller {
     private final HostServices hostServices;
     private final MainView view;
     private final DialogService dialogService;
+    private final CategoryController categoryController;
     private final AnnotationIoController annotationIoController;
     private final ImageFolderController imageFolderController;
     private final InferenceController inferenceController;
@@ -186,6 +181,7 @@ public class Controller {
         this.imageFolderController = new ImageFolderController(model, ioMetaData, dialogService, stage,
                 annotationIoController, new ImageFolderOperations());
         this.inferenceController = new InferenceController(model, dialogService, new InferenceOperations());
+        this.categoryController = new CategoryController(model, dialogService, stage);
         this.keyboardShortcutHandler = new KeyboardShortcutHandler(model, new KeyboardShortcutEditor(),
                 KeyboardShortcutHandler.createViewActionShortcuts(view, this::onRegisterSettingsAction,
                         this::onRegisterUndoAction, this::onRegisterRedoAction, shapeClipboardController::copySelectedShape,
@@ -394,33 +390,16 @@ public class Controller {
     public void onRegisterAddObjectCategoryAction() {
         final String categoryName = view.getObjectCategoryInputField().getText();
 
-        if(categoryName == null || categoryName.isBlank()) {
-            dialogService.displayErrorAlert(CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                    INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT, stage);
-            view.getObjectCategoryInputField().clear();
-            view.getEditorImagePane().requestFocus();
-            return;
+        if(categoryController.addCategory(categoryName, view.getObjectCategoryColorPicker().getValue())) {
+            view.getObjectCategoryTable().getSelectionModel().selectLast();
+            view.getObjectCategoryTable().scrollTo(view.getObjectCategoryTable()
+                    .getSelectionModel()
+                    .getSelectedIndex()
+            );
+            view.getObjectCategoryColorPicker().setValue(ColorUtils.createRandomColor());
         }
-
-        if(model.getCategoryToAssignedBoundingShapesCountMap().containsKey(categoryName)) {
-            dialogService.displayErrorAlert(CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                    "The category \"" + categoryName + "\" already exists.", stage);
-            view.getObjectCategoryInputField().clear();
-            view.getEditorImagePane().requestFocus();
-            return;
-        }
-
-        final Color categoryColor = view.getObjectCategoryColorPicker().getValue();
-        model.getObjectCategories().add(new ObjectCategory(categoryName, categoryColor));
-
-        view.getObjectCategoryTable().getSelectionModel().selectLast();
-        view.getObjectCategoryTable().scrollTo(view.getObjectCategoryTable()
-                .getSelectionModel()
-                .getSelectedIndex()
-        );
 
         view.getObjectCategoryInputField().clear();
-        view.getObjectCategoryColorPicker().setValue(ColorUtils.createRandomColor());
         view.getEditorImagePane().requestFocus();
     }
 
@@ -517,42 +496,13 @@ public class Controller {
      * @see com.github.mfl28.boundingboxeditor.ui.ObjectCategoryTableView
      */
     public void onSelectorCellEditEvent(TableColumn.CellEditEvent<ObjectCategory, String> event) {
-        String newName = event.getNewValue();
-        String oldName = event.getOldValue();
+        final String oldName = event.getOldValue();
 
-        if(Objects.equals(oldName, newName)) {
-            // Nothing to do if the new name is the same as the current one.
-            return;
-        }
-
-        final ObjectCategory objectCategory = event.getRowValue();
-        final Map<String, Integer> boundingShapesPerCategoryNameMap =
-                model.getCategoryToAssignedBoundingShapesCountMap();
-
-        if(newName == null || newName.isBlank()) {
-            dialogService.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                    INVALID_CATEGORY_NAME_ERROR_DIALOG_CONTENT, stage);
-            objectCategory.setName(oldName);
+        if(!categoryController.renameCategory(event.getRowValue(), oldName, event.getNewValue())) {
             event.getTableView().refresh();
-        } else if(boundingShapesPerCategoryNameMap.containsKey(newName)) {
-            dialogService.displayErrorAlert(Controller.CATEGORY_INPUT_ERROR_DIALOG_TITLE,
-                    "The category \"" + newName + "\" already exists.", stage);
-            objectCategory.setName(oldName);
-            event.getTableView().refresh();
-        } else {
-            if(oldName != null) {
-                int assignedBoundingShapesCount = boundingShapesPerCategoryNameMap.get(oldName);
-                boundingShapesPerCategoryNameMap.remove(oldName);
-                boundingShapesPerCategoryNameMap.put(newName, assignedBoundingShapesCount);
-            } else {
-                boundingShapesPerCategoryNameMap.put(newName, 0);
-            }
-
-            objectCategory.setName(newName);
-
-            if(oldName != null && imageFileFilterController.getFilter().categoryNames().contains(oldName)) {
-                onRegisterImageFilterChanged(view.getImageFileExplorer().getFilter());
-            }
+        } else if(oldName != null && !Objects.equals(oldName, event.getNewValue())
+                && imageFileFilterController.getFilter().categoryNames().contains(oldName)) {
+            onRegisterImageFilterChanged(view.getImageFileExplorer().getFilter());
         }
     }
 
@@ -966,27 +916,7 @@ public class Controller {
         view.getObjectCategoryTable().getDeleteColumn().setCellFactory(column -> {
             final ObjectCategoryDeleteTableCell cell = new ObjectCategoryDeleteTableCell();
 
-            cell.getDeleteButton().setOnAction(action -> {
-                final ObjectCategory category = cell.getItem();
-
-                int nrExistingBoundingShapes =
-                        model.getCategoryToAssignedBoundingShapesCountMap().getOrDefault(category.getName(), 0);
-
-                // Only allow to delete a bounding-box category that has no bounding-boxes assigned to it.
-                if(nrExistingBoundingShapes != 0) {
-                    dialogService.displayErrorAlert(CATEGORY_DELETION_ERROR_DIALOG_TITLE,
-                            CATEGORY_DELETION_ERROR_DIALOG_CONTENT
-                                    + "\nCurrently there " +
-                                    (nrExistingBoundingShapes == 1 ? "is " : "are ") +
-                                    nrExistingBoundingShapes
-                                    + " object" +
-                                    (nrExistingBoundingShapes == 1 ? " " : "s ") +
-                                    "with the category \"" + category.getName() + "\".",
-                            stage);
-                } else {
-                    cell.getTableView().getItems().remove(category);
-                }
-            });
+            cell.getDeleteButton().setOnAction(action -> categoryController.deleteCategory(cell.getItem()));
 
             return cell;
         });
@@ -1133,32 +1063,22 @@ public class Controller {
     @SuppressWarnings("UnnecessaryLambda")
     private ListChangeListener<BoundingShapeViewable> createBoundingShapeCountPerCategoryListener() {
         return change -> {
-            Map<String, Integer> categoryToShapesCountMap = model.getCategoryToAssignedBoundingShapesCountMap();
-
             while(change.next()) {
                 if(change.wasAdded()) {
-                    change.getAddedSubList().forEach(item -> categoryToShapesCountMap
-                            .merge(item.getViewData().getObjectCategory()
-                                            .getName(),
-                                    1, Integer::sum));
+                    change.getAddedSubList().forEach(item ->
+                            categoryController.onShapeAdded(item.getViewData().getObjectCategory().getName()));
                 }
 
                 if(change.wasRemoved()) {
                     change.getRemoved().forEach(item ->
-                            categoryToShapesCountMap.computeIfPresent(
-                                    item.getViewData().getObjectCategory().getName(),
-                                    (key, value) -> --value));
+                            categoryController.onShapeRemoved(item.getViewData().getObjectCategory().getName()));
                 }
 
                 if(change.wasUpdated()) {
                     for(int i = change.getFrom(); i != change.getTo(); ++i) {
-                        BoundingShapeViewData changedShapeViewData = change.getList().get(i).getViewData();
-
-                        categoryToShapesCountMap.computeIfPresent(changedShapeViewData.getPreviousObjectCategoryName(),
-                                (key, value) -> --value);
-
-                        categoryToShapesCountMap.merge(changedShapeViewData.getObjectCategory().getName(),
-                                1, Integer::sum);
+                        final BoundingShapeViewData changedShapeViewData = change.getList().get(i).getViewData();
+                        categoryController.onShapeCategoryChanged(changedShapeViewData.getPreviousObjectCategoryName(),
+                                changedShapeViewData.getObjectCategory().getName());
                     }
                 }
             }
