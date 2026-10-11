@@ -91,9 +91,9 @@ final class AutosaveWriter {
     void delete(File imageFolder) {
         try {
             executor.submit(() -> store.delete(imageFolder)).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch(InterruptedException e) {
+        } catch(InterruptedException _) {
             Thread.currentThread().interrupt();
-        } catch(ExecutionException | TimeoutException e) {
+        } catch(ExecutionException | TimeoutException _) {
             store.delete(imageFolder);
         }
     }
@@ -104,9 +104,9 @@ final class AutosaveWriter {
     void awaitCompletion() {
         try {
             executor.submit(() -> { }).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch(InterruptedException e) {
+        } catch(InterruptedException _) {
             Thread.currentThread().interrupt();
-        } catch(ExecutionException | TimeoutException e) {
+        } catch(ExecutionException | TimeoutException _) {
             // Nothing to wait for anymore.
         }
     }

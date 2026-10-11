@@ -677,7 +677,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                         maskObject.get(JSONSaveStrategy.MASK_COUNTS_SERIALIZED_NAME).getAsString());
                 return MaskBitmap.fromColumnMajorRunLengths(counts, width, height);
             } catch(IllegalStateException | UnsupportedOperationException | IllegalArgumentException
-                    | NullPointerException | ClassCastException e) {
+                    | NullPointerException | ClassCastException _) {
                 return null;
             }
         }

@@ -40,8 +40,10 @@ import java.util.Optional;
 /**
  * Stores the not yet exported annotations of image folders, one file per folder (in the app's JSON format), in the
  * user's application data folder, so that they can be restored after a crash or a forced quit.
+ *
+ * @param directory the folder of the autosave files
  */
-final class AutosaveStore {
+record AutosaveStore(Path directory) {
     /**
      * Overrides the folder for the autosave files (the tests use it).
      */
@@ -50,12 +52,7 @@ final class AutosaveStore {
     private static final String LINUX_APP_FOLDER_NAME = "boundingboxeditor";
     private static final String AUTOSAVE_FOLDER_NAME = "autosave";
     private static final String FILE_EXTENSION = ".json";
-
-    private final Path directory;
-
-    AutosaveStore(Path directory) {
-        this.directory = directory;
-    }
+    private static final String TEMPORARY_FILE_PREFIX = "autosave-";
 
     /**
      * Creates the store for the user's application data folder (or the folder in {@value #DIRECTORY_PROPERTY}).
@@ -95,10 +92,6 @@ final class AutosaveStore {
         return base.resolve(LINUX_APP_FOLDER_NAME).resolve(AUTOSAVE_FOLDER_NAME);
     }
 
-    Path getDirectory() {
-        return directory;
-    }
-
     /**
      * Returns the autosave file of an image folder (whether it exists or not). It is named after a hash of the
      * folder's path.
@@ -130,7 +123,7 @@ final class AutosaveStore {
         try {
             return Files.isRegularFile(file) ? Optional.of(Files.getLastModifiedTime(file).toInstant())
                     : Optional.empty();
-        } catch(IOException e) {
+        } catch(IOException _) {
             return Optional.empty();
         }
     }
@@ -145,7 +138,7 @@ final class AutosaveStore {
     void save(File imageFolder, ImageAnnotationData annotations) throws IOException {
         Files.createDirectories(directory);
         final Path target = fileFor(imageFolder);
-        final Path temporary = Files.createTempFile(directory, "autosave", ".tmp");
+        final Path temporary = Files.createTempFile(directory, TEMPORARY_FILE_PREFIX, ".tmp");
 
         try {
             final ImageAnnotationExportResult result = ImageAnnotationSaveStrategy
@@ -158,7 +151,7 @@ final class AutosaveStore {
 
             try {
                 Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch(AtomicMoveNotSupportedException e) {
+            } catch(AtomicMoveNotSupportedException _) {
                 Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
             }
         } finally {
@@ -174,7 +167,7 @@ final class AutosaveStore {
     void delete(File imageFolder) {
         try {
             Files.deleteIfExists(fileFor(imageFolder));
-        } catch(IOException e) {
+        } catch(IOException _) {
             // Nothing to restore from a file that can't be deleted either; it is replaced by the next autosave.
         }
     }

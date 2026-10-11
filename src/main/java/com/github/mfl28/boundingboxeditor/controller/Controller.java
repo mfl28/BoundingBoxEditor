@@ -60,6 +60,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 
 import java.io.File;
@@ -160,6 +161,8 @@ public class Controller {
     private File currentImageFolder;
     // While it is open whether to restore the shown folder's autosave, and while it is restored, nothing is saved.
     private boolean autosavePaused = false;
+    // After the window was closed.
+    private boolean autosaveStopped = false;
     private boolean restoringAutosave = false;
     // Set when the user agreed at startup to restore the last folder's autosave, so that it isn't asked again.
     private File folderToRestoreWithoutAsking;
@@ -1281,6 +1284,8 @@ public class Controller {
             onRegisterExitAction();
             event.consume();
         });
+        // Once the window is closed, nothing is saved anymore (also not into the next test's autosave folder).
+        stage.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> stopAutosaving());
 
         stage.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
             if (!Objects.equals(event.getTarget(), view.getEditorImageView())) {
@@ -1314,7 +1319,7 @@ public class Controller {
     void autosaveNow() {
         final File folder = currentImageFolder;
 
-        if(folder == null || autosavePaused) {
+        if(folder == null || autosavePaused || autosaveStopped) {
             return;
         }
 
@@ -1344,6 +1349,10 @@ public class Controller {
         return autosaveStore;
     }
 
+    RecentImageFolders getRecentImageFolders() {
+        return recentImageFolders;
+    }
+
     private void setUpAutosave() {
         autosaveDelay.setOnFinished(event -> autosaveNow());
 
@@ -1363,9 +1372,15 @@ public class Controller {
     }
 
     private void scheduleAutosave() {
-        if(currentImageFolder != null && !autosavePaused) {
+        if(currentImageFolder != null && !autosavePaused && !autosaveStopped) {
             autosaveDelay.playFromStart();
         }
+    }
+
+    private void stopAutosaving() {
+        autosaveStopped = true;
+        autosaveDelay.stop();
+        autosaveWriter.awaitCompletion();
     }
 
     /**
@@ -1415,40 +1430,9 @@ public class Controller {
     }
 
     /**
-     * Asks whether to restore the autosaved annotations of a folder that was opened (unless the user already agreed
-     * at startup), and restores or deletes them.
-     */
-    private void offerToRestoreAutosave(File folder) {
-        final Optional<Instant> lastSaved = autosaveStore.lastSaved(folder);
-        final boolean restoreWithoutAsking = folder.equals(folderToRestoreWithoutAsking);
-        folderToRestoreWithoutAsking = null;
-
-        if(lastSaved.isEmpty()) {
-            return;
-        }
-
-        autosavePaused = true;
-        autosaveDelay.stop();
-
-        final boolean restore = restoreWithoutAsking
-                || dialogService.displayYesNoDialogAndGetResult(RESTORE_AUTOSAVE_DIALOG_TITLE,
-                String.format("The annotations of this folder from %s were not exported. They were saved "
-                                      + "automatically. Restore them?",
-                              AUTOSAVE_TIME_FORMATTER.format(lastSaved.get())), stage) == ButtonBar.ButtonData.YES;
-
-        if(restore) {
-            restoringAutosave = true;
-            startAnnotationImportService(autosaveStore.fileFor(folder).toFile(), ImageAnnotationLoadStrategy.Type.JSON);
-        } else {
-            autosavePaused = false;
-            deleteAutosave(folder);
-        }
-    }
-
-    /**
      * At startup, offers to reopen the most recently opened folder if its annotations were not exported.
      */
-    private void offerToRestoreLastSession() {
+    void offerToRestoreLastSession() {
         final List<File> folders = recentImageFolders.getFolders();
 
         if(folders.isEmpty() || currentImageFolder != null) {
@@ -1523,6 +1507,38 @@ public class Controller {
      * Loads and shows the image folders opened by the {@link ImageFolderController}.
      */
     private class ImageFolderOperations implements ImageFolderController.Operations {
+        /**
+         * Asks whether to restore the autosaved annotations of a folder that was opened (unless the user already agreed
+         * at startup), and restores or deletes them.
+         */
+        private void offerToRestoreAutosave(File folder) {
+            final Optional<Instant> lastSaved = autosaveStore.lastSaved(folder);
+            final boolean restoreWithoutAsking = folder.equals(folderToRestoreWithoutAsking);
+            folderToRestoreWithoutAsking = null;
+
+            if(lastSaved.isEmpty()) {
+                return;
+            }
+
+            autosavePaused = true;
+            autosaveDelay.stop();
+
+            final boolean restore = restoreWithoutAsking
+                    || dialogService.displayYesNoDialogAndGetResult(RESTORE_AUTOSAVE_DIALOG_TITLE,
+                    String.format("The annotations of this folder from %s were not exported. They were saved "
+                                          + "automatically. Restore them?",
+                                  AUTOSAVE_TIME_FORMATTER.format(lastSaved.get())), stage) == ButtonBar.ButtonData.YES;
+
+            if(restore) {
+                restoringAutosave = true;
+                startAnnotationImportService(autosaveStore.fileFor(folder).toFile(),
+                        ImageAnnotationLoadStrategy.Type.JSON);
+            } else {
+                autosavePaused = false;
+                deleteAutosave(folder);
+            }
+        }
+
         @Override
         public void updateModelFromView() {
             Controller.this.updateModelFromView();

@@ -38,8 +38,11 @@ import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -76,6 +79,11 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat(mainView.getStatusBar().getSavedStatusDescription(),
                    Matchers.startsWith("The annotations are not exported yet. They were saved automatically at "),
+                   saveScreenshot(testinfo));
+        // An autosave from an earlier day is shown with its date.
+        robot.interact(() -> mainView.getStatusBar().setAutosaveTime(Instant.now().minus(2, ChronoUnit.DAYS)));
+        verifyThat(mainView.getStatusBar().getSavedStatusDescription(),
+                   Matchers.startsWith("The annotations are not exported yet. They were saved automatically on "),
                    saveScreenshot(testinfo));
 
         // Exported annotations need no autosave.
@@ -118,7 +126,7 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         // The autosave folder doesn't become the folder for importing annotations.
         verifyThat(controller.getIoMetaData().getDefaultAnnotationLoadingDirectory(),
-                   Matchers.not(Matchers.equalTo(controller.getAutosaveStore().getDirectory().toFile())),
+                   Matchers.not(Matchers.equalTo(controller.getAutosaveStore().directory().toFile())),
                    saveScreenshot(testinfo));
     }
 
@@ -160,6 +168,70 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
         verifyThat(boxBounds.getMaxY(),
                    Matchers.closeTo(imageBounds.getMinY() + 0.6 * imageBounds.getHeight(), 3.0),
                    saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onStartingWithAnAutosaveOfTheLastFolder_WhenAccepting_ShouldOpenTheFolderAndRestoreIt(FxRobot robot,
+                                                                                                 TestInfo testinfo)
+            throws Exception {
+        final File folder = testImageFolder();
+        writeAutosave(folder);
+        robot.interact(() -> controller.getRecentImageFolders().add(folder));
+
+        // The dialog waits for an answer, so it is opened later on the JavaFX thread.
+        Platform.runLater(controller::offerToRestoreLastSession);
+        final Stage dialog = timeOutGetTopModalStage(robot, Controller.RESTORE_AUTOSAVE_DIALOG_TITLE, testinfo);
+        timeOutLookUpInStageAndClickOn(robot, dialog, "Yes", testinfo);
+
+        // The folder is opened and restored without asking again.
+        waitUntilCurrentImageIsLoaded(testinfo);
+        waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1, "the restored box", testinfo);
+        timeOutAssertNoTopModelStage(robot, testinfo);
+        verifyThat(model.getImageFileNameToAnnotationMap().get(IMAGE_FILE_NAME).getBoundingShapeData().size(),
+                   Matchers.equalTo(1), saveScreenshot(testinfo));
+        verifyThat(model.isSaved(), Matchers.is(false), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onFailingToSaveAutomatically_ShouldShowTheErrorInTheStatusBar(FxRobot robot, TestInfo testinfo)
+            throws Exception {
+        final File folder = testImageFolder();
+        robot.interact(() -> controller.loadImageFiles(folder));
+        waitUntilCurrentImageIsLoaded(testinfo);
+        enterNewCategory(robot, "Boat", testinfo);
+        moveRelativeToImageView(robot, new Point2D(0.2, 0.2), new Point2D(0.5, 0.5));
+        waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1, "the drawn box", testinfo);
+
+        // A file in place of the autosave folder makes saving fail.
+        final Path directory = controller.getAutosaveStore().directory();
+        deleteRecursively(directory);
+        Files.createFile(directory);
+
+        try {
+            robot.interact(controller::autosaveNow);
+            controller.waitForAutosave();
+            WaitForAsyncUtils.waitForFxEvents();
+
+            verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                       Matchers.startsWith("Could not save the annotations automatically: "),
+                       saveScreenshot(testinfo));
+        } finally {
+            Files.deleteIfExists(directory);
+        }
+    }
+
+    private static void deleteRecursively(Path directory) throws IOException {
+        if(!Files.exists(directory)) {
+            return;
+        }
+
+        try(var files = Files.list(directory)) {
+            for(Path file : files.toList()) {
+                Files.delete(file);
+            }
+        }
+
+        Files.delete(directory);
     }
 
     private File testImageFolder() {

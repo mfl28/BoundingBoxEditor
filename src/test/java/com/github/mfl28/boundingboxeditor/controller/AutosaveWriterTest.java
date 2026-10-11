@@ -122,7 +122,7 @@ class AutosaveWriterTest {
     private static void awaitQuietly(CountDownLatch latch) {
         try {
             assertTrue(latch.await(5, TimeUnit.SECONDS));
-        } catch(InterruptedException e) {
+        } catch(InterruptedException _) {
             Thread.currentThread().interrupt();
         }
     }

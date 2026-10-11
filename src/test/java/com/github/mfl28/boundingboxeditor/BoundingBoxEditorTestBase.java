@@ -348,7 +348,7 @@ public class BoundingBoxEditorTestBase {
             for(Path file : files.toList()) {
                 Files.deleteIfExists(file);
             }
-        } catch(NoSuchFileException e) {
+        } catch(NoSuchFileException _) {
             // Nothing was saved yet.
         } catch(IOException e) {
             throw new UncheckedIOException(e);

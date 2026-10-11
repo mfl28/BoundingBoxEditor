@@ -50,6 +50,33 @@ class AutosaveStoreTest {
                      AutosaveStore.defaultDirectory("Linux", "/home/ann", null, null));
         assertEquals(Path.of("/data", "boundingboxeditor", "autosave"),
                      AutosaveStore.defaultDirectory("Linux", "/home/ann", null, "/data"));
+        // Unset or empty variables fall back to the usual folders.
+        assertEquals(Path.of("C:\\Users\\ann", "AppData", "Roaming", "BoundingBoxEditor", "autosave"),
+                     AutosaveStore.defaultDirectory("Windows 11", "C:\\Users\\ann", " ", null));
+        assertEquals(Path.of("/home/ann", ".local", "share", "boundingboxeditor", "autosave"),
+                     AutosaveStore.defaultDirectory("Linux", "/home/ann", null, ""));
+    }
+
+    @Test
+    void onCreatingTheDefaultStore_ShouldUseTheOverriddenOrTheApplicationDataFolder() {
+        final String overridden = System.getProperty(AutosaveStore.DIRECTORY_PROPERTY);
+
+        try {
+            System.setProperty(AutosaveStore.DIRECTORY_PROPERTY, "/tmp/autosave-test");
+            assertEquals(Path.of("/tmp/autosave-test"), AutosaveStore.createDefault().directory());
+
+            System.clearProperty(AutosaveStore.DIRECTORY_PROPERTY);
+            assertEquals(AutosaveStore.defaultDirectory(System.getProperty("os.name"),
+                                                        System.getProperty("user.home"), System.getenv("APPDATA"),
+                                                        System.getenv("XDG_DATA_HOME")),
+                         AutosaveStore.createDefault().directory());
+        } finally {
+            if(overridden == null) {
+                System.clearProperty(AutosaveStore.DIRECTORY_PROPERTY);
+            } else {
+                System.setProperty(AutosaveStore.DIRECTORY_PROPERTY, overridden);
+            }
+        }
     }
 
     @Test
