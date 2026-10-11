@@ -87,10 +87,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
 
         final File referenceAnnotationFile = new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
         try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
-            timeOutClickOn(robot, "#pvoc-import-menu-item", testinfo);
+            timeOutClickOnMenuPath(robot, testinfo, "#file-menu", "#file-import-annotations-menu",
+                                   "#pvoc-import-menu-item");
             verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
         }
 
@@ -226,11 +225,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFolder =
                 new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationDirectoryPath)).getFile());
 
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
-        timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
         try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
-            timeOutClickOn(robot, "#yolo-import-menu-item", testinfo);
+            timeOutClickOnMenuPath(robot, testinfo, "#file-menu", "#file-import-annotations-menu",
+                                   "#yolo-import-menu-item");
             verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
         }
 
@@ -356,11 +353,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFile =
                 new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
-        timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
         try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
-            timeOutClickOn(robot, "#json-import-menu-item", testinfo);
+            timeOutClickOnMenuPath(robot, testinfo, "#file-menu", "#file-import-annotations-menu",
+                                   "#json-import-menu-item");
             verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
         }
 
@@ -1172,11 +1167,9 @@ class ControllerTests extends BoundingBoxEditorTestBase {
         final File referenceAnnotationFile =
                 new File(Objects.requireNonNull(getClass().getResource(referenceAnnotationFilePath)).getFile());
 
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        timeOutClickOn(robot, "#file-import-annotations-menu", testinfo);
-        timeOutMoveTo(robot, "#pvoc-import-menu-item", testinfo);
         try(MockedFileDialogs fileDialogs = mockCancelledFileDialogs()) {
-            timeOutClickOn(robot, "#csv-import-menu-item", testinfo);
+            timeOutClickOnMenuPath(robot, testinfo, "#file-menu", "#file-import-annotations-menu",
+                                   "#csv-import-menu-item");
             verifyThat(fileDialogs.nrRequested(), Matchers.equalTo(1), saveScreenshot(testinfo));
         }
 

@@ -157,9 +157,8 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
         assertTrue(saveItem.isVisible(), () -> saveScreenshotAndReturnMessage(testinfo, "Save item not visible"));
         assertFalse(saveItem.isDisable(), () -> saveScreenshotAndReturnMessage(testinfo, "Save item not enabled"));
 
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
-        timeOutClickOn(robot, "#pvoc-export-menu-item", testinfo);
+        timeOutClickOnMenuPath(robot, testinfo, "#file-menu", "#file-export-annotations-menu",
+                               "#pvoc-export-menu-item");
 
         Stage categoryCreationErrorStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
         verifyThat(categoryCreationErrorStage, Matchers.notNullValue(), saveScreenshot(testinfo));
@@ -168,10 +167,8 @@ class NoImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertTopModalStageClosed(robot, "Save Error", testinfo);
 
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
-        timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
-        timeOutClickOn(robot, "#yolo-export-menu-item", testinfo);
+        timeOutClickOnMenuPath(robot, testinfo, "#file-menu", "#file-export-annotations-menu",
+                               "#yolo-export-menu-item");
 
         Stage categoryCreationErrorStage2 = timeOutGetTopModalStage(robot, "Save Error", testinfo);
         verifyThat(categoryCreationErrorStage2, Matchers.notNullValue(), saveScreenshot(testinfo));

@@ -120,10 +120,8 @@ class MenuShortcutTests extends BoundingBoxEditorTestBase {
                       testinfo);
             verifyThat(fileDialogs.fileChoosers().constructed().size(), Matchers.equalTo(0), saveScreenshot(testinfo));
 
-            timeOutClickOn(robot, "#file-menu", testinfo);
-            timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
-            timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
-            timeOutClickOn(robot, "#json-export-menu-item", testinfo);
+            timeOutClickOnMenuPath(robot, testinfo, "#file-menu", "#file-export-annotations-menu",
+                                   "#json-export-menu-item");
             waitUntil(() -> fileDialogs.fileChoosers().constructed().size() == 1, "JSON export from the menu",
                       testinfo);
             verifyThat(getExportInLastFormatMenuItem().getText(), Matchers.equalTo("Export as JSON..."),
@@ -156,9 +154,7 @@ class MenuShortcutTests extends BoundingBoxEditorTestBase {
                   "other folder first", testinfo);
 
         // Opening a recent folder from the menu.
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        timeOutClickOn(robot, "#file-open-recent-menu", testinfo);
-        timeOutClickOn(robot, loadedFolder.getPath(), testinfo);
+        timeOutClickOnMenuPath(robot, testinfo, "#file-menu", "#file-open-recent-menu", loadedFolder.getPath());
         waitUntil(() -> model.getImageFileNameSet().contains("austin-neill-685084-unsplash.jpg"),
                   "first folder reopened", testinfo);
         waitUntil(() -> getRecentFolderPaths().equals(List.of(loadedFolder.getPath(), otherFolder.getPath())),

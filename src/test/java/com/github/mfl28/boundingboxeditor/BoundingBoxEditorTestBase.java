@@ -441,9 +441,62 @@ public class BoundingBoxEditorTestBase {
         robot.clickOn((Node) robot.lookup(id).nth(n).query());
     }
 
-    protected void timeOutMoveTo(FxRobot robot, String id, TestInfo testinfo) {
-        timeOutLookUp(robot, id, testinfo);
-        robot.moveTo(id);
+    /**
+     * Opens a menu of the menu bar (and its submenus) and clicks an item, e.g.
+     * {@code timeOutClickOnMenuPath(robot, testinfo, "#file-menu", "#file-export-annotations-menu",
+     * "#json-export-menu-item")}.
+     * <p>
+     * Before each step it waits until the node is shown and stays the same node while pending JavaFX events run: a
+     * submenu that was just opened can be shown again right away, which replaces its nodes, and moving to a replaced
+     * node fails ("scene" is null). The pointer goes into a submenu horizontally first, so that it doesn't pass the
+     * parent menu's other items (which would open their submenus instead).
+     *
+     * @param robot    the robot
+     * @param testinfo the test info
+     * @param queries  the menu, the submenus and the item to click (TestFX queries, e.g. ids)
+     */
+    protected void timeOutClickOnMenuPath(FxRobot robot, TestInfo testinfo, String... queries) {
+        for(int i = 0; i < queries.length; i++) {
+            final Node node = timeOutGetStableShownNode(robot, queries[i], testinfo);
+
+            // The menu bar's menu opens a popup, its items are in that popup, and later items are in submenus.
+            if(i >= 2) {
+                final Point2D target = WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L, () -> {
+                    final Bounds bounds = node.localToScreen(node.getBoundsInLocal());
+                    return new Point2D(bounds.getCenterX(), bounds.getCenterY());
+                });
+                final Point2D pointer = robot.robotContext().getBaseRobot().retrieveMouse();
+                robot.moveTo(new Point2D(target.getX(), pointer.getY()));
+            }
+
+            robot.clickOn(node);
+        }
+    }
+
+    private Node timeOutGetStableShownNode(FxRobot robot, String query, TestInfo testinfo) {
+        final AtomicReference<Node> stableNode = new AtomicReference<>();
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> {
+                            final Node before = findShownNode(robot, query);
+                            WaitForAsyncUtils.waitForFxEvents();
+                            final Node after = findShownNode(robot, query);
+                            stableNode.set(after);
+                            return before != null && before.equals(after);
+                        }),
+                () -> saveScreenshotAndReturnMessage(testinfo,
+                        "Element " + query + " was not shown (steadily) within " + TIMEOUT_DURATION_IN_SEC +
+                                " sec. Showing windows: " + describeShowingWindows()));
+
+        return stableNode.get();
+    }
+
+    private static Node findShownNode(FxRobot robot, String query) throws Exception {
+        return WaitForAsyncUtils.asyncFx(() -> robot.lookup(query).queryAll().stream()
+                .filter(node -> node.getScene() != null && node.getScene().getWindow() != null
+                        && node.getScene().getWindow().isShowing() && NodeQueryUtils.isVisible().test(node))
+                .findFirst()
+                .orElse(null)).get();
     }
 
     protected <T extends Node> void timeOutLookupAs(FxRobot robot, String id, Class<T> clazz, TestInfo testinfo) {
