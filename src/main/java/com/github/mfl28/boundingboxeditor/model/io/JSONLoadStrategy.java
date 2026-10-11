@@ -78,7 +78,8 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
     private static final String MISSING_CATEGORY_NAME_ERROR_MESSAGE =
             MISSING_MESSAGE_PART + OBJECT_CATEGORY_SERIALIZED_NAME + " name" + IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String MISSING_BOUNDING_SHAPE_ERROR_MESSAGE =
-            MISSING_MESSAGE_PART + BOUNDING_BOX_SERIALIZED_NAME + " or " + BOUNDING_POLYGON_SERIALIZED_NAME +
+            MISSING_MESSAGE_PART + BOUNDING_BOX_SERIALIZED_NAME + ", " + BOUNDING_POLYGON_SERIALIZED_NAME + " or "
+                    + JSONSaveStrategy.MASK_SERIALIZED_NAME +
                     IMAGE_ATTRIBUTION_MESSAGE_PART;
     private static final String INVALID_COLOR_ERROR_MESSAGE = INVALID_MESSAGE_PART + OBJECT_COLOR_SERIALIZED_NAME;
 
@@ -115,6 +116,11 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                                                                                                     annotationFileName,
                                                                                                     existingCategoryNameToCategoryMap,
                                                                                                     categoryNameToBoundingShapesCountMap))
+                .registerTypeAdapter(BoundingMaskData.class, new BoundingMaskDataDeserializer(errorInfoEntries,
+                                                                                              currentImageFileName,
+                                                                                              annotationFileName,
+                                                                                              existingCategoryNameToCategoryMap,
+                                                                                              categoryNameToBoundingShapesCountMap))
                 .registerTypeAdapter(ObjectCategory.class,
                                      new ObjectCategoryDeserializer(errorInfoEntries, currentImageFileName,
                                                                     annotationFileName))
@@ -248,6 +254,8 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                     boundingShapeData = context.deserialize(json, BoundingBoxData.class);
                 } else if(jsonObject.has(BOUNDING_POLYGON_SERIALIZED_NAME)) {
                     boundingShapeData = context.deserialize(json, BoundingPolygonData.class);
+                } else if(jsonObject.has(JSONSaveStrategy.MASK_SERIALIZED_NAME)) {
+                    boundingShapeData = context.deserialize(json, BoundingMaskData.class);
                 } else {
                     errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
                             MISSING_BOUNDING_SHAPE_ERROR_MESSAGE +
@@ -589,6 +597,91 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                 return boundingPolygonData;
             }
         }
+
+    private record BoundingMaskDataDeserializer(List<IOErrorInfoEntry> errorInfoEntries,
+                                                AtomicReference<String> currentFileName, String annotationFileName,
+                                                Map<String, ObjectCategory> nameToObjectCategoryMap,
+                                                Map<String, Integer> boundingShapeCountPerCategory)
+            implements JsonDeserializer<BoundingMaskData> {
+
+        @Override
+        public BoundingMaskData deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
+                                            JsonDeserializationContext context) {
+            final JsonObject jsonObject = json.getAsJsonObject();
+            final String elementName = JSONSaveStrategy.MASK_SERIALIZED_NAME;
+
+            final Optional<ObjectCategory> parsedObjectCategory = parseObjectCategory(context, jsonObject,
+                    errorInfoEntries, elementName, annotationFileName, currentFileName.get());
+
+            if(parsedObjectCategory.isEmpty()) {
+                return null;
+            }
+
+            final MaskBitmap mask = parseMask(jsonObject.get(elementName));
+
+            if(mask == null) {
+                errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
+                        INVALID_MESSAGE_PART + elementName + IMAGE_ATTRIBUTION_MESSAGE_PART
+                                + currentFileName.get() + "."));
+                return null;
+            }
+
+            final Optional<List<String>> tags = parseBoundingShapeTags(context, jsonObject, errorInfoEntries,
+                    elementName, annotationFileName, currentFileName.get());
+
+            if(tags.isEmpty()) {
+                return null;
+            }
+
+            final Optional<List<BoundingShapeData>> parts = parseBoundingShapeDataParts(context, jsonObject,
+                    errorInfoEntries, elementName, annotationFileName, currentFileName.get());
+
+            if(parts.isEmpty()) {
+                return null;
+            }
+
+            final ObjectCategory objectCategory =
+                    nameToObjectCategoryMap.computeIfAbsent(parsedObjectCategory.get().getName(),
+                            key -> parsedObjectCategory.get());
+
+            boundingShapeCountPerCategory.merge(objectCategory.getName(), 1, Integer::sum);
+
+            final BoundingMaskData boundingMaskData = new BoundingMaskData(objectCategory, mask, tags.get());
+            boundingMaskData.setParts(parts.get());
+
+            return boundingMaskData;
+        }
+
+        /**
+         * Reads a mask ({"size": [height, width], "counts": "<COCO run-length encoding>"}).
+         *
+         * @return the mask, or null if it is invalid
+         */
+        private static MaskBitmap parseMask(JsonElement element) {
+            try {
+                final JsonObject maskObject = element.getAsJsonObject();
+                final JsonArray size = maskObject.getAsJsonArray(JSONSaveStrategy.MASK_SIZE_SERIALIZED_NAME);
+
+                if(size == null || size.size() != 2) {
+                    return null;
+                }
+
+                final int height = size.get(0).getAsInt();
+                final int width = size.get(1).getAsInt();
+
+                if(width <= 0 || height <= 0) {
+                    return null;
+                }
+
+                final long[] counts = COCORunLengthEncoding.decode(
+                        maskObject.get(JSONSaveStrategy.MASK_COUNTS_SERIALIZED_NAME).getAsString());
+                return MaskBitmap.fromColumnMajorRunLengths(counts, width, height);
+            } catch(IllegalStateException | UnsupportedOperationException | IllegalArgumentException
+                    | NullPointerException | ClassCastException _) {
+                return null;
+            }
+        }
+    }
 
     private record ImageAnnotationListDeserializer(
             DoubleProperty progress) implements JsonDeserializer<List<ImageAnnotation>> {

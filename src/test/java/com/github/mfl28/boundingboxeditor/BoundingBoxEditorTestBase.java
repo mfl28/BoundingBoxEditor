@@ -63,6 +63,10 @@ import org.testfx.util.PointQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -88,6 +92,8 @@ public class BoundingBoxEditorTestBase {
     private static final String FULL_SCREEN_TESTS_SYSTEM_PROPERTY_NAME = "fullScreenTests";
     protected static final int TIMEOUT_DURATION_IN_SEC = 30;
     protected static final String TEST_IMAGE_FOLDER_PATH_1 = "/testimages/1";
+    // The system property for the autosave folder (see AutosaveStore).
+    protected static final String AUTOSAVE_DIRECTORY_PROPERTY = "boundingboxeditor.autosaveDirectory";
     protected static final String TEST_IMAGE_FOLDER_PATH_2 = "/testimages/2";
     protected static final String TEST_IMAGE_FOLDER_PATH_3 = "/testimages/3";
     protected static final String TEST_IMAGE_FOLDER_PATH_4 = "/testimages/4";
@@ -251,6 +257,7 @@ public class BoundingBoxEditorTestBase {
         stage.setScene(scene);
 
         clearTestPreferences();
+        clearTestAutosaves();
         controller = new Controller(stage, mainView, null);
         model = controller.getModel();
         // To make sure that the window is on top of all other windows at the start.
@@ -322,6 +329,29 @@ public class BoundingBoxEditorTestBase {
             Preferences.userNodeForPackage(Controller.class).clear();
         } catch(BackingStoreException e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * Deletes the autosaves of earlier tests, so that opening a folder doesn't ask to restore them. Only the folder set
+     * up for the tests in build.gradle is used, never the user's.
+     */
+    private static void clearTestAutosaves() {
+        final String directory = System.getProperty(AUTOSAVE_DIRECTORY_PROPERTY);
+
+        if(directory == null || directory.isBlank()) {
+            throw new IllegalStateException("Tests must run with their own autosave folder ("
+                    + AUTOSAVE_DIRECTORY_PROPERTY + ").");
+        }
+
+        try(var files = Files.list(Path.of(directory))) {
+            for(Path file : files.toList()) {
+                Files.deleteIfExists(file);
+            }
+        } catch(NoSuchFileException _) {
+            // Nothing was saved yet.
+        } catch(IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

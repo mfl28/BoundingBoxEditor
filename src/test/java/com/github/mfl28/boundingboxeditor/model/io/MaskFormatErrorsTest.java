@@ -240,6 +240,42 @@ class MaskFormatErrorsTest {
         assertEquals(1, intoFile.getErrorTableEntries().size());
     }
 
+    @Test
+    void onLoadingJSONWithInvalidMasks_ShouldReportEachAndLoadTheValidOne(@TempDir Path tempDir) throws Exception {
+        final String category = "\"category\": {\"name\": \"car\", \"color\": \"#FF0000\"}";
+        // Two rows and two columns, the first column set.
+        final String counts = COCORunLengthEncoding.encode(new long[]{0, 2, 2});
+        final String json = """
+                [{"image": {"fileName": "street.jpg"},
+                  "objects": [
+                    {"mask": {"size": [2, 2], "counts": "%2$s"}, %1$s, "tags": ["parked"]},
+                    {"mask": {"size": [2, 2], "counts": "%2$s"}},
+                    {"mask": {"size": [2]}, %1$s},
+                    {"mask": {"size": [0, 2], "counts": "%2$s"}, %1$s},
+                    {"mask": {"size": [2, 2], "counts": {"not": "a string"}}, %1$s},
+                    {"mask": {"size": [2, 2], "counts": "%2$s"}, %1$s, "tags": {"not": "a list"}},
+                    {"mask": {"size": [2, 2], "counts": "%2$s"}, %1$s, "parts": 5}
+                  ]}]""".formatted(category, counts);
+        final Path file = tempDir.resolve("annotations.json");
+        Files.writeString(file, json);
+
+        final ImageAnnotationImportResult result = ImageAnnotationLoadStrategy
+                .createStrategy(ImageAnnotationLoadStrategy.Type.JSON)
+                .load(file, Set.of(IMAGE), new HashMap<>(), new SimpleDoubleProperty());
+
+        final List<BoundingShapeData> shapes = shapesOf(result);
+        assertEquals(1, shapes.size());
+        assertEquals(2, ((BoundingMaskData) shapes.getFirst()).getMask().getArea());
+        assertEquals(List.of("parked"), shapes.getFirst().getTags());
+        assertEquals(List.of(
+                "Missing category element in mask element in annotation for image street.jpg.",
+                "Invalid mask element in annotation for image street.jpg.",
+                "Invalid mask element in annotation for image street.jpg.",
+                "Invalid mask element in annotation for image street.jpg.",
+                "Invalid tags value(s) in mask element in annotation for image street.jpg.",
+                "Invalid parts value(s) in mask element in annotation for image street.jpg."), messages(result));
+    }
+
     private static ImageAnnotationImportResult loadCOCO(Path folder, String json) throws Exception {
         final Path file = folder.resolve("instances.json");
         Files.writeString(file, json);

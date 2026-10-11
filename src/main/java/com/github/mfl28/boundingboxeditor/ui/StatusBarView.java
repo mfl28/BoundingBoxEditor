@@ -24,11 +24,16 @@ import javafx.beans.property.BooleanPropertyBase;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Circle;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
 
 /**
@@ -83,6 +88,25 @@ public class StatusBarView extends HBox implements View {
         return eventMessageLabel.getText();
     }
 
+    /**
+     * Sets when the not yet exported annotations were last saved automatically (shown in the saved-status
+     * indicator's tooltip).
+     *
+     * @param autosaveTime the time, or null if there is no autosave
+     */
+    public void setAutosaveTime(Instant autosaveTime) {
+        savedStatusIndicator.setAutosaveTime(autosaveTime);
+    }
+
+    /**
+     * Gets the text of the saved-status indicator's tooltip.
+     *
+     * @return the text
+     */
+    public String getSavedStatusDescription() {
+        return savedStatusIndicator.getTooltip().getText();
+    }
+
     public void clear() {
         timeStampLabel.setText(null);
         eventMessageLabel.setText(null);
@@ -94,6 +118,16 @@ public class StatusBarView extends HBox implements View {
                 PseudoClass.getPseudoClass(SAVED_STATUS_PSEUDO_CLASS_NAME);
         private static final String SAVE_STATUS_INDICATOR_ID = "save-status-indicator";
         private static final int SAVE_STATUS_INDICATOR_RADIUS = 7;
+        private static final String SAVED_DESCRIPTION = "All annotations are exported.";
+        private static final String NOT_SAVED_DESCRIPTION = "The annotations are not exported yet.";
+        private static final String AUTOSAVED_DESCRIPTION_FORMAT = NOT_SAVED_DESCRIPTION
+                + " They were saved automatically %s.";
+        private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT);
+        private static final DateTimeFormatter DATE_TIME_FORMATTER =
+                DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT);
+
+        private final Tooltip tooltip = new Tooltip(SAVED_DESCRIPTION);
+        private Instant autosaveTime;
 
         private final BooleanProperty saved = new BooleanPropertyBase(true) {
             @Override
@@ -109,12 +143,41 @@ public class StatusBarView extends HBox implements View {
             @Override
             protected void invalidated() {
                 pseudoClassStateChanged(SAVED_STATUS_PSEUDO_CLASS, get());
+                updateTooltip();
             }
         };
 
         SavedStatusIndicator() {
             super(SAVE_STATUS_INDICATOR_RADIUS);
             setId(SAVE_STATUS_INDICATOR_ID);
+            Tooltip.install(this, tooltip);
+        }
+
+        Tooltip getTooltip() {
+            return tooltip;
+        }
+
+        void setAutosaveTime(Instant autosaveTime) {
+            this.autosaveTime = autosaveTime;
+            updateTooltip();
+        }
+
+        private void updateTooltip() {
+            if(saved.get()) {
+                tooltip.setText(SAVED_DESCRIPTION);
+            } else if(autosaveTime == null) {
+                tooltip.setText(NOT_SAVED_DESCRIPTION);
+            } else {
+                tooltip.setText(String.format(AUTOSAVED_DESCRIPTION_FORMAT, formatAutosaveTime()));
+            }
+        }
+
+        private String formatAutosaveTime() {
+            final ZonedDateTime time = autosaveTime.atZone(ZoneId.systemDefault());
+
+            return time.toLocalDate().equals(LocalDate.now(ZoneId.systemDefault()))
+                    ? "at " + TIME_FORMATTER.format(time)
+                    : "on " + DATE_TIME_FORMATTER.format(time);
         }
 
         boolean isSaved() {

@@ -74,6 +74,11 @@ public interface ImageAnnotationSaveStrategy {
             public String toString() {
                 return "JSON";
             }
+
+            @Override
+            public boolean supportsMasks() {
+                return true;
+            }
         },
         CSV {
             @Override
