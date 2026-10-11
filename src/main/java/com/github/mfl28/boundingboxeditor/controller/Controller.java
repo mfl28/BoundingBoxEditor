@@ -626,25 +626,6 @@ public class Controller {
         initiateAnnotationExport(destination, exportFormat, null);
     }
 
-    private void onBoundingBoxPredictionSucceeded() {
-        final BoundingBoxPredictionResult predictionResult = ioServices.getBoundingBoxPredictorService().getValue();
-
-        if(predictionResult.getNrSuccessfullyProcessedItems() != 0) {
-            model.updateFromImageAnnotationData(predictionResult.getImageAnnotationData(),
-                    predictionResult.getOperationType());
-            view.getStatusBar().setStatusEvent(new BoundingBoxPredictionSuccessfulEvent(predictionResult));
-        }
-
-        updateViewFileExplorerFileInfoElements();
-
-        reloadCurrentAnnotationInView();
-
-        if(!predictionResult.getErrorTableEntries().isEmpty()) {
-            ioServices.getBoundingBoxPredictorService().getProgressViewer().hideProgress();
-            dialogService.displayIOResultErrorInfoAlert(predictionResult, stage);
-        }
-    }
-
     private void reloadCurrentAnnotationInView() {
         final ImageAnnotation annotation = model.getCurrentImageAnnotation();
 
@@ -661,40 +642,6 @@ public class Controller {
 
     private void startAnnotationImportService(File source, ImageAnnotationLoadStrategy.Type importFormat) {
         ioServices.startImport(source, importFormat, model.getImageFileNameSet(), model.getCategoryNameToCategoryMap());
-    }
-
-    private void onModelNameFetchingSucceeded() {
-        ioServices.getModelNameFetchService().getProgressViewer().hideProgress();
-        inferenceController.onModelNamesFetched(ioServices.getModelNameFetchService().getValue(), view.getSettingsWindow().orElse(stage));
-    }
-
-    private void onServerConnectionCheckSucceeded() {
-        ioServices.getServerConnectionCheckService().getProgressViewer().hideProgress();
-        inferenceController.onConnectionChecked(ioServices.getServerConnectionCheckService().getValue(),
-                view.getSettingsWindow().orElse(stage));
-    }
-
-    private void onImageMetaDataLoadingSucceeded() {
-        imageFolderController.onImageMetaDataLoaded(ioServices.getImageMetaDataLoadingService().getValue(),
-                ioServices.getImageMetaDataLoadingService().getSource(), ioServices.getImageMetaDataLoadingService().isReload());
-    }
-
-    private void onAnnotationImportSucceeded() {
-        final ImageAnnotationImportService service = ioServices.getAnnotationImportService();
-        annotationIoController.onImportFinished(service.getValue(), service.getSource(), service.getProgressViewer());
-    }
-
-
-    private void onIoServiceFailed(IoService<?> service) {
-        if(ioServices.getAnnotationImportService().equals(service) && autosaveController.isRestoring()) {
-            autosaveController.onRestoreFailed();
-        }
-    }
-
-    private void onAnnotationExportSucceeded() {
-        final ImageAnnotationExportService service = ioServices.getAnnotationExportService();
-        annotationIoController.onExportFinished(service.getValue(), service.getDestination(),
-                service.getChainedOperation(), service.getProgressViewer());
     }
 
     private void updateViewFileExplorerFileInfoElements() {
@@ -1059,17 +1006,6 @@ public class Controller {
     }
 
     /**
-     * Discards all edit histories and starts a new one for the shown image, e.g. after annotations were imported.
-     */
-    private void restartEditHistory() {
-        editHistoryController.clear();
-
-        if(model.containsImageFiles() && view.getEditorImagePane().isImageFullyLoaded()) {
-            editHistoryController.onImageShown(model.getCurrentImageFile());
-        }
-    }
-
-    /**
      * Runs the annotation imports and exports initiated by the {@link AnnotationIoController}.
      */
     private class AnnotationIoOperations implements AnnotationIoController.Operations {
@@ -1122,6 +1058,17 @@ public class Controller {
         @Override
         public void startExport(File destination, ImageAnnotationSaveStrategy.Type format, Runnable chainedOperation) {
             initiateAnnotationExport(destination, format, chainedOperation);
+        }
+
+        /**
+         * Discards all edit histories and starts a new one for the shown image, e.g. after annotations were imported.
+         */
+        private void restartEditHistory() {
+            editHistoryController.clear();
+
+            if(model.containsImageFiles() && view.getEditorImagePane().isImageFullyLoaded()) {
+                editHistoryController.onImageShown(model.getCurrentImageFile());
+            }
         }
     }
 
@@ -1425,37 +1372,63 @@ public class Controller {
     private class ServiceResultHandlers implements IoServices.ResultHandlers {
         @Override
         public void onAnnotationsExported(WorkerStateEvent event) {
-            onAnnotationExportSucceeded();
+            final ImageAnnotationExportService service = ioServices.getAnnotationExportService();
+            annotationIoController.onExportFinished(service.getValue(), service.getDestination(),
+                    service.getChainedOperation(), service.getProgressViewer());
         }
 
         @Override
         public void onAnnotationsImported(WorkerStateEvent event) {
-            onAnnotationImportSucceeded();
+            final ImageAnnotationImportService service = ioServices.getAnnotationImportService();
+            annotationIoController.onImportFinished(service.getValue(), service.getSource(),
+                    service.getProgressViewer());
         }
 
         @Override
         public void onImageMetaDataLoaded(WorkerStateEvent event) {
-            onImageMetaDataLoadingSucceeded();
+            final ImageMetaDataLoadingService service = ioServices.getImageMetaDataLoadingService();
+            imageFolderController.onImageMetaDataLoaded(service.getValue(), service.getSource(), service.isReload());
         }
 
         @Override
         public void onBoundingBoxesPredicted(WorkerStateEvent event) {
-            onBoundingBoxPredictionSucceeded();
+            final BoundingBoxPredictionResult predictionResult = ioServices.getBoundingBoxPredictorService().getValue();
+
+            if(predictionResult.getNrSuccessfullyProcessedItems() != 0) {
+                model.updateFromImageAnnotationData(predictionResult.getImageAnnotationData(),
+                        predictionResult.getOperationType());
+                view.getStatusBar().setStatusEvent(new BoundingBoxPredictionSuccessfulEvent(predictionResult));
+            }
+
+            updateViewFileExplorerFileInfoElements();
+
+            reloadCurrentAnnotationInView();
+
+            if(!predictionResult.getErrorTableEntries().isEmpty()) {
+                ioServices.getBoundingBoxPredictorService().getProgressViewer().hideProgress();
+                dialogService.displayIOResultErrorInfoAlert(predictionResult, stage);
+            }
         }
 
         @Override
         public void onModelNamesFetched(WorkerStateEvent event) {
-            onModelNameFetchingSucceeded();
+            ioServices.getModelNameFetchService().getProgressViewer().hideProgress();
+            inferenceController.onModelNamesFetched(ioServices.getModelNameFetchService().getValue(),
+                    view.getSettingsWindow().orElse(stage));
         }
 
         @Override
         public void onServerConnectionChecked(WorkerStateEvent event) {
-            onServerConnectionCheckSucceeded();
+            ioServices.getServerConnectionCheckService().getProgressViewer().hideProgress();
+            inferenceController.onConnectionChecked(ioServices.getServerConnectionCheckService().getValue(),
+                    view.getSettingsWindow().orElse(stage));
         }
 
         @Override
         public void onFailed(IoService<?> service) {
-            onIoServiceFailed(service);
+            if(ioServices.getAnnotationImportService().equals(service) && autosaveController.isRestoring()) {
+                autosaveController.onRestoreFailed();
+            }
         }
     }
 }
