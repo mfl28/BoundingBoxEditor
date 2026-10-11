@@ -35,6 +35,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
@@ -282,11 +283,9 @@ public class BoundingMaskView extends ImageView implements View, BoundingShapeDa
             return;
         }
 
-        final int[] changed = paintedMask.strokeLine(from.getX(), from.getY(), to.getX(), to.getY(), radius, paint);
-
-        if(changed != null) {
-            renderRegion(paintingImage, 0, 0, changed[0], changed[1], changed[2], changed[3]);
-        }
+        paintedMask.strokeLine(from.getX(), from.getY(), to.getX(), to.getY(), radius, paint)
+                   .ifPresent(changed -> renderRegion(paintingImage, 0, 0, changed.minX(), changed.minY(),
+                                                      changed.maxX(), changed.maxY()));
     }
 
     /**
@@ -501,47 +500,55 @@ public class BoundingMaskView extends ImageView implements View, BoundingShapeDa
             }
         });
 
-        setOnMousePressed(event -> {
-            if(!event.isShortcutDown()) {
-                boundingShapeViewData.getToggleGroup().selectToggle(this);
-
-                if(event.getButton().equals(MouseButton.PRIMARY)) {
-                    dragStartInMask = pointerInMask(event.getSceneX(), event.getSceneY());
-                    dragOffsetX = 0;
-                    dragOffsetY = 0;
-                }
-
-                event.consume();
-            }
-        });
-
+        setOnMousePressed(this::handleMousePressed);
         // While dragging, the whole node group is shifted; the mask itself is moved on release, by whole pixels.
-        setOnMouseDragged(event -> {
-            if(!event.isShortcutDown() && event.getButton().equals(MouseButton.PRIMARY)) {
-                final Point2D pointer = pointerInMask(event.getSceneX(), event.getSceneY());
+        setOnMouseDragged(this::handleMouseDragged);
+        setOnMouseReleased(event -> finishMove());
+    }
 
-                if(dragStartInMask != null && pointer != null) {
-                    dragOffsetX = clampMoveX((int) Math.round(pointer.getX() - dragStartInMask.getX()));
-                    dragOffsetY = clampMoveY((int) Math.round(pointer.getY() - dragStartInMask.getY()));
-                    updateDragTranslation();
-                }
+    private void handleMousePressed(MouseEvent event) {
+        if(event.isShortcutDown()) {
+            return;
+        }
 
-                event.consume();
-            }
-        });
+        boundingShapeViewData.getToggleGroup().selectToggle(this);
 
-        setOnMouseReleased(event -> {
-            final int dx = dragOffsetX;
-            final int dy = dragOffsetY;
-            dragStartInMask = null;
+        if(event.getButton().equals(MouseButton.PRIMARY)) {
+            dragStartInMask = pointerInMask(event.getSceneX(), event.getSceneY());
             dragOffsetX = 0;
             dragOffsetY = 0;
-            updateDragTranslation();
+        }
 
-            if(dx != 0 || dy != 0) {
-                setMask(mask.translated(dx, dy));
-            }
-        });
+        event.consume();
+    }
+
+    private void handleMouseDragged(MouseEvent event) {
+        if(event.isShortcutDown() || !event.getButton().equals(MouseButton.PRIMARY)) {
+            return;
+        }
+
+        final Point2D pointer = pointerInMask(event.getSceneX(), event.getSceneY());
+
+        if(dragStartInMask != null && pointer != null) {
+            dragOffsetX = clampMoveX((int) Math.round(pointer.getX() - dragStartInMask.getX()));
+            dragOffsetY = clampMoveY((int) Math.round(pointer.getY() - dragStartInMask.getY()));
+            updateDragTranslation();
+        }
+
+        event.consume();
+    }
+
+    private void finishMove() {
+        final int dx = dragOffsetX;
+        final int dy = dragOffsetY;
+        dragStartInMask = null;
+        dragOffsetX = 0;
+        dragOffsetY = 0;
+        updateDragTranslation();
+
+        if(dx != 0 || dy != 0) {
+            setMask(mask.translated(dx, dy));
+        }
     }
 
     /**

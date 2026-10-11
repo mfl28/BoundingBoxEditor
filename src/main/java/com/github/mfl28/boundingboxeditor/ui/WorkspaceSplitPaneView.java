@@ -186,7 +186,7 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
         BufferedImage bufferedImage = SwingFXUtils.fromFXImage(imageView.snapshot(parameters, null), null);
         try {
             ImageIO.write(bufferedImage, "png", outputFile);
-        } catch (IOException e) {
+        } catch (IOException _) {
             dialogService.displayErrorAlert("Image Saving Error", "Could not write image.",
                     this.getScene().getWindow());
         }

@@ -64,23 +64,4 @@ public interface ImageAnnotationLoadStrategy {
                                      DoubleProperty progress) throws IOException;
 
     enum Type {PASCAL_VOC, YOLO, JSON, CSV, COCO, PNG_MASKS}
-
-    @SuppressWarnings("serial")
-    class InvalidAnnotationFormatException extends RuntimeException {
-        InvalidAnnotationFormatException(String message) {
-            super(message);
-        }
-    }
-
-    @SuppressWarnings("serial")
-    class AnnotationToNonExistentImageException extends RuntimeException {
-        AnnotationToNonExistentImageException(String message) {
-            super(message);
-        }
-    }
-
-    @SuppressWarnings("serial")
-    class AnnotationAssociationException extends RuntimeException {
-        AnnotationAssociationException(String message) { super(message); }
-    }
 }

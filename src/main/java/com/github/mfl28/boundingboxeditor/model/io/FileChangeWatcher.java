@@ -60,9 +60,9 @@ public class FileChangeWatcher implements Runnable {
                     key.reset();
                 }
             }
-        } catch(InterruptedException ignored) {
+        } catch(InterruptedException _) {
             Thread.currentThread().interrupt();
-        } catch(IOException e) {
+        } catch(IOException _) {
             Platform.runLater(onFilesChangedHandler);
         }
     }

@@ -35,13 +35,10 @@ class UtilsTests {
         Constructor<MathUtils> mathUtilsConstructor = MathUtils.class.getDeclaredConstructor();
         mathUtilsConstructor.setAccessible(true);
 
-        try {
-            mathUtilsConstructor.newInstance();
-            Assertions.fail("Expected an InvocationTargetException to be thrown");
-        } catch(InvocationTargetException e) {
-            MatcherAssert.assertThat(e.getCause(), Matchers.instanceOf(IllegalStateException.class));
-            Assertions.assertEquals("MathUtils class", e.getCause().getMessage());
-        }
+        final InvocationTargetException exception =
+                Assertions.assertThrows(InvocationTargetException.class, mathUtilsConstructor::newInstance);
+        MatcherAssert.assertThat(exception.getCause(), Matchers.instanceOf(IllegalStateException.class));
+        Assertions.assertEquals("MathUtils class", exception.getCause().getMessage());
     }
 
     @Test
@@ -49,13 +46,10 @@ class UtilsTests {
         Constructor<ColorUtils> colorUtilsConstructor = ColorUtils.class.getDeclaredConstructor();
         colorUtilsConstructor.setAccessible(true);
 
-        try {
-            colorUtilsConstructor.newInstance();
-            Assertions.fail("Expected an InvocationTargetException to be thrown");
-        } catch(InvocationTargetException e) {
-            MatcherAssert.assertThat(e.getCause(), Matchers.instanceOf(IllegalStateException.class));
-            Assertions.assertEquals("ColorUtils class", e.getCause().getMessage());
-        }
+        final InvocationTargetException exception =
+                Assertions.assertThrows(InvocationTargetException.class, colorUtilsConstructor::newInstance);
+        MatcherAssert.assertThat(exception.getCause(), Matchers.instanceOf(IllegalStateException.class));
+        Assertions.assertEquals("ColorUtils class", exception.getCause().getMessage());
     }
 
     @Test
@@ -63,13 +57,10 @@ class UtilsTests {
         Constructor<UiUtils> uiUtilsConstructor = UiUtils.class.getDeclaredConstructor();
         uiUtilsConstructor.setAccessible(true);
 
-        try {
-            uiUtilsConstructor.newInstance();
-            Assertions.fail("Expected an InvocationTargetException to be thrown");
-        } catch(InvocationTargetException e) {
-            MatcherAssert.assertThat(e.getCause(), Matchers.instanceOf(IllegalStateException.class));
-            Assertions.assertEquals("UiUtils class", e.getCause().getMessage());
-        }
+        final InvocationTargetException exception =
+                Assertions.assertThrows(InvocationTargetException.class, uiUtilsConstructor::newInstance);
+        MatcherAssert.assertThat(exception.getCause(), Matchers.instanceOf(IllegalStateException.class));
+        Assertions.assertEquals("UiUtils class", exception.getCause().getMessage());
     }
 
     @Test

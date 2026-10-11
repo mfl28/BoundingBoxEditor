@@ -320,7 +320,7 @@ public class BoundingBoxEditorTestBase {
      * Only the in-memory preferences set up for the tests in build.gradle are cleared, never the user's.
      */
     private static void clearTestPreferences() {
-        if(!(Preferences.userRoot().getClass().getEnclosingClass() == InMemoryPreferencesFactory.class)) {
+        if(Preferences.userRoot().getClass().getEnclosingClass() != InMemoryPreferencesFactory.class) {
             throw new IllegalStateException("Tests must run with the in-memory preferences "
                     + "(java.util.prefs.PreferencesFactory=" + InMemoryPreferencesFactory.class.getName() + ").");
         }

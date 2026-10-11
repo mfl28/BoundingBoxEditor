@@ -168,7 +168,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
         try {
             tags = context.deserialize(jsonObject.get(TAGS_SERIALIZED_NAME), tagsType);
-        } catch(JsonParseException e) {
+        } catch(JsonParseException _) {
             errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
                                                       INVALID_TAGS_ERROR_MESSAGE +
                                                               elementName +
@@ -198,7 +198,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
         try {
             parts = context.deserialize(jsonObject.get(PARTS_SERIALIZED_NAME), partsType);
-        } catch(JsonParseException e) {
+        } catch(JsonParseException _) {
             errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
                                                       INVALID_PARTS_ERROR_MESSAGE +
                                                               elementName +
@@ -291,7 +291,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
                 if(jsonObject.has(OBJECT_COLOR_SERIALIZED_NAME)) {
                     try {
                         categoryColor = Color.web(jsonObject.get(OBJECT_COLOR_SERIALIZED_NAME).getAsString());
-                    } catch(IllegalArgumentException | ClassCastException e) {
+                    } catch(IllegalArgumentException | ClassCastException _) {
                         errorInfoEntries
                                 .add(new IOErrorInfoEntry(annotationFileName, INVALID_COLOR_ERROR_MESSAGE +
                                         IMAGE_ATTRIBUTION_MESSAGE_PART + currentFileName.get() + "."));
@@ -355,7 +355,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
                 try {
                     value = jsonObject.get(name).getAsDouble();
-                } catch(ClassCastException | NumberFormatException e) {
+                } catch(ClassCastException | NumberFormatException _) {
                     errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
                             INVALID_COORDINATE_ERROR_MESSAGE + name +
                                     ELEMENT_LOCATION_ERROR_MESSAGE_PART +
@@ -539,7 +539,7 @@ public class JSONLoadStrategy implements ImageAnnotationLoadStrategy {
 
                 try {
                     points = context.deserialize(json.getAsJsonObject().get(BOUNDING_POLYGON_SERIALIZED_NAME), pointsType);
-                } catch(JsonParseException | NumberFormatException e) {
+                } catch(JsonParseException | NumberFormatException _) {
                     errorInfoEntries.add(new IOErrorInfoEntry(annotationFileName,
                             INVALID_COORDINATES_ERROR_MESSAGE +
                                     BOUNDING_POLYGON_SERIALIZED_NAME +

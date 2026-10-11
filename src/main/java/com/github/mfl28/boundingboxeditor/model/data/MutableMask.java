@@ -21,6 +21,7 @@ package com.github.mfl28.boundingboxeditor.model.data;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * An editable binary pixel mask covering a whole image, used to paint masks and to build them when importing.
@@ -159,10 +160,9 @@ public final class MutableMask {
      * @param centerY the y-coordinate of the center
      * @param radius  the radius in pixels
      * @param value   true to set, false to clear
-     * @return the pixel rectangle that may have changed as {minX, minY, maxX (exclusive), maxY (exclusive)}, or
-     * null if nothing lies in the image
+     * @return the pixels that may have changed, or an empty optional if nothing lies in the image
      */
-    public int[] fillCircle(double centerX, double centerY, double radius, boolean value) {
+    public Optional<PixelRegion> fillCircle(double centerX, double centerY, double radius, boolean value) {
         // At least one pixel, however small the brush.
         final double r = Math.max(radius, 0.5);
         final int fromY = Math.max(0, (int) Math.floor(centerY - r));
@@ -189,10 +189,10 @@ public final class MutableMask {
         }
 
         if(minX >= maxX) {
-            return null;
+            return Optional.empty();
         }
 
-        return clipRectangle(minX, fromY, maxX, toY);
+        return clip(minX, fromY, maxX, toY);
     }
 
     /**
@@ -204,18 +204,24 @@ public final class MutableMask {
      * @param toY    the y-coordinate of the end
      * @param radius the radius of the brush in pixels
      * @param value  true to set, false to clear
-     * @return the pixel rectangle that may have changed (see {@link #fillCircle}), or null
+     * @return the pixels that may have changed, or an empty optional if nothing lies in the image
      */
-    public int[] strokeLine(double fromX, double fromY, double toX, double toY, double radius, boolean value) {
+    public Optional<PixelRegion> strokeLine(double fromX, double fromY, double toX, double toY, double radius,
+                                            boolean value) {
         final double length = Math.hypot(toX - fromX, toY - fromY);
         // Circles at most a quarter of the brush size apart cover the line without gaps.
         final double step = Math.max(Math.max(radius, 0.5) / 2, 0.5);
         final int nrSteps = Math.max(1, (int) Math.ceil(length / step));
-        int[] changed = null;
+        Optional<PixelRegion> changed = Optional.empty();
 
         for(int i = 0; i <= nrSteps; ++i) {
             final double t = (double) i / nrSteps;
-            changed = union(changed, fillCircle(fromX + t * (toX - fromX), fromY + t * (toY - fromY), radius, value));
+            final Optional<PixelRegion> circle =
+                    fillCircle(fromX + t * (toX - fromX), fromY + t * (toY - fromY), radius, value);
+
+            if(circle.isPresent()) {
+                changed = Optional.of(changed.map(region -> region.union(circle.get())).orElse(circle.get()));
+            }
         }
 
         return changed;
@@ -226,13 +232,13 @@ public final class MutableMask {
      *
      * @param points the polygon's points as x1, y1, x2, y2, ... in pixels
      * @param value  true to set, false to clear
-     * @return the pixel rectangle that may have changed (see {@link #fillCircle}), or null
+     * @return the pixels that may have changed, or an empty optional if nothing lies in the image
      */
-    public int[] fillPolygon(double[] points, boolean value) {
+    public Optional<PixelRegion> fillPolygon(double[] points, boolean value) {
         final int nrPoints = points.length / 2;
 
         if(nrPoints < 3) {
-            return null;
+            return Optional.empty();
         }
 
         double minPolygonY = Double.POSITIVE_INFINITY;
@@ -280,10 +286,10 @@ public final class MutableMask {
         }
 
         if(minX >= maxX) {
-            return null;
+            return Optional.empty();
         }
 
-        return clipRectangle(minX, fromY, maxX, toY);
+        return clip(minX, fromY, maxX, toY);
     }
 
     /**
@@ -342,31 +348,13 @@ public final class MutableMask {
         return Arrays.stream(bits).allMatch(word -> word == 0);
     }
 
-    /**
-     * Returns the union of two changed-pixel rectangles (see {@link #fillCircle}); either may be null.
-     *
-     * @param first  the first rectangle
-     * @param second the second rectangle
-     * @return the union, or null if both are null
-     */
-    public static int[] union(int[] first, int[] second) {
-        if(first == null) {
-            return second;
-        }
-
-        if(second == null) {
-            return first;
-        }
-
-        return new int[]{Math.min(first[0], second[0]), Math.min(first[1], second[1]),
-                Math.max(first[2], second[2]), Math.max(first[3], second[3])};
-    }
-
     private int firstSetInRow(int y) {
         final long start = (long) y * imageWidth;
         final long end = start + imageWidth;
 
-        for(long index = start; index < end; ) {
+        long index = start;
+
+        while(index < end) {
             final int word = (int) (index >>> 6);
             final int bit = (int) (index & 63);
             final long remaining = bits[word] >>> bit;
@@ -385,7 +373,9 @@ public final class MutableMask {
     private int lastSetInRow(int y) {
         final long start = (long) y * imageWidth;
 
-        for(long index = start + imageWidth - 1; index >= start; ) {
+        long index = start + imageWidth - 1;
+
+        while(index >= start) {
             final int word = (int) (index >>> 6);
             final int bit = (int) (index & 63);
             final long masked = bits[word] & (bit == 63 ? -1L : (1L << (bit + 1)) - 1);
@@ -401,9 +391,10 @@ public final class MutableMask {
         return -1;
     }
 
-    private int[] clipRectangle(int minX, int minY, int maxX, int maxY) {
-        final int[] clipped = {Math.max(0, minX), Math.max(0, minY), Math.min(imageWidth, maxX),
-                Math.min(imageHeight, maxY)};
-        return clipped[0] < clipped[2] && clipped[1] < clipped[3] ? clipped : null;
+    private Optional<PixelRegion> clip(int minX, int minY, int maxX, int maxY) {
+        final PixelRegion clipped = new PixelRegion(Math.max(0, minX), Math.max(0, minY), Math.min(imageWidth, maxX),
+                                                    Math.min(imageHeight, maxY));
+        return clipped.minX() < clipped.maxX() && clipped.minY() < clipped.maxY() ? Optional.of(clipped)
+                : Optional.empty();
     }
 }

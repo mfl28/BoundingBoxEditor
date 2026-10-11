@@ -485,25 +485,8 @@ public class EditorImagePaneView extends ScrollPane implements View {
     }
 
     private void setUpInternalListeners() {
-        widthProperty().addListener((value, oldValue, newValue) -> {
-            if(!isMaximizeImageView()) {
-                final Image image = imageView.getImage();
-                double prefWidth = image != null ? image.getWidth() : 0;
-                imageView.setFitWidth(Math.min(prefWidth, getMaxAllowedImageWidth()));
-            } else {
-                imageView.setFitWidth(getMaxAllowedImageWidth());
-            }
-        });
-
-        heightProperty().addListener((value, oldValue, newValue) -> {
-            if(!isMaximizeImageView()) {
-                final Image image = imageView.getImage();
-                double prefHeight = image != null ? image.getHeight() : 0;
-                imageView.setFitHeight(Math.min(prefHeight, getMaxAllowedImageHeight()));
-            } else {
-                imageView.setFitHeight(getMaxAllowedImageHeight());
-            }
-        });
+        widthProperty().addListener((value, oldValue, newValue) -> updateFitWidth());
+        heightProperty().addListener((value, oldValue, newValue) -> updateFitHeight());
 
         setUpImageViewListeners();
         setUpContentPaneListeners();
@@ -515,11 +498,31 @@ public class EditorImagePaneView extends ScrollPane implements View {
         // A filter, because the scroll pane itself scrolls with the arrow keys.
         addEventFilter(KeyEvent.KEY_PRESSED, this::handleNudgeKeyPressed);
         // Zooming or scrolling moves the image under the pointer, so a mask stroke goes on from the next point.
-        addEventFilter(ScrollEvent.ANY, event -> {
-            if(boundingShapeDrawer instanceof BoundingMaskDrawer maskDrawer && maskDrawer.isDrawingInProgress()) {
-                maskDrawer.pauseStroke();
-            }
-        });
+        addEventFilter(ScrollEvent.ANY, event -> pauseMaskStroke());
+    }
+
+    private void updateFitWidth() {
+        if(isMaximizeImageView()) {
+            imageView.setFitWidth(getMaxAllowedImageWidth());
+        } else {
+            final Image image = imageView.getImage();
+            imageView.setFitWidth(Math.min(image != null ? image.getWidth() : 0, getMaxAllowedImageWidth()));
+        }
+    }
+
+    private void updateFitHeight() {
+        if(isMaximizeImageView()) {
+            imageView.setFitHeight(getMaxAllowedImageHeight());
+        } else {
+            final Image image = imageView.getImage();
+            imageView.setFitHeight(Math.min(image != null ? image.getHeight() : 0, getMaxAllowedImageHeight()));
+        }
+    }
+
+    private void pauseMaskStroke() {
+        if(boundingShapeDrawer instanceof BoundingMaskDrawer maskDrawer && maskDrawer.isDrawingInProgress()) {
+            maskDrawer.pauseStroke();
+        }
     }
 
     private void handleNudgeKeyPressed(KeyEvent event) {

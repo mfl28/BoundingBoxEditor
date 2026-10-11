@@ -18,6 +18,7 @@
  */
 package com.github.mfl28.boundingboxeditor.model.io;
 
+import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.results.ImageAnnotationImportResult;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -54,7 +55,7 @@ class PVOCLoadStrategyTest {
                 new SimpleDoubleProperty(0));
 
         assertEquals(List.of("valid.jpg"), result.getImageAnnotationData().imageAnnotations().stream()
-                                                 .map(annotation -> annotation.getImageFileName()).toList());
+                                                 .map(ImageAnnotation::getImageFileName).toList());
         assertEquals(List.of("bad-coordinate.xml", "bad-depth.xml", "bad-flag.xml"),
                      result.getErrorTableEntries().stream().map(IOErrorInfoEntry::getSourceName).sorted().toList());
         assertTrue(result.getErrorTableEntries().stream().map(IOErrorInfoEntry::getErrorDescription)
@@ -110,7 +111,7 @@ class PVOCLoadStrategyTest {
                 new SimpleDoubleProperty(0));
 
         assertEquals(List.of("valid.jpg"), result.getImageAnnotationData().imageAnnotations().stream()
-                                                 .map(annotation -> annotation.getImageFileName()).toList());
+                                                 .map(ImageAnnotation::getImageFileName).toList());
         final Map<String, String> errors = result.getErrorTableEntries().stream()
                 .collect(Collectors.toMap(IOErrorInfoEntry::getSourceName, IOErrorInfoEntry::getErrorDescription));
         assertEquals(8, errors.size(), errors::toString);

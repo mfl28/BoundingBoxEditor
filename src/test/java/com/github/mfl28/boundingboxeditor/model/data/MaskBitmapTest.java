@@ -82,7 +82,7 @@ class MaskBitmapTest {
     void onFillingCircle_ShouldSetThePixelsWhoseCentersAreInside() {
         final MutableMask mutableMask = new MutableMask(40, 40);
 
-        final int[] changed = mutableMask.fillCircle(20, 20, 5, true);
+        final PixelRegion changed = mutableMask.fillCircle(20, 20, 5, true).orElseThrow();
         final MaskBitmap mask = mutableMask.toBitmap();
 
         int expectedArea = 0;
@@ -96,8 +96,7 @@ class MaskBitmapTest {
         }
 
         assertEquals(expectedArea, mask.getArea());
-        assertNotNull(changed);
-        assertTrue(changed[0] <= mask.getMinX() && changed[2] >= mask.getMinX() + mask.getWidth());
+        assertTrue(changed.minX() <= mask.getMinX() && changed.maxX() >= mask.getMinX() + mask.getWidth());
     }
 
     @Test

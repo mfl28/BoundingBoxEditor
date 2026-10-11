@@ -99,7 +99,7 @@ public class UiUtils {
 
     public static TextFormatter<String> createFloatFormatter() {
         return new TextFormatter<>(change -> {
-            if(!change.getControlNewText().equals(".") && change.getControlNewText().matches("\\d*\\.?\\d*")) {
+            if(!change.getControlNewText().equals(".") && change.getControlNewText().matches("\\d*+(\\.\\d*+)?")) {
                 return change;
             }
 

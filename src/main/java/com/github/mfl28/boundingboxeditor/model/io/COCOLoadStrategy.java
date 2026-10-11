@@ -55,6 +55,44 @@ public class COCOLoadStrategy implements ImageAnnotationLoadStrategy {
         progress.set(0);
         final String sourceName = path.getFileName().toString();
         final List<IOErrorInfoEntry> errorEntries = new ArrayList<>();
+        final Optional<JsonObject> root = readRoot(path, sourceName, errorEntries);
+
+        if(root.isEmpty()) {
+            return emptyResult(errorEntries, existingCategoryNameToCategoryMap);
+        }
+
+        final LoadContext context = new LoadContext(sourceName, filesToLoad, existingCategoryNameToCategoryMap,
+                                                    errorEntries, new LinkedHashMap<>(), new HashMap<>(),
+                                                    new HashSet<>());
+        final Map<Long, ImageEntry> images = readImages(root.get().getAsJsonArray(IMAGES_KEY), context);
+        final Map<Long, JsonObject> categories = readCategories(root.get().getAsJsonArray(CATEGORIES_KEY), context);
+        final JsonArray annotations = root.get().getAsJsonArray(ANNOTATIONS_KEY);
+
+        for(int i = 0; i < annotations.size(); ++i) {
+            try {
+                readAnnotation(annotations.get(i), "Annotation " + (i + 1), images, categories, context);
+            } catch(InvalidAnnotationFormatException | IllegalArgumentException | IllegalStateException |
+                    UnsupportedOperationException exception) {
+                errorEntries.add(new IOErrorInfoEntry(sourceName, exception.getMessage()));
+            }
+
+            progress.set((i + 1.0) / annotations.size());
+        }
+
+        progress.set(1.0);
+        return new ImageAnnotationImportResult(context.fileNameToAnnotation().size(), errorEntries,
+                                               new ImageAnnotationData(context.fileNameToAnnotation().values(),
+                                                                       context.categoryNameToShapeCount(),
+                                                                       existingCategoryNameToCategoryMap));
+    }
+
+    /**
+     * Reads the file's JSON object and checks that it has the image, category and annotation arrays.
+     *
+     * @return the object, or an empty optional (with the error reported) if the file is invalid
+     */
+    private static Optional<JsonObject> readRoot(Path path, String sourceName, List<IOErrorInfoEntry> errorEntries)
+            throws IOException {
         final JsonObject root;
 
         try(Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
@@ -67,76 +105,58 @@ public class COCOLoadStrategy implements ImageAnnotationLoadStrategy {
             root = element.getAsJsonObject();
         } catch(JsonParseException exception) {
             errorEntries.add(new IOErrorInfoEntry(sourceName, "Invalid COCO file: " + exception.getMessage()));
-            return emptyResult(errorEntries, existingCategoryNameToCategoryMap);
+            return Optional.empty();
         }
-
-        final LoadContext context = new LoadContext(sourceName, filesToLoad, existingCategoryNameToCategoryMap,
-                                                    errorEntries);
 
         for(String key : List.of(IMAGES_KEY, CATEGORIES_KEY, ANNOTATIONS_KEY)) {
             if(!root.has(key) || !root.get(key).isJsonArray()) {
                 errorEntries.add(new IOErrorInfoEntry(sourceName, "Missing \"" + key + "\" array."));
-                return emptyResult(errorEntries, existingCategoryNameToCategoryMap);
+                return Optional.empty();
             }
         }
 
-        final Map<Long, ImageEntry> images = readImages(root.getAsJsonArray(IMAGES_KEY), context);
-        final Map<Long, JsonObject> categories = readCategories(root.getAsJsonArray(CATEGORIES_KEY), context);
-        final JsonArray annotations = root.getAsJsonArray(ANNOTATIONS_KEY);
-        final Map<String, ImageAnnotation> fileNameToAnnotation = new LinkedHashMap<>();
-        final Map<String, Integer> categoryNameToShapeCount = new HashMap<>();
-        final Set<String> reportedOtherImages = new HashSet<>();
+        return Optional.of(root);
+    }
 
-        for(int i = 0; i < annotations.size(); ++i) {
-            final JsonElement element = annotations.get(i);
-            final String annotationName = "Annotation " + (i + 1);
-
-            try {
-                if(!element.isJsonObject()) {
-                    throw new InvalidAnnotationFormatException(annotationName + " is not an object.");
-                }
-
-                final JsonObject annotation = element.getAsJsonObject();
-                final ImageEntry image = images.get(readId(annotation, IMAGE_ID_KEY, annotationName));
-
-                if(image == null) {
-                    throw new InvalidAnnotationFormatException(annotationName + " refers to an unknown image.");
-                }
-
-                if(!filesToLoad.contains(image.fileName())) {
-                    if(reportedOtherImages.add(image.fileName())) {
-                        errorEntries.add(new IOErrorInfoEntry(image.fileName(), "Image " + image.fileName()
-                                + " does not belong to currently loaded image files."));
-                    }
-
-                    continue;
-                }
-
-                final JsonObject category = categories.get(readId(annotation, CATEGORY_ID_KEY, annotationName));
-
-                if(category == null) {
-                    throw new InvalidAnnotationFormatException(annotationName + " refers to an unknown category.");
-                }
-
-                final BoundingShapeData shape = createShape(annotation, image, context.categoryFor(category),
-                                                            annotationName);
-                fileNameToAnnotation.computeIfAbsent(image.fileName(),
-                                                     name -> new ImageAnnotation(new ImageMetaData(name)))
-                                    .getBoundingShapeData().add(shape);
-                categoryNameToShapeCount.merge(shape.getCategoryName(), 1, Integer::sum);
-            } catch(InvalidAnnotationFormatException | IllegalArgumentException | IllegalStateException |
-                    UnsupportedOperationException exception) {
-                errorEntries.add(new IOErrorInfoEntry(sourceName, exception.getMessage()));
-            }
-
-            progress.set((i + 1.0) / annotations.size());
+    /**
+     * Adds an annotation's shape to its image's annotation, unless the image isn't loaded.
+     *
+     * @throws InvalidAnnotationFormatException if the annotation is invalid
+     */
+    private static void readAnnotation(JsonElement element, String annotationName, Map<Long, ImageEntry> images,
+                                       Map<Long, JsonObject> categories, LoadContext context) {
+        if(!element.isJsonObject()) {
+            throw new InvalidAnnotationFormatException(annotationName + " is not an object.");
         }
 
-        progress.set(1.0);
-        return new ImageAnnotationImportResult(fileNameToAnnotation.size(), errorEntries,
-                                               new ImageAnnotationData(fileNameToAnnotation.values(),
-                                                                       categoryNameToShapeCount,
-                                                                       existingCategoryNameToCategoryMap));
+        final JsonObject annotation = element.getAsJsonObject();
+        final ImageEntry image = images.get(readId(annotation, IMAGE_ID_KEY, annotationName));
+
+        if(image == null) {
+            throw new InvalidAnnotationFormatException(annotationName + " refers to an unknown image.");
+        }
+
+        if(!context.filesToLoad().contains(image.fileName())) {
+            // Reported once per image.
+            if(context.reportedOtherImages().add(image.fileName())) {
+                context.errorEntries().add(new IOErrorInfoEntry(image.fileName(), "Image " + image.fileName()
+                        + " does not belong to currently loaded image files."));
+            }
+
+            return;
+        }
+
+        final JsonObject category = categories.get(readId(annotation, CATEGORY_ID_KEY, annotationName));
+
+        if(category == null) {
+            throw new InvalidAnnotationFormatException(annotationName + " refers to an unknown category.");
+        }
+
+        final BoundingShapeData shape = createShape(annotation, image, context.categoryFor(category), annotationName);
+        context.fileNameToAnnotation().computeIfAbsent(image.fileName(),
+                                                       name -> new ImageAnnotation(new ImageMetaData(name)))
+               .getBoundingShapeData().add(shape);
+        context.categoryNameToShapeCount().merge(shape.getCategoryName(), 1, Integer::sum);
     }
 
     private static ImageAnnotationImportResult emptyResult(List<IOErrorInfoEntry> errorEntries,
@@ -214,11 +234,9 @@ public class COCOLoadStrategy implements ImageAnnotationLoadStrategy {
         }
 
         if(segmentation != null && segmentation.isJsonArray() && !segmentation.getAsJsonArray().isEmpty()) {
-            final List<double[]> polygons = new ArrayList<>();
-
-            for(JsonElement polygonElement : segmentation.getAsJsonArray()) {
-                polygons.add(readPolygon(polygonElement, image, annotationName));
-            }
+            final List<double[]> polygons = segmentation.getAsJsonArray().asList().stream()
+                    .map(polygonElement -> readPolygon(polygonElement, image, annotationName))
+                    .toList();
 
             if(polygons.size() == 1) {
                 final double[] points = polygons.getFirst();
@@ -379,9 +397,15 @@ public class COCOLoadStrategy implements ImageAnnotationLoadStrategy {
     private record ImageEntry(String fileName, int width, int height) {
     }
 
+    /**
+     * The state of one import (strategies are shared between threads, so it isn't kept in fields).
+     *
+     * @param reportedOtherImages the images that are not loaded and were already reported
+     */
     private record LoadContext(String sourceName, Set<String> filesToLoad,
                                Map<String, ObjectCategory> categoryNameToCategory,
-                               List<IOErrorInfoEntry> errorEntries) {
+                               List<IOErrorInfoEntry> errorEntries, Map<String, ImageAnnotation> fileNameToAnnotation,
+                               Map<String, Integer> categoryNameToShapeCount, Set<String> reportedOtherImages) {
         ObjectCategory categoryFor(JsonObject category) {
             final String name = category.get(NAME_KEY).getAsString();
 
