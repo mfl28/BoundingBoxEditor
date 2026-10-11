@@ -37,9 +37,8 @@ import com.github.mfl28.boundingboxeditor.ui.settings.InferenceSettingsView;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.AutosaveFailedEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.BoundingBoxPredictionSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.BoundingShapeClipboardEvent;
-import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsImportingSuccessfulEvent;
-import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsSavingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageFilesLoadingSuccessfulEvent;
+import com.github.mfl28.boundingboxeditor.ui.statusevents.StatusEvent;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.github.mfl28.boundingboxeditor.utils.ImageUtils;
 import javafx.application.HostServices;
@@ -88,9 +87,6 @@ public class Controller {
     private static final String RECENT_IMAGE_FOLDER_NOT_FOUND_ERROR_DIALOG_TITLE = "Image Folder Not Found";
     private static final String NO_IMAGE_ANNOTATIONS_TO_SAVE_ERROR_DIALOG_CONTENT =
             "There are no image annotations to save.";
-    private static final String ANNOTATION_IMPORT_ERROR_TITLE = "Annotation Import Error";
-    private static final String ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT =
-            "The source does not contain any valid annotations.";
     private static final String EXIT_APPLICATION_OPTION_DIALOG_TITLE = "Exit Application";
     private static final String EXIT_APPLICATION_OPTION_DIALOG_CONTENT =
             "Do you want to save the existing annotation data?";
@@ -100,30 +96,13 @@ public class Controller {
     private static final String SETTINGS_APPLICATION_NO_MODEL_SELECTED_ERROR_DIALOG_CONTENT =
             "Please select a model or disable inference.";
     private static final String IMAGE_LOADING_ERROR_DIALOG_TITLE = "Image Loading Error";
-    private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Saving Annotations";
-    private static final String SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER = "Saving in progress...";
-    private static final String LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE = "Loading";
-    private static final String LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER = "Loading annotations...";
-    private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE = "Loading Images";
-    private static final String IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER = "Loading image meta-data";
-    private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE = "Predicting";
-    private static final String BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER = "Predicting bounding boxes";
-    private static final String FETCHING_MODELS_PROGRESS_DIALOG_TITLE = "Fetching Models";
-    private static final String FETCHING_MODELS_PROGRESS_DIALOG_HEADER = "Fetching model names from server";
-    private static final String CONNECTION_CHECK_PROGRESS_DIALOG_TITLE = "Checking Connection";
-    private static final String CONNECTION_CHECK_PROGRESS_DIALOG_HEADER = "Checking the inference server";
 
-    private final ImageAnnotationExportService annotationExportService = new ImageAnnotationExportService();
-    private final ImageAnnotationImportService annotationImportService = new ImageAnnotationImportService();
-    private final ImageMetaDataLoadingService imageMetaDataLoadingService = new ImageMetaDataLoadingService();
-    private final BoundingBoxPredictorService boundingBoxPredictorService = new BoundingBoxPredictorService();
-    private final ModelNameFetchService modelNameFetchService = new ModelNameFetchService();
-    private final ServerConnectionCheckService serverConnectionCheckService = new ServerConnectionCheckService();
     private final Stage stage;
     private final HostServices hostServices;
     private final MainView view;
     private final DialogService dialogService;
     private final CategoryController categoryController;
+    private final IoServices ioServices;
     private final AnnotationIoController annotationIoController;
     private final ImageFolderController imageFolderController;
     private final InferenceController inferenceController;
@@ -181,6 +160,7 @@ public class Controller {
                 annotationIoController, new ImageFolderOperations());
         this.inferenceController = new InferenceController(model, dialogService, new InferenceOperations());
         this.categoryController = new CategoryController(model, dialogService, stage);
+        this.ioServices = new IoServices(dialogService, stage, new ServiceResultHandlers());
         this.keyboardShortcutHandler = new KeyboardShortcutHandler(model, new KeyboardShortcutEditor(),
                 KeyboardShortcutHandler.createViewActionShortcuts(view, this::onRegisterSettingsAction,
                         this::onRegisterUndoAction, this::onRegisterRedoAction, shapeClipboardController::copySelectedShape,
@@ -191,7 +171,6 @@ public class Controller {
         loadPreferences();
         view.connectToController(this);
         setUpModelListeners();
-        setUpServices();
         autosaveController = AutosaveController.create(model, dialogService, stage, recentImageFolders,
                 new AutosaveOperations());
         // After the window was shown.
@@ -606,19 +585,19 @@ public class Controller {
     }
 
     ImageAnnotationExportService getAnnotationExportService() {
-        return annotationExportService;
+        return ioServices.getAnnotationExportService();
     }
 
     ImageAnnotationImportService getAnnotationImportService() {
-        return annotationImportService;
+        return ioServices.getAnnotationImportService();
     }
 
     ImageMetaDataLoadingService getImageMetaDataLoadingService() {
-        return imageMetaDataLoadingService;
+        return ioServices.getImageMetaDataLoadingService();
     }
 
     BoundingBoxPredictorService getBoundingBoxPredictorService() {
-        return boundingBoxPredictorService;
+        return ioServices.getBoundingBoxPredictorService();
     }
 
     EditHistoryController getEditHistoryController() {
@@ -626,11 +605,11 @@ public class Controller {
     }
 
     ModelNameFetchService getModelNameFetchService() {
-        return modelNameFetchService;
+        return ioServices.getModelNameFetchService();
     }
 
     ServerConnectionCheckService getServerConnectionCheckService() {
-        return serverConnectionCheckService;
+        return ioServices.getServerConnectionCheckService();
     }
 
     Stage getStage() {
@@ -640,20 +619,15 @@ public class Controller {
     void initiateAnnotationExport(File destination,
                                   ImageAnnotationSaveStrategy.Type exportFormat,
                                   Runnable chainedOperation) {
-        annotationExportService.reset();
-        annotationExportService.setDestination(destination);
-        annotationExportService.setExportFormat(exportFormat);
-        annotationExportService.setAnnotationData(model.createImageAnnotationData());
-        annotationExportService.setChainedOperation(chainedOperation);
-        annotationExportService.restart();
+        ioServices.startExport(destination, exportFormat, model.createImageAnnotationData(), chainedOperation);
     }
 
     void initiateAnnotationExport(File destination, ImageAnnotationSaveStrategy.Type exportFormat) {
         initiateAnnotationExport(destination, exportFormat, null);
     }
 
-    private void onBoundingBoxPredictionSucceeded(WorkerStateEvent event) {
-        final BoundingBoxPredictionResult predictionResult = boundingBoxPredictorService.getValue();
+    private void onBoundingBoxPredictionSucceeded() {
+        final BoundingBoxPredictionResult predictionResult = ioServices.getBoundingBoxPredictorService().getValue();
 
         if(predictionResult.getNrSuccessfullyProcessedItems() != 0) {
             model.updateFromImageAnnotationData(predictionResult.getImageAnnotationData(),
@@ -666,7 +640,7 @@ public class Controller {
         reloadCurrentAnnotationInView();
 
         if(!predictionResult.getErrorTableEntries().isEmpty()) {
-            boundingBoxPredictorService.getProgressViewer().hideProgress();
+            ioServices.getBoundingBoxPredictorService().getProgressViewer().hideProgress();
             dialogService.displayIOResultErrorInfoAlert(predictionResult, stage);
         }
     }
@@ -686,130 +660,41 @@ public class Controller {
     }
 
     private void startAnnotationImportService(File source, ImageAnnotationLoadStrategy.Type importFormat) {
-        annotationImportService.reset();
-        annotationImportService.setSource(source);
-        annotationImportService.setImportFormat(importFormat);
-        annotationImportService.setImportableFileNames(model.getImageFileNameSet());
-        annotationImportService.setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
-        annotationImportService.restart();
+        ioServices.startImport(source, importFormat, model.getImageFileNameSet(), model.getCategoryNameToCategoryMap());
     }
 
-    private void setUpServices() {
-        setUpService(annotationExportService, SAVING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
-                SAVING_ANNOTATIONS_PROGRESS_DIALOGUE_HEADER, this::onAnnotationExportSucceeded, false);
-        setUpService(annotationImportService, LOADING_ANNOTATIONS_PROGRESS_DIALOG_TITLE,
-                LOADING_ANNOTATIONS_PROGRESS_DIALOG_HEADER, this::onAnnotationImportSucceeded, false);
-        setUpService(imageMetaDataLoadingService, IMAGE_FILES_LOADING_PROGRESS_DIALOG_TITLE,
-                IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER, this::onImageMetaDataLoadingSucceeded, false);
-        setUpService(boundingBoxPredictorService, BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE,
-                BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER, this::onBoundingBoxPredictionSucceeded, true);
-        setUpService(modelNameFetchService, FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
-                FETCHING_MODELS_PROGRESS_DIALOG_HEADER, this::onModelNameFetchingSucceeded, true);
-        setUpService(serverConnectionCheckService, CONNECTION_CHECK_PROGRESS_DIALOG_TITLE,
-                CONNECTION_CHECK_PROGRESS_DIALOG_HEADER, this::onServerConnectionCheckSucceeded, true);
+    private void onModelNameFetchingSucceeded() {
+        ioServices.getModelNameFetchService().getProgressViewer().hideProgress();
+        inferenceController.onModelNamesFetched(ioServices.getModelNameFetchService().getValue(), view.getSettingsWindow().orElse(stage));
     }
 
-    /**
-     * Gives the service its progress dialog and its result handlers. Each service gets a single dialog that is reused
-     * for every run: ControlsFX progress dialogs never detach from their worker, so creating one per run would leave
-     * stale dialogs that reappear on every later run.
-     */
-    private void setUpService(IoService<?> service, String progressDialogTitle, String progressDialogHeader,
-                              EventHandler<WorkerStateEvent> onSucceeded, boolean cancellable) {
-        final ServiceProgressDialog progressDialog =
-                dialogService.createServiceProgressDialog(service, progressDialogTitle, progressDialogHeader);
-        progressDialog.setOwnerParentWindow(stage);
-
-        if(cancellable) {
-            progressDialog.enableCancellation();
-        }
-
-        service.setProgressViewer(progressDialog);
-        service.setOnSucceeded(onSucceeded);
-        service.setOnFailed(this::onIoServiceFailed);
-    }
-
-    private void onModelNameFetchingSucceeded(WorkerStateEvent event) {
-        modelNameFetchService.getProgressViewer().hideProgress();
-        inferenceController.onModelNamesFetched(modelNameFetchService.getValue(), view.getSettingsWindow().orElse(stage));
-    }
-
-    private void onServerConnectionCheckSucceeded(WorkerStateEvent event) {
-        serverConnectionCheckService.getProgressViewer().hideProgress();
-        inferenceController.onConnectionChecked(serverConnectionCheckService.getValue(),
+    private void onServerConnectionCheckSucceeded() {
+        ioServices.getServerConnectionCheckService().getProgressViewer().hideProgress();
+        inferenceController.onConnectionChecked(ioServices.getServerConnectionCheckService().getValue(),
                 view.getSettingsWindow().orElse(stage));
     }
 
-    private void onImageMetaDataLoadingSucceeded(WorkerStateEvent workerStateEvent) {
-        imageFolderController.onImageMetaDataLoaded(imageMetaDataLoadingService.getValue(),
-                imageMetaDataLoadingService.getSource(), imageMetaDataLoadingService.isReload());
+    private void onImageMetaDataLoadingSucceeded() {
+        imageFolderController.onImageMetaDataLoaded(ioServices.getImageMetaDataLoadingService().getValue(),
+                ioServices.getImageMetaDataLoadingService().getSource(), ioServices.getImageMetaDataLoadingService().isReload());
     }
 
-    private void onAnnotationImportSucceeded(WorkerStateEvent workerStateEvent) {
-        ImageAnnotationImportResult importResult = annotationImportService.getValue();
-        final boolean restoredAutosave = autosaveController.isRestoring();
-
-        if(importResult.getNrSuccessfullyProcessedItems() != 0) {
-            model.updateFromImageAnnotationData(importResult.getImageAnnotationData(), importResult.getOperationType());
-            view.getStatusBar().setStatusEvent(new ImageAnnotationsImportingSuccessfulEvent(importResult));
-        }
-
-        if(restoredAutosave) {
-            autosaveController.onRestoreFinished(importResult.getNrSuccessfullyProcessedItems() != 0);
-        }
-
-        updateViewFileExplorerFileInfoElements();
-
-        reloadCurrentAnnotationInView();
-        restartEditHistory();
-
-        if(!importResult.getErrorTableEntries().isEmpty()) {
-            annotationImportService.getProgressViewer().hideProgress();
-            dialogService.displayIOResultErrorInfoAlert(importResult, stage);
-        } else if(importResult.getNrSuccessfullyProcessedItems() == 0) {
-            annotationImportService.getProgressViewer().hideProgress();
-            dialogService.displayErrorAlert(ANNOTATION_IMPORT_ERROR_TITLE,
-                    ANNOTATION_IMPORT_ERROR_NO_VALID_FILES_CONTENT, stage);
-            return;
-        }
-
-        if(!restoredAutosave) {
-            annotationIoController.rememberLoadingDirectory(annotationImportService.getSource());
-        }
+    private void onAnnotationImportSucceeded() {
+        final ImageAnnotationImportService service = ioServices.getAnnotationImportService();
+        annotationIoController.onImportFinished(service.getValue(), service.getSource(), service.getProgressViewer());
     }
 
 
-    private void onIoServiceFailed(WorkerStateEvent event) {
-        if(annotationImportService.equals(event.getSource()) && autosaveController.isRestoring()) {
+    private void onIoServiceFailed(IoService<?> service) {
+        if(ioServices.getAnnotationImportService().equals(service) && autosaveController.isRestoring()) {
             autosaveController.onRestoreFailed();
         }
-
-        final Throwable exception = event.getSource().getException();
-
-        if(exception != null) {
-            dialogService.displayExceptionDialog(exception, stage);
-        }
     }
 
-    private void onAnnotationExportSucceeded(WorkerStateEvent event) {
-        IOResult saveResult = annotationExportService.getValue();
-
-        if(saveResult.getNrSuccessfullyProcessedItems() != 0) {
-            view.getStatusBar().setStatusEvent(new ImageAnnotationsSavingSuccessfulEvent(saveResult));
-        }
-
-        if(!saveResult.getErrorTableEntries().isEmpty()) {
-            annotationExportService.getProgressViewer().hideProgress();
-            dialogService.displayIOResultErrorInfoAlert(saveResult, stage);
-        } else {
-            model.setSaved(true);
-        }
-
-        annotationIoController.rememberSavingDirectory(annotationExportService.getDestination());
-
-        if(annotationExportService.getChainedOperation() != null) {
-            annotationExportService.getChainedOperation().run();
-        }
+    private void onAnnotationExportSucceeded() {
+        final ImageAnnotationExportService service = ioServices.getAnnotationExportService();
+        annotationIoController.onExportFinished(service.getValue(), service.getDestination(),
+                service.getChainedOperation(), service.getProgressViewer());
     }
 
     private void updateViewFileExplorerFileInfoElements() {
@@ -1188,6 +1073,27 @@ public class Controller {
      * Runs the annotation imports and exports initiated by the {@link AnnotationIoController}.
      */
     private class AnnotationIoOperations implements AnnotationIoController.Operations {
+        @Override
+        public void showStatus(StatusEvent event) {
+            view.getStatusBar().setStatusEvent(event);
+        }
+
+        @Override
+        public boolean isRestoringAutosave() {
+            return autosaveController.isRestoring();
+        }
+
+        @Override
+        public void onAnnotationsImported(boolean anyImported) {
+            if(autosaveController.isRestoring()) {
+                autosaveController.onRestoreFinished(anyImported);
+            }
+
+            updateViewFileExplorerFileInfoElements();
+            reloadCurrentAnnotationInView();
+            restartEditHistory();
+        }
+
         private void clearModelAndViewAnnotationData() {
             editHistoryController.clear();
             model.clearAnnotationData(false);
@@ -1224,11 +1130,11 @@ public class Controller {
      */
     private class ImageFolderOperations implements ImageFolderController.Operations {
         private void startImageMetaDataLoadingService(File source, List<File> imageFiles, boolean reload) {
-            imageMetaDataLoadingService.reset();
-            imageMetaDataLoadingService.setSource(source);
-            imageMetaDataLoadingService.setImageFiles(imageFiles);
-            imageMetaDataLoadingService.setReload(reload);
-            imageMetaDataLoadingService.restart();
+            ioServices.getImageMetaDataLoadingService().reset();
+            ioServices.getImageMetaDataLoadingService().setSource(source);
+            ioServices.getImageMetaDataLoadingService().setImageFiles(imageFiles);
+            ioServices.getImageMetaDataLoadingService().setReload(reload);
+            ioServices.getImageMetaDataLoadingService().restart();
         }
 
         private void updateViewImageFiles() {
@@ -1298,7 +1204,7 @@ public class Controller {
 
         @Override
         public void hideImageMetaDataLoadingProgress() {
-            imageMetaDataLoadingService.getProgressViewer().hideProgress();
+            ioServices.getImageMetaDataLoadingService().getProgressViewer().hideProgress();
         }
 
         @Override
@@ -1337,28 +1243,28 @@ public class Controller {
 
         @Override
         public void startModelNameFetching(BoundingBoxPredictorClient predictorClient) {
-            modelNameFetchService.reset();
-            modelNameFetchService.setClient(predictorClient);
-            modelNameFetchService.restart();
+            ioServices.getModelNameFetchService().reset();
+            ioServices.getModelNameFetchService().setClient(predictorClient);
+            ioServices.getModelNameFetchService().restart();
         }
 
         @Override
         public void startPrediction(File imageFile, BoundingBoxPredictorClient predictorClient) {
-            boundingBoxPredictorService.reset();
-            boundingBoxPredictorService.setImageFile(imageFile);
-            boundingBoxPredictorService.setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
-            boundingBoxPredictorService.setImageMetaData(
+            ioServices.getBoundingBoxPredictorService().reset();
+            ioServices.getBoundingBoxPredictorService().setImageFile(imageFile);
+            ioServices.getBoundingBoxPredictorService().setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
+            ioServices.getBoundingBoxPredictorService().setImageMetaData(
                     model.getImageFileNameToMetaDataMap().get(imageFile.getName()));
-            boundingBoxPredictorService.setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
-            boundingBoxPredictorService.setPredictorClient(predictorClient);
-            boundingBoxPredictorService.restart();
+            ioServices.getBoundingBoxPredictorService().setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
+            ioServices.getBoundingBoxPredictorService().setPredictorClient(predictorClient);
+            ioServices.getBoundingBoxPredictorService().restart();
         }
 
         @Override
         public void startConnectionCheck(BoundingBoxPredictorClient predictorClient) {
-            serverConnectionCheckService.reset();
-            serverConnectionCheckService.setClient(predictorClient);
-            serverConnectionCheckService.restart();
+            ioServices.getServerConnectionCheckService().reset();
+            ioServices.getServerConnectionCheckService().setClient(predictorClient);
+            ioServices.getServerConnectionCheckService().restart();
         }
 
         @Override
@@ -1513,6 +1419,43 @@ public class Controller {
         @Override
         public AutosaveController.Timer createTimer(Runnable action) {
             return AutosaveController.createSaveTimer(action);
+        }
+    }
+
+    private class ServiceResultHandlers implements IoServices.ResultHandlers {
+        @Override
+        public void onAnnotationsExported(WorkerStateEvent event) {
+            onAnnotationExportSucceeded();
+        }
+
+        @Override
+        public void onAnnotationsImported(WorkerStateEvent event) {
+            onAnnotationImportSucceeded();
+        }
+
+        @Override
+        public void onImageMetaDataLoaded(WorkerStateEvent event) {
+            onImageMetaDataLoadingSucceeded();
+        }
+
+        @Override
+        public void onBoundingBoxesPredicted(WorkerStateEvent event) {
+            onBoundingBoxPredictionSucceeded();
+        }
+
+        @Override
+        public void onModelNamesFetched(WorkerStateEvent event) {
+            onModelNameFetchingSucceeded();
+        }
+
+        @Override
+        public void onServerConnectionChecked(WorkerStateEvent event) {
+            onServerConnectionCheckSucceeded();
+        }
+
+        @Override
+        public void onFailed(IoService<?> service) {
+            onIoServiceFailed(service);
         }
     }
 }
