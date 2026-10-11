@@ -55,7 +55,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onOpeningNewImageFolder_WhenBoundingBoxesExist_ShouldResetCorrectly(FxRobot robot, TestInfo testinfo) {
+    void onDrawingABoundingBox_ShouldAddItWhenTheMouseIsReleased(FxRobot robot, TestInfo testinfo) {
         waitUntilCurrentImageIsLoaded(testinfo);
 
         verifyDragAnchorFunctionality(testinfo);
@@ -87,8 +87,6 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         // Draw a bounding box.
         moveRelativeToImageViewNoRelease(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
 
-        int drawnBoundingBoxFileIndex = model.getCurrentFileIndex();
-
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                                                                       () -> mainView.getCurrentBoundingShapes()
                                                                                     .size() == 1),
@@ -118,10 +116,20 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class),
                    saveScreenshot(testinfo));
-        // The views are recreated when switching images and use identity equality, so compare their data instead.
-        final BoundingShapeData drawnBoundingBoxData =
-                ((BoundingBoxView) mainView.getCurrentBoundingShapes().get(0)).toBoundingShapeData();
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
+
+    }
+
+    @Test
+    void onSwitchingImages_ShouldKeepTheBoundingBoxWithItsImage(FxRobot robot, TestInfo testinfo) {
+        final String testCategoryName = "Test";
+        startWithTestCategory(robot, testinfo);
+        timeOutClickOn(robot, "#next-button", testinfo);
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        final int drawnBoundingBoxFileIndex = model.getCurrentFileIndex();
+        // The views are recreated when switching images and use identity equality, so compare their data instead.
+        final BoundingShapeData drawnBoundingBoxData = drawBoundingBox(robot, testinfo).toBoundingShapeData();
 
         timeOutClickOn(robot, "#previous-button", testinfo);
         waitUntilCurrentImageIsLoaded(testinfo);
@@ -158,7 +166,12 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getCurrentBoundingShapes().get(0), Matchers.instanceOf(BoundingBoxView.class),
                    saveScreenshot(testinfo));
 
-        final BoundingBoxView boundingBoxView = (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
+    }
+
+    @Test
+    void onMovingABoundingBox_ShouldKeepItsSizeAndStopAtTheImageBorders(FxRobot robot, TestInfo testinfo) {
+        startWithTestCategory(robot, testinfo);
+        final BoundingBoxView boundingBoxView = drawBoundingBox(robot, testinfo);
 
         // Move bounding box to top left corner.
         double boundingBoxWidth = boundingBoxView.getWidth();
@@ -187,6 +200,14 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         verifyThat(boundingBoxView.getHeight(), Matchers.closeTo(boundingBoxHeight, MathUtils.DOUBLE_EQUAL_THRESHOLD),
                    saveScreenshot(testinfo));
+
+    }
+
+    @Test
+    void onOpeningAnotherFolder_ShouldReportInvalidFilesAndResetTheAnnotations(FxRobot robot, TestInfo testinfo) {
+        startWithTestCategory(robot, testinfo);
+        drawBoundingBox(robot, testinfo);
+        leaveImageToStoreAnnotations(robot, testinfo);
 
         loadImageFolderAndClickKeepCategoriesAndSaveAnnotationOptions(robot, TEST_IMAGE_FOLDER_PATH_2, "No", "No",
                                                                       testinfo);
@@ -236,7 +257,12 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                            .stream().noneMatch(ImageFileListView.FileInfo::isHasAssignedBoundingShapes),
                    Matchers.is(true));
 
-        enterNewCategory(robot, testCategoryName, testinfo);
+    }
+
+    @Test
+    void onResizingABoundingBox_ShouldMoveOnlyTheDraggedCorner(FxRobot robot, TestInfo testinfo) {
+        final String testCategoryName = "Test";
+        startWithTestCategory(robot, testinfo);
 
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get(testCategoryName), Matchers.equalTo(0),
                    saveScreenshot(testinfo));
@@ -256,7 +282,7 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         // Resize test:
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.0, 0.0));
 
-        imageViewRelativePointTopLeft = getParentPointFromImageViewRatios(new Point2D(0.0, 0.0));
+        final Point2D imageViewRelativePointTopLeft = getParentPointFromImageViewRatios(new Point2D(0.0, 0.0));
         verifyThat(boundingBoxView3.getX(),
                    Matchers.closeTo(imageViewRelativePointTopLeft.getX(), MathUtils.DOUBLE_EQUAL_THRESHOLD));
         verifyThat(boundingBoxView3.getY(),
@@ -265,6 +291,14 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
                    Matchers.closeTo(preResizeMaxX, MathUtils.DOUBLE_EQUAL_THRESHOLD));
         verifyThat(boundingBoxView3.getY() + boundingBoxView3.getHeight(),
                    Matchers.closeTo(preResizeMaxY, MathUtils.DOUBLE_EQUAL_THRESHOLD));
+
+    }
+
+    @Test
+    void onExitingWithUnsavedAnnotations_ShouldAskToSaveThem(FxRobot robot, TestInfo testinfo) {
+        startWithTestCategory(robot, testinfo);
+        drawBoundingBox(robot, testinfo);
+        leaveImageToStoreAnnotations(robot, testinfo);
 
         // Try to exit application:
         final Stage exitDialogStage = tryExitAndGetDialog(robot, testinfo);
@@ -283,6 +317,34 @@ class BoundingBoxDrawingTests extends BoundingBoxEditorTestBase {
         timeOutLookUpInStageAndClickOn(robot, saveAnnotationsStage, "Cancel", testinfo);
 
         verifyThat(model.isSaved(), Matchers.is(false), saveScreenshot(testinfo));
+    }
+
+    private void startWithTestCategory(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        enterNewCategory(robot, "Test", testinfo);
+    }
+
+    /**
+     * Draws a bounding box over the middle of the image (from a quarter to three quarters of its width and height).
+     */
+    private BoundingBoxView drawBoundingBox(FxRobot robot, TestInfo testinfo) {
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.75, 0.75));
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                                                                      () -> mainView.getCurrentBoundingShapes()
+                                                                                    .size() == 1),
+                                      () -> saveScreenshotAndReturnMessage(testinfo,
+                                                                           "The bounding box was not drawn within " +
+                                                                                   TIMEOUT_DURATION_IN_SEC + " sec."));
+        return (BoundingBoxView) mainView.getCurrentBoundingShapes().get(0);
+    }
+
+    /**
+     * Switches to the next image, which stores the shown image's annotations in the model (so they are unsaved).
+     */
+    private void leaveImageToStoreAnnotations(FxRobot robot, TestInfo testinfo) {
+        timeOutClickOn(robot, "#next-button", testinfo);
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     private void verifyDragAnchorFunctionality(TestInfo testinfo) {
