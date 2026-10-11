@@ -110,7 +110,7 @@ class SettingsTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onInferenceSettingsChanged_ShouldCorrectlyApplyChanges(FxRobot robot, TestInfo testinfo) {
+    void onOpeningTheInferenceSettings_ShouldShowThemWithInferenceDisabled(FxRobot robot, TestInfo testinfo) {
         waitUntilCurrentImageIsLoaded(testinfo);
 
         timeOutClickOn(robot, "#file-menu", testinfo);
@@ -160,6 +160,14 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(settingsPane.lookupButton(ButtonType.APPLY).isDisable(), Matchers.is(false),
                    saveScreenshot(testinfo));
 
+        cancelSettings(robot, testinfo);
+    }
+
+    @Test
+    void onEnablingInference_ShouldShowAllInferenceControls(FxRobot robot, TestInfo testinfo) {
+        final InferenceSettingsView inferenceSettingsView = openInferenceSettings(robot, testinfo);
+        robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
+
         verifyThat(inferenceSettingsView.getInferenceEnabledControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getInferenceAddressField().isVisible(), Matchers.is(true),
@@ -187,6 +195,14 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(inferenceSettingsView.getKeepImageRatioControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
 
+        cancelSettings(robot, testinfo);
+    }
+
+    @Test
+    void onEnablingInference_ShouldShowTheDefaultValues(FxRobot robot, TestInfo testinfo) {
+        final InferenceSettingsView inferenceSettingsView = openInferenceSettings(robot, testinfo);
+        robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
+
         verifyThat(inferenceSettingsView.getInferenceAddressField().getText(), Matchers.equalTo("http://localhost"),
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getInferencePortField().getText(), Matchers.equalTo("8080"),
@@ -212,6 +228,15 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(inferenceSettingsView.getKeepImageRatioControl().isSelected(), Matchers.is(true),
                    saveScreenshot(testinfo));
 
+        cancelSettings(robot, testinfo);
+    }
+
+    @Test
+    void onCancellingChangedInferenceSettings_ShouldKeepTheCurrentSettings(FxRobot robot, TestInfo testinfo) {
+        final InferenceSettingsView inferenceSettingsView = openInferenceSettings(robot, testinfo);
+        final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        final DialogPane settingsPane = (DialogPane) settingsStage.getScene().getRoot();
+        robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
 
         inferenceSettingsView.getImageResizeWidthField().clear();
         WaitForAsyncUtils.waitForFxEvents();
@@ -251,15 +276,14 @@ class SettingsTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         verifyThat(predictorConfig.getImageResizeKeepRatio(), Matchers.is(true),
                    saveScreenshot(testinfo));
+    }
 
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
-
-        final Stage settingsStageReopened = timeOutGetTopModalStage(robot, "Settings", testinfo);
-        verifyThat(settingsStageReopened.isShowing(), Matchers.is(true), saveScreenshot(testinfo));
-        verifyThat(settingsStageReopened.getScene().getRoot(), Matchers.instanceOf(DialogPane.class));
-
-        timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
+    @Test
+    void onApplyingInvalidInferenceSettings_ShouldShowAnErrorAndApplyNothing(FxRobot robot, TestInfo testinfo) {
+        final InferenceSettingsView inferenceSettingsView = openInferenceSettings(robot, testinfo);
+        final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        final BoundingBoxPredictorClientConfig clientConfig = model.getBoundingBoxPredictorClientConfig();
+        final BoundingBoxPredictorConfig predictorConfig = model.getBoundingBoxPredictorConfig();
 
         verifyDefaultInferenceSettingsStates(testinfo);
 
@@ -288,14 +312,14 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(inferenceSettingsView.getKeepImageRatioControl().getParent().isVisible(), Matchers.is(false),
                    saveScreenshot(testinfo));
 
-        timeOutClickOnButtonInDialogStage(robot, settingsStageReopened, ButtonType.OK, testinfo);
+        timeOutClickOnButtonInDialogStage(robot, settingsStage, ButtonType.OK, testinfo);
 
         final Stage errorStage = timeOutGetTopModalStage(robot, "Settings Application Error", testinfo);
         timeOutClickOnButtonInDialogStage(robot, errorStage, ButtonType.OK, testinfo);
 
         robot.clickOn(inferenceSettingsView.getInferenceEnabledControl());
 
-        timeOutClickOnButtonInDialogStage(robot, settingsStageReopened, ButtonType.OK, testinfo);
+        timeOutClickOnButtonInDialogStage(robot, settingsStage, ButtonType.OK, testinfo);
 
         timeOutAssertNoTopModelStage(robot, testinfo);
         verifyThat(settingsStage.isShowing(), Matchers.is(false), saveScreenshot(testinfo));
@@ -444,6 +468,25 @@ class SettingsTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getEditorSettingsConfig().isAutoSimplifyPolygons(), Matchers.is(false));
         verifyThat(mainView.getEditorSettingsConfig().getSimplifyRelativeDistanceTolerance(), Matchers.equalTo(0.5));
+    }
+
+    private void cancelSettings(FxRobot robot, TestInfo testinfo) {
+        final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        timeOutClickOnButtonInDialogStage(robot, settingsStage, ButtonType.CANCEL, testinfo);
+        timeOutAssertNoTopModelStage(robot, testinfo);
+    }
+
+    /**
+     * Opens the settings dialog and its inference category.
+     */
+    private InferenceSettingsView openInferenceSettings(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        timeOutClickOn(robot, "#file-menu", testinfo);
+        timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
+        final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        return mainView.getInferenceSettingsView();
     }
 
     private void verifyDefaultInferenceSettingsStates(TestInfo testinfo) {

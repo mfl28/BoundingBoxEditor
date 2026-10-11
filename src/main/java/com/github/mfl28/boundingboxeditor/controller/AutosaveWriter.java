@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -78,7 +79,12 @@ final class AutosaveWriter {
      */
     void save(File imageFolder, ImageAnnotationData annotations) {
         if(pendingSave.getAndSet(new PendingSave(imageFolder, annotations)) == null) {
-            executor.execute(this::writePendingSave);
+            try {
+                executor.execute(this::writePendingSave);
+            } catch(RejectedExecutionException _) {
+                // The writer was shut down: nothing is saved anymore.
+                pendingSave.set(null);
+            }
         }
     }
 
@@ -93,7 +99,8 @@ final class AutosaveWriter {
             executor.submit(() -> store.delete(imageFolder)).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch(InterruptedException _) {
             Thread.currentThread().interrupt();
-        } catch(ExecutionException | TimeoutException _) {
+        } catch(ExecutionException | TimeoutException | RejectedExecutionException _) {
+            // Also after the writer was shut down.
             store.delete(imageFolder);
         }
     }
@@ -106,9 +113,18 @@ final class AutosaveWriter {
             executor.submit(() -> { }).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch(InterruptedException _) {
             Thread.currentThread().interrupt();
-        } catch(ExecutionException | TimeoutException _) {
+        } catch(ExecutionException | TimeoutException | RejectedExecutionException _) {
             // Nothing to wait for anymore.
         }
+    }
+
+    /**
+     * Waits for the saves and deletions that were requested and ends the writer's thread. Deletions are still done
+     * afterwards, directly; saves are not.
+     */
+    void shutdown() {
+        awaitCompletion();
+        executor.shutdown();
     }
 
     private void writePendingSave() {

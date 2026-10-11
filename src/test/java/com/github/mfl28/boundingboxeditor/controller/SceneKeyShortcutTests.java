@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 import static org.mockito.Mockito.verify;
 import static org.testfx.api.FxAssert.verifyThat;
@@ -60,7 +61,7 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onSceneKeyPressed_ShouldPerformCorrectAction(TestInfo testinfo, FxRobot robot) {
+    void onStarting_ShouldRegisterTheExpectedShortcuts(TestInfo testinfo) {
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -90,21 +91,48 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
 
         verifyThat(controller.keyCombinationHandlers.stream().map(KeyCombinationEventHandler::getKeyCombination).toList(),
                 Matchers.containsInAnyOrder(expectedShortcuts.toArray()));
+    }
 
-        testOpenSettingsKeyEvent(robot, testinfo);
+    @Test
+    void onNavigationShortcuts_ShouldSwitchImages(TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
         testNavigateNextKeyEvent(testinfo, true, true, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");
         testNavigatePreviousKeyEvent(testinfo, true, true, "rachel-hisko-rEM3cK8F1pk-unsplash.jpg");
         testNavigateNextKeyEvent(testinfo, false, true, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");
         testNavigatePreviousKeyEvent(testinfo, false, true, "rachel-hisko-rEM3cK8F1pk-unsplash.jpg");
         testNavigateNextKeyEvent(testinfo, true, false, "wexor-tmg-L-2p8fapOA8-unsplash.jpg");
         testNavigatePreviousKeyEvent(testinfo, true, false, "rachel-hisko-rEM3cK8F1pk-unsplash.jpg");
+    }
+
+    @Test
+    void onDrawingModeShortcuts_ShouldSelectTheDrawingModes(TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
         testSelectFreehandDrawingModeKeyEvent();
         testMaskKeyEvents();
         testSelectRectangleModeKeyEvent();
+        testSelectPolygonModeKeyEvent();
+    }
+
+    @Test
+    void onSettingsAndFocusShortcuts_ShouldOpenTheSettingsAndFocusTheFields(TestInfo testinfo, FxRobot robot) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        testOpenSettingsKeyEvent(robot, testinfo);
         testFocusCategorySearchFieldKeyEvent(robot);
         testFocusFileSearchKeyEvent(robot);
         testFocusCategoryNameTextFieldKeyEvent(robot);
         testFocusTagTextFieldKeyEventWhenNoBoundingShapeSelected();
+    }
+
+    @Test
+    void onShapeShortcuts_ShouldActOnTheSelectedPolygon(TestInfo testinfo, FxRobot robot) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
         testSelectPolygonModeKeyEvent();
 
         // Draw a bounding polygon.
@@ -150,28 +178,18 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         testRemovePolygonVerticesKeyEvent(robot, targetImageViewPointRatios, polygon);
         testSimplifySelectedPolygonKeyEvent(polygon);
         testInitiateCategoryChangeKeyEvent(testinfo, robot);
+    }
 
-        // Draw another polygon.
-        Double[] targetImageViewPointRatios2 = {0.75, 0.75, 0.75, 0.85, 0.85, 0.85, 0.85, 0.75};
-
-        moveAndClickRelativeToImageView(robot, MouseButton.PRIMARY,
-                new Point2D(targetImageViewPointRatios2[0], targetImageViewPointRatios2[1]),
-                new Point2D(targetImageViewPointRatios2[2], targetImageViewPointRatios2[3]),
-                new Point2D(targetImageViewPointRatios2[4], targetImageViewPointRatios2[5]),
-                new Point2D(targetImageViewPointRatios2[6], targetImageViewPointRatios2[7]));
-
-        robot.clickOn(mainView.getStatusBar());
-
-        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
-                        () -> mainView.getCurrentBoundingShapes()
-                                .size() == 2),
-                () -> saveScreenshotAndReturnMessage(testinfo,
-                        "Expected number of bounding polygons " +
-                                "not found in " +
-                                TIMEOUT_DURATION_IN_SEC +
-                                " sec."));
-
-        BoundingPolygonView polygon2 = (BoundingPolygonView) mainView.getCurrentBoundingShapes().get(1);
+    @Test
+    void onShapeShortcuts_WithSeveralShapes_ShouldActOnTheSelectedOne(TestInfo testinfo, FxRobot robot) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        testSelectPolygonModeKeyEvent();
+        enterNewCategory(robot, "dummy", testinfo);
+        final BoundingPolygonView polygon =
+                drawPolygon(robot, new Double[]{0.25, 0.25, 0.1, 0.6, 0.4, 0.75, 0.75, 0.3}, 1, testinfo);
+        final BoundingPolygonView polygon2 =
+                drawPolygon(robot, new Double[]{0.75, 0.75, 0.75, 0.85, 0.85, 0.85, 0.85, 0.75}, 2, testinfo);
         verifyThat(polygon2.isSelected(), Matchers.is(true));
         verifyThat(polygon2, NodeMatchers.isVisible());
 
@@ -179,6 +197,25 @@ class SceneKeyShortcutTests extends BoundingBoxEditorTestBase {
         testSaveCurrentlySelectedBoundingShapeKeyEvent();
         testRemoveCurrentlySelectedBoundingShapeKeyEvent();
         testResetImageViewSizeKeyEvent(robot);
+    }
+
+    /**
+     * Draws a polygon in the polygon drawing mode and finishes it by clicking outside the image.
+     *
+     * @param nrShapes the number of shapes once it is drawn
+     */
+    private BoundingPolygonView drawPolygon(FxRobot robot, Double[] pointRatios, int nrShapes, TestInfo testinfo) {
+        moveAndClickRelativeToImageView(robot, MouseButton.PRIMARY,
+                IntStream.range(0, pointRatios.length / 2)
+                         .mapToObj(i -> new Point2D(pointRatios[2 * i], pointRatios[2 * i + 1]))
+                         .toArray(Point2D[]::new));
+        robot.clickOn(mainView.getStatusBar());
+
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> mainView.getCurrentBoundingShapes().size() == nrShapes),
+                () -> saveScreenshotAndReturnMessage(testinfo, "The polygon was not drawn within " +
+                        TIMEOUT_DURATION_IN_SEC + " sec."));
+        return (BoundingPolygonView) mainView.getCurrentBoundingShapes().get(nrShapes - 1);
     }
 
     private void testOpenSettingsKeyEvent(FxRobot robot, TestInfo testinfo) {

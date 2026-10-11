@@ -478,29 +478,39 @@ public class BoundingBoxEditorTestBase {
      * <p>
      * Before each step it waits until the node is shown and stays the same node while pending JavaFX events run: a
      * submenu that was just opened can be shown again right away, which replaces its nodes, and moving to a replaced
-     * node fails ("scene" is null). The pointer goes into a submenu horizontally first, so that it doesn't pass the
-     * parent menu's other items (which would open their submenus instead).
+     * node fails ("scene" is null). The pointer goes from the menu bar straight down into the menu and into a
+     * submenu straight across, so that it doesn't pass other items (which would open their menus instead).
      *
      * @param robot    the robot
      * @param testinfo the test info
      * @param queries  the menu, the submenus and the item to click (TestFX queries, e.g. ids)
      */
     protected void timeOutClickOnMenuPath(FxRobot robot, TestInfo testinfo, String... queries) {
-        for(int i = 0; i < queries.length; i++) {
-            final Node node = timeOutGetStableShownNode(robot, queries[i], testinfo);
+        Point2D previousCenter = null;
 
-            // The menu bar's menu opens a popup, its items are in that popup, and later items are in submenus.
-            if(i >= 2) {
-                final Point2D target = WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L, () -> {
-                    final Bounds bounds = node.localToScreen(node.getBoundsInLocal());
-                    return new Point2D(bounds.getCenterX(), bounds.getCenterY());
-                });
-                final Point2D pointer = robot.robotContext().getBaseRobot().retrieveMouse();
-                robot.moveTo(new Point2D(target.getX(), pointer.getY()));
+        for(int i = 0; i < queries.length; i++) {
+            Node node = timeOutGetStableShownNode(robot, queries[i], testinfo);
+            final Point2D center = screenCenter(node);
+
+            // The pointer must not pass other items on its way, which would open their menus instead: from the
+            // menu bar it goes straight down into the menu, and into a submenu straight across.
+            if(previousCenter != null) {
+                robot.moveTo(i == 1 ? new Point2D(previousCenter.getX(), center.getY())
+                        : new Point2D(center.getX(), previousCenter.getY()));
+                // Entering a menu can show it again, which replaces its items.
+                node = timeOutGetStableShownNode(robot, queries[i], testinfo);
             }
 
+            previousCenter = center;
             robot.clickOn(node);
         }
+    }
+
+    private static Point2D screenCenter(Node node) {
+        return WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L, () -> {
+            final Bounds bounds = node.localToScreen(node.getBoundsInLocal());
+            return new Point2D(bounds.getCenterX(), bounds.getCenterY());
+        });
     }
 
     private Node timeOutGetStableShownNode(FxRobot robot, String query, TestInfo testinfo) {

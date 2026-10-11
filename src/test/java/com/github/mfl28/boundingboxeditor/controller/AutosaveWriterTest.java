@@ -85,6 +85,29 @@ class AutosaveWriterTest {
     }
 
     @Test
+    void onShuttingDown_ShouldEndTheThreadAndStillDeleteButNotSave(@TempDir Path tempDir) throws Exception {
+        final AutosaveStore store = new AutosaveStore(tempDir);
+        final AtomicInteger saveCount = new AtomicInteger();
+        final AutosaveWriter writer = new AutosaveWriter(store, executor, saveCount::incrementAndGet,
+                                                         e -> fail(e));
+        final File folder = tempDir.resolve("images").toFile();
+        writer.save(folder, annotationsWithBoxes(1));
+
+        writer.shutdown();
+
+        // The save that was requested before is written.
+        assertEquals(1, saveCount.get());
+        assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+
+        writer.save(folder, annotationsWithBoxes(2));
+        writer.awaitCompletion();
+        assertEquals(1, saveCount.get());
+
+        writer.delete(folder);
+        assertTrue(store.lastSaved(folder).isEmpty());
+    }
+
+    @Test
     void onFailingToSave_ShouldReportTheError(@TempDir Path tempDir) throws Exception {
         // The store's folder can't be created, because a file is in its place.
         final Path blocked = tempDir.resolve("blocked");

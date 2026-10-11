@@ -69,7 +69,7 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onBoundingBoxesDrawnAndInteractedWith_ShouldCorrectlyDisplayTreeItems(FxRobot robot, TestInfo testinfo) {
+    void onDrawingBoundingBoxes_ShouldAddTreeItemsUnderTheirCategory(FxRobot robot, TestInfo testinfo) {
         waitUntilCurrentImageIsLoaded(testinfo);
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -78,7 +78,6 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(true), saveScreenshot(testinfo));
 
-        /* ----Drawing---- */
         // Draw first bounding-box.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
 
@@ -131,7 +130,18 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(((BoundingBoxView) secondTestChildTreeItem.getValue()).isSelected(), Matchers.equalTo(true),
                    saveScreenshot(testinfo));
 
-        /* ----Hiding And Showing---- */
+    }
+
+    @Test
+    void onHidingAndShowingBoundingBoxes_ShouldToggleTreeItemsAndViews(FxRobot robot, TestInfo testinfo) {
+        drawTwoTestBoundingBoxes(robot, testinfo);
+
+        final ObjectCategoryTreeItem testCategoryTreeItem = categoryTreeItem(0);
+        final BoundingBoxTreeItem firstTestChildTreeItem =
+                (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(0);
+        final BoundingBoxTreeItem secondTestChildTreeItem =
+                (BoundingBoxTreeItem) testCategoryTreeItem.getChildren().get(1);
+
         // Hide first bounding-box by right-clicking.
         robot.rightClickOn("Test 1");
         timeOutClickOn(robot, "Hide", testinfo);
@@ -199,7 +209,15 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(secondTestChildTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(testCategoryTreeItem.isIconToggledOn(), Matchers.is(true), saveScreenshot(testinfo));
 
-        /* ----Nesting---- */
+    }
+
+    @Test
+    void onDraggingABoundingBoxOntoAnother_ShouldNestIt(FxRobot robot, TestInfo testinfo) {
+        drawTwoTestBoundingBoxes(robot, testinfo);
+
+        final List<TreeItem<Object>> topLevelTreeItems = mainView.getObjectTree().getRoot().getChildren();
+        final ObjectCategoryTreeItem testCategoryTreeItem = categoryTreeItem(0);
+
         // Draw another bounding-box belonging to the Test-category.
         moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
 
@@ -251,7 +269,13 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(nestedTestCategoryTreeItem.getChildren().get(0), Matchers.equalTo(thirdTestChildTreeItem),
                    saveScreenshot(testinfo));
 
-        /* ----Reloading On Image Change---- */
+    }
+
+    @Test
+    void onSwitchingImages_ShouldRebuildTheTree(FxRobot robot, TestInfo testinfo) {
+        createNestedTree(robot, testinfo);
+        final List<TreeItem<Object>> topLevelTreeItems = mainView.getObjectTree().getRoot().getChildren();
+
         // Switch to the next image.
         timeOutClickOn(robot, "#next-button", testinfo);
 
@@ -273,7 +297,18 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         verifyThat(mainView.getImageFileListView().getSelectionModel()
                            .getSelectedItem().isHasAssignedBoundingShapes(), Matchers.is(true));
 
-        /* ----Deleting---- */
+        verifyThat(newTopLevelTreeItems.stream()
+                                       .map(item -> ((ObjectCategoryTreeItem) item).getObjectCategory().getName())
+                                       .toList(), Matchers.contains("Test", "Dummy"), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onDeletingTreeItems_ShouldRemoveTheirBoundingBoxes(FxRobot robot, TestInfo testinfo) {
+        createNestedTree(robot, testinfo);
+        // The tree is deleted from after it was rebuilt for the image.
+        switchToNextImageAndBack(robot, testinfo);
+        final List<TreeItem<Object>> newTopLevelTreeItems = mainView.getObjectTree().getRoot().getChildren();
+
         final ObjectCategoryTreeItem newTestCategoryTreeItem = (ObjectCategoryTreeItem) newTopLevelTreeItems.get(0);
         final ObjectCategoryTreeItem newDummyCategoryTreeItem = (ObjectCategoryTreeItem) newTopLevelTreeItems.get(1);
         final BoundingBoxTreeItem newFirstTestChildTreeItem =
@@ -353,7 +388,15 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
         // The tag input field should be disabled if not bounding shape element is currently selected.
         verifyThat(mainView.getTagInputField().isDisabled(), Matchers.is(true), saveScreenshot(testinfo));
 
-        /* ---- Object category change ---- */
+    }
+
+    @Test
+    void onChangingTheCategoryOfABoundingBox_ShouldMoveItToTheNewCategory(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        enterNewCategory(robot, "Test", testinfo);
+        enterNewCategory(robot, "Dummy", testinfo);
+
         moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -414,6 +457,16 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("Dummy"), Matchers.equalTo(0),
                    saveScreenshot(testinfo));
+
+    }
+
+    @Test
+    void onAddingAndRemovingTags_ShouldUpdateTheBoundingBox(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        enterNewCategory(robot, "Test", testinfo);
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
+        WaitForAsyncUtils.waitForFxEvents();
 
         final String testTagName = "TestTag";
 
@@ -481,6 +534,52 @@ class ObjectTreeTests extends BoundingBoxEditorTestBase {
 
         timeOutAssertDialogOpenedAndGetStage(robot, "Image Saving Error", "Bounding shape region is too small.",
                 testinfo);
+    }
+
+    /**
+     * Opens the "Test" category and draws two of its bounding boxes side by side.
+     */
+    private void drawTwoTestBoundingBoxes(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        enterNewCategory(robot, "Test", testinfo);
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.25), new Point2D(0.5, 0.5));
+        moveRelativeToImageView(robot, new Point2D(0.6, 0.25), new Point2D(0.85, 0.5));
+        waitUntilTreeItemCount(0, 2, testinfo);
+    }
+
+    /**
+     * Draws three "Test" boxes and one "Dummy" box, and nests the third "Test" box in the "Dummy" box.
+     */
+    private void createNestedTree(FxRobot robot, TestInfo testinfo) {
+        drawTwoTestBoundingBoxes(robot, testinfo);
+        moveRelativeToImageView(robot, new Point2D(0.25, 0.6), new Point2D(0.5, 0.85));
+        enterNewCategory(robot, "Dummy", testinfo);
+        moveRelativeToImageView(robot, new Point2D(0.6, 0.6), new Point2D(0.85, 0.85));
+        robot.moveTo("Test 3").press(MouseButton.PRIMARY).moveTo("Dummy 1").release(MouseButton.PRIMARY);
+        WaitForAsyncUtils.waitForFxEvents();
+        waitUntilTreeItemCount(0, 2, testinfo);
+    }
+
+    private void switchToNextImageAndBack(FxRobot robot, TestInfo testinfo) {
+        timeOutClickOn(robot, "#next-button", testinfo);
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+        timeOutClickOn(robot, "#previous-button", testinfo);
+        waitUntilCurrentImageIsLoaded(testinfo);
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    private ObjectCategoryTreeItem categoryTreeItem(int index) {
+        return (ObjectCategoryTreeItem) mainView.getObjectTree().getRoot().getChildren().get(index);
+    }
+
+    private void waitUntilTreeItemCount(int categoryIndex, int count, TestInfo testinfo) {
+        Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
+                        () -> mainView.getObjectTree().getRoot().getChildren().size() > categoryIndex
+                                && categoryTreeItem(categoryIndex).getChildren().size() == count),
+                () -> saveScreenshotAndReturnMessage(testinfo, "The category's tree items were not shown within "
+                        + TIMEOUT_DURATION_IN_SEC + " sec."));
     }
 
     /**
