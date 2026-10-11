@@ -97,36 +97,6 @@ public class PNGMaskLoadStrategy implements ImageAnnotationLoadStrategy {
     }
 
     /**
-     * Creates the masks of one image, in the order of their numbers.
-     */
-    private static List<BoundingShapeData> createMasks(PNGMasks.Values objects, PNGMasks.Values classes,
-                                                       List<String> categoryNames,
-                                                       Map<String, ObjectCategory> categoryNameToCategory,
-                                                       String maskFileName, List<IOErrorInfoEntry> errorEntries) {
-        final List<BoundingShapeData> shapes = new ArrayList<>();
-
-        for(Map.Entry<Integer, ObjectRegion> entry : findObjects(objects, classes).entrySet()) {
-            final int object = entry.getKey();
-            final int classIndex = entry.getValue().mostFrequentClass();
-
-            if(classIndex == PNGMasks.BACKGROUND || classIndex > categoryNames.size()
-                    || categoryNames.get(classIndex - 1).isEmpty()) {
-                errorEntries.add(new IOErrorInfoEntry(maskFileName, "Object " + object + " has no valid category ("
-                        + (classIndex == PNGMasks.BACKGROUND ? "its pixels are background in the category mask"
-                        : "category " + classIndex + " is not in " + PNGMasks.CLASSES_FILE_NAME) + ")."));
-            } else {
-                final ObjectCategory category = categoryNameToCategory.computeIfAbsent(
-                        categoryNames.get(classIndex - 1),
-                        name -> new ObjectCategory(name, ColorUtils.createRandomColor()));
-                shapes.add(new BoundingMaskData(category, entry.getValue().toMask(objects, object),
-                                                new ArrayList<>()));
-            }
-        }
-
-        return shapes;
-    }
-
-    /**
      * Finds the objects of an object mask (in the order of their numbers), with their bounds and the categories of
      * their pixels.
      */
@@ -208,7 +178,35 @@ public class PNGMaskLoadStrategy implements ImageAnnotationLoadStrategy {
                 throw new IOException("The object and category masks have different sizes.");
             }
 
-            return createMasks(objects, classes, categoryNames, categoryNameToCategory, maskFileName, errorEntries);
+            return createMasks(objects, classes, maskFileName);
+        }
+
+        /**
+         * Creates the masks of one image, in the order of their numbers.
+         */
+        private List<BoundingShapeData> createMasks(PNGMasks.Values objects, PNGMasks.Values classes,
+                                                    String maskFileName) {
+            final List<BoundingShapeData> shapes = new ArrayList<>();
+
+            for(Map.Entry<Integer, ObjectRegion> entry : findObjects(objects, classes).entrySet()) {
+                final int object = entry.getKey();
+                final int classIndex = entry.getValue().mostFrequentClass();
+
+                if(classIndex == PNGMasks.BACKGROUND || classIndex > categoryNames.size()
+                        || categoryNames.get(classIndex - 1).isEmpty()) {
+                    errorEntries.add(new IOErrorInfoEntry(maskFileName, "Object " + object + " has no valid category ("
+                            + (classIndex == PNGMasks.BACKGROUND ? "its pixels are background in the category mask"
+                            : "category " + classIndex + " is not in " + PNGMasks.CLASSES_FILE_NAME) + ")."));
+                } else {
+                    final ObjectCategory category = categoryNameToCategory.computeIfAbsent(
+                            categoryNames.get(classIndex - 1),
+                            name -> new ObjectCategory(name, ColorUtils.createRandomColor()));
+                    shapes.add(new BoundingMaskData(category, entry.getValue().toMask(objects, object),
+                                                    new ArrayList<>()));
+                }
+            }
+
+            return shapes;
         }
 
         private void addAnnotation(String imageFileName, List<BoundingShapeData> shapes) {
