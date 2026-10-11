@@ -65,13 +65,13 @@ class ImageFileFilterTests extends BoundingBoxEditorTestBase {
     }
 
     @Test
-    void onFilterChanges_ShouldShowMatchingImagesAndNavigateWithinThem(FxRobot robot, TestInfo testinfo)
+    void onFilteringByAnnotationStatus_ShouldShowMatchingImagesAndNavigateWithinThem(FxRobot robot,
+                                                                                      TestInfo testinfo)
             throws IOException {
         waitUntilCurrentImageIsLoaded(testinfo);
         importAnnotations(testinfo);
 
         final ImageFileExplorerView explorer = mainView.getImageFileExplorer();
-        final ImageFileFilterView filterView = explorer.getImageFileFilterView();
 
         verifyThat(shownFileNames(), Matchers.contains(AUSTIN, CALEB, NICO, TYLER), saveScreenshot(testinfo));
         verifyThat(explorer.getFilterMatchLabel().isVisible(), Matchers.is(false), saveScreenshot(testinfo));
@@ -103,9 +103,19 @@ class ImageFileFilterTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCurrentImageFileName(), Matchers.equalTo(CALEB), saveScreenshot(testinfo));
         verifyThat(shownFileNames(), Matchers.contains(CALEB), saveScreenshot(testinfo));
         verifyThat(indexLabelText(), Matchers.equalTo("1 | 1"), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onFilteringByCategories_ShouldMatchAnyOrAllOfThemUntilCleared(FxRobot robot, TestInfo testinfo)
+            throws IOException {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        importAnnotations(testinfo);
+
+        final ImageFileExplorerView explorer = mainView.getImageFileExplorer();
+        final ImageFileFilterView filterView = explorer.getImageFileFilterView();
+        timeOutClickOn(robot, "#image-file-filter-button", testinfo);
 
         // Categories, matching any or all of them.
-        timeOutClickOn(robot, "#image-file-filter-status-all", testinfo);
         checkCategory(filterView, "Flag");
         verifyThat(model.getCurrentImageFileName(), Matchers.equalTo(NICO), saveScreenshot(testinfo));
         verifyThat(shownFileNames(), Matchers.contains(NICO, TYLER), saveScreenshot(testinfo));
@@ -122,9 +132,16 @@ class ImageFileFilterTests extends BoundingBoxEditorTestBase {
         verifyThat(model.getCurrentImageFileName(), Matchers.equalTo(NICO), saveScreenshot(testinfo));
         verifyThat(indexLabelText(), Matchers.equalTo("3 | 4"), saveScreenshot(testinfo));
         verifyThat(explorer.getFilterMatchLabel().isVisible(), Matchers.is(false), saveScreenshot(testinfo));
+    }
+
+    @Test
+    void onSearchingFileNames_ShouldShowTheMatchingImages(FxRobot robot, TestInfo testinfo) throws IOException {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        importAnnotations(testinfo);
+
+        final ImageFileExplorerView explorer = mainView.getImageFileExplorer();
 
         // The search field filters by file name.
-        robot.push(KeyCode.ESCAPE);
         typeText(robot.clickOn(explorer.getImageFileSearchField()), "TYL");
         verifyThat(shownFileNames(), Matchers.contains(TYLER), saveScreenshot(testinfo));
         verifyThat(model.getCurrentImageFileName(), Matchers.equalTo(TYLER), saveScreenshot(testinfo));
