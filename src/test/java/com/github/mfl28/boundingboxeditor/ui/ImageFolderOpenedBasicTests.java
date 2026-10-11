@@ -222,10 +222,8 @@ class ImageFolderOpenedBasicTests extends BoundingBoxEditorTestBase {
                             "enabled"));
 
         for(var exportItemName : List.of("pvoc", "yolo", "json", "csv")) {
-            timeOutClickOn(robot, "#file-menu", testinfo);
-            timeOutClickOn(robot, "#file-export-annotations-menu", testinfo);
-            timeOutMoveTo(robot, "#pvoc-export-menu-item", testinfo);
-            timeOutClickOn(robot, String.format("#%s-export-menu-item", exportItemName), testinfo);
+            timeOutClickOnMenuPath(robot, testinfo, "#file-menu", "#file-export-annotations-menu",
+                                   String.format("#%s-export-menu-item", exportItemName));
 
             Stage errorDialogStage = timeOutGetTopModalStage(robot, "Save Error", testinfo);
             verifyThat(errorDialogStage, Matchers.notNullValue(), saveScreenshot(testinfo));
