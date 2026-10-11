@@ -581,9 +581,10 @@ class WorkspaceSplitPaneView extends SplitPane implements View {
 
         private void handlePopoverTimerFinished(ObjectTreeElementCell cell) {
             // The tree may have been rebuilt since the timer started (e.g. by an undo or an image change), which
-            // leaves the cell off-screen or holding another item.
+            // leaves the cell off-screen or holding another item, or the window may have been closed.
             if(!(cell.getItem() instanceof BoundingShapeViewable)
-                    || cell.localToScreen(cell.getBoundsInLocal()) == null) {
+                    || cell.localToScreen(cell.getBoundsInLocal()) == null
+                    || cell.getScene().getWindow() == null || !cell.getScene().getWindow().isShowing()) {
                 return;
             }
 
