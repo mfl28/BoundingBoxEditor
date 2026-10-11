@@ -38,13 +38,10 @@ class ImageUtilsTests {
         Constructor<ImageUtils> imageUtilsConstructor = ImageUtils.class.getDeclaredConstructor();
         imageUtilsConstructor.setAccessible(true);
 
-        try {
-            imageUtilsConstructor.newInstance();
-            Assertions.fail("Expected an InvocationTargetException to be thrown");
-        } catch(InvocationTargetException e) {
-            MatcherAssert.assertThat(e.getCause(), Matchers.instanceOf(IllegalStateException.class));
-            Assertions.assertEquals("ImageUtils class", e.getCause().getMessage());
-        }
+        final InvocationTargetException exception =
+                Assertions.assertThrows(InvocationTargetException.class, imageUtilsConstructor::newInstance);
+        MatcherAssert.assertThat(exception.getCause(), Matchers.instanceOf(IllegalStateException.class));
+        Assertions.assertEquals("ImageUtils class", exception.getCause().getMessage());
     }
 
     @Test

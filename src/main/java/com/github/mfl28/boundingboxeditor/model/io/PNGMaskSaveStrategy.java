@@ -115,6 +115,35 @@ public class PNGMaskSaveStrategy implements ImageAnnotationSaveStrategy {
         return new ImageAnnotationExportResult(nrSaved.get(), errors);
     }
 
+    /**
+     * Returns a shape's pixels: a mask as it is, a polygon filled; boxes have none (empty optional).
+     */
+    private static Optional<MaskBitmap> toMask(BoundingShapeData shape, int width, int height) {
+        return switch(shape) {
+            case BoundingBoxData _ -> Optional.empty();
+            case BoundingPolygonData polygon -> {
+                final MutableMask filled = new MutableMask(width, height);
+                filled.fillPolygon(polygon.getAbsolutePointsInImage(width, height).stream()
+                                          .mapToDouble(Double::doubleValue).toArray(), true);
+                yield Optional.of(filled.toBitmap());
+            }
+            case BoundingMaskData maskData -> Optional.of(maskData.getMaskForImageSize(width, height));
+        };
+    }
+
+    /**
+     * Sets the pixels of a mask to a value in an image (one byte per pixel, row by row).
+     */
+    private static void paint(MaskBitmap mask, int width, byte[] image, byte value) {
+        for(int y = mask.getMinY(); y < mask.getMinY() + mask.getHeight(); ++y) {
+            for(int x = mask.getMinX(); x < mask.getMinX() + mask.getWidth(); ++x) {
+                if(mask.get(x, y)) {
+                    image[y * width + x] = value;
+                }
+            }
+        }
+    }
+
     private static void saveImageMasks(ImageAnnotation annotation, Path destination,
                                        Map<String, Integer> categoryIndices, AtomicInteger nrSkippedBoxes,
                                        Queue<IOErrorInfoEntry> errorEntries) throws IOException {
@@ -131,37 +160,14 @@ public class PNGMaskSaveStrategy implements ImageAnnotationSaveStrategy {
 
         for(BoundingShapeData shape : annotation.getBoundingShapeData().stream()
                                                 .flatMap(BoundingShapeData::flatten).toList()) {
-            final MaskBitmap mask = switch(shape) {
-                case BoundingBoxData _ -> null;
-                case BoundingPolygonData polygon -> {
-                    final MutableMask filled = new MutableMask(width, height);
-                    filled.fillPolygon(polygon.getAbsolutePointsInImage(width, height).stream()
-                                              .mapToDouble(Double::doubleValue).toArray(), true);
-                    yield filled.toBitmap();
-                }
-                case BoundingMaskData maskData -> maskData.getMaskForImageSize(width, height);
-            };
-
-            if(mask == null) {
-                nrSkippedBoxes.incrementAndGet();
-                continue;
-            }
+            final Optional<MaskBitmap> mask = toMask(shape, width, height);
 
             if(mask.isEmpty()) {
-                continue;
-            }
-
-            ++objectIndex;
-            final byte objectValue = (byte) Math.min(objectIndex, PNGMasks.MAXIMUM_INDEX);
-            final byte classValue = (byte) (int) categoryIndices.get(shape.getCategoryName());
-
-            for(int y = mask.getMinY(); y < mask.getMinY() + mask.getHeight(); ++y) {
-                for(int x = mask.getMinX(); x < mask.getMinX() + mask.getWidth(); ++x) {
-                    if(mask.get(x, y)) {
-                        objects[y * width + x] = objectValue;
-                        classes[y * width + x] = classValue;
-                    }
-                }
+                nrSkippedBoxes.incrementAndGet();
+            } else if(!mask.get().isEmpty()) {
+                ++objectIndex;
+                paint(mask.get(), width, objects, (byte) Math.min(objectIndex, PNGMasks.MAXIMUM_INDEX));
+                paint(mask.get(), width, classes, (byte) (int) categoryIndices.get(shape.getCategoryName()));
             }
         }
 

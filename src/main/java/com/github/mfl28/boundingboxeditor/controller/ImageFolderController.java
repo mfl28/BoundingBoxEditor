@@ -214,7 +214,7 @@ class ImageFolderController {
 
         try {
             imageFiles = getImageFilesFromDirectory(imageFolder);
-        } catch(IOException e) {
+        } catch(IOException _) {
             dialogService.displayErrorAlert(OPEN_FOLDER_ERROR_DIALOG_TITLE, OPEN_FOLDER_ERROR_DIALOG_HEADER, stage);
 
             if(reload) {

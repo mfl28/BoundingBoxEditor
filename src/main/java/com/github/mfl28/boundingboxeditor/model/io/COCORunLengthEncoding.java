@@ -76,11 +76,45 @@ final class COCORunLengthEncoding {
      * @throws IllegalArgumentException if the string is not a valid encoding
      */
     static long[] decode(String encoded) {
+        final CountReader reader = new CountReader(encoded);
         long[] counts = new long[16];
         int nrCounts = 0;
-        int position = 0;
 
-        while(position < encoded.length()) {
+        while(reader.hasNext()) {
+            long value = reader.next();
+
+            // From the fourth count on, each one is stored as the difference to the count two before.
+            if(nrCounts > 2) {
+                value += counts[nrCounts - 2];
+            }
+
+            if(nrCounts == counts.length) {
+                counts = Arrays.copyOf(counts, counts.length * 2);
+            }
+
+            counts[nrCounts++] = value;
+        }
+
+        return Arrays.copyOf(counts, nrCounts);
+    }
+
+    /**
+     * Reads the encoded values one after another: each is a group of characters with 5 bits each (least significant
+     * first), where 0x20 marks that more follow and 0x10 in the last one is the sign.
+     */
+    private static final class CountReader {
+        private final String encoded;
+        private int position = 0;
+
+        CountReader(String encoded) {
+            this.encoded = encoded;
+        }
+
+        boolean hasNext() {
+            return position < encoded.length();
+        }
+
+        long next() {
             long value = 0;
             int shift = 0;
             boolean more = true;
@@ -106,17 +140,7 @@ final class COCORunLengthEncoding {
                 }
             }
 
-            if(nrCounts > 2) {
-                value += counts[nrCounts - 2];
-            }
-
-            if(nrCounts == counts.length) {
-                counts = Arrays.copyOf(counts, counts.length * 2);
-            }
-
-            counts[nrCounts++] = value;
+            return value;
         }
-
-        return Arrays.copyOf(counts, nrCounts);
     }
 }

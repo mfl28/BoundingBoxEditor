@@ -96,6 +96,42 @@ public class CSVLoadStrategy implements ImageAnnotationLoadStrategy {
                 Collections.emptyList());
     }
 
+    /**
+     * Reads the next row, or reports it if it can't be read.
+     *
+     * @return the row, or an empty optional if it is invalid
+     */
+    private static Optional<CSVRow> readRow(MappingIterator<CSVRow> it, Path path,
+                                            List<IOErrorInfoEntry> errorInfoEntries) throws IOException {
+        try {
+            return Optional.of(it.nextValue());
+        } catch (JsonMappingException exception) {
+            final String row = exception.getLocation() == null
+                    ? "Invalid row" : "Invalid row on line " + exception.getLocation().getLineNr();
+            errorInfoEntries.add(new IOErrorInfoEntry(path.getFileName().toString(),
+                    row + ": " + exception.getOriginalMessage()));
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Adds a row's box to the annotations, or reports the row if it is invalid.
+     */
+    private static void importRow(CSVRow csvRow, Set<String> filesToLoad,
+                                  Map<String, ImageAnnotation> filenameAnnotationMap,
+                                  Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
+                                  Map<String, Integer> categoryNameToBoundingShapesCountMap,
+                                  List<IOErrorInfoEntry> errorInfoEntries) {
+        try {
+            if (filterRow(filesToLoad, csvRow, errorInfoEntries)) {
+                updateAnnotations(csvRow, filenameAnnotationMap, existingCategoryNameToCategoryMap,
+                        categoryNameToBoundingShapesCountMap);
+            }
+        } catch (InvalidAnnotationFormatException exception) {
+            errorInfoEntries.add(new IOErrorInfoEntry(csvRow.filename(), exception.getMessage()));
+        }
+    }
+
     @Override
     public ImageAnnotationImportResult load(Path path, Set<String> filesToLoad,
                                             Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
@@ -126,28 +162,9 @@ public class CSVLoadStrategy implements ImageAnnotationLoadStrategy {
             // A row that can't be read throws while advancing the iterator (not in the code handling the row),
             // so the reading itself is guarded, and the remaining rows are still imported.
             while (it.hasNextValue()) {
-                final CSVRow csvRow;
-
-                try {
-                    csvRow = it.nextValue();
-                } catch (JsonMappingException exception) {
-                    final String row = exception.getLocation() == null
-                            ? "Invalid row" : "Invalid row on line " + exception.getLocation().getLineNr();
-                    errorInfoEntries.add(new IOErrorInfoEntry(path.getFileName().toString(),
-                            row + ": " + exception.getOriginalMessage()));
-                    continue;
-                }
-
-                try {
-                    if (filterRow(filesToLoad, csvRow, errorInfoEntries)) {
-                        updateAnnotations(csvRow, filenameAnnotationMap,
-                                existingCategoryNameToCategoryMap,
-                                categoryNameToBoundingShapesCountMap);
-                    }
-                } catch (InvalidAnnotationFormatException exception) {
-                    errorInfoEntries.add(new IOErrorInfoEntry(csvRow.filename(),
-                            exception.getMessage()));
-                }
+                readRow(it, path, errorInfoEntries).ifPresent(csvRow -> importRow(csvRow, filesToLoad,
+                        filenameAnnotationMap, existingCategoryNameToCategoryMap,
+                        categoryNameToBoundingShapesCountMap, errorInfoEntries));
             }
         } catch (JsonProcessingException exception) {
             // E.g. a missing column in the header, or broken quoting: the rows read so far are kept.

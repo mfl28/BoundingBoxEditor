@@ -112,27 +112,30 @@ public class ImageAnnotationSaver {
         for(BoundingShapeData shape : shapes) {
             if(shape instanceof BoundingMaskData) {
                 nrRemoved.addAndGet((int) shape.flatten().filter(BoundingMaskData.class::isInstance).count());
-                continue;
-            }
-
-            if(shape.flatten().noneMatch(BoundingMaskData.class::isInstance)) {
+            } else if(shape.flatten().noneMatch(BoundingMaskData.class::isInstance)) {
                 result.add(shape);
-                continue;
+            } else {
+                result.add(copyWithoutMasks(shape, nrRemoved));
             }
-
-            final BoundingShapeData copy = switch(shape) {
-                case BoundingBoxData box -> new BoundingBoxData(box.getCategory(), box.getXMinRelative(),
-                        box.getYMinRelative(), box.getXMaxRelative(), box.getYMaxRelative(), box.getTags());
-                case BoundingPolygonData polygon -> new BoundingPolygonData(polygon.getCategory(),
-                        polygon.getRelativePointsInImage(), polygon.getTags());
-                case BoundingMaskData mask -> mask;
-            };
-
-            copy.setParts(withoutMasks(shape.getParts(), nrRemoved));
-            result.add(copy);
         }
 
         return result;
+    }
+
+    /**
+     * Copies a box or polygon whose parts contain masks, without them.
+     */
+    private static BoundingShapeData copyWithoutMasks(BoundingShapeData shape, AtomicInteger nrRemoved) {
+        final BoundingShapeData copy = switch(shape) {
+            case BoundingBoxData box -> new BoundingBoxData(box.getCategory(), box.getXMinRelative(),
+                    box.getYMinRelative(), box.getXMaxRelative(), box.getYMaxRelative(), box.getTags());
+            case BoundingPolygonData polygon -> new BoundingPolygonData(polygon.getCategory(),
+                    polygon.getRelativePointsInImage(), polygon.getTags());
+            case BoundingMaskData mask -> mask;
+        };
+
+        copy.setParts(withoutMasks(shape.getParts(), nrRemoved));
+        return copy;
     }
 
     /**

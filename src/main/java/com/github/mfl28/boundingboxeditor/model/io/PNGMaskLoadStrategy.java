@@ -48,73 +48,42 @@ public class PNGMaskLoadStrategy implements ImageAnnotationLoadStrategy {
         final Path classesFile = path.resolve(PNGMasks.CLASSES_FILE_NAME);
         final Path objectFolder = path.resolve(PNGMasks.OBJECT_FOLDER_NAME);
         final Path classFolder = path.resolve(PNGMasks.CLASS_FOLDER_NAME);
+        final Optional<String> missingInput = findMissingInput(classesFile, classFolder);
 
-        if(!Files.isRegularFile(classesFile)) {
-            errorEntries.add(new IOErrorInfoEntry(path.getFileName().toString(), "The file \""
-                    + PNGMasks.CLASSES_FILE_NAME + "\" with the category names is missing."));
+        if(missingInput.isPresent()) {
+            errorEntries.add(new IOErrorInfoEntry(path.getFileName().toString(), missingInput.get()));
             return emptyResult(errorEntries, existingCategoryNameToCategoryMap);
         }
 
-        if(!Files.isDirectory(classFolder)) {
-            errorEntries.add(new IOErrorInfoEntry(path.getFileName().toString(), "The folder \""
-                    + PNGMasks.CLASS_FOLDER_NAME + "\" with the category masks is missing."));
-            return emptyResult(errorEntries, existingCategoryNameToCategoryMap);
-        }
-
-        final List<String> categoryNames = Files.readAllLines(classesFile, StandardCharsets.UTF_8).stream()
-                .map(String::strip)
-                .toList();
         final boolean hasObjectMasks = Files.isDirectory(objectFolder);
         final List<Path> maskFiles = listPngFiles(hasObjectMasks ? objectFolder : classFolder);
-        final Map<String, List<String>> baseNameToImageFileNames = filesToLoad.stream()
-                .collect(Collectors.groupingBy(FilenameUtils::getBaseName));
-        final Map<String, ImageAnnotation> fileNameToAnnotation = new LinkedHashMap<>();
-        final Map<String, Integer> categoryNameToShapeCount = new HashMap<>();
+        final LoadContext context = new LoadContext(classFolder, hasObjectMasks,
+                Files.readAllLines(classesFile, StandardCharsets.UTF_8).stream().map(String::strip).toList(),
+                filesToLoad.stream().collect(Collectors.groupingBy(FilenameUtils::getBaseName)),
+                existingCategoryNameToCategoryMap, errorEntries);
 
         for(int i = 0; i < maskFiles.size(); ++i) {
-            final Path maskFile = maskFiles.get(i);
-            final String maskFileName = maskFile.getFileName().toString();
-            final List<String> imageFileNames =
-                    baseNameToImageFileNames.getOrDefault(FilenameUtils.getBaseName(maskFileName), List.of());
-
-            if(imageFileNames.size() != 1) {
-                errorEntries.add(new IOErrorInfoEntry(maskFileName, imageFileNames.isEmpty()
-                        ? "No image of the currently loaded image files has the name of the mask."
-                        : "Several images (" + String.join(", ", imageFileNames) + ") have the name of the mask."));
-            } else {
-                try {
-                    final PNGMasks.Values classes = PNGMasks.read(classFolder.resolve(maskFileName));
-                    final PNGMasks.Values objects = hasObjectMasks ? PNGMasks.read(maskFile) : classes;
-
-                    if(objects.width() != classes.width() || objects.height() != classes.height()) {
-                        throw new IOException("The object and category masks have different sizes.");
-                    }
-
-                    final List<BoundingShapeData> shapes = createMasks(objects, classes, categoryNames,
-                                                                       existingCategoryNameToCategoryMap,
-                                                                       maskFileName, errorEntries);
-
-                    if(!shapes.isEmpty()) {
-                        final String imageFileName = imageFileNames.getFirst();
-                        fileNameToAnnotation.put(imageFileName, new ImageAnnotation(new ImageMetaData(imageFileName),
-                                                                                    shapes));
-                        shapes.forEach(shape -> categoryNameToShapeCount.merge(shape.getCategoryName(), 1,
-                                                                               Integer::sum));
-                    }
-                } catch(IOException e) {
-                    errorEntries.add(new IOErrorInfoEntry(maskFileName, e.getMessage() != null ? e.getMessage()
-                            : "The mask can't be read."));
-                }
-            }
-
+            context.loadMaskFile(maskFiles.get(i));
             progress.set((i + 1.0) / maskFiles.size());
         }
 
         progress.set(1.0);
-        return new ImageAnnotationImportResult(fileNameToAnnotation.size(), errorEntries,
-                                               new ImageAnnotationData(fileNameToAnnotation.values(),
-                                                                       categoryNameToShapeCount,
+        return new ImageAnnotationImportResult(context.fileNameToAnnotation.size(), errorEntries,
+                                               new ImageAnnotationData(context.fileNameToAnnotation.values(),
+                                                                       context.categoryNameToShapeCount,
                                                                        existingCategoryNameToCategoryMap));
+    }
+
+    private static Optional<String> findMissingInput(Path classesFile, Path classFolder) {
+        if(!Files.isRegularFile(classesFile)) {
+            return Optional.of("The file \"" + PNGMasks.CLASSES_FILE_NAME + "\" with the category names is missing.");
+        }
+
+        if(!Files.isDirectory(classFolder)) {
+            return Optional.of("The folder \"" + PNGMasks.CLASS_FOLDER_NAME + "\" with the category masks is missing.");
+        }
+
+        return Optional.empty();
     }
 
     private static List<Path> listPngFiles(Path folder) throws IOException {
@@ -127,84 +96,175 @@ public class PNGMaskLoadStrategy implements ImageAnnotationLoadStrategy {
         }
     }
 
+    private static ImageAnnotationImportResult emptyResult(List<IOErrorInfoEntry> errorEntries,
+                                                           Map<String, ObjectCategory> categories) {
+        return new ImageAnnotationImportResult(0, errorEntries,
+                                               new ImageAnnotationData(Collections.emptyList(),
+                                                                       Collections.emptyMap(), categories));
+    }
+
     /**
-     * Creates the masks of one image, in the order of their numbers.
+     * The state of one import (strategies are shared between threads, so it isn't kept in fields).
      */
-    private static List<BoundingShapeData> createMasks(PNGMasks.Values objects, PNGMasks.Values classes,
-                                                       List<String> categoryNames,
-                                                       Map<String, ObjectCategory> categoryNameToCategory,
-                                                       String maskFileName, List<IOErrorInfoEntry> errorEntries) {
-        // The bounds of each object, so that each mask is built from its own region only.
-        final Map<Integer, int[]> objectBounds = new TreeMap<>();
-        // Per object, how many of its pixels have which category.
-        final Map<Integer, Map<Integer, Integer>> objectClassCounts = new HashMap<>();
+    private static final class LoadContext {
+        private final Path classFolder;
+        private final boolean hasObjectMasks;
+        private final List<String> categoryNames;
+        private final Map<String, List<String>> baseNameToImageFileNames;
+        private final Map<String, ObjectCategory> categoryNameToCategory;
+        private final List<IOErrorInfoEntry> errorEntries;
+        private final Map<String, ImageAnnotation> fileNameToAnnotation = new LinkedHashMap<>();
+        private final Map<String, Integer> categoryNameToShapeCount = new HashMap<>();
 
-        for(int y = 0; y < objects.height(); ++y) {
-            for(int x = 0; x < objects.width(); ++x) {
-                final int object = objects.get(x, y);
+        LoadContext(Path classFolder, boolean hasObjectMasks, List<String> categoryNames,
+                    Map<String, List<String>> baseNameToImageFileNames,
+                    Map<String, ObjectCategory> categoryNameToCategory, List<IOErrorInfoEntry> errorEntries) {
+            this.classFolder = classFolder;
+            this.hasObjectMasks = hasObjectMasks;
+            this.categoryNames = categoryNames;
+            this.baseNameToImageFileNames = baseNameToImageFileNames;
+            this.categoryNameToCategory = categoryNameToCategory;
+            this.errorEntries = errorEntries;
+        }
 
-                if(object == PNGMasks.BACKGROUND || object == PNGMasks.IGNORED) {
-                    continue;
-                }
+        /**
+         * Loads the masks of the image that has the name of a mask file.
+         */
+        void loadMaskFile(Path maskFile) {
+            final String maskFileName = maskFile.getFileName().toString();
+            final List<String> imageFileNames =
+                    baseNameToImageFileNames.getOrDefault(FilenameUtils.getBaseName(maskFileName), List.of());
 
-                int[] bounds = objectBounds.get(object);
+            if(imageFileNames.size() != 1) {
+                errorEntries.add(new IOErrorInfoEntry(maskFileName, imageFileNames.isEmpty()
+                        ? "No image of the currently loaded image files has the name of the mask."
+                        : "Several images (" + String.join(", ", imageFileNames) + ") have the name of the mask."));
+                return;
+            }
 
-                if(bounds == null) {
-                    bounds = new int[]{x, y, x + 1, y + 1};
-                    objectBounds.put(object, bounds);
-                }
-
-                bounds[0] = Math.min(bounds[0], x);
-                bounds[1] = Math.min(bounds[1], y);
-                bounds[2] = Math.max(bounds[2], x + 1);
-                bounds[3] = Math.max(bounds[3], y + 1);
-                objectClassCounts.computeIfAbsent(object, key -> new HashMap<>())
-                                 .merge(classes.get(x, y), 1, Integer::sum);
+            try {
+                addAnnotation(imageFileNames.getFirst(), readMasks(maskFile, maskFileName));
+            } catch(IOException e) {
+                errorEntries.add(new IOErrorInfoEntry(maskFileName, e.getMessage() != null ? e.getMessage()
+                        : "The mask can't be read."));
             }
         }
 
-        final List<BoundingShapeData> shapes = new ArrayList<>();
+        private List<BoundingShapeData> readMasks(Path maskFile, String maskFileName) throws IOException {
+            final PNGMasks.Values classes = PNGMasks.read(classFolder.resolve(maskFileName));
+            final PNGMasks.Values objects = hasObjectMasks ? PNGMasks.read(maskFile) : classes;
 
-        for(Map.Entry<Integer, int[]> entry : objectBounds.entrySet()) {
-            final int object = entry.getKey();
-            final int classIndex = objectClassCounts.get(object).entrySet().stream()
+            if(objects.width() != classes.width() || objects.height() != classes.height()) {
+                throw new IOException("The object and category masks have different sizes.");
+            }
+
+            return createMasks(objects, classes, maskFileName);
+        }
+
+        /**
+         * Creates the masks of one image, in the order of their numbers.
+         */
+        private List<BoundingShapeData> createMasks(PNGMasks.Values objects, PNGMasks.Values classes,
+                                                    String maskFileName) {
+            final List<BoundingShapeData> shapes = new ArrayList<>();
+
+            for(Map.Entry<Integer, ObjectRegion> entry : ObjectRegion.findAll(objects, classes).entrySet()) {
+                final int object = entry.getKey();
+                final int classIndex = entry.getValue().mostFrequentClass();
+
+                if(classIndex == PNGMasks.BACKGROUND || classIndex > categoryNames.size()
+                        || categoryNames.get(classIndex - 1).isEmpty()) {
+                    errorEntries.add(new IOErrorInfoEntry(maskFileName, "Object " + object + " has no valid category ("
+                            + (classIndex == PNGMasks.BACKGROUND ? "its pixels are background in the category mask"
+                            : "category " + classIndex + " is not in " + PNGMasks.CLASSES_FILE_NAME) + ")."));
+                } else {
+                    final ObjectCategory category = categoryNameToCategory.computeIfAbsent(
+                            categoryNames.get(classIndex - 1),
+                            name -> new ObjectCategory(name, ColorUtils.createRandomColor()));
+                    shapes.add(new BoundingMaskData(category, entry.getValue().toMask(objects, object),
+                                                    new ArrayList<>()));
+                }
+            }
+
+            return shapes;
+        }
+
+        private void addAnnotation(String imageFileName, List<BoundingShapeData> shapes) {
+            if(shapes.isEmpty()) {
+                return;
+            }
+
+            fileNameToAnnotation.put(imageFileName, new ImageAnnotation(new ImageMetaData(imageFileName), shapes));
+            shapes.forEach(shape -> categoryNameToShapeCount.merge(shape.getCategoryName(), 1, Integer::sum));
+        }
+    }
+
+    /**
+     * The pixels of one object in an object mask: its bounds, and how many of its pixels have which category.
+     */
+    private static final class ObjectRegion {
+        private final Map<Integer, Integer> classCounts = new HashMap<>();
+        private int minX = Integer.MAX_VALUE;
+        private int minY = Integer.MAX_VALUE;
+        private int maxX = Integer.MIN_VALUE;
+        private int maxY = Integer.MIN_VALUE;
+
+        /**
+         * Finds the objects of an object mask (in the order of their numbers), with their bounds and the categories of
+         * their pixels.
+         */
+        static Map<Integer, ObjectRegion> findAll(PNGMasks.Values objects, PNGMasks.Values classes) {
+            final Map<Integer, ObjectRegion> regions = new TreeMap<>();
+
+            for(int y = 0; y < objects.height(); ++y) {
+                for(int x = 0; x < objects.width(); ++x) {
+                    final int object = objects.get(x, y);
+
+                    if(object != PNGMasks.BACKGROUND && object != PNGMasks.IGNORED) {
+                        regions.computeIfAbsent(object, key -> new ObjectRegion()).add(x, y, classes.get(x, y));
+                    }
+                }
+            }
+
+            return regions;
+        }
+
+        void add(int x, int y, int classIndex) {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + 1);
+            maxY = Math.max(maxY, y + 1);
+            classCounts.merge(classIndex, 1, Integer::sum);
+        }
+
+        /**
+         * Returns the category that most of the object's pixels have (the lower number on ties), or the background if
+         * none of them has one.
+         */
+        int mostFrequentClass() {
+            return classCounts.entrySet().stream()
                     .filter(count -> count.getKey() != PNGMasks.BACKGROUND && count.getKey() != PNGMasks.IGNORED)
                     .max(Map.Entry.<Integer, Integer>comparingByValue()
                                   .thenComparing(Map.Entry.comparingByKey(Comparator.reverseOrder())))
                     .map(Map.Entry::getKey)
                     .orElse(PNGMasks.BACKGROUND);
+        }
 
-            if(classIndex == PNGMasks.BACKGROUND || classIndex > categoryNames.size()
-                    || categoryNames.get(classIndex - 1).isEmpty()) {
-                errorEntries.add(new IOErrorInfoEntry(maskFileName, "Object " + object + " has no valid category ("
-                        + (classIndex == PNGMasks.BACKGROUND ? "its pixels are background in the category mask"
-                        : "category " + classIndex + " is not in " + PNGMasks.CLASSES_FILE_NAME) + ")."));
-                continue;
-            }
-
-            final int[] bounds = entry.getValue();
+        /**
+         * Builds the mask from the object's region only.
+         */
+        MaskBitmap toMask(PNGMasks.Values objects, int object) {
             final MutableMask mask = new MutableMask(objects.width(), objects.height());
 
-            for(int y = bounds[1]; y < bounds[3]; ++y) {
-                for(int x = bounds[0]; x < bounds[2]; ++x) {
+            for(int y = minY; y < maxY; ++y) {
+                for(int x = minX; x < maxX; ++x) {
                     if(objects.get(x, y) == object) {
                         mask.set(x, y, true);
                     }
                 }
             }
 
-            final ObjectCategory category = categoryNameToCategory.computeIfAbsent(
-                    categoryNames.get(classIndex - 1), name -> new ObjectCategory(name, ColorUtils.createRandomColor()));
-            shapes.add(new BoundingMaskData(category, mask.toBitmap(), new ArrayList<>()));
+            return mask.toBitmap();
         }
-
-        return shapes;
-    }
-
-    private static ImageAnnotationImportResult emptyResult(List<IOErrorInfoEntry> errorEntries,
-                                                           Map<String, ObjectCategory> categories) {
-        return new ImageAnnotationImportResult(0, errorEntries,
-                                               new ImageAnnotationData(Collections.emptyList(),
-                                                                       Collections.emptyMap(), categories));
     }
 }

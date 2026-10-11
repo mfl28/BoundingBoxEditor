@@ -65,7 +65,7 @@ public class BoundingBoxPredictor {
 
             try(final InputStream inputStream = createInputStream(imageFile, imageMetaData)) {
                 boundingBoxPredictions = client.predict(inputStream);
-            } catch(FileNotFoundException e) {
+            } catch(FileNotFoundException _) {
                 errorInfoEntries.add(new IOErrorInfoEntry(imageFile.getName(), NON_EXISTENT_IMAGE_ERROR_MESSAGE));
                 return new BoundingBoxPredictionResult(
                         0,

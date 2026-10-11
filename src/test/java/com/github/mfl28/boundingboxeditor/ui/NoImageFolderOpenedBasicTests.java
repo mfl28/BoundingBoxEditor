@@ -31,7 +31,6 @@ import org.junit.jupiter.api.TestInfo;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.base.NodeMatchers;
-import org.testfx.util.WaitForAsyncUtils;
 
 import java.io.File;
 import java.util.HashMap;

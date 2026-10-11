@@ -260,15 +260,20 @@ public class PVOCLoadStrategy implements ImageAnnotationLoadStrategy {
                     boxDataParseResult.getTags().add("pose: " + poseValue.toLowerCase(Locale.ENGLISH));
                 }
             }
-            case "truncated", "occluded", "difficult" -> {
-                if(parseInt(tagElement.getTextContent(), tagElement.getTagName()) == 1) {
-                    boxDataParseResult.getTags().add(tagElement.getTagName());
-                }
-            }
+            case "truncated", "occluded", "difficult" -> parseFlag(tagElement, boxDataParseResult);
             case "actions" -> boxDataParseResult.getTags().addAll(parseActions(tagElement));
             default -> {
                 // Unknown tags are ignored!
             }
+        }
+    }
+
+    /**
+     * Adds a flag (e.g. "difficult") as a tag if it is set (1).
+     */
+    private void parseFlag(Element tagElement, BoundingShapeDataParseResult boxDataParseResult) {
+        if(parseInt(tagElement.getTextContent(), tagElement.getTagName()) == 1) {
+            boxDataParseResult.getTags().add(tagElement.getTagName());
         }
     }
 

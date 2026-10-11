@@ -318,7 +318,7 @@ public class BoundingBoxView extends Rectangle implements
         private static final double SIDE_LENGTH = 9.5;
 
         private final CompassPoint compassPoint;
-        private final DragAnchor dragAnchor = new DragAnchor();
+        private final DragAnchor handleDragAnchor = new DragAnchor();
 
         ResizeHandle(CompassPoint compassPoint) {
             super(SIDE_LENGTH, SIDE_LENGTH);
@@ -391,7 +391,7 @@ public class BoundingBoxView extends Rectangle implements
 
             setOnMousePressed(event -> {
                 if(event.getButton().equals(MouseButton.PRIMARY)) {
-                    dragAnchor.setFromMouseEvent(event);
+                    handleDragAnchor.setFromMouseEvent(event);
                 }
                 event.consume();
             });

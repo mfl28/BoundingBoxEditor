@@ -45,7 +45,7 @@ public class BoundingBoxEditorApp extends Application {
      * @param args arguments
      */
     public static void main(String[] args) {
-        launch(BoundingBoxEditorApp.class);
+        launch(BoundingBoxEditorApp.class, args);
     }
 
     @Override

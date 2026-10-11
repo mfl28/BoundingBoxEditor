@@ -43,8 +43,7 @@ class YOLOSaveStrategyTest {
      * so they must be reported as errors instead of silently overwriting each other.
      */
     @Test
-    void onSaving_WhenImageFileNamesShareBaseName_ShouldReportClashesAndNotOverwrite(@TempDir Path tempDir)
-            throws IOException {
+    void onSaving_WhenImageFileNamesShareBaseName_ShouldReportClashesAndNotOverwrite(@TempDir Path tempDir) {
         ImageAnnotationData annotations = createAnnotationData("a.jpg", "a.png", "b.jpg", "C.jpg", "c.png");
 
         ImageAnnotationExportResult result =

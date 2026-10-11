@@ -213,7 +213,7 @@ public final class ImageMetaData {
                             if(exifDirectory != null && exifDirectory.containsTag(ExifDirectoryBase.TAG_ORIENTATION)) {
                                 orientation = exifDirectory.getInt(ExifDirectoryBase.TAG_ORIENTATION);
                             }
-                        } catch(JpegProcessingException | MetadataException | IOException exception) {
+                        } catch(JpegProcessingException | MetadataException | IOException _) {
                             throw new UnsupportedImageFileException(JPEG_READ_ERROR_MESSAGE);
                         }
                     }

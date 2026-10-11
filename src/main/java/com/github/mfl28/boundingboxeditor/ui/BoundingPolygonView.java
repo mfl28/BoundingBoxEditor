@@ -608,7 +608,7 @@ public class BoundingPolygonView extends Polygon implements
         private static final double BRIGHTNESS_BLACK_SWITCH_THRESHOLD = 0.75;
         private final PseudoClass editingPseudoClass = PseudoClass
                 .getPseudoClass(VertexHandle.EDITING_PSEUDO_CLASS_NAME);
-        private final BooleanProperty editing = createEditingProperty();
+        private final BooleanProperty vertexEditing = createEditingProperty();
         private final DragAnchor dragAnchor = new DragAnchor();
         private final BooleanProperty selected = new SimpleBooleanProperty(false);
         private final IntegerProperty pointIndex;
@@ -625,11 +625,11 @@ public class BoundingPolygonView extends Polygon implements
         }
 
         public boolean isEditing() {
-            return this.editing.get();
+            return this.vertexEditing.get();
         }
 
         public void setEditing(boolean editing) {
-            this.editing.set(editing);
+            this.vertexEditing.set(editing);
         }
 
         public boolean isSelected() {
@@ -748,7 +748,7 @@ public class BoundingPolygonView extends Polygon implements
                     .getPoints().set(pointIndex.get() + 1,
                             newNumber.doubleValue()));
 
-            strokeProperty().bind(Bindings.when(editing)
+            strokeProperty().bind(Bindings.when(vertexEditing)
                     .then(Bindings.createObjectBinding(() -> ((Color) getFill())
                                     .getBrightness() > BRIGHTNESS_BLACK_SWITCH_THRESHOLD
                                     ? Color.BLACK
