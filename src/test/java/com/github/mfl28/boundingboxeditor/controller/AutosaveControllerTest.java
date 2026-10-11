@@ -264,6 +264,8 @@ class AutosaveControllerTest {
 
         assertFalse(timer.running);
         assertFalse(Files.exists(store.fileFor(folder)));
+        // The writer's thread ends, so that it doesn't keep the app in memory.
+        assertTrue(executor.isShutdown());
     }
 
     @Test

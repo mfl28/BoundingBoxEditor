@@ -51,7 +51,9 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -148,6 +150,8 @@ public class Controller {
     private final PreferencesStore preferencesStore = PreferencesStore.forApplication();
     private final RecentImageFolders recentImageFolders = new RecentImageFolders(preferencesStore);
     private final AutosaveController autosaveController;
+    // Removes the handlers that this controller added to its window.
+    private final List<Runnable> stageListenerRemovals = new ArrayList<>();
     final List<KeyCombinationEventHandler> keyCombinationHandlers;
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
@@ -1176,24 +1180,56 @@ public class Controller {
 
     private void setupStage() {
         stage.setTitle(PROGRAM_IDENTIFIER);
-        stage.getIcons().add(MainView.APPLICATION_ICON);
-        stage.setOnCloseRequest(event -> {
+
+        if(!stage.getIcons().contains(MainView.APPLICATION_ICON)) {
+            stage.getIcons().add(MainView.APPLICATION_ICON);
+        }
+
+        final EventHandler<WindowEvent> closeRequestHandler = event -> {
             onRegisterExitAction();
             event.consume();
+        };
+        stage.setOnCloseRequest(closeRequestHandler);
+        // Once the window is closed, nothing is saved anymore (also not into the next test's autosave folder), and
+        // this controller lets go of the window (UI tests show each new controller in the same window).
+        addStageEventHandler(WindowEvent.WINDOW_HIDDEN, event -> {
+            autosaveController.stop();
+            // After the event was handled, so that its handler isn't removed while it runs.
+            Platform.runLater(() -> releaseStage(closeRequestHandler));
         });
-        // Once the window is closed, nothing is saved anymore (also not into the next test's autosave folder).
-        stage.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> autosaveController.stop());
 
-        stage.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+        addStageEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
             if (!Objects.equals(event.getTarget(), view.getEditorImageView())) {
                 view.getEditorImagePane().finalizeBoundingShapeDrawing();
             }
         });
 
         // Edits of the bounding shapes end with one of these events; checkpoints that find no change are ignored.
-        stage.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> scheduleEditCheckpoint());
-        stage.addEventFilter(KeyEvent.KEY_RELEASED, event -> scheduleEditCheckpoint());
-        stage.addEventFilter(DragEvent.DRAG_DROPPED, event -> scheduleEditCheckpoint());
+        addStageEventFilter(MouseEvent.MOUSE_RELEASED, event -> scheduleEditCheckpoint());
+        addStageEventFilter(KeyEvent.KEY_RELEASED, event -> scheduleEditCheckpoint());
+        addStageEventFilter(DragEvent.DRAG_DROPPED, event -> scheduleEditCheckpoint());
+    }
+
+    private <T extends Event> void addStageEventFilter(EventType<T> eventType, EventHandler<? super T> filter) {
+        stage.addEventFilter(eventType, filter);
+        stageListenerRemovals.add(() -> stage.removeEventFilter(eventType, filter));
+    }
+
+    private <T extends Event> void addStageEventHandler(EventType<T> eventType, EventHandler<? super T> handler) {
+        stage.addEventHandler(eventType, handler);
+        stageListenerRemovals.add(() -> stage.removeEventHandler(eventType, handler));
+    }
+
+    /**
+     * Removes this controller's handlers from its window, so that the window doesn't keep it in memory.
+     */
+    private void releaseStage(EventHandler<WindowEvent> closeRequestHandler) {
+        stageListenerRemovals.forEach(Runnable::run);
+        stageListenerRemovals.clear();
+
+        if(Objects.equals(stage.getOnCloseRequest(), closeRequestHandler)) {
+            stage.setOnCloseRequest(null);
+        }
     }
 
     /**

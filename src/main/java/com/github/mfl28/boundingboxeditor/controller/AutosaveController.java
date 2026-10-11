@@ -280,7 +280,8 @@ class AutosaveController {
     void stop() {
         stopped = true;
         saveTimer.stop();
-        writer.awaitCompletion();
+        // Ends the writer's thread, which would otherwise keep this controller (and the whole app) in memory.
+        writer.shutdown();
     }
 
     /**
