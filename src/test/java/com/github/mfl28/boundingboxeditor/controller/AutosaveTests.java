@@ -63,7 +63,7 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
     void onEditingAnnotations_ShouldSaveThemAutomaticallyUntilTheyAreExported(FxRobot robot, TestInfo testinfo,
                                                                               @TempDir Path tempDir) {
         final File folder = testImageFolder();
-        final AutosaveStore store = controller.getAutosaveStore();
+        final AutosaveStore store = controller.getAutosaveController().getStore();
         robot.interact(() -> controller.loadImageFiles(folder));
         waitUntilCurrentImageIsLoaded(testinfo);
         enterNewCategory(robot, "Boat", testinfo);
@@ -71,8 +71,8 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
         waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1, "the drawn box", testinfo);
 
         // (Instead of waiting for the autosave delay.)
-        robot.interact(controller::autosaveNow);
-        controller.waitForAutosave();
+        robot.interact(controller.getAutosaveController()::saveNow);
+        controller.getAutosaveController().awaitCompletion();
 
         verifyThat(Files.isRegularFile(store.fileFor(folder)), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(model.isSaved(), Matchers.is(false), saveScreenshot(testinfo));
@@ -91,7 +91,7 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
                                                                     ImageAnnotationSaveStrategy.Type.JSON));
         WaitForAsyncUtils.waitForFxEvents();
         timeOutAssertServiceSucceeded(controller.getAnnotationExportService(), testinfo);
-        controller.waitForAutosave();
+        controller.getAutosaveController().awaitCompletion();
 
         verifyThat(model.isSaved(), Matchers.is(true), saveScreenshot(testinfo));
         verifyThat(Files.exists(store.fileFor(folder)), Matchers.is(false), saveScreenshot(testinfo));
@@ -107,7 +107,7 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
         writeAutosave(folder);
 
         robot.interact(() -> controller.loadImageFiles(folder));
-        final Stage dialog = timeOutGetTopModalStage(robot, Controller.RESTORE_AUTOSAVE_DIALOG_TITLE, testinfo);
+        final Stage dialog = timeOutGetTopModalStage(robot, AutosaveController.RESTORE_DIALOG_TITLE, testinfo);
         timeOutLookUpInStageAndClickOn(robot, dialog, "Yes", testinfo);
 
         waitUntil(() -> model.getImageFileNameToAnnotationMap().containsKey(IMAGE_FILE_NAME), "the restored annotation",
@@ -118,15 +118,15 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
         verifyThat(shapes.getFirst().getTags(), Matchers.contains("difficult"), saveScreenshot(testinfo));
         // Still not exported, so still unsaved, and the autosave is kept.
         verifyThat(model.isSaved(), Matchers.is(false), saveScreenshot(testinfo));
-        controller.waitForAutosave();
-        verifyThat(Files.isRegularFile(controller.getAutosaveStore().fileFor(folder)), Matchers.is(true),
+        controller.getAutosaveController().awaitCompletion();
+        verifyThat(Files.isRegularFile(controller.getAutosaveController().getStore().fileFor(folder)), Matchers.is(true),
                    saveScreenshot(testinfo));
         verifyThat(mainView.getStatusBar().getSavedStatusDescription(),
                    Matchers.startsWith("The annotations are not exported yet. They were saved automatically "),
                    saveScreenshot(testinfo));
         // The autosave folder doesn't become the folder for importing annotations.
         verifyThat(controller.getIoMetaData().getDefaultAnnotationLoadingDirectory(),
-                   Matchers.not(Matchers.equalTo(controller.getAutosaveStore().directory().toFile())),
+                   Matchers.not(Matchers.equalTo(controller.getAutosaveController().getStore().directory().toFile())),
                    saveScreenshot(testinfo));
     }
 
@@ -137,13 +137,13 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
         writeAutosave(folder);
 
         robot.interact(() -> controller.loadImageFiles(folder));
-        final Stage dialog = timeOutGetTopModalStage(robot, Controller.RESTORE_AUTOSAVE_DIALOG_TITLE, testinfo);
+        final Stage dialog = timeOutGetTopModalStage(robot, AutosaveController.RESTORE_DIALOG_TITLE, testinfo);
         timeOutLookUpInStageAndClickOn(robot, dialog, "No", testinfo);
         waitUntilCurrentImageIsLoaded(testinfo);
-        controller.waitForAutosave();
+        controller.getAutosaveController().awaitCompletion();
 
         verifyThat(model.getImageFileNameToAnnotationMap().isEmpty(), Matchers.is(true), saveScreenshot(testinfo));
-        verifyThat(Files.exists(controller.getAutosaveStore().fileFor(folder)), Matchers.is(false),
+        verifyThat(Files.exists(controller.getAutosaveController().getStore().fileFor(folder)), Matchers.is(false),
                    saveScreenshot(testinfo));
     }
 
@@ -154,7 +154,7 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
         writeAutosave(folder);
 
         // The annotations may be restored before the image is loaded (no dialog in between, as at startup).
-        robot.interact(() -> controller.loadImageFilesAndRestoreAutosave(folder));
+        robot.interact(() -> controller.getAutosaveController().openFolderAndRestore(folder));
         waitUntilCurrentImageIsLoaded(testinfo);
         waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1, "the restored box", testinfo);
         WaitForAsyncUtils.waitForFxEvents();
@@ -179,8 +179,8 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
         robot.interact(() -> controller.getRecentImageFolders().add(folder));
 
         // The dialog waits for an answer, so it is opened later on the JavaFX thread.
-        Platform.runLater(controller::offerToRestoreLastSession);
-        final Stage dialog = timeOutGetTopModalStage(robot, Controller.RESTORE_AUTOSAVE_DIALOG_TITLE, testinfo);
+        Platform.runLater(controller.getAutosaveController()::offerToRestoreLastSession);
+        final Stage dialog = timeOutGetTopModalStage(robot, AutosaveController.RESTORE_DIALOG_TITLE, testinfo);
         timeOutLookUpInStageAndClickOn(robot, dialog, "Yes", testinfo);
 
         // The folder is opened and restored without asking again.
@@ -203,13 +203,13 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
         waitUntil(() -> mainView.getCurrentBoundingShapes().size() == 1, "the drawn box", testinfo);
 
         // A file in place of the autosave folder makes saving fail.
-        final Path directory = controller.getAutosaveStore().directory();
+        final Path directory = controller.getAutosaveController().getStore().directory();
         deleteRecursively(directory);
         Files.createFile(directory);
 
         try {
-            robot.interact(controller::autosaveNow);
-            controller.waitForAutosave();
+            robot.interact(controller.getAutosaveController()::saveNow);
+            controller.getAutosaveController().awaitCompletion();
             WaitForAsyncUtils.waitForFxEvents();
 
             verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
@@ -244,7 +244,7 @@ class AutosaveTests extends BoundingBoxEditorTestBase {
                                                       new File(folder, IMAGE_FILE_NAME).toURI().toString(), 3854,
                                                       2033, 3);
         final BoundingBoxData box = new BoundingBoxData(category, 0.2, 0.2, 0.6, 0.6, List.of("difficult"));
-        controller.getAutosaveStore().save(folder, new ImageAnnotationData(
+        controller.getAutosaveController().getStore().save(folder, new ImageAnnotationData(
                 List.of(new ImageAnnotation(image, List.of(box))), Map.of("Boat", 1), Map.of("Boat", category)));
     }
 
