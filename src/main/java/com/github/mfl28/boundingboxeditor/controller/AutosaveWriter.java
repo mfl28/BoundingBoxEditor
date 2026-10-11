@@ -60,14 +60,14 @@ final class AutosaveWriter {
     }
 
     /**
-     * Creates a writer with its own daemon thread.
+     * Creates the executor for a writer: one daemon thread.
      */
-    static AutosaveWriter create(AutosaveStore store, Runnable onSaved, Consumer<IOException> onFailed) {
-        return new AutosaveWriter(store, Executors.newSingleThreadExecutor(runnable -> {
+    static ExecutorService createExecutor() {
+        return Executors.newSingleThreadExecutor(runnable -> {
             final Thread thread = new Thread(runnable, "autosave");
             thread.setDaemon(true);
             return thread;
-        }), onSaved, onFailed);
+        });
     }
 
     /**

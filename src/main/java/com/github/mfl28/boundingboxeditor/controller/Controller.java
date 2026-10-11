@@ -23,7 +23,6 @@ import com.github.mfl28.boundingboxeditor.model.ImageFileFilter;
 import com.github.mfl28.boundingboxeditor.model.Model;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
-import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotationData;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.IoMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
@@ -43,7 +42,6 @@ import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageAnnotationsSaving
 import com.github.mfl28.boundingboxeditor.ui.statusevents.ImageFilesLoadingSuccessfulEvent;
 import com.github.mfl28.boundingboxeditor.utils.ColorUtils;
 import com.github.mfl28.boundingboxeditor.utils.ImageUtils;
-import javafx.animation.PauseTransition;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -61,14 +59,9 @@ import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import javafx.util.Duration;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -147,25 +140,6 @@ public class Controller {
     private final ShapeClipboardController shapeClipboardController =
             new ShapeClipboardController(new ShapeClipboardOperations());
     private boolean editCheckpointScheduled = false;
-    // Autosave: the annotations are saved a few seconds after the last change, until they are exported.
-    private static final Duration AUTOSAVE_DELAY = Duration.seconds(5);
-    static final String RESTORE_AUTOSAVE_DIALOG_TITLE = "Restore Unsaved Annotations";
-    private static final DateTimeFormatter AUTOSAVE_TIME_FORMATTER =
-            DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault());
-    private final AutosaveStore autosaveStore = AutosaveStore.createDefault();
-    private final PauseTransition autosaveDelay = new PauseTransition(AUTOSAVE_DELAY);
-    // Saves and deletes in order, off the JavaFX thread.
-    private final AutosaveWriter autosaveWriter =
-            AutosaveWriter.create(autosaveStore, this::onAutosaved, this::onAutosaveFailed);
-    // The folder whose images are shown, which the autosave belongs to.
-    private File currentImageFolder;
-    // While it is open whether to restore the shown folder's autosave, and while it is restored, nothing is saved.
-    private boolean autosavePaused = false;
-    // After the window was closed.
-    private boolean autosaveStopped = false;
-    private boolean restoringAutosave = false;
-    // Set when the user agreed at startup to restore the last folder's autosave, so that it isn't asked again.
-    private File folderToRestoreWithoutAsking;
     private final ListChangeListener<BoundingShapeViewable> boundingShapeCountPerCategoryListener =
             createBoundingShapeCountPerCategoryListener();
     private final ChangeListener<Number> imageLoadProgressListener = createImageLoadingProgressListener();
@@ -173,6 +147,7 @@ public class Controller {
     private final IoMetaData ioMetaData = new IoMetaData();
     private final PreferencesStore preferencesStore = PreferencesStore.forApplication();
     private final RecentImageFolders recentImageFolders = new RecentImageFolders(preferencesStore);
+    private final AutosaveController autosaveController;
     final List<KeyCombinationEventHandler> keyCombinationHandlers;
     String lastLoadedImageUrl;
     private final ChangeListener<Number> selectedFileIndexListener = createSelectedFileIndexListener();
@@ -218,9 +193,10 @@ public class Controller {
         view.connectToController(this);
         setUpModelListeners();
         setUpServices();
-        setUpAutosave();
+        autosaveController = AutosaveController.create(model, dialogService, stage, recentImageFolders,
+                new AutosaveOperations());
         // After the window was shown.
-        Platform.runLater(this::offerToRestoreLastSession);
+        Platform.runLater(autosaveController::offerToRestoreLastSession);
     }
 
     public void onRegisterSettingsAction() {
@@ -470,10 +446,10 @@ public class Controller {
             }
 
             // The user decided not to keep the annotations.
-            deleteAutosave(currentImageFolder);
+            autosaveController.discard();
         }
 
-        autosaveDelay.stop();
+        autosaveController.stop();
         savePreferences();
         imageFolderController.stopWatching();
         makeClientUnavailable();
@@ -826,8 +802,7 @@ public class Controller {
 
     private void onAnnotationImportSucceeded(WorkerStateEvent workerStateEvent) {
         ImageAnnotationImportResult importResult = annotationImportService.getValue();
-        final boolean restoredAutosave = restoringAutosave;
-        restoringAutosave = false;
+        final boolean restoredAutosave = autosaveController.isRestoring();
 
         if(importResult.getNrSuccessfullyProcessedItems() != 0) {
             model.updateFromImageAnnotationData(importResult.getImageAnnotationData(), importResult.getOperationType());
@@ -835,12 +810,7 @@ public class Controller {
         }
 
         if(restoredAutosave) {
-            autosavePaused = false;
-
-            // Restored annotations are still not exported.
-            if(importResult.getNrSuccessfullyProcessedItems() != 0) {
-                model.setSaved(false);
-            }
+            autosaveController.onRestoreFinished(importResult.getNrSuccessfullyProcessedItems() != 0);
         }
 
         updateViewFileExplorerFileInfoElements();
@@ -865,9 +835,8 @@ public class Controller {
 
 
     private void onIoServiceFailed(WorkerStateEvent event) {
-        if(annotationImportService.equals(event.getSource()) && restoringAutosave) {
-            restoringAutosave = false;
-            autosavePaused = false;
+        if(annotationImportService.equals(event.getSource()) && autosaveController.isRestoring()) {
+            autosaveController.onRestoreFailed();
         }
 
         final Throwable exception = event.getSource().getException();
@@ -1285,7 +1254,7 @@ public class Controller {
             event.consume();
         });
         // Once the window is closed, nothing is saved anymore (also not into the next test's autosave folder).
-        stage.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> stopAutosaving());
+        stage.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> autosaveController.stop());
 
         stage.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
             if (!Objects.equals(event.getTarget(), view.getEditorImageView())) {
@@ -1308,163 +1277,17 @@ public class Controller {
             Platform.runLater(() -> {
                 editCheckpointScheduled = false;
                 editHistoryController.checkpoint();
-                scheduleAutosave();
+                autosaveController.onEdited();
             });
         }
     }
 
-    /**
-     * Saves the annotations of the shown folder now (as after the autosave delay), unless they are exported.
-     */
-    void autosaveNow() {
-        final File folder = currentImageFolder;
-
-        if(folder == null || autosavePaused || autosaveStopped) {
-            return;
-        }
-
-        if(view.getEditorImagePane().isDrawingInProgress()) {
-            scheduleAutosave();
-            return;
-        }
-
-        updateModelFromView();
-
-        if(model.isSaved()) {
-            deleteAutosave(folder);
-            return;
-        }
-
-        autosaveWriter.save(folder, createAutosaveSnapshot());
-    }
-
-    /**
-     * Waits until the autosaves that were started are written (or deleted).
-     */
-    void waitForAutosave() {
-        autosaveWriter.awaitCompletion();
-    }
-
-    AutosaveStore getAutosaveStore() {
-        return autosaveStore;
+    AutosaveController getAutosaveController() {
+        return autosaveController;
     }
 
     RecentImageFolders getRecentImageFolders() {
         return recentImageFolders;
-    }
-
-    private void setUpAutosave() {
-        autosaveDelay.setOnFinished(event -> autosaveNow());
-
-        // Exported (or discarded, when another folder is opened) annotations need no autosave anymore.
-        model.savedProperty().addListener((observable, oldValue, newValue) -> {
-            if(autosavePaused) {
-                return;
-            }
-
-            if(Boolean.TRUE.equals(newValue)) {
-                autosaveDelay.stop();
-                deleteAutosave(currentImageFolder);
-            } else {
-                scheduleAutosave();
-            }
-        });
-    }
-
-    private void scheduleAutosave() {
-        if(currentImageFolder != null && !autosavePaused && !autosaveStopped) {
-            autosaveDelay.playFromStart();
-        }
-    }
-
-    private void stopAutosaving() {
-        autosaveStopped = true;
-        autosaveDelay.stop();
-        autosaveWriter.awaitCompletion();
-    }
-
-    /**
-     * Deletes the autosave of a folder, after the autosaves that were already started, and waits for it (so that it
-     * is gone even if the app quits right afterwards).
-     */
-    private void deleteAutosave(File folder) {
-        if(folder == null) {
-            return;
-        }
-
-        autosaveWriter.delete(folder);
-        showAutosaveTime();
-    }
-
-    // Called on the autosave thread.
-    private void onAutosaved() {
-        Platform.runLater(this::showAutosaveTime);
-    }
-
-    // Called on the autosave thread.
-    private void onAutosaveFailed(IOException exception) {
-        Platform.runLater(() -> view.getStatusBar().setStatusEvent(new AutosaveFailedEvent(exception.getMessage())));
-    }
-
-    /**
-     * Shows when the annotations of the shown folder were last saved automatically (in the status bar's saved-status
-     * tooltip).
-     */
-    private void showAutosaveTime() {
-        view.getStatusBar().setAutosaveTime(currentImageFolder == null ? null
-                : autosaveStore.lastSaved(currentImageFolder).orElse(null));
-    }
-
-    /**
-     * Copies the annotations (with their tags and parts), so that they can be saved off the JavaFX thread while the
-     * user goes on editing.
-     */
-    private ImageAnnotationData createAutosaveSnapshot() {
-        final ImageAnnotationData data = model.createImageAnnotationData();
-        final List<ImageAnnotation> annotations = data.imageAnnotations().stream()
-                .map(annotation -> new ImageAnnotation(annotation.getImageMetaData(),
-                        annotation.getBoundingShapeData().stream().map(ShapeClipboardController::copyOf).toList()))
-                .toList();
-        return new ImageAnnotationData(annotations, Map.copyOf(data.categoryNameToBoundingShapeCountMap()),
-                Map.copyOf(data.categoryNameToCategoryMap()));
-    }
-
-    /**
-     * At startup, offers to reopen the most recently opened folder if its annotations were not exported.
-     */
-    void offerToRestoreLastSession() {
-        final List<File> folders = recentImageFolders.getFolders();
-
-        if(folders.isEmpty() || currentImageFolder != null) {
-            return;
-        }
-
-        final File folder = folders.getFirst();
-        final Optional<Instant> lastSaved = autosaveStore.lastSaved(folder);
-
-        if(!folder.isDirectory() || lastSaved.isEmpty()) {
-            return;
-        }
-
-        final ButtonBar.ButtonData answer = dialogService.displayYesNoDialogAndGetResult(
-                RESTORE_AUTOSAVE_DIALOG_TITLE,
-                String.format("The annotations of the folder \"%s\" from %s were not exported. They were saved "
-                                      + "automatically. Open the folder and restore them?",
-                              folder.getPath(), AUTOSAVE_TIME_FORMATTER.format(lastSaved.get())), stage);
-
-        if(answer == ButtonBar.ButtonData.YES) {
-            loadImageFilesAndRestoreAutosave(folder);
-        }
-    }
-
-    /**
-     * Opens an image folder and restores its autosaved annotations without asking.
-     *
-     * @param folder the image folder
-     */
-    void loadImageFilesAndRestoreAutosave(File folder) {
-        folderToRestoreWithoutAsking = folder;
-        loadImageFiles(folder);
     }
 
     /**
@@ -1507,38 +1330,6 @@ public class Controller {
      * Loads and shows the image folders opened by the {@link ImageFolderController}.
      */
     private class ImageFolderOperations implements ImageFolderController.Operations {
-        /**
-         * Asks whether to restore the autosaved annotations of a folder that was opened (unless the user already agreed
-         * at startup), and restores or deletes them.
-         */
-        private void offerToRestoreAutosave(File folder) {
-            final Optional<Instant> lastSaved = autosaveStore.lastSaved(folder);
-            final boolean restoreWithoutAsking = folder.equals(folderToRestoreWithoutAsking);
-            folderToRestoreWithoutAsking = null;
-
-            if(lastSaved.isEmpty()) {
-                return;
-            }
-
-            autosavePaused = true;
-            autosaveDelay.stop();
-
-            final boolean restore = restoreWithoutAsking
-                    || dialogService.displayYesNoDialogAndGetResult(RESTORE_AUTOSAVE_DIALOG_TITLE,
-                    String.format("The annotations of this folder from %s were not exported. They were saved "
-                                          + "automatically. Restore them?",
-                                  AUTOSAVE_TIME_FORMATTER.format(lastSaved.get())), stage) == ButtonBar.ButtonData.YES;
-
-            if(restore) {
-                restoringAutosave = true;
-                startAnnotationImportService(autosaveStore.fileFor(folder).toFile(),
-                        ImageAnnotationLoadStrategy.Type.JSON);
-            } else {
-                autosavePaused = false;
-                deleteAutosave(folder);
-            }
-        }
-
         @Override
         public void updateModelFromView() {
             Controller.this.updateModelFromView();
@@ -1570,16 +1361,13 @@ public class Controller {
             recentImageFolders.add(folder);
 
             view.getStatusBar().setStatusEvent(new ImageFilesLoadingSuccessfulEvent(result, folder));
-            currentImageFolder = folder;
-            offerToRestoreAutosave(folder);
-            showAutosaveTime();
+            autosaveController.onFolderOpened(folder);
         }
 
         @Override
         public void clearWorkspace() {
             clearViewAndModel();
-            currentImageFolder = null;
-            showAutosaveTime();
+            autosaveController.onFolderClosed();
         }
     }
 
@@ -1728,6 +1516,43 @@ public class Controller {
         @Override
         public boolean hasPreviousImage() {
             return imageFileFilterController.hasPreviousProperty().get();
+        }
+    }
+
+    private class AutosaveOperations implements AutosaveController.Operations {
+        @Override
+        public void updateModelFromView() {
+            Controller.this.updateModelFromView();
+        }
+
+        @Override
+        public boolean isDrawingInProgress() {
+            return view.getEditorImagePane().isDrawingInProgress();
+        }
+
+        @Override
+        public void restore(File autosaveFile) {
+            startAnnotationImportService(autosaveFile, ImageAnnotationLoadStrategy.Type.JSON);
+        }
+
+        @Override
+        public void openImageFolder(File folder) {
+            loadImageFiles(folder);
+        }
+
+        @Override
+        public void runOnUiThread(Runnable action) {
+            Platform.runLater(action);
+        }
+
+        @Override
+        public void showAutosaveTime(Instant time) {
+            view.getStatusBar().setAutosaveTime(time);
+        }
+
+        @Override
+        public void showAutosaveFailed(String reason) {
+            view.getStatusBar().setStatusEvent(new AutosaveFailedEvent(reason));
         }
     }
 }
