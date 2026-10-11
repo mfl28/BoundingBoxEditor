@@ -39,10 +39,12 @@ Annotations can be imported and exported in the [Pascal VOC](http://host.robots.
 * **Drawing and editing:** rectangles and polygons (by clicking vertices or drawing freehand). Move and resize boxes, add, move and remove polygon vertices, and simplify polygons. Copy and paste bounding boxes (also to other images), and move the selected one with the arrow keys.
 * **[Pixel masks](https://github.com/mfl28/BoundingBoxEditor/wiki/Bounding-Boxes#shape-specific-functions---pixel-masks)** for instance segmentation: paint and erase objects with a brush of adjustable size.
 * **Undo and redo** for all changes to the bounding boxes, with a separate history per image.
+* **[Automatic saving](https://github.com/mfl28/BoundingBoxEditor/wiki/Annotations#automatic-saving):** annotations that aren't exported yet are saved automatically a few seconds after each change. After a crash or a forced quit, the program offers to restore them when the folder is opened again.
 * **Nesting and tags:** nest bounding boxes (e.g. a wheel inside a car), and tag them with the Pascal VOC tags (truncated, difficult, occluded, pose, action).
 * **Categories:** color-coded and searchable object categories, created as you go. Select one of the first nine with the number keys, and optionally show each bounding box's category name next to it.
 * **Import and export:**
-  * Pascal VOC (XML) and JSON: rectangles and polygons, including nesting;
+  * Pascal VOC (XML): rectangles and polygons, including nesting;
+  * JSON: rectangles, polygons and masks, including nesting;
   * YOLO (TXT): rectangles, and polygons in YOLO's segmentation format;
   * CSV: rectangles;
   * COCO (JSON): rectangles, polygons and masks;
