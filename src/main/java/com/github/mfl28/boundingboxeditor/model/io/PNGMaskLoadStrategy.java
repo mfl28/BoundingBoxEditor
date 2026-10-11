@@ -96,26 +96,6 @@ public class PNGMaskLoadStrategy implements ImageAnnotationLoadStrategy {
         }
     }
 
-    /**
-     * Finds the objects of an object mask (in the order of their numbers), with their bounds and the categories of
-     * their pixels.
-     */
-    private static Map<Integer, ObjectRegion> findObjects(PNGMasks.Values objects, PNGMasks.Values classes) {
-        final Map<Integer, ObjectRegion> regions = new TreeMap<>();
-
-        for(int y = 0; y < objects.height(); ++y) {
-            for(int x = 0; x < objects.width(); ++x) {
-                final int object = objects.get(x, y);
-
-                if(object != PNGMasks.BACKGROUND && object != PNGMasks.IGNORED) {
-                    regions.computeIfAbsent(object, key -> new ObjectRegion()).add(x, y, classes.get(x, y));
-                }
-            }
-        }
-
-        return regions;
-    }
-
     private static ImageAnnotationImportResult emptyResult(List<IOErrorInfoEntry> errorEntries,
                                                            Map<String, ObjectCategory> categories) {
         return new ImageAnnotationImportResult(0, errorEntries,
@@ -188,7 +168,7 @@ public class PNGMaskLoadStrategy implements ImageAnnotationLoadStrategy {
                                                     String maskFileName) {
             final List<BoundingShapeData> shapes = new ArrayList<>();
 
-            for(Map.Entry<Integer, ObjectRegion> entry : findObjects(objects, classes).entrySet()) {
+            for(Map.Entry<Integer, ObjectRegion> entry : ObjectRegion.findAll(objects, classes).entrySet()) {
                 final int object = entry.getKey();
                 final int classIndex = entry.getValue().mostFrequentClass();
 
@@ -228,6 +208,26 @@ public class PNGMaskLoadStrategy implements ImageAnnotationLoadStrategy {
         private int minY = Integer.MAX_VALUE;
         private int maxX = Integer.MIN_VALUE;
         private int maxY = Integer.MIN_VALUE;
+
+        /**
+         * Finds the objects of an object mask (in the order of their numbers), with their bounds and the categories of
+         * their pixels.
+         */
+        static Map<Integer, ObjectRegion> findAll(PNGMasks.Values objects, PNGMasks.Values classes) {
+            final Map<Integer, ObjectRegion> regions = new TreeMap<>();
+
+            for(int y = 0; y < objects.height(); ++y) {
+                for(int x = 0; x < objects.width(); ++x) {
+                    final int object = objects.get(x, y);
+
+                    if(object != PNGMasks.BACKGROUND && object != PNGMasks.IGNORED) {
+                        regions.computeIfAbsent(object, key -> new ObjectRegion()).add(x, y, classes.get(x, y));
+                    }
+                }
+            }
+
+            return regions;
+        }
 
         void add(int x, int y, int classIndex) {
             minX = Math.min(minX, x);
