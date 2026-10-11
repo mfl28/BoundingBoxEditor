@@ -28,6 +28,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -77,6 +78,15 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
                                                                                                           ButtonType.OK));
 
         setOnCloseRequest(event -> controller.onRegisterSettingsCancelCloseAction());
+    }
+
+    /**
+     * Returns the dialog's window (once it is shown).
+     *
+     * @return the window
+     */
+    public Window getWindow() {
+        return getDialogPane().getScene().getWindow();
     }
 
     public <T extends Node & ApplyButtonChangeProvider> void addCategoryContentPair(String category, T contentNode) {

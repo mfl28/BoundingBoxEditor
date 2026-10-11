@@ -32,7 +32,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.Stage;
 import javafx.stage.Window;
 
 import java.io.File;
@@ -60,6 +59,8 @@ public class MainView extends BorderPane implements View {
     private final StatusBarView statusBar = new StatusBarView();
     private final UISettingsConfig uiSettingsConfig = new UISettingsConfig();
     private final EditorSettingsConfig editorSettingsConfig = new EditorSettingsConfig();
+    // While the settings dialog is shown.
+    private SettingsDialogView shownSettingsDialog;
     private final InferenceSettingsView inferenceSettingsView = new InferenceSettingsView();
     private final UISettingsView uiSettingsView = new UISettingsView();
     private final EditorSettingsView editorSettingsView = new EditorSettingsView();
@@ -363,16 +364,22 @@ public class MainView extends BorderPane implements View {
 
         settingsDialog.initOwner(owner);
 
-        settingsDialog.showAndWait();
+        shownSettingsDialog = settingsDialog;
+
+        try {
+            settingsDialog.showAndWait();
+        } finally {
+            shownSettingsDialog = null;
+        }
     }
 
-
+    /**
+     * Returns the window of the settings dialog while it is shown (e.g. as the owner of error dialogs).
+     *
+     * @return the window, or an empty optional if the settings dialog isn't shown
+     */
     public Optional<Window> getSettingsWindow() {
-        return Window.getWindows()
-                .stream()
-                .filter(window -> window instanceof Stage stage
-                        && stage.getTitle().equals(SettingsDialogView.SETTINGS_TITLE))
-                .findFirst();
+        return Optional.ofNullable(shownSettingsDialog).map(SettingsDialogView::getWindow);
     }
 
 
