@@ -216,8 +216,13 @@ class AnnotationIoControllerTest {
 
         annotationIoController.saveWithFormatChoiceAndRunInAnyCase(operation);
 
-        verify(operations).startExport(DESTINATION, ImageAnnotationSaveStrategy.Type.JSON, operation);
+        final ArgumentCaptor<Runnable> afterExport = ArgumentCaptor.forClass(Runnable.class);
+        verify(operations).startExport(eq(DESTINATION), eq(ImageAnnotationSaveStrategy.Type.JSON),
+                afterExport.capture());
         verifyNoInteractions(operation);
+
+        afterExport.getValue().run();
+        verify(operation).run();
     }
 
     @Test
@@ -308,17 +313,36 @@ class AnnotationIoControllerTest {
     }
 
     @Test
-    void onExportFinished_WithErrors_ShouldReportThemAndKeepTheAnnotationsUnsaved(@TempDir Path folder) {
+    void onExportFinished_WithErrors_ShouldReportThemAndNotRunTheWaitingOperation(@TempDir Path folder) {
         final ProgressViewer progress = mock(ProgressViewer.class);
-        final ImageAnnotationExportResult result = new ImageAnnotationExportResult(
-                1, List.of(new IOErrorInfoEntry("b.xml", "Could not write the file.")));
+        final ImageAnnotationExportResult result = exportResultWithError();
+        // E.g. quitting, which would discard the annotations that couldn't be saved.
+        final Runnable onSaveSuccess = mock(Runnable.class);
         model.setSaved(false);
 
-        annotationIoController.onExportFinished(result, folder.toFile(), null, progress);
+        annotationIoController.onExportFinished(result, folder.toFile(), onSaveSuccess, progress);
 
         assertFalse(model.isSaved());
         verify(progress).hideProgress();
         verify(dialogService).displayIOResultErrorInfoAlert(result, null);
+        verifyNoInteractions(onSaveSuccess);
+    }
+
+    @Test
+    void onExportFinished_WithErrors_ShouldStillRunAnOperationThatRunsInAnyCase(@TempDir Path folder) {
+        chooseSaveFormat(ImageAnnotationSaveStrategy.Type.JSON);
+        when(dialogService.displayFileChooserAndGetChoice(any(), any(), any(), any(), any(), any()))
+                .thenReturn(DESTINATION);
+        // E.g. reloading a folder that changed on disk.
+        final Runnable operation = mock(Runnable.class);
+        annotationIoController.saveWithFormatChoiceAndRunInAnyCase(operation);
+        final ArgumentCaptor<Runnable> afterExport = ArgumentCaptor.forClass(Runnable.class);
+        verify(operations).startExport(any(), any(), afterExport.capture());
+
+        annotationIoController.onExportFinished(exportResultWithError(), folder.toFile(), afterExport.getValue(),
+                                                mock(ProgressViewer.class));
+
+        verify(operation).run();
     }
 
     @Test
@@ -376,6 +400,10 @@ class AnnotationIoControllerTest {
         inOrder.verify(operations).isRestoringAutosave();
         inOrder.verify(operations).onAnnotationsImported(true);
         assertEquals(previousFolder, ioMetaData.getDefaultAnnotationLoadingDirectory());
+    }
+
+    private static ImageAnnotationExportResult exportResultWithError() {
+        return new ImageAnnotationExportResult(1, List.of(new IOErrorInfoEntry("b.xml", "Could not write the file.")));
     }
 
     private static ImageAnnotationImportResult importResult(int nrImported, List<IOErrorInfoEntry> errors) {
