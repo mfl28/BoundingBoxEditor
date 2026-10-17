@@ -18,6 +18,7 @@
  */
 package com.github.mfl28.boundingboxeditor.model.io.services;
 
+import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
 import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.model.io.BoundingBoxPredictor;
@@ -44,6 +45,8 @@ public class BoundingBoxPredictorService extends IoService<BoundingBoxPrediction
     private final ObjectProperty<List<File>> imageFiles = new SimpleObjectProperty<>(this, "imageFiles");
     private final ObjectProperty<Map<String, ImageMetaData>> fileNameToMetaData =
             new SimpleObjectProperty<>(this, "fileNameToMetaData");
+    private final ObjectProperty<Map<String, ImageAnnotation>> fileNameToAnnotation =
+            new SimpleObjectProperty<>(this, "fileNameToAnnotation", Map.of());
 
     private final ObjectProperty<Map<String, ObjectCategory>> categoryNameToCategoryMap =
             new SimpleObjectProperty<>(this, "categoryNameToCategoryMap");
@@ -61,6 +64,15 @@ public class BoundingBoxPredictorService extends IoService<BoundingBoxPrediction
 
     public void setFileNameToMetaData(Map<String, ImageMetaData> fileNameToMetaData) {
         this.fileNameToMetaData.set(fileNameToMetaData);
+    }
+
+    /**
+     * Sets the images' existing annotations. Predicted boxes that duplicate an existing shape are skipped.
+     *
+     * @param fileNameToAnnotation the annotations by file name
+     */
+    public void setFileNameToAnnotation(Map<String, ImageAnnotation> fileNameToAnnotation) {
+        this.fileNameToAnnotation.set(fileNameToAnnotation);
     }
 
     /**
@@ -94,9 +106,20 @@ public class BoundingBoxPredictorService extends IoService<BoundingBoxPrediction
     @Override
     protected Task<BoundingBoxPredictionResult> createTask() {
         final List<File> files = List.copyOf(imageFiles.get());
-        // Copied on the JavaFX thread, because the model's maps must not be read while it changes them.
+        // Copied on the JavaFX thread, because the model's data must not be read while it changes.
         final Map<String, ImageMetaData> metaData = new HashMap<>(fileNameToMetaData.get());
         final Map<String, ObjectCategory> categories = new HashMap<>(categoryNameToCategoryMap.get());
+        final Map<String, List<BoundingBoxPredictor.ShapeBounds>> existingShapes = new HashMap<>();
+
+        for(File file : files) {
+            final ImageAnnotation annotation = fileNameToAnnotation.get().get(file.getName());
+
+            if(annotation != null) {
+                existingShapes.put(file.getName(),
+                        BoundingBoxPredictor.ShapeBounds.of(annotation.getBoundingShapeData()));
+            }
+        }
+
         final BoundingBoxPredictor predictor =
                 new BoundingBoxPredictor(predictorClient.get(), boundingBoxPredictorConfig.get());
         final Consumer<BoundingBoxPredictionResult> imageHandler = onImagePredicted.get();
@@ -106,7 +129,8 @@ public class BoundingBoxPredictorService extends IoService<BoundingBoxPrediction
             protected BoundingBoxPredictionResult call() throws Exception {
                 final Task<BoundingBoxPredictionResult> task = this;
 
-                return predictor.predictAll(files, metaData, categories, new BoundingBoxPredictor.Progress() {
+                return predictor.predictAll(files, metaData, existingShapes, categories,
+                                            new BoundingBoxPredictor.Progress() {
                     @Override
                     public boolean isCancelled() {
                         return task.isCancelled();

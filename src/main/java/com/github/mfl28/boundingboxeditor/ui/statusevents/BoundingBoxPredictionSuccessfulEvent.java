@@ -45,6 +45,8 @@ public class BoundingBoxPredictionSuccessfulEvent extends StatusEvent {
                 + ioResult.getNrSuccessfullyProcessedItems() + " image" +
                 (ioResult.getNrSuccessfullyProcessedItems() != 1 ? "s" : "")
                 + " in "
-                + secondsFormat.format(ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.";
+                + secondsFormat.format(ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec."
+                + (ioResult.getNrSkippedDuplicates() != 0 ? " Skipped " + ioResult.getNrSkippedDuplicates()
+                + " duplicate" + (ioResult.getNrSkippedDuplicates() != 1 ? "s" : "") + " of existing shapes." : "");
     }
 }

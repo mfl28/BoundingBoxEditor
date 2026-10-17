@@ -1232,6 +1232,7 @@ public class Controller {
             ioServices.getBoundingBoxPredictorService().setImageFiles(imageFiles);
             ioServices.getBoundingBoxPredictorService().setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
             ioServices.getBoundingBoxPredictorService().setFileNameToMetaData(model.getImageFileNameToMetaDataMap());
+            ioServices.getBoundingBoxPredictorService().setFileNameToAnnotation(model.getImageFileNameToAnnotationMap());
             ioServices.getBoundingBoxPredictorService().setOnImagePredicted(Controller.this::onImagePredicted);
             ioServices.getBoundingBoxPredictorService().setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
             ioServices.getBoundingBoxPredictorService().setPredictorClient(predictorClient);

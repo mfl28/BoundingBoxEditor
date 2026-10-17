@@ -268,6 +268,24 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
                            .allMatch(ImageFileListView.FileInfo::isHasAssignedBoundingShapes), Matchers.is(true),
                    saveScreenshot(testinfo));
         verifyThat(model.isSaved(), Matchers.is(false));
+
+        // Predicting all images again finds only the same boxes, which are skipped as duplicates.
+        final BoundingBoxPredictionResult firstRunResult =
+                WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L,
+                                                 controller.getBoundingBoxPredictorService()::getValue);
+
+        timeOutClickOn(robot, "#predict-button .arrow-button", testinfo);
+        timeOutClickOn(robot, "#predict-all-menu-item", testinfo);
+
+        final Stage predictAgainDialog = timeOutGetTopModalStage(robot, "Predict All Listed Images", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, predictAgainDialog, "Yes", testinfo);
+        waitForANewSuccessfulResult(firstRunResult, testinfo);
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                   Matchers.endsWith("Skipped " + nrImages + " duplicates of existing shapes."),
+                   saveScreenshot(testinfo));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("foo"), Matchers.equalTo(nrImages));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
     }
 
     /**
