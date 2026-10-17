@@ -49,10 +49,6 @@ public class BoundingBoxPredictor {
     // Stops predicting further images when the server keeps failing (e.g. it is not running), instead of
     // waiting for every request to fail.
     private static final int MAX_CONSECUTIVE_FAILURES = 3;
-    // A predicted box overlapping an existing shape of the same category at least this much (intersection over
-    // union) is considered the same object, and skipped. Lower values would also skip neighbouring objects of the
-    // same category that overlap (e.g. people in a crowd).
-    static final double DUPLICATE_MIN_INTERSECTION_OVER_UNION = 0.7;
     private static final String TOO_MANY_FAILURES_ERROR_MESSAGE = "Stopped after the predictions for "
             + MAX_CONSECUTIVE_FAILURES + " images in a row failed.";
     private final BoundingBoxPredictorClient client;
@@ -73,7 +69,7 @@ public class BoundingBoxPredictor {
 
     /**
      * Predicts bounding boxes for an image, skipping predicted boxes that duplicate one of the image's existing
-     * shapes.
+     * shapes (if switched on in the {@link BoundingBoxPredictorConfig}).
      *
      * @param imageFile                         the image file
      * @param imageMetaData                     the image's metadata
@@ -135,7 +131,7 @@ public class BoundingBoxPredictor {
      * @param imageFiles                        the image files
      * @param fileNameToMetaData                the metadata of the image files, by file name
      * @param fileNameToExistingShapes          the bounds of the images' existing shapes, by file name (images
-     *                                          without shapes may be missing); predicted duplicates are skipped
+     *                                          without shapes may be missing), for skipping predicted duplicates
      * @param existingCategoryNameToCategoryMap the existing categories, which are not changed: new categories are
      *                                          added to a copy, and each image's result contains a copy
      *                                          of the categories created so far
@@ -333,7 +329,7 @@ public class BoundingBoxPredictor {
                 Map<String, Integer> categoryNameToShapeCount, List<ShapeBounds> existingShapes) {
             this.existingCategoryNameToCategoryMap = existingCategoryNameToCategoryMap;
             this.categoryNameToShapeCount = categoryNameToShapeCount;
-            this.existingShapes = existingShapes;
+            this.existingShapes = predictorConfig.isSkipDuplicates() ? existingShapes : List.of();
 
             if(predictorConfig.isMergeCategories()) {
                 mergedCategoryNameToCategoryMap = new CaseInsensitiveMap<>(existingCategoryNameToCategoryMap);
@@ -409,7 +405,8 @@ public class BoundingBoxPredictor {
 
         private boolean isDuplicate(String categoryName, double xMin, double yMin, double xMax, double yMax) {
             return existingShapes.stream().anyMatch(shape -> shape.categoryName().equals(categoryName)
-                    && shape.intersectionOverUnion(xMin, yMin, xMax, yMax) >= DUPLICATE_MIN_INTERSECTION_OVER_UNION);
+                    && shape.intersectionOverUnion(xMin, yMin, xMax, yMax)
+                    >= predictorConfig.getDuplicateMinIntersectionOverUnion());
         }
 
         private static boolean hasCoordinates(List<Double> coordinates) {

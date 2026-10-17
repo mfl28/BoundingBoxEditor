@@ -54,6 +54,8 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private static final String RESIZE_IMAGES_HEIGHT_LABEL_TEXT = "Height";
     private static final String RESIZE_IMAGES_KEEP_RATIO_LABEL_TEXT = "Keep ratio";
     private static final String MERGE_CATEGORIES_LABEL_TEXT = "Merge categories";
+    private static final String SKIP_DUPLICATES_LABEL_TEXT = "Skip duplicates";
+    private static final String DUPLICATE_MIN_IOU_LABEL_TEXT = "Minimum overlap (IoU)";
     private static final String SUBGROUP_TITLE_LABEL_ID = "subgroup-title-label";
     private static final String SETTINGS_SUBGROUP_BOX_ID = "settings-subgroup-box";
     private static final String SERVERS_SUBGROUP_TITLE = "Server";
@@ -79,6 +81,12 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private static final String MINIMUM_SCORE_TOOLTIP = "Score threshold for bounding box predictions";
     private static final String MERGE_CATEGORIES_TOOLTIP =
             "Merge categories of predictions with existing categories case-insensitively";
+    private static final String SKIP_DUPLICATES_TOOLTIP =
+            "Skip predicted boxes that overlap an existing box or polygon of the same category";
+    private static final String DUPLICATE_MIN_IOU_TOOLTIP = "Overlap (intersection over union, from 0 to 1) from "
+            + "which a predicted box counts as a duplicate";
+    private static final String SKIP_DUPLICATES_CONTROL_ID = "skip-duplicates-control";
+    private static final String DUPLICATE_MIN_IOU_CONTROL_ID = "duplicate-min-iou-control";
     private static final String RESIZE_IMAGES_TOOLTIP = "Resize images before performing prediction";
     private static final String INFERENCE_PORT_TOOLTIP = "Inference server port";
     private static final String INFERENCE_ADDRESS_TOOLTIP = "Inference server address";
@@ -98,6 +106,8 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     private final TextField imageResizeHeightField = new TextField();
     private final CheckBox keepImageRatioControl = new CheckBox();
     private final CheckBox mergeCategoriesControl = new CheckBox();
+    private final CheckBox skipDuplicatesControl = new CheckBox();
+    private final Spinner<Double> duplicateMinIouControl = new Spinner<>(0.05, 1.0, 0.7, 0.05);
     private final ComboBox<ServiceType> serviceTypeControl =
             new ComboBox<>(FXCollections.observableArrayList(ServiceType.values()));
     private final TextField predictionPathField = new TextField();
@@ -142,10 +152,11 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         boolean managementServerDataValid = !isTorchServeSelected() || validateManagementServerData();
         boolean predictionPathValid = isTorchServeSelected() || validatePredictionPathData();
         boolean minimumScoreControlDataValid = validateMinimumScoreControlData();
+        boolean duplicateMinIouControlDataValid = validateSpinnerData(duplicateMinIouControl);
         boolean resizeImagesControlDataValid = validateResizeImagesControlData();
 
         return inferenceDataValid && managementServerDataValid && predictionPathValid &&
-                minimumScoreControlDataValid && resizeImagesControlDataValid;
+                minimumScoreControlDataValid && duplicateMinIouControlDataValid && resizeImagesControlDataValid;
     }
 
     /**
@@ -165,6 +176,7 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         managementPortField.pseudoClassStateChanged(invalidValuePseudoClass, false);
         predictionPathField.pseudoClassStateChanged(invalidValuePseudoClass, false);
         minimumScoreControl.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, false);
+        duplicateMinIouControl.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, false);
         imageResizeWidthField.pseudoClassStateChanged(invalidValuePseudoClass, false);
         imageResizeHeightField.pseudoClassStateChanged(invalidValuePseudoClass, false);
     }
@@ -203,6 +215,12 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
 
         config.setMinimumScore(minimumScoreControl.getValue());
         config.setMergeCategories(mergeCategoriesControl.isSelected());
+        config.setSkipDuplicates(skipDuplicatesControl.isSelected());
+
+        if(skipDuplicatesControl.isSelected()) {
+            config.setDuplicateMinIntersectionOverUnion(duplicateMinIouControl.getValue());
+        }
+
         config.setResizeImages(resizeImagesControl.isSelected());
 
         if(resizeImagesControl.isSelected()) {
@@ -220,6 +238,8 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         imageResizeHeightField.setText(Integer.toString(config.getImageResizeHeight()));
         keepImageRatioControl.setSelected(config.getImageResizeKeepRatio());
         mergeCategoriesControl.setSelected(config.isMergeCategories());
+        skipDuplicatesControl.setSelected(config.isSkipDuplicates());
+        duplicateMinIouControl.getValueFactory().setValue(config.getDuplicateMinIntersectionOverUnion());
     }
 
     @Override
@@ -247,6 +267,10 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         keepImageRatioControl.selectedProperty()
                              .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
         mergeCategoriesControl.selectedProperty()
+                              .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
+        skipDuplicatesControl.selectedProperty()
+                             .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
+        duplicateMinIouControl.valueProperty()
                               .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
         serviceTypeControl.valueProperty()
                           .addListener((observable, oldValue, newValue) -> applyButton.setDisable(false));
@@ -304,6 +328,14 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         return keepImageRatioControl;
     }
 
+    public CheckBox getSkipDuplicatesControl() {
+        return skipDuplicatesControl;
+    }
+
+    public Spinner<Double> getDuplicateMinIouControl() {
+        return duplicateMinIouControl;
+    }
+
     public CheckBox getMergeCategoriesControl() {
         return mergeCategoriesControl;
     }
@@ -333,14 +365,12 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
     }
 
     private boolean validateMinimumScoreControlData() {
-        boolean valid = true;
+        return validateSpinnerData(minimumScoreControl);
+    }
 
-        if(minimumScoreControl.getEditor().getText() == null || minimumScoreControl.getEditor().getText().isBlank()) {
-            minimumScoreControl.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, true);
-            valid = false;
-        } else {
-            minimumScoreControl.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, false);
-        }
+    private static boolean validateSpinnerData(Spinner<Double> spinner) {
+        final boolean valid = spinner.getEditor().getText() != null && !spinner.getEditor().getText().isBlank();
+        spinner.getEditor().pseudoClassStateChanged(invalidValuePseudoClass, !valid);
         return valid;
     }
 
@@ -418,6 +448,7 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         addSubgroupTitleRow(PREDICTION_SUBGROUP_TITLE, ++rowIndex);
         addMinimumPredictionScoreRow(++rowIndex);
         addPredictionMergeCategoryChoiceRow(++rowIndex);
+        addSkipDuplicatesRow(++rowIndex);
         addSubgroupTitleRow(PREPROCESSING_SUBGROUP_TITLE, ++rowIndex);
         addImageResizePreprocessingSetupRow(++rowIndex);
     }
@@ -612,6 +643,30 @@ public class InferenceSettingsView extends GridPane implements View, ApplyButton
         mergeCategoriesLabel.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
 
         addRow(row, mergeCategoriesLabel, mergeCategoriesControl);
+    }
+
+    private void addSkipDuplicatesRow(int row) {
+        skipDuplicatesControl.setId(SKIP_DUPLICATES_CONTROL_ID);
+        duplicateMinIouControl.setId(DUPLICATE_MIN_IOU_CONTROL_ID);
+        duplicateMinIouControl.setEditable(true);
+        duplicateMinIouControl.getValueFactory().setConverter(UiUtils.createFloatConverter());
+        duplicateMinIouControl.getEditor().setTextFormatter(UiUtils.createFloatFormatter());
+
+        final Label minIouLabel = new Label(DUPLICATE_MIN_IOU_LABEL_TEXT);
+        Tooltip.install(minIouLabel, UiUtils.createTooltip(DUPLICATE_MIN_IOU_TOOLTIP));
+        final HBox minIouBox = new HBox(minIouLabel, duplicateMinIouControl);
+        minIouBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
+        minIouBox.visibleProperty().bind(skipDuplicatesControl.selectedProperty());
+
+        final HBox controlBox = new HBox(skipDuplicatesControl, minIouBox);
+        controlBox.getStyleClass().add(SETTINGS_ENTRY_BOX_STYLE_CLASS);
+        controlBox.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
+
+        final Label skipDuplicatesLabel = new Label(SKIP_DUPLICATES_LABEL_TEXT);
+        Tooltip.install(skipDuplicatesLabel, UiUtils.createTooltip(SKIP_DUPLICATES_TOOLTIP));
+        skipDuplicatesLabel.visibleProperty().bind(inferenceEnabledControl.selectedProperty());
+
+        addRow(row, skipDuplicatesLabel, controlBox);
     }
 
     private void addSubgroupTitleRow(String title, int row) {

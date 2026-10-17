@@ -186,6 +186,10 @@ class SettingsTests extends BoundingBoxEditorTestBase {
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getMergeCategoriesControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
+        verifyThat(inferenceSettingsView.getSkipDuplicatesControl().isVisible(), Matchers.is(true),
+                   saveScreenshot(testinfo));
+        verifyThat(inferenceSettingsView.getDuplicateMinIouControl().isVisible(), Matchers.is(true),
+                   saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getResizeImagesControl().isVisible(), Matchers.is(true),
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getImageResizeWidthField().isVisible(), Matchers.is(true),
@@ -218,6 +222,10 @@ class SettingsTests extends BoundingBoxEditorTestBase {
         verifyThat(inferenceSettingsView.getMinimumScoreControl().getEditor().getText(), Matchers.equalTo("0.5"),
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getMergeCategoriesControl().isSelected(), Matchers.is(true),
+                   saveScreenshot(testinfo));
+        verifyThat(inferenceSettingsView.getSkipDuplicatesControl().isSelected(), Matchers.is(true),
+                   saveScreenshot(testinfo));
+        verifyThat(inferenceSettingsView.getDuplicateMinIouControl().getEditor().getText(), Matchers.equalTo("0.7"),
                    saveScreenshot(testinfo));
         verifyThat(inferenceSettingsView.getResizeImagesControl().isSelected(), Matchers.is(true),
                    saveScreenshot(testinfo));

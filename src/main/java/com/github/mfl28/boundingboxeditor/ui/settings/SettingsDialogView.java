@@ -100,14 +100,35 @@ public class SettingsDialogView extends Dialog<ButtonType> implements View {
 
     private void setUpInternalListeners() {
         settingCategoriesView.getSelectionModel()
-                             .selectedItemProperty().addListener((observable, oldValue, newValue) ->
-                                                                         contentBox.getChildren()
-                                                                                   .setAll(categoryToContentMap
-                                                                                                   .get(newValue)));
+                             .selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                                 contentBox.getChildren().setAll(categoryToContentMap.get(newValue));
+                                 growWindowToFitContent();
+                             });
 
         setOnShowing(event -> {
             settingCategoriesView.getSelectionModel().selectFirst();
             getDialogPane().lookupButton(ButtonType.APPLY).setDisable(true);
         });
+    }
+
+    /**
+     * Makes the window taller if the shown page doesn't fit. The dialog pane can't get smaller than its content, so
+     * otherwise a taller page would push the dialog's buttons out of the window.
+     */
+    private void growWindowToFitContent() {
+        final DialogPane dialogPane = getDialogPane();
+
+        if(dialogPane.getScene() == null || dialogPane.getScene().getWindow() == null
+                || !dialogPane.getScene().getWindow().isShowing()) {
+            return;
+        }
+
+        final Window window = dialogPane.getScene().getWindow();
+        dialogPane.applyCss();
+        final double missingHeight = dialogPane.prefHeight(dialogPane.getWidth()) - dialogPane.getScene().getHeight();
+
+        if(missingHeight > 0) {
+            window.setHeight(window.getHeight() + missingHeight);
+        }
     }
 }

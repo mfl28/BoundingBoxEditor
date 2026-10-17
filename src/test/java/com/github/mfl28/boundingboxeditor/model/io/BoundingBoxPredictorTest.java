@@ -231,6 +231,26 @@ class BoundingBoxPredictorTest {
     }
 
     @Test
+    void onPrediction_ShouldSkipDuplicatesAccordingToTheSettings() throws Exception {
+        final BoundingBoxPredictorClient client = fakeClient();
+        // Relative to the 200x100 image: (0.1, 0.1)-(0.5, 0.5).
+        when(client.predict(any())).thenReturn(List.of(entry("dog", 0.9, 20.0, 10.0, 100.0, 50.0)));
+        final ObjectCategory dog = new ObjectCategory("dog", Color.RED);
+        // Overlaps the prediction with an intersection over union of 2/3.
+        final List<BoundingBoxPredictor.ShapeBounds> existingShapes = BoundingBoxPredictor.ShapeBounds.of(List.of(
+                new BoundingBoxData(dog, 0.1, 0.1, 0.5, 0.3667, new ArrayList<>())));
+        final BoundingBoxPredictorConfig predictorConfig = predictorConfig();
+
+        assertEquals(0, predictDuplicates(client, predictorConfig, dog, existingShapes));
+
+        predictorConfig.setDuplicateMinIntersectionOverUnion(0.5);
+        assertEquals(1, predictDuplicates(client, predictorConfig, dog, existingShapes));
+
+        predictorConfig.setSkipDuplicates(false);
+        assertEquals(0, predictDuplicates(client, predictorConfig, dog, existingShapes));
+    }
+
+    @Test
     void onShapeBounds_ShouldIncludeBoxesAndPolygonsButNotMasks() {
         final ObjectCategory category = new ObjectCategory("dog", Color.RED);
 
@@ -306,5 +326,14 @@ class BoundingBoxPredictorTest {
         }
 
         return fileNameToMetaData;
+    }
+
+    private int predictDuplicates(BoundingBoxPredictorClient client, BoundingBoxPredictorConfig predictorConfig,
+                                  ObjectCategory category, List<BoundingBoxPredictor.ShapeBounds> existingShapes)
+            throws Exception {
+        return new BoundingBoxPredictor(client, predictorConfig)
+                .predict(imageFile("image.jpg"), metaData("image.jpg").get("image.jpg"),
+                         new HashMap<>(Map.of(category.getName(), category)), existingShapes)
+                .getNrSkippedDuplicates();
     }
 }
