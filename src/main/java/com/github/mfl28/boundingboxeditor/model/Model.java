@@ -200,7 +200,10 @@ public class Model {
                 annotation.setImageMetaData(imageFileNameToMetaData.get(annotation.getImageFileName()));
                 imageFileNameToAnnotation.put(annotation.getImageFileName(), annotation);
             } else {
-                imageAnnotation.getBoundingShapeData().addAll(annotation.getBoundingShapeData());
+                // The existing list may be unmodifiable (e.g. the shapes taken from the view), so a new one is set.
+                final List<BoundingShapeData> mergedShapes = new ArrayList<>(imageAnnotation.getBoundingShapeData());
+                mergedShapes.addAll(annotation.getBoundingShapeData());
+                imageAnnotation.setBoundingShapeData(mergedShapes);
             }
 
             if(!annotation.getBoundingShapeData().isEmpty()) {
