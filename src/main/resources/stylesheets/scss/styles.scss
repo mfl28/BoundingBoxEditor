@@ -321,6 +321,12 @@ $base-separator-line-color: derive($base-background-color, -15%);
         -fx-text-fill: $base-font-color;
     }
 
+    // The default paddings are taller than a button's, which would make the toolbar taller.
+    & > .label,
+    & > .arrow-button {
+        -fx-padding: 4px 8px;
+    }
+
     & > .arrow-button > .arrow {
         -fx-background-color: $base-font-color;
     }
