@@ -282,7 +282,9 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         waitForANewSuccessfulResult(firstRunResult, testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                   Matchers.endsWith("Skipped " + nrImages + " duplicates of existing shapes."),
+                   Matchers.allOf(Matchers.startsWith("No new bounding boxes for " + nrImages + " images in"),
+                                  Matchers.endsWith(": all " + nrImages
+                                                            + " predicted boxes duplicate existing shapes.")),
                    saveScreenshot(testinfo));
         verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("foo"), Matchers.equalTo(nrImages));
         verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
@@ -448,7 +450,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         clickPredictAndWaitForANewResult(robot, testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                Matchers.startsWith("Successfully predicted 0 bounding boxes for 1 image in"),
+                Matchers.startsWith("No bounding boxes predicted for 1 image in"),
                 saveScreenshot(testinfo));
 
         verifyThat(model.getObjectCategories().size(), Matchers.equalTo(1));
