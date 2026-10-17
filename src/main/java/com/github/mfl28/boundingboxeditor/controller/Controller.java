@@ -268,6 +268,15 @@ public class Controller {
     }
 
     /**
+     * Predicts bounding boxes for all images shown in the image list (all images, unless the list is filtered).
+     */
+    public void onRegisterPerformListedImagesBoundingBoxPredictionAction() {
+        final List<File> imageFiles = model.getImageFiles();
+        inferenceController.predictAll(imageFileFilterController.getShownItems().stream()
+                .map(item -> imageFiles.get(item.getFileIndex())).toList(), stage);
+    }
+
+    /**
      * Initiates the loading of image files from a provided folder.
      *
      * @param imageFolder the folder containing the image files to load
@@ -637,6 +646,28 @@ public class Controller {
             view.getCurrentBoundingShapes().addListener(boundingShapeCountPerCategoryListener);
             view.getObjectCategoryTable().refresh();
             view.getObjectTree().refresh();
+        }
+    }
+
+    /**
+     * Adds the predictions for one image to the model, while the prediction service may still be predicting further
+     * images.
+     */
+    private void onImagePredicted(BoundingBoxPredictionResult result) {
+        if(result.getNrSuccessfullyProcessedItems() == 0) {
+            return;
+        }
+
+        model.updateFromImageAnnotationData(result.getImageAnnotationData(), result.getOperationType());
+
+        if(model.containsImageFiles() && result.getImageAnnotationData().imageAnnotations().stream()
+                .anyMatch(annotation -> annotation.getImageFileName().equals(model.getCurrentImageFileName()))) {
+            reloadCurrentAnnotationInView();
+        }
+
+        // Late results of a cancelled run arrive after the cancellation was handled.
+        if(!ioServices.getBoundingBoxPredictorService().isRunning()) {
+            updateViewFileExplorerFileInfoElements();
         }
     }
 
@@ -1196,12 +1227,12 @@ public class Controller {
         }
 
         @Override
-        public void startPrediction(File imageFile, BoundingBoxPredictorClient predictorClient) {
+        public void startPrediction(List<File> imageFiles, BoundingBoxPredictorClient predictorClient) {
             ioServices.getBoundingBoxPredictorService().reset();
-            ioServices.getBoundingBoxPredictorService().setImageFile(imageFile);
+            ioServices.getBoundingBoxPredictorService().setImageFiles(imageFiles);
             ioServices.getBoundingBoxPredictorService().setCategoryNameToCategoryMap(model.getCategoryNameToCategoryMap());
-            ioServices.getBoundingBoxPredictorService().setImageMetaData(
-                    model.getImageFileNameToMetaDataMap().get(imageFile.getName()));
+            ioServices.getBoundingBoxPredictorService().setFileNameToMetaData(model.getImageFileNameToMetaDataMap());
+            ioServices.getBoundingBoxPredictorService().setOnImagePredicted(Controller.this::onImagePredicted);
             ioServices.getBoundingBoxPredictorService().setBoundingBoxPredictorConfig(model.getBoundingBoxPredictorConfig());
             ioServices.getBoundingBoxPredictorService().setPredictorClient(predictorClient);
             ioServices.getBoundingBoxPredictorService().restart();
@@ -1392,22 +1423,24 @@ public class Controller {
 
         @Override
         public void onBoundingBoxesPredicted(WorkerStateEvent event) {
+            // The predicted shapes were already added to the model image by image (see onImagePredicted).
             final BoundingBoxPredictionResult predictionResult = ioServices.getBoundingBoxPredictorService().getValue();
 
             if(predictionResult.getNrSuccessfullyProcessedItems() != 0) {
-                model.updateFromImageAnnotationData(predictionResult.getImageAnnotationData(),
-                        predictionResult.getOperationType());
                 view.getStatusBar().setStatusEvent(new BoundingBoxPredictionSuccessfulEvent(predictionResult));
             }
 
             updateViewFileExplorerFileInfoElements();
 
-            reloadCurrentAnnotationInView();
-
             if(!predictionResult.getErrorTableEntries().isEmpty()) {
                 ioServices.getBoundingBoxPredictorService().getProgressViewer().hideProgress();
                 dialogService.displayIOResultErrorInfoAlert(predictionResult, stage);
             }
+        }
+
+        @Override
+        public void onBoundingBoxPredictionCancelled(WorkerStateEvent event) {
+            updateViewFileExplorerFileInfoElements();
         }
 
         @Override
@@ -1428,6 +1461,10 @@ public class Controller {
         public void onFailed(IoService<?> service) {
             if(ioServices.getAnnotationImportService().equals(service) && autosaveController.isRestoring()) {
                 autosaveController.onRestoreFailed();
+            }
+
+            if(ioServices.getBoundingBoxPredictorService().equals(service)) {
+                updateViewFileExplorerFileInfoElements();
             }
         }
     }

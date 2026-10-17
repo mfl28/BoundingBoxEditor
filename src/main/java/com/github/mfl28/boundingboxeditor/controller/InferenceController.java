@@ -19,6 +19,7 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.model.Model;
+import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.GsonMessageBodyHandler;
@@ -27,6 +28,7 @@ import com.github.mfl28.boundingboxeditor.model.io.results.ServerConnectionCheck
 import com.github.mfl28.boundingboxeditor.ui.DialogService;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
+import javafx.scene.control.ButtonBar;
 import javafx.stage.Window;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -37,8 +39,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Handles the connection to the inference server: managing the REST client, fetching the available models and
- * letting the user choose one, and starting bounding box predictions. Running the requests is delegated to the
- * {@link Operations}.
+ * letting the user choose one, and starting bounding box predictions for one or several images. Running the
+ * requests is delegated to the {@link Operations}.
  */
 class InferenceController {
     private static final long CLIENT_CONNECT_TIMEOUT_SECONDS = 10;
@@ -52,6 +54,7 @@ class InferenceController {
     private static final String MODEL_CHOICE_DIALOG_CONTENT = "Model:";
     private static final String CONNECTION_CHECK_DIALOG_TITLE = "Connection Check";
     private static final String CONNECTION_CHECK_SUCCESS_DIALOG_HEADER = "The inference server is available.";
+    static final String PREDICT_ALL_DIALOG_TITLE = "Predict All Listed Images";
 
     private final Model model;
     private final DialogService dialogService;
@@ -76,12 +79,12 @@ class InferenceController {
         void startModelNameFetching(BoundingBoxPredictorClient predictorClient);
 
         /**
-         * Starts predicting bounding boxes for the provided image.
+         * Starts predicting bounding boxes for the provided images, one after the other.
          *
-         * @param imageFile       the image file
+         * @param imageFiles      the image files
          * @param predictorClient the client to use
          */
-        void startPrediction(File imageFile, BoundingBoxPredictorClient predictorClient);
+        void startPrediction(List<File> imageFiles, BoundingBoxPredictorClient predictorClient);
 
         /**
          * Starts checking that the inference server is available. The result is expected to be passed to
@@ -220,7 +223,67 @@ class InferenceController {
      */
     void predict(File imageFile) {
         operations.updateModelFromView();
-        operations.startPrediction(imageFile,
+        startPrediction(List.of(imageFile));
+    }
+
+    /**
+     * Starts predicting bounding boxes for several images. If some of them already have annotations, the user
+     * chooses whether to add the predictions to these images too, or to skip them.
+     *
+     * @param imageFiles the image files
+     * @param owner      the owner window of the shown dialog
+     */
+    void predictAll(List<File> imageFiles, Window owner) {
+        if(imageFiles.isEmpty()) {
+            return;
+        }
+
+        operations.updateModelFromView();
+
+        final List<File> unannotatedImageFiles = imageFiles.stream().filter(this::hasNoAnnotations).toList();
+        final int nrAnnotated = imageFiles.size() - unannotatedImageFiles.size();
+
+        if(nrAnnotated == 0) {
+            startPrediction(imageFiles);
+            return;
+        }
+
+        if(unannotatedImageFiles.isEmpty()) {
+            if(dialogService.displayYesNoDialogAndGetResult(PREDICT_ALL_DIALOG_TITLE,
+                    createPredictAllNotice(nrAnnotated, imageFiles.size())
+                            + "\nAdd the predicted bounding boxes to them anyway?", owner) == ButtonBar.ButtonData.YES) {
+                startPrediction(imageFiles);
+            }
+            return;
+        }
+
+        final ButtonBar.ButtonData answer = dialogService.displayYesNoCancelDialogAndGetResult(PREDICT_ALL_DIALOG_TITLE,
+                createPredictAllNotice(nrAnnotated, imageFiles.size())
+                        + "\nAdd the predicted bounding boxes to them too?\n\n"
+                        + "Yes: predict all " + imageFiles.size() + " images.\n"
+                        + "No: predict only the " + unannotatedImageFiles.size() + " image"
+                        + (unannotatedImageFiles.size() != 1 ? "s" : "") + " without annotations.", owner);
+
+        if(answer == ButtonBar.ButtonData.YES) {
+            startPrediction(imageFiles);
+        } else if(answer == ButtonBar.ButtonData.NO) {
+            startPrediction(unannotatedImageFiles);
+        }
+    }
+
+    private void startPrediction(List<File> imageFiles) {
+        operations.startPrediction(imageFiles,
                 BoundingBoxPredictorClient.create(client, model.getBoundingBoxPredictorClientConfig()));
+    }
+
+    private boolean hasNoAnnotations(File imageFile) {
+        final ImageAnnotation annotation = model.getImageFileNameToAnnotationMap().get(imageFile.getName());
+        return annotation == null || annotation.getBoundingShapeData().isEmpty();
+    }
+
+    private static String createPredictAllNotice(int nrAnnotated, int nrImages) {
+        return (nrAnnotated == nrImages ? (nrImages == 1 ? "The image already has" : "All " + nrImages
+                + " images already have") : nrAnnotated + " of the " + nrImages + " images already "
+                + (nrAnnotated == 1 ? "has" : "have")) + " annotations.";
     }
 }

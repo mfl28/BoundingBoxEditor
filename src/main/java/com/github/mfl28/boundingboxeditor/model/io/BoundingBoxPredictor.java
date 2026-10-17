@@ -45,6 +45,11 @@ public class BoundingBoxPredictor {
             + "and were skipped. Expected: {\"<category>\": [xmin, ymin, xmax, ymax], \"score\": <score>}.";
     private static final String OUTSIDE_PREDICTIONS_ERROR_MESSAGE =
             " predicted box(es) did not overlap the image and were skipped.";
+    // Stops predicting further images when the server keeps failing (e.g. it is not running), instead of
+    // waiting for every request to fail.
+    private static final int MAX_CONSECUTIVE_FAILURES = 3;
+    private static final String TOO_MANY_FAILURES_ERROR_MESSAGE = "Stopped after the predictions for "
+            + MAX_CONSECUTIVE_FAILURES + " images in a row failed.";
     private final BoundingBoxPredictorClient client;
     private final BoundingBoxPredictorConfig predictorConfig;
     private double predictedImageWidth;
@@ -100,6 +105,61 @@ public class BoundingBoxPredictor {
         });
     }
 
+    /**
+     * Predicts bounding boxes for several images, one after the other. Each image's result is passed to the
+     * {@link Progress} as soon as it is available, so that the predictions made so far are kept when the run is
+     * cancelled.
+     *
+     * @param imageFiles                        the image files
+     * @param fileNameToMetaData                the metadata of the image files, by file name
+     * @param existingCategoryNameToCategoryMap the existing categories, which are not changed: new categories are
+     *                                          added to a copy, and each image's result contains a copy
+     *                                          of the categories created so far
+     * @param progress                          receives the results and tells whether to stop
+     * @return the combined result of all predicted images
+     */
+    public BoundingBoxPredictionResult predictAll(List<File> imageFiles, Map<String, ImageMetaData> fileNameToMetaData,
+                                                  Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
+                                                  Progress progress) throws Exception {
+        return IOOperationTimer.time(() -> {
+            final Map<String, ObjectCategory> categoryNameToCategory =
+                    new HashMap<>(existingCategoryNameToCategoryMap);
+            final List<ImageAnnotation> imageAnnotations = new ArrayList<>();
+            final Map<String, Integer> categoryToCount = new HashMap<>();
+            final List<IOErrorInfoEntry> errorInfoEntries = new ArrayList<>();
+            int nrPredictedImages = 0;
+            int nrConsecutiveFailures = 0;
+
+            for(int i = 0; i < imageFiles.size() && !progress.isCancelled(); ++i) {
+                final File imageFile = imageFiles.get(i);
+                final BoundingBoxPredictionResult result =
+                        predict(imageFile, fileNameToMetaData.get(imageFile.getName()), categoryNameToCategory);
+                final ImageAnnotationData data = result.getImageAnnotationData();
+
+                imageAnnotations.addAll(data.imageAnnotations());
+                data.categoryNameToBoundingShapeCountMap().forEach((name, count) ->
+                        categoryToCount.merge(name, count, Integer::sum));
+                errorInfoEntries.addAll(result.getErrorTableEntries());
+                nrPredictedImages += result.getNrSuccessfullyProcessedItems();
+
+                progress.onImagePredicted(new BoundingBoxPredictionResult(result.getNrSuccessfullyProcessedItems(),
+                        result.getErrorTableEntries(), new ImageAnnotationData(data.imageAnnotations(),
+                        data.categoryNameToBoundingShapeCountMap(), new HashMap<>(categoryNameToCategory))),
+                        i + 1, imageFiles.size());
+
+                nrConsecutiveFailures = result.getNrSuccessfullyProcessedItems() == 0 ? nrConsecutiveFailures + 1 : 0;
+
+                if(nrConsecutiveFailures == MAX_CONSECUTIVE_FAILURES && i + 1 < imageFiles.size()) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(client.getName(), TOO_MANY_FAILURES_ERROR_MESSAGE));
+                    break;
+                }
+            }
+
+            return new BoundingBoxPredictionResult(nrPredictedImages, errorInfoEntries,
+                    new ImageAnnotationData(imageAnnotations, categoryToCount, categoryNameToCategory));
+        });
+    }
+
     private InputStream createInputStream(File imageFile, ImageMetaData imageMetaData) throws IOException {
         if(shouldResize()) {
             Image image = new Image(
@@ -143,6 +203,27 @@ public class BoundingBoxPredictor {
             ImageIO.write(bufferedImage, DEFAULT_IMAGE_STREAM_FORMAT_NAME, outputStream);
             return new ByteArrayInputStream(outputStream.toByteArray());
         }
+    }
+
+    /**
+     * Receives the results of {@link #predictAll} while it runs.
+     */
+    public interface Progress {
+        /**
+         * Returns whether the remaining images should not be predicted.
+         *
+         * @return true to stop
+         */
+        boolean isCancelled();
+
+        /**
+         * Called after an image was predicted, also when its prediction failed.
+         *
+         * @param result            the image's result
+         * @param nrProcessedImages the number of images processed so far
+         * @param nrImages          the number of images to predict
+         */
+        void onImagePredicted(BoundingBoxPredictionResult result, int nrProcessedImages, int nrImages);
     }
 
     private class PredictionExtractor {
