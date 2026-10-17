@@ -26,6 +26,7 @@ import com.github.mfl28.boundingboxeditor.model.io.restclients.TorchServeRestCli
 import com.github.mfl28.boundingboxeditor.model.io.results.BoundingBoxPredictionResult;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import com.github.mfl28.boundingboxeditor.model.io.services.BoundingBoxPredictorService;
+import com.github.mfl28.boundingboxeditor.ui.ImageFileListView;
 import com.google.gson.JsonSyntaxException;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
@@ -157,6 +158,143 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
 
         verifyThat(model.getObjectCategories().size(), Matchers.equalTo(1));
 
+        enableInferenceWithMockedServers(robot, testinfo);
+
+        verifyInferenceConnectionErrorHandling(robot, testinfo);
+        verifyInferenceProcessingErrorHandling(robot, testinfo);
+        verifyInferenceNonOkResponseErrorHandling(robot, testinfo);
+        verifyInferenceEntityReadingErrorHandling(robot, testinfo);
+        verifyInferenceJsonSyntaxErrorHandling(robot, testinfo);
+        verifyInferenceNoBoundingBoxPredictionsReceivedHandling(robot, testinfo);
+
+        List<BoundingBoxPredictionEntry> testPredictions = new ArrayList<>();
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("foo", List.of(100.0, 100.0, 200.0, 200.0)),
+                0.7));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("foo", List.of(250.0, 250.0, 300.0, 275.0)),
+                0.9));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("bar", List.of(50.0, 100.0, 150.0, 175.0)),
+                0.3));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("bar", List.of(75.0, 150.0, 225.0, 275.0)),
+                0.8));
+
+        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 2, 1);
+
+        Platform.runLater(() -> mainView.getImageFileListView().getSelectionModel().select(5));
+
+        WaitForAsyncUtils.waitForFxEvents();
+        waitUntilCurrentImageIsLoaded(testinfo);
+        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 4, 2);
+
+        Platform.runLater(() -> mainView.getImageFileListView().getSelectionModel().select(6));
+
+        WaitForAsyncUtils.waitForFxEvents();
+        waitUntilCurrentImageIsLoaded(testinfo);
+
+        timeOutClickOn(robot, "#file-menu", testinfo);
+        timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
+
+        final Stage settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
+
+        robot.clickOn(mainView.getInferenceSettingsView().getResizeImagesControl());
+
+        robot.clickOn(((DialogPane) settingsStage.getScene().getRoot()).lookupButton(ButtonType.OK));
+
+        timeOutAssertNoTopModelStage(robot, testinfo);
+
+        testPredictions = new ArrayList<>();
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("foo", List.of(10.0, 10.0, 20.0, 20.0)),
+                0.7));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("foo", List.of(25.0, 25.0, 30.0, 27.0)),
+                0.9));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("bar", List.of(5.0, 10.0, 15.0, 17.0)),
+                0.3));
+        testPredictions.add(new BoundingBoxPredictionEntry(
+                Map.of("bar", List.of(7.0, 15.0, 22.0, 27.0)),
+                0.8));
+
+        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 6, 3);
+
+        Platform.runLater(() -> mainView.getImageFileListView().getSelectionModel().select(1));
+
+        WaitForAsyncUtils.waitForFxEvents();
+        waitUntilCurrentImageIsLoaded(testinfo);
+
+        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 8, 4);
+    }
+
+
+    @Test
+    void onPredictAllListedImagesRequested_ShouldPredictTheChosenImages(FxRobot robot, TestInfo testinfo) {
+        waitUntilCurrentImageIsLoaded(testinfo);
+        enableInferenceWithMockedServers(robot, testinfo);
+
+        when(mockInferenceInvocationBuilder.post(Mockito.any())).thenReturn(mockPredictionResponse);
+        when(mockPredictionResponse.getStatusInfo()).thenReturn(Response.Status.OK);
+        when(mockPredictionResponse.readEntity(new GenericType<List<BoundingBoxPredictionEntry>>() {
+        })).thenReturn(List.of(new BoundingBoxPredictionEntry(Map.of("foo", List.of(10.0, 10.0, 50.0, 50.0)), 0.9)));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        clickPredictAndWaitForANewResult(robot, testinfo);
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
+
+        final int nrImages = model.getImageFiles().size();
+        final BoundingBoxPredictionResult previousResult =
+                WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L,
+                                                 controller.getBoundingBoxPredictorService()::getValue);
+
+        timeOutClickOn(robot, "#predict-button .arrow-button", testinfo);
+        timeOutClickOn(robot, "#predict-all-menu-item", testinfo);
+
+        // The current image already has a prediction, so only the others are predicted.
+        final Stage predictAllDialog = timeOutGetTopModalStage(robot, "Predict All Listed Images", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, predictAllDialog, "No", testinfo);
+        waitForANewSuccessfulResult(previousResult, testinfo);
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                   Matchers.startsWith("Successfully predicted " + (nrImages - 1) + " bounding boxes for "
+                                               + (nrImages - 1) + " images in"), saveScreenshot(testinfo));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("foo"), Matchers.equalTo(nrImages));
+        verifyThat(model.getObjectCategories().size(), Matchers.equalTo(1));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
+        verifyThat(mainView.getImageFileListView().getItems().stream()
+                           .allMatch(ImageFileListView.FileInfo::isHasAssignedBoundingShapes), Matchers.is(true),
+                   saveScreenshot(testinfo));
+        verifyThat(model.isSaved(), Matchers.is(false));
+
+        // Predicting all images again finds only the same boxes, which are skipped as duplicates.
+        final BoundingBoxPredictionResult firstRunResult =
+                WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L,
+                                                 controller.getBoundingBoxPredictorService()::getValue);
+
+        timeOutClickOn(robot, "#predict-button .arrow-button", testinfo);
+        timeOutClickOn(robot, "#predict-all-menu-item", testinfo);
+
+        final Stage predictAgainDialog = timeOutGetTopModalStage(robot, "Predict All Listed Images", testinfo);
+        timeOutLookUpInStageAndClickOn(robot, predictAgainDialog, "Yes", testinfo);
+        waitForANewSuccessfulResult(firstRunResult, testinfo);
+
+        verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
+                   Matchers.allOf(Matchers.startsWith("No new bounding boxes for " + nrImages + " images in"),
+                                  Matchers.endsWith(": all " + nrImages
+                                                            + " predicted boxes duplicate existing shapes.")),
+                   saveScreenshot(testinfo));
+        verifyThat(model.getCategoryToAssignedBoundingShapesCountMap().get("foo"), Matchers.equalTo(nrImages));
+        verifyThat(mainView.getCurrentBoundingShapes().size(), Matchers.equalTo(1), saveScreenshot(testinfo));
+    }
+
+    /**
+     * Enables inference in the settings, with mocked management and inference servers, and chooses the model.
+     * The predictions are mocked by the caller.
+     */
+    private void enableInferenceWithMockedServers(FxRobot robot, TestInfo testinfo) {
         timeOutClickOn(robot, "#file-menu", testinfo);
         timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
 
@@ -221,77 +359,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
 
         verifyThat(mainView.getEditor().getEditorToolBar().getPredictButton().isVisible(), Matchers.is(true),
                 saveScreenshot(testinfo));
-
-        verifyInferenceConnectionErrorHandling(robot, testinfo);
-        verifyInferenceProcessingErrorHandling(robot, testinfo);
-        verifyInferenceNonOkResponseErrorHandling(robot, testinfo);
-        verifyInferenceEntityReadingErrorHandling(robot, testinfo);
-        verifyInferenceJsonSyntaxErrorHandling(robot, testinfo);
-        verifyInferenceNoBoundingBoxPredictionsReceivedHandling(robot, testinfo);
-
-        List<BoundingBoxPredictionEntry> testPredictions = new ArrayList<>();
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("foo", List.of(100.0, 100.0, 200.0, 200.0)),
-                0.7));
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("foo", List.of(250.0, 250.0, 300.0, 275.0)),
-                0.9));
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("bar", List.of(50.0, 100.0, 150.0, 175.0)),
-                0.3));
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("bar", List.of(75.0, 150.0, 225.0, 275.0)),
-                0.8));
-
-        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 2, 1);
-
-        Platform.runLater(() -> mainView.getImageFileListView().getSelectionModel().select(5));
-
-        WaitForAsyncUtils.waitForFxEvents();
-        waitUntilCurrentImageIsLoaded(testinfo);
-        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 4, 2);
-
-        Platform.runLater(() -> mainView.getImageFileListView().getSelectionModel().select(6));
-
-        WaitForAsyncUtils.waitForFxEvents();
-        waitUntilCurrentImageIsLoaded(testinfo);
-
-        timeOutClickOn(robot, "#file-menu", testinfo);
-        timeOutClickOn(robot, "#file-settings-menu-item", testinfo);
-
-        settingsStage = timeOutGetTopModalStage(robot, "Settings", testinfo);
-        timeOutLookUpInStageAndClickOn(robot, settingsStage, "Inference", testinfo);
-
-        robot.clickOn(mainView.getInferenceSettingsView().getResizeImagesControl());
-
-        robot.clickOn(((DialogPane) settingsStage.getScene().getRoot()).lookupButton(ButtonType.OK));
-
-        timeOutAssertNoTopModelStage(robot, testinfo);
-
-        testPredictions = new ArrayList<>();
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("foo", List.of(10.0, 10.0, 20.0, 20.0)),
-                0.7));
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("foo", List.of(25.0, 25.0, 30.0, 27.0)),
-                0.9));
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("bar", List.of(5.0, 10.0, 15.0, 17.0)),
-                0.3));
-        testPredictions.add(new BoundingBoxPredictionEntry(
-                Map.of("bar", List.of(7.0, 15.0, 22.0, 27.0)),
-                0.8));
-
-        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 6, 3);
-
-        Platform.runLater(() -> mainView.getImageFileListView().getSelectionModel().select(1));
-
-        WaitForAsyncUtils.waitForFxEvents();
-        waitUntilCurrentImageIsLoaded(testinfo);
-
-        verifyInferenceBoundingBoxPredictionsReceivedHandling(robot, testinfo, testPredictions, 8, 4);
     }
-
 
     private void verifyInferenceConnectionErrorHandling(FxRobot robot, TestInfo testinfo) {
         when(mockInferenceInvocationBuilder.post(Mockito.any()))
@@ -382,7 +450,7 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
         clickPredictAndWaitForANewResult(robot, testinfo);
 
         verifyThat(mainView.getStatusBar().getCurrentEventMessage(),
-                Matchers.startsWith("Successfully predicted 0 bounding boxes for 1 image in"),
+                Matchers.startsWith("No bounding boxes predicted for 1 image in"),
                 saveScreenshot(testinfo));
 
         verifyThat(model.getObjectCategories().size(), Matchers.equalTo(1));
@@ -751,17 +819,25 @@ class TorchServeClientTest extends BoundingBoxEditorTestBase {
     }
 
     /**
-     * Clicks the predict button and waits until the prediction succeeded. The service still holds the previous
-     * prediction's successful result until the click has restarted it, so a new result is waited for.
+     * Clicks the predict button and waits until the prediction succeeded.
+     */
+    private void clickPredictAndWaitForANewResult(FxRobot robot, TestInfo testinfo) {
+        final BoundingBoxPredictionResult previousResult = WaitForAsyncUtils.waitForAsyncFx(
+                TIMEOUT_DURATION_IN_SEC * 1000L, controller.getBoundingBoxPredictorService()::getValue);
+
+        robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
+
+        waitForANewSuccessfulResult(previousResult, testinfo);
+    }
+
+    /**
+     * Waits until a prediction succeeded. The service still holds the previous prediction's successful result until
+     * it was restarted, so a new result is waited for.
      */
     // A new run's result can equal the previous one (same predictions), so it is told apart by identity.
     @SuppressWarnings("ReferenceEquality")
-    private void clickPredictAndWaitForANewResult(FxRobot robot, TestInfo testinfo) {
+    private void waitForANewSuccessfulResult(BoundingBoxPredictionResult previousResult, TestInfo testinfo) {
         final BoundingBoxPredictorService service = controller.getBoundingBoxPredictorService();
-        final BoundingBoxPredictionResult previousResult =
-                WaitForAsyncUtils.waitForAsyncFx(TIMEOUT_DURATION_IN_SEC * 1000L, service::getValue);
-
-        robot.moveTo(mainView.getEditor().getEditorToolBar().getPredictButton()).clickOn();
 
         Assertions.assertDoesNotThrow(() -> WaitForAsyncUtils.waitFor(TIMEOUT_DURATION_IN_SEC, TimeUnit.SECONDS,
                         () -> WaitForAsyncUtils.asyncFx(() -> service.getState() == Worker.State.SUCCEEDED

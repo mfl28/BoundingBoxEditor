@@ -19,21 +19,29 @@
 package com.github.mfl28.boundingboxeditor.model.io;
 
 import com.github.mfl28.boundingboxeditor.model.data.BoundingBoxData;
+import com.github.mfl28.boundingboxeditor.model.data.BoundingMaskData;
+import com.github.mfl28.boundingboxeditor.model.data.BoundingPolygonData;
 import com.github.mfl28.boundingboxeditor.model.data.BoundingShapeData;
+import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
 import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
+import com.github.mfl28.boundingboxeditor.model.data.MaskBitmap;
+import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictionEntry;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
 import com.github.mfl28.boundingboxeditor.model.io.results.BoundingBoxPredictionResult;
 import com.github.mfl28.boundingboxeditor.model.io.results.IOErrorInfoEntry;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -88,6 +96,173 @@ class BoundingBoxPredictorTest {
         assertBounds(new BoundingBox(0, 0, 1, 1), shapes.getFirst());
     }
 
+    @Test
+    void onPredictAll_ShouldReuseNewCategoriesAcrossImagesAndReportEachImage() throws Exception {
+        final BoundingBoxPredictorClient client = fakeClient();
+        when(client.predict(any())).thenReturn(List.of(entry("dog", 0.9, 20.0, 10.0, 100.0, 50.0)));
+        final Map<String, ObjectCategory> existingCategories = new HashMap<>();
+        final List<BoundingBoxPredictionResult> imageResults = new ArrayList<>();
+        final List<Integer> progress = new ArrayList<>();
+
+        final BoundingBoxPredictionResult result = new BoundingBoxPredictor(client, predictorConfig())
+                .predictAll(List.of(imageFile("a.jpg"), imageFile("b.jpg")), metaData("a.jpg", "b.jpg"), Map.of(),
+                            existingCategories, new BoundingBoxPredictor.Progress() {
+                            @Override
+                            public boolean isCancelled() {
+                                return false;
+                            }
+
+                            @Override
+                            public void onImagePredicted(BoundingBoxPredictionResult imageResult,
+                                                         int nrProcessedImages, int nrImages) {
+                                imageResults.add(imageResult);
+                                progress.add(nrProcessedImages);
+                                assertEquals(2, nrImages);
+                            }
+                        });
+
+        assertEquals(2, result.getNrSuccessfullyProcessedItems());
+        assertEquals(Map.of("dog", 2), result.getImageAnnotationData().categoryNameToBoundingShapeCountMap());
+        assertEquals(List.of(1, 2), progress);
+        assertTrue(existingCategories.isEmpty(), "The passed categories must not be changed.");
+
+        final ObjectCategory firstDog = imageResults.get(0).getImageAnnotationData().categoryNameToCategoryMap()
+                                                    .get("dog");
+        assertSame(firstDog, imageResults.get(1).getImageAnnotationData().categoryNameToCategoryMap().get("dog"));
+        assertSame(firstDog, imageResults.get(1).getImageAnnotationData().imageAnnotations().iterator().next()
+                                         .getBoundingShapeData().getFirst().getCategory());
+        assertEquals(List.of("a.jpg", "b.jpg"), result.getImageAnnotationData().imageAnnotations().stream()
+                                                      .map(ImageAnnotation::getImageFileName).toList());
+    }
+
+    @Test
+    void onPredictAll_WhenCancelled_ShouldStopBeforeTheNextImage() throws Exception {
+        final BoundingBoxPredictorClient client = fakeClient();
+        when(client.predict(any())).thenReturn(List.of());
+        final List<Integer> progress = new ArrayList<>();
+
+        final BoundingBoxPredictionResult result = new BoundingBoxPredictor(client, predictorConfig())
+                .predictAll(List.of(imageFile("a.jpg"), imageFile("b.jpg"), imageFile("c.jpg")),
+                            metaData("a.jpg", "b.jpg", "c.jpg"), Map.of(), new HashMap<>(),
+                            new BoundingBoxPredictor.Progress() {
+                            @Override
+                            public boolean isCancelled() {
+                                return !progress.isEmpty();
+                            }
+
+                            @Override
+                            public void onImagePredicted(BoundingBoxPredictionResult imageResult,
+                                                         int nrProcessedImages, int nrImages) {
+                                progress.add(nrProcessedImages);
+                            }
+                        });
+
+        assertEquals(1, result.getNrSuccessfullyProcessedItems());
+        assertEquals(List.of(1), progress);
+    }
+
+    @Test
+    void onPredictAll_WhenRequestsKeepFailing_ShouldStopAndReportIt() throws Exception {
+        final BoundingBoxPredictorClient client = fakeClient();
+        when(client.predict(any())).thenThrow(new IllegalStateException("Could not connect."));
+        final List<String> fileNames = List.of("a.jpg", "b.jpg", "c.jpg", "d.jpg", "e.jpg");
+        final List<File> imageFiles = new ArrayList<>();
+
+        for(String fileName : fileNames) {
+            imageFiles.add(imageFile(fileName));
+        }
+
+        final BoundingBoxPredictionResult result = new BoundingBoxPredictor(client, predictorConfig())
+                .predictAll(imageFiles, metaData(fileNames.toArray(String[]::new)), Map.of(), new HashMap<>(),
+                            new BoundingBoxPredictor.Progress() {
+                                @Override
+                                public boolean isCancelled() {
+                                    return false;
+                                }
+
+                                @Override
+                                public void onImagePredicted(BoundingBoxPredictionResult imageResult,
+                                                             int nrProcessedImages, int nrImages) {
+                                    // Not needed.
+                                }
+                            });
+
+        assertEquals(0, result.getNrSuccessfullyProcessedItems());
+        assertEquals(List.of("Could not connect.", "Could not connect.", "Could not connect.",
+                             "Stopped after the predictions for 3 images in a row failed."),
+                     result.getErrorTableEntries().stream().map(IOErrorInfoEntry::getErrorDescription).toList());
+    }
+
+    @Test
+    void onPrediction_ShouldSkipDuplicatesOfExistingShapesOfTheSameCategory() throws Exception {
+        final BoundingBoxPredictorClient client = fakeClient();
+        // Relative to the 200x100 image: dog (0.1, 0.1)-(0.5, 0.5), cat (0.6, 0.1)-(0.9, 0.5).
+        when(client.predict(any())).thenReturn(List.of(
+                entry("dog", 0.9, 20.0, 10.0, 100.0, 50.0),
+                entry("Cat", 0.9, 120.0, 10.0, 180.0, 50.0),
+                entry("dog", 0.9, 120.0, 10.0, 180.0, 50.0),
+                entry("bird", 0.9, 0.0, 60.0, 100.0, 100.0)));
+
+        final ObjectCategory dog = new ObjectCategory("dog", Color.RED);
+        final ObjectCategory cat = new ObjectCategory("cat", Color.BLUE);
+        final ObjectCategory bird = new ObjectCategory("bird", Color.GREEN);
+        // A polygon covering the cat prediction, nested in another shape: a duplicate (categories are matched
+        // case-insensitively when merging).
+        final BoundingShapeData container = new BoundingBoxData(bird, 0.0, 0.0, 1.0, 1.0, new ArrayList<>());
+        container.setParts(List.of(new BoundingPolygonData(cat, List.of(0.6, 0.1, 0.9, 0.1, 0.9, 0.5, 0.6, 0.5),
+                                                           new ArrayList<>())));
+        final List<BoundingShapeData> existingShapes = List.of(
+                // Nearly the same box as the first dog prediction (IoU 0.9): a duplicate.
+                new BoundingBoxData(dog, 0.12, 0.1, 0.5, 0.48, new ArrayList<>()),
+                container,
+                // Overlaps the bird prediction only partly (IoU 1/3): not a duplicate.
+                new BoundingBoxData(bird, 0.25, 0.6, 0.75, 1.0, new ArrayList<>()));
+        final Map<String, ObjectCategory> categories = new HashMap<>(Map.of("dog", dog, "cat", cat, "bird", bird));
+
+        final BoundingBoxPredictionResult result = new BoundingBoxPredictor(client, predictorConfig())
+                .predict(imageFile("image.jpg"), metaData("image.jpg").get("image.jpg"), categories,
+                         BoundingBoxPredictor.ShapeBounds.of(existingShapes));
+
+        assertEquals(2, result.getNrSkippedDuplicates());
+        assertEquals(List.of(), result.getErrorTableEntries());
+        assertEquals(List.of("dog", "bird"), result.getImageAnnotationData().imageAnnotations().iterator().next()
+                .getBoundingShapeData().stream().map(BoundingShapeData::getCategoryName).toList());
+        assertEquals(Map.of("dog", 1, "bird", 1), result.getImageAnnotationData().categoryNameToBoundingShapeCountMap());
+    }
+
+    @Test
+    void onPrediction_ShouldSkipDuplicatesAccordingToTheSettings() throws Exception {
+        final BoundingBoxPredictorClient client = fakeClient();
+        // Relative to the 200x100 image: (0.1, 0.1)-(0.5, 0.5).
+        when(client.predict(any())).thenReturn(List.of(entry("dog", 0.9, 20.0, 10.0, 100.0, 50.0)));
+        final ObjectCategory dog = new ObjectCategory("dog", Color.RED);
+        // Overlaps the prediction with an intersection over union of 2/3.
+        final List<BoundingBoxPredictor.ShapeBounds> existingShapes = BoundingBoxPredictor.ShapeBounds.of(List.of(
+                new BoundingBoxData(dog, 0.1, 0.1, 0.5, 0.3667, new ArrayList<>())));
+        final BoundingBoxPredictorConfig predictorConfig = predictorConfig();
+
+        assertEquals(0, predictDuplicates(client, predictorConfig, dog, existingShapes));
+
+        predictorConfig.setDuplicateMinIntersectionOverUnion(0.5);
+        assertEquals(1, predictDuplicates(client, predictorConfig, dog, existingShapes));
+
+        predictorConfig.setSkipDuplicates(false);
+        assertEquals(0, predictDuplicates(client, predictorConfig, dog, existingShapes));
+    }
+
+    @Test
+    void onShapeBounds_ShouldIncludeBoxesAndPolygonsButNotMasks() {
+        final ObjectCategory category = new ObjectCategory("dog", Color.RED);
+
+        assertEquals(List.of(new BoundingBoxPredictor.ShapeBounds("dog", 0.1, 0.2, 0.3, 0.4),
+                             new BoundingBoxPredictor.ShapeBounds("dog", 0.2, 0.1, 0.6, 0.5)),
+                     BoundingBoxPredictor.ShapeBounds.of(List.of(
+                             new BoundingBoxData(category, 0.1, 0.2, 0.3, 0.4, new ArrayList<>()),
+                             new BoundingPolygonData(category, List.of(0.6, 0.1, 0.2, 0.5, 0.4, 0.3),
+                                                     new ArrayList<>()),
+                             new BoundingMaskData(category, MaskBitmap.empty(10, 10), new ArrayList<>()))));
+    }
+
     private List<BoundingShapeData> predict(List<BoundingBoxPredictionEntry> predictions,
                                             ErrorCheck errorCheck) throws Exception {
         final BoundingBoxPredictorClient client = mock(BoundingBoxPredictorClient.class);
@@ -124,5 +299,41 @@ class BoundingBoxPredictorTest {
     @FunctionalInterface
     private interface ErrorCheck {
         void check(List<IOErrorInfoEntry> errors);
+    }
+
+    private static BoundingBoxPredictorClient fakeClient() {
+        final BoundingBoxPredictorClient client = mock(BoundingBoxPredictorClient.class);
+        when(client.getName()).thenReturn("FakeServe");
+        return client;
+    }
+
+    private static BoundingBoxPredictorConfig predictorConfig() {
+        final BoundingBoxPredictorConfig predictorConfig = new BoundingBoxPredictorConfig();
+        predictorConfig.setResizeImages(false);
+        return predictorConfig;
+    }
+
+    private File imageFile(String fileName) throws IOException {
+        return Files.writeString(tempDir.resolve(fileName), "image-bytes").toFile();
+    }
+
+    private Map<String, ImageMetaData> metaData(String... fileNames) {
+        final Map<String, ImageMetaData> fileNameToMetaData = new HashMap<>();
+
+        for(String fileName : fileNames) {
+            fileNameToMetaData.put(fileName, new ImageMetaData(fileName, "folder",
+                    tempDir.resolve(fileName).toUri().toString(), IMAGE_WIDTH, IMAGE_HEIGHT, 3));
+        }
+
+        return fileNameToMetaData;
+    }
+
+    private int predictDuplicates(BoundingBoxPredictorClient client, BoundingBoxPredictorConfig predictorConfig,
+                                  ObjectCategory category, List<BoundingBoxPredictor.ShapeBounds> existingShapes)
+            throws Exception {
+        return new BoundingBoxPredictor(client, predictorConfig)
+                .predict(imageFile("image.jpg"), metaData("image.jpg").get("image.jpg"),
+                         new HashMap<>(Map.of(category.getName(), category)), existingShapes)
+                .getNrSkippedDuplicates();
     }
 }

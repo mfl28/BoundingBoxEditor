@@ -24,6 +24,7 @@ import java.util.List;
 
 public class BoundingBoxPredictionResult extends IOResult {
     private final ImageAnnotationData imageAnnotationData;
+    private final int nrSkippedDuplicates;
 
     /**
      * Creates a new bounding box prediction result.
@@ -37,11 +38,34 @@ public class BoundingBoxPredictionResult extends IOResult {
     public BoundingBoxPredictionResult(int nrSuccessfullyProcessedItems,
                                        List<IOErrorInfoEntry> errorTableEntries,
                                        ImageAnnotationData imageAnnotationData) {
+        this(nrSuccessfullyProcessedItems, errorTableEntries, imageAnnotationData, 0);
+    }
+
+    /**
+     * Creates a new bounding box prediction result.
+     *
+     * @param nrSuccessfullyProcessedItems the number of items (files/annotations) that
+     *                                     were successfully processed
+     * @param errorTableEntries            a list of objects of type {@link IOErrorInfoEntry} that contain information
+     *                                     about where and which errors occurred.
+     * @param imageAnnotationData          the predicted annotation data
+     * @param nrSkippedDuplicates          the number of predicted boxes that were skipped, because the image
+     *                                     already had the same shape
+     */
+    public BoundingBoxPredictionResult(int nrSuccessfullyProcessedItems,
+                                       List<IOErrorInfoEntry> errorTableEntries,
+                                       ImageAnnotationData imageAnnotationData,
+                                       int nrSkippedDuplicates) {
         super(OperationType.BOUNDING_BOX_PREDICTION, nrSuccessfullyProcessedItems, errorTableEntries);
         this.imageAnnotationData = imageAnnotationData;
+        this.nrSkippedDuplicates = nrSkippedDuplicates;
     }
 
     public ImageAnnotationData getImageAnnotationData() {
         return imageAnnotationData;
+    }
+
+    public int getNrSkippedDuplicates() {
+        return nrSkippedDuplicates;
     }
 }

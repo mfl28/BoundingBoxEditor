@@ -305,8 +305,49 @@ $base-separator-line-color: derive($base-background-color, -15%);
     }
 }
 
+// A split button: its two parts (the label predicts the current image, the arrow opens the menu) look like
+// the other toolbar buttons.
 #predict-button {
     @include flat-button;
+    -fx-background-color: transparent;
+
+    & > .label,
+    & > .arrow-button {
+        @include flat-button;
+        -fx-background-color: transparent;
+    }
+
+    & > .label {
+        -fx-text-fill: $base-font-color;
+    }
+
+    // The default paddings are taller than a button's, which would make the toolbar taller.
+    & > .label,
+    & > .arrow-button {
+        -fx-padding: 4px 8px;
+    }
+
+    & > .arrow-button > .arrow {
+        -fx-background-color: $base-font-color;
+    }
+
+    & > .label:hover,
+    & > .arrow-button:hover {
+        -fx-background-color: $base-highlight-color;
+    }
+
+    & > .label:hover {
+        -fx-text-fill: $base-font-highlight-color;
+    }
+
+    & > .arrow-button:hover > .arrow {
+        -fx-background-color: $base-font-highlight-color;
+    }
+
+    &:armed > .label,
+    &:showing > .arrow-button {
+        -fx-background-color: $base-highlight-light-color;
+    }
 }
 
 .color-picker {
@@ -1228,24 +1269,26 @@ $base-separator-line-color: derive($base-background-color, -15%);
     -fx-background-insets: 0;
 }
 
-.dialog-pane .combo-box-popup > .list-view {
+// The list of a combo box is shown in a popup window, outside the dialog pane, so these rules can't be scoped by
+// .dialog-pane (combo boxes are only used in dialogs).
+.combo-box-popup > .list-view {
     -fx-background-color:$base-background-light-color;
     -fx-effect: none;
 }
 
-.dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet >  .list-cell {
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet >  .list-cell {
     -fx-padding: 4px 0 4px 5px;
     -fx-background-insets: 0;
     -fx-background: $base-background-light-color;
 }
     
-.dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet   
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet   
     > .list-cell:filled:hover {
     -fx-background-color: $base-highlight-color;
     -fx-text-fill: $base-font-highlight-color;
 }
 
-.dialog-pane .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet   
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet   
     > .list-cell:filled:selected {
     -fx-background-color: $base-highlight-light-color;
     -fx-text-fill: $base-font-color;

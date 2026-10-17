@@ -52,7 +52,7 @@ Annotations can be imported and exported in the [Pascal VOC](http://host.robots.
 
   Invalid files or entries are listed in an error report, and everything else is imported.
 * **Image navigation:** a side panel with thumbnails, search by file name, and a filter by annotation status (annotated or not) and by categories. Recently opened image folders are listed in the `File` menu.
-* **Predictions:** connect a [TorchServe](https://pytorch.org/serve/) or [LitServe](https://github.com/Lightning-AI/LitServe) server and use its predicted bounding boxes as annotation hints (see [Predictions](https://github.com/mfl28/BoundingBoxEditor/wiki/Predictions) in the wiki for the setup, including an example LitServe server). The settings are remembered between runs.
+* **Predictions:** connect a [TorchServe](https://pytorch.org/serve/) or [LitServe](https://github.com/Lightning-AI/LitServe) server and use its predicted bounding boxes as annotation hints, for the current image or for all images in the image list at once (the arrow next to *Predict*; images that already have annotations can be skipped, and predicted boxes that repeat an existing shape are left out, which can be adjusted in the settings) (see [Predictions](https://github.com/mfl28/BoundingBoxEditor/wiki/Predictions) in the wiki for the setup, including an example LitServe server). The settings are remembered between runs.
 * **[Keyboard shortcuts](https://github.com/mfl28/BoundingBoxEditor/wiki/Keyboard-Shortcuts)** for navigation, drawing modes, visibility and more.
 
 ## Latest Release

@@ -28,6 +28,11 @@ public class BoundingBoxPredictorConfig {
     private final IntegerProperty imageResizeHeight = new SimpleIntegerProperty(600);
     private final BooleanProperty imageResizeKeepRatio = new SimpleBooleanProperty(true);
     private final BooleanProperty mergeCategories = new SimpleBooleanProperty(true);
+    private final BooleanProperty skipDuplicates = new SimpleBooleanProperty(true);
+    // A predicted box overlapping an existing shape of the same category at least this much (intersection over
+    // union) is considered the same object. Lower values also skip neighbouring objects of the same category that
+    // overlap (e.g. people in a crowd).
+    private final DoubleProperty duplicateMinIntersectionOverUnion = new SimpleDoubleProperty(0.7);
 
     public double getMinimumScore() {
         return minimumScore.get();
@@ -87,5 +92,32 @@ public class BoundingBoxPredictorConfig {
 
     public void setMergeCategories(boolean mergeCategories) {
         this.mergeCategories.set(mergeCategories);
+    }
+
+    /**
+     * Returns whether predicted boxes that duplicate an existing shape of the same category are skipped.
+     *
+     * @return true if duplicates are skipped
+     */
+    public boolean isSkipDuplicates() {
+        return skipDuplicates.get();
+    }
+
+    public void setSkipDuplicates(boolean skipDuplicates) {
+        this.skipDuplicates.set(skipDuplicates);
+    }
+
+    /**
+     * Returns the minimal intersection over union with an existing shape of the same category from which a
+     * predicted box counts as a duplicate.
+     *
+     * @return the minimal intersection over union, between 0 and 1
+     */
+    public double getDuplicateMinIntersectionOverUnion() {
+        return duplicateMinIntersectionOverUnion.get();
+    }
+
+    public void setDuplicateMinIntersectionOverUnion(double duplicateMinIntersectionOverUnion) {
+        this.duplicateMinIntersectionOverUnion.set(duplicateMinIntersectionOverUnion);
     }
 }

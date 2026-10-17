@@ -39,12 +39,22 @@ public class BoundingBoxPredictionSuccessfulEvent extends StatusEvent {
                                              .reduce(Integer::sum)
                                              .orElse(0);
 
-        return "Successfully predicted "
-                + predictedBoundingBoxes
-                + " bounding box" + (predictedBoundingBoxes != 1 ? "es" : "") + " for "
-                + ioResult.getNrSuccessfullyProcessedItems() + " image" +
-                (ioResult.getNrSuccessfullyProcessedItems() != 1 ? "s" : "")
-                + " in "
-                + secondsFormat.format(ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec.";
+        final int nrImages = ioResult.getNrSuccessfullyProcessedItems();
+        final int nrDuplicates = ioResult.getNrSkippedDuplicates();
+        final String imagesAndTime = nrImages + " image" + (nrImages != 1 ? "s" : "") + " in "
+                + secondsFormat.format(ioResult.getTimeTakenInMilliseconds() / 1000.0) + " sec";
+
+        if(predictedBoundingBoxes == 0) {
+            return nrDuplicates == 0
+                    ? "No bounding boxes predicted for " + imagesAndTime + "."
+                    : "No new bounding boxes for " + imagesAndTime + ": "
+                    + (nrDuplicates == 1 ? "the predicted box duplicates an existing shape."
+                    : "all " + nrDuplicates + " predicted boxes duplicate existing shapes.");
+        }
+
+        return "Successfully predicted " + predictedBoundingBoxes + " bounding box"
+                + (predictedBoundingBoxes != 1 ? "es" : "") + " for " + imagesAndTime + "."
+                + (nrDuplicates != 0 ? " Skipped " + nrDuplicates + " duplicate" + (nrDuplicates != 1 ? "s" : "")
+                + " of existing shapes." : "");
     }
 }

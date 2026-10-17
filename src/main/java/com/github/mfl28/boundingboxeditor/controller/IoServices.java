@@ -75,6 +75,8 @@ class IoServices {
 
         void onBoundingBoxesPredicted(WorkerStateEvent event);
 
+        void onBoundingBoxPredictionCancelled(WorkerStateEvent event);
+
         void onModelNamesFetched(WorkerStateEvent event);
 
         void onServerConnectionChecked(WorkerStateEvent event);
@@ -100,6 +102,7 @@ class IoServices {
               IMAGE_FILES_LOADING_PROGRESS_DIALOG_HEADER, handlers::onImageMetaDataLoaded, onFailed, false);
         setUp(boundingBoxPredictorService, BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_TITLE,
               BOUNDING_BOX_PREDICTION_PROGRESS_DIALOG_HEADER, handlers::onBoundingBoxesPredicted, onFailed, true);
+        boundingBoxPredictorService.setOnCancelled(handlers::onBoundingBoxPredictionCancelled);
         setUp(modelNameFetchService, FETCHING_MODELS_PROGRESS_DIALOG_TITLE,
               FETCHING_MODELS_PROGRESS_DIALOG_HEADER, handlers::onModelNamesFetched, onFailed, true);
         setUp(serverConnectionCheckService, CONNECTION_CHECK_PROGRESS_DIALOG_TITLE,

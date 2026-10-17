@@ -33,6 +33,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,11 @@ public class BoundingBoxPredictor {
             + "and were skipped. Expected: {\"<category>\": [xmin, ymin, xmax, ymax], \"score\": <score>}.";
     private static final String OUTSIDE_PREDICTIONS_ERROR_MESSAGE =
             " predicted box(es) did not overlap the image and were skipped.";
+    // Stops predicting further images when the server keeps failing (e.g. it is not running), instead of
+    // waiting for every request to fail.
+    private static final int MAX_CONSECUTIVE_FAILURES = 3;
+    private static final String TOO_MANY_FAILURES_ERROR_MESSAGE = "Stopped after the predictions for "
+            + MAX_CONSECUTIVE_FAILURES + " images in a row failed.";
     private final BoundingBoxPredictorClient client;
     private final BoundingBoxPredictorConfig predictorConfig;
     private double predictedImageWidth;
@@ -57,6 +63,23 @@ public class BoundingBoxPredictor {
 
     public BoundingBoxPredictionResult predict(File imageFile, ImageMetaData imageMetaData,
                                                Map<String, ObjectCategory> existingCategoryNameToCategoryMap)
+            throws Exception {
+        return predict(imageFile, imageMetaData, existingCategoryNameToCategoryMap, List.of());
+    }
+
+    /**
+     * Predicts bounding boxes for an image, skipping predicted boxes that duplicate one of the image's existing
+     * shapes (if switched on in the {@link BoundingBoxPredictorConfig}).
+     *
+     * @param imageFile                         the image file
+     * @param imageMetaData                     the image's metadata
+     * @param existingCategoryNameToCategoryMap the existing categories, new categories are added to it
+     * @param existingShapes                    the bounds of the image's existing shapes
+     * @return the result
+     */
+    public BoundingBoxPredictionResult predict(File imageFile, ImageMetaData imageMetaData,
+                                               Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
+                                               List<ShapeBounds> existingShapes)
             throws Exception {
         return IOOperationTimer.time(() -> {
             final List<IOErrorInfoEntry> errorInfoEntries = new ArrayList<>();
@@ -84,7 +107,7 @@ public class BoundingBoxPredictor {
             final ImageAnnotation imageAnnotation = new ImageAnnotation(imageMetaData);
 
             final PredictionExtractor predictionExtractor = new PredictionExtractor(existingCategoryNameToCategoryMap,
-                    categoryToCount);
+                    categoryToCount, existingShapes);
 
             for(BoundingBoxPredictionEntry prediction : boundingBoxPredictions) {
                 if(Double.compare(prediction.score(), predictorConfig.getMinimumScore()) >= 0) {
@@ -96,7 +119,70 @@ public class BoundingBoxPredictor {
 
             return new BoundingBoxPredictionResult(1, errorInfoEntries,
                     new ImageAnnotationData(List.of(imageAnnotation), categoryToCount,
-                            existingCategoryNameToCategoryMap));
+                            existingCategoryNameToCategoryMap), predictionExtractor.nrDuplicates);
+        });
+    }
+
+    /**
+     * Predicts bounding boxes for several images, one after the other. Each image's result is passed to the
+     * {@link Progress} as soon as it is available, so that the predictions made so far are kept when the run is
+     * cancelled.
+     *
+     * @param imageFiles                        the image files
+     * @param fileNameToMetaData                the metadata of the image files, by file name
+     * @param fileNameToExistingShapes          the bounds of the images' existing shapes, by file name (images
+     *                                          without shapes may be missing), for skipping predicted duplicates
+     * @param existingCategoryNameToCategoryMap the existing categories, which are not changed: new categories are
+     *                                          added to a copy, and each image's result contains a copy
+     *                                          of the categories created so far
+     * @param progress                          receives the results and tells whether to stop
+     * @return the combined result of all predicted images
+     */
+    public BoundingBoxPredictionResult predictAll(List<File> imageFiles, Map<String, ImageMetaData> fileNameToMetaData,
+                                                  Map<String, List<ShapeBounds>> fileNameToExistingShapes,
+                                                  Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
+                                                  Progress progress) throws Exception {
+        return IOOperationTimer.time(() -> {
+            final Map<String, ObjectCategory> categoryNameToCategory =
+                    new HashMap<>(existingCategoryNameToCategoryMap);
+            final List<ImageAnnotation> imageAnnotations = new ArrayList<>();
+            final Map<String, Integer> categoryToCount = new HashMap<>();
+            final List<IOErrorInfoEntry> errorInfoEntries = new ArrayList<>();
+            int nrPredictedImages = 0;
+            int nrSkippedDuplicates = 0;
+            int nrConsecutiveFailures = 0;
+
+            for(int i = 0; i < imageFiles.size() && !progress.isCancelled(); ++i) {
+                final File imageFile = imageFiles.get(i);
+                final BoundingBoxPredictionResult result =
+                        predict(imageFile, fileNameToMetaData.get(imageFile.getName()), categoryNameToCategory,
+                                fileNameToExistingShapes.getOrDefault(imageFile.getName(), List.of()));
+                final ImageAnnotationData data = result.getImageAnnotationData();
+
+                imageAnnotations.addAll(data.imageAnnotations());
+                data.categoryNameToBoundingShapeCountMap().forEach((name, count) ->
+                        categoryToCount.merge(name, count, Integer::sum));
+                errorInfoEntries.addAll(result.getErrorTableEntries());
+                nrPredictedImages += result.getNrSuccessfullyProcessedItems();
+                nrSkippedDuplicates += result.getNrSkippedDuplicates();
+
+                progress.onImagePredicted(new BoundingBoxPredictionResult(result.getNrSuccessfullyProcessedItems(),
+                        result.getErrorTableEntries(), new ImageAnnotationData(data.imageAnnotations(),
+                        data.categoryNameToBoundingShapeCountMap(), new HashMap<>(categoryNameToCategory)),
+                        result.getNrSkippedDuplicates()),
+                        i + 1, imageFiles.size());
+
+                nrConsecutiveFailures = result.getNrSuccessfullyProcessedItems() == 0 ? nrConsecutiveFailures + 1 : 0;
+
+                if(nrConsecutiveFailures == MAX_CONSECUTIVE_FAILURES && i + 1 < imageFiles.size()) {
+                    errorInfoEntries.add(new IOErrorInfoEntry(client.getName(), TOO_MANY_FAILURES_ERROR_MESSAGE));
+                    break;
+                }
+            }
+
+            return new BoundingBoxPredictionResult(nrPredictedImages, errorInfoEntries,
+                    new ImageAnnotationData(imageAnnotations, categoryToCount, categoryNameToCategory),
+                    nrSkippedDuplicates);
         });
     }
 
@@ -145,18 +231,105 @@ public class BoundingBoxPredictor {
         }
     }
 
+    /**
+     * The bounds of an existing shape (relative to the image), for recognizing predicted duplicates.
+     *
+     * @param categoryName the shape's category name
+     * @param xMin         the left border
+     * @param yMin         the top border
+     * @param xMax         the right border
+     * @param yMax         the bottom border
+     */
+    public record ShapeBounds(String categoryName, double xMin, double yMin, double xMax, double yMax) {
+        /**
+         * Returns the bounds of the boxes and polygons among the provided shapes and their nested parts. Masks are
+         * not included.
+         *
+         * @param shapes the shapes
+         * @return the bounds
+         */
+        public static List<ShapeBounds> of(Collection<BoundingShapeData> shapes) {
+            return shapes.stream().flatMap(BoundingShapeData::flatten)
+                    .<ShapeBounds>mapMulti((shape, consumer) -> {
+                        switch(shape) {
+                            case BoundingBoxData box -> consumer.accept(new ShapeBounds(box.getCategoryName(),
+                                    box.getXMinRelative(), box.getYMinRelative(), box.getXMaxRelative(),
+                                    box.getYMaxRelative()));
+                            case BoundingPolygonData polygon -> polygonBounds(polygon).ifPresent(consumer);
+                            case BoundingMaskData _ -> {
+                                // Masks lie on the pixel grid; they are not compared.
+                            }
+                        }
+                    }).toList();
+        }
+
+        private static Optional<ShapeBounds> polygonBounds(BoundingPolygonData polygon) {
+            final List<Double> points = polygon.getRelativePointsInImage();
+
+            if(points.size() < 2) {
+                return Optional.empty();
+            }
+
+            double xMin = Double.MAX_VALUE;
+            double yMin = Double.MAX_VALUE;
+            double xMax = -Double.MAX_VALUE;
+            double yMax = -Double.MAX_VALUE;
+
+            for(int i = 0; i + 1 < points.size(); i += 2) {
+                xMin = Math.min(xMin, points.get(i));
+                xMax = Math.max(xMax, points.get(i));
+                yMin = Math.min(yMin, points.get(i + 1));
+                yMax = Math.max(yMax, points.get(i + 1));
+            }
+
+            return Optional.of(new ShapeBounds(polygon.getCategoryName(), xMin, yMin, xMax, yMax));
+        }
+
+        double intersectionOverUnion(double otherXMin, double otherYMin, double otherXMax, double otherYMax) {
+            final double intersection = Math.max(0, Math.min(xMax, otherXMax) - Math.max(xMin, otherXMin))
+                    * Math.max(0, Math.min(yMax, otherYMax) - Math.max(yMin, otherYMin));
+            final double union = (xMax - xMin) * (yMax - yMin)
+                    + (otherXMax - otherXMin) * (otherYMax - otherYMin) - intersection;
+            return union > 0 ? intersection / union : 0;
+        }
+    }
+
+    /**
+     * Receives the results of {@link #predictAll} while it runs.
+     */
+    public interface Progress {
+        /**
+         * Returns whether the remaining images should not be predicted.
+         *
+         * @return true to stop
+         */
+        boolean isCancelled();
+
+        /**
+         * Called after an image was predicted, also when its prediction failed.
+         *
+         * @param result            the image's result
+         * @param nrProcessedImages the number of images processed so far
+         * @param nrImages          the number of images to predict
+         */
+        void onImagePredicted(BoundingBoxPredictionResult result, int nrProcessedImages, int nrImages);
+    }
+
     private class PredictionExtractor {
         private final Map<String, ObjectCategory> existingCategoryNameToCategoryMap;
         private final Map<String, Integer> categoryNameToShapeCount;
         private CaseInsensitiveMap<String, ObjectCategory> mergedCategoryNameToCategoryMap;
         private int nrInvalidPredictions = 0;
         private int nrPredictionsOutsideImage = 0;
+        private final List<ShapeBounds> existingShapes;
+        private int nrDuplicates = 0;
 
         PredictionExtractor(
                 Map<String, ObjectCategory> existingCategoryNameToCategoryMap,
-                Map<String, Integer> categoryNameToShapeCount) {
+                Map<String, Integer> categoryNameToShapeCount, List<ShapeBounds> existingShapes) {
             this.existingCategoryNameToCategoryMap = existingCategoryNameToCategoryMap;
             this.categoryNameToShapeCount = categoryNameToShapeCount;
+            this.existingShapes = predictorConfig.isSkipDuplicates() ? existingShapes : List.of();
 
             if(predictorConfig.isMergeCategories()) {
                 mergedCategoryNameToCategoryMap = new CaseInsensitiveMap<>(existingCategoryNameToCategoryMap);
@@ -165,7 +338,8 @@ public class BoundingBoxPredictor {
 
         /**
          * Converts a prediction into a bounding box, clamped to the image. Predictions without a category and at
-         * least four coordinates, and boxes that don't overlap the image, are skipped and counted.
+         * least four coordinates, boxes that don't overlap the image and duplicates of existing shapes are skipped
+         * and counted.
          */
         Optional<BoundingBoxData> extract(BoundingBoxPredictionEntry prediction) {
             final Optional<Map.Entry<String, List<Double>>> boundingBoxCoordinatesEntry =
@@ -207,6 +381,11 @@ public class BoundingBoxPredictor {
                                         ColorUtils.createRandomColor()));
             }
 
+            if(isDuplicate(objectCategory.getName(), xMin, yMin, xMax, yMax)) {
+                ++nrDuplicates;
+                return Optional.empty();
+            }
+
             categoryNameToShapeCount.merge(objectCategory.getName(), 1, Integer::sum);
 
             return Optional.of(new BoundingBoxData(objectCategory, xMin, yMin, xMax, yMax, new ArrayList<>()));
@@ -222,6 +401,12 @@ public class BoundingBoxPredictor {
                 errorInfoEntries.add(new IOErrorInfoEntry(client.getName(),
                         nrPredictionsOutsideImage + OUTSIDE_PREDICTIONS_ERROR_MESSAGE));
             }
+        }
+
+        private boolean isDuplicate(String categoryName, double xMin, double yMin, double xMax, double yMax) {
+            return existingShapes.stream().anyMatch(shape -> shape.categoryName().equals(categoryName)
+                    && shape.intersectionOverUnion(xMin, yMin, xMax, yMax)
+                    >= predictorConfig.getDuplicateMinIntersectionOverUnion());
         }
 
         private static boolean hasCoordinates(List<Double> coordinates) {

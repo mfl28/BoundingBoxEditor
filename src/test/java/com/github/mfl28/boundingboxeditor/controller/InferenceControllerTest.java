@@ -19,6 +19,10 @@
 package com.github.mfl28.boundingboxeditor.controller;
 
 import com.github.mfl28.boundingboxeditor.model.Model;
+import com.github.mfl28.boundingboxeditor.model.data.BoundingBoxData;
+import com.github.mfl28.boundingboxeditor.model.data.ImageAnnotation;
+import com.github.mfl28.boundingboxeditor.model.data.ImageMetaData;
+import com.github.mfl28.boundingboxeditor.model.data.ObjectCategory;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClient;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.BoundingBoxPredictorClientConfig;
 import com.github.mfl28.boundingboxeditor.model.io.restclients.LitServeRestClient;
@@ -29,6 +33,8 @@ import com.github.mfl28.boundingboxeditor.model.io.results.ServerConnectionCheck
 import com.github.mfl28.boundingboxeditor.ui.DialogService;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.paint.Color;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -37,6 +43,7 @@ import org.mockito.Answers;
 import org.mockito.MockedStatic;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -167,7 +174,69 @@ class InferenceControllerTest {
         inferenceController.predictCurrentImage();
 
         verify(operations).updateModelFromView();
-        verify(operations).startPrediction(eq(image), isA(TorchServeRestClient.class));
+        verify(operations).startPrediction(eq(List.of(image)), isA(TorchServeRestClient.class));
+    }
+
+    @Test
+    void onPredictAll_WhenNoImagesListed_ShouldDoNothing() {
+        inferenceController.predictAll(List.of(), null);
+
+        verifyNoInteractions(operations, dialogService);
+    }
+
+    @Test
+    void onPredictAll_WhenNoImageHasAnnotations_ShouldPredictAllWithoutAsking() {
+        final List<File> images = List.of(new File("a.jpg"), new File("b.jpg"));
+        // An annotation without shapes doesn't count as annotated.
+        model.getImageFileNameToAnnotationMap().put("b.jpg", new ImageAnnotation(metaData("b.jpg")));
+
+        inferenceController.predictAll(images, null);
+
+        verify(operations).updateModelFromView();
+        verify(operations).startPrediction(eq(images), isA(TorchServeRestClient.class));
+        verifyNoInteractions(dialogService);
+    }
+
+    @Test
+    void onPredictAll_WhenSomeImagesHaveAnnotations_ShouldAskWhetherToIncludeThem() {
+        final List<File> images = List.of(new File("a.jpg"), new File("b.jpg"), new File("c.jpg"));
+        addAnnotatedImage("b.jpg");
+        final String content = """
+                1 of the 3 images already has annotations.
+                Add the predicted bounding boxes to them too?
+
+                Yes: predict all 3 images.
+                No: predict only the 2 images without annotations.""";
+
+        when(dialogService.displayYesNoCancelDialogAndGetResult(InferenceController.PREDICT_ALL_DIALOG_TITLE,
+                content, null)).thenReturn(ButtonBar.ButtonData.YES, ButtonBar.ButtonData.NO,
+                ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        inferenceController.predictAll(images, null);
+        verify(operations).startPrediction(eq(images), any());
+
+        inferenceController.predictAll(images, null);
+        verify(operations).startPrediction(eq(List.of(images.get(0), images.get(2))), any());
+
+        inferenceController.predictAll(images, null);
+        verify(operations, times(2)).startPrediction(any(), any());
+    }
+
+    @Test
+    void onPredictAll_WhenAllImagesHaveAnnotations_ShouldAskWhetherToPredictAnyway() {
+        final List<File> images = List.of(new File("a.jpg"), new File("b.jpg"));
+        addAnnotatedImage("a.jpg");
+        addAnnotatedImage("b.jpg");
+
+        when(dialogService.displayYesNoDialogAndGetResult(InferenceController.PREDICT_ALL_DIALOG_TITLE,
+                "All 2 images already have annotations.\nAdd the predicted bounding boxes to them anyway?", null))
+                .thenReturn(ButtonBar.ButtonData.NO, ButtonBar.ButtonData.YES);
+
+        inferenceController.predictAll(images, null);
+        verify(operations, never()).startPrediction(any(), any());
+
+        inferenceController.predictAll(images, null);
+        verify(operations).startPrediction(eq(images), any());
     }
 
     @Test
@@ -210,5 +279,16 @@ class InferenceControllerTest {
         inferenceController.onModelNamesFetched(new ModelNameFetchResult(1, List.of(), List.of("foo-model")), null);
 
         verify(operations, never()).showSelectedModel(any());
+    }
+
+    private void addAnnotatedImage(String fileName) {
+        final ImageAnnotation annotation = new ImageAnnotation(metaData(fileName));
+        annotation.getBoundingShapeData().add(new BoundingBoxData(new ObjectCategory("dog", Color.RED),
+                0.1, 0.1, 0.5, 0.5, new ArrayList<>()));
+        model.getImageFileNameToAnnotationMap().put(fileName, annotation);
+    }
+
+    private static ImageMetaData metaData(String fileName) {
+        return new ImageMetaData(fileName, "folder", "file:/folder/" + fileName, 200, 100, 3);
     }
 }

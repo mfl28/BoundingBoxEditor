@@ -78,6 +78,8 @@ public class EditorToolBarView extends ToolBar implements View {
     private static final String POLYGON_MODE_BUTTON_ICON_ID = "polygon-mode-button-icon";
     private static final String PREDICT_BUTTON_TEXT = "Predict";
     private static final String PREDICT_BUTTON_ID = "predict-button";
+    private static final String PREDICT_ALL_MENU_ITEM_TEXT = "Predict All Listed Images";
+    private static final String PREDICT_ALL_MENU_ITEM_ID = "predict-all-menu-item";
     private static final String FREEHAND_DRAWING_MODE = "Select Freehand Drawing-Mode";
     private static final String FREEHAND_DRAWING_MODE_TOOLTIP_TEXT = FREEHAND_DRAWING_MODE;
     private static final String DRAWING_MODE_TOOLBOX_ID = "drawing-mode-toolbox";
@@ -135,7 +137,9 @@ public class EditorToolBarView extends ToolBar implements View {
     private final HBox symmetryBox = new HBox();
     private final HBox boundingShapeToolBox = new HBox(hideBoundingShapesButton, showBoundingShapesButton);
     private final HBox imageSettingsToolBox = new HBox(resetSizeAndCenterImageButton, createImageSettingsButton());
-    private final Button predictButton = new Button(PREDICT_BUTTON_TEXT);
+    private final MenuItem predictAllMenuItem = new MenuItem(PREDICT_ALL_MENU_ITEM_TEXT);
+    // Clicking it predicts the current image; its menu predicts all images shown in the image list.
+    private final SplitMenuButton predictButton = new SplitMenuButton(predictAllMenuItem);
 
     /**
      * Creates a new toolbar containing controls to navigate images
@@ -168,6 +172,7 @@ public class EditorToolBarView extends ToolBar implements View {
         nextButton.setOnAction(action -> controller.onRegisterNextImageFileRequested());
         previousButton.setOnAction(action -> controller.onRegisterPreviousImageFileRequested());
         predictButton.setOnAction(action -> controller.onRegisterPerformCurrentImageBoundingBoxPredictionAction());
+        predictAllMenuItem.setOnAction(action -> controller.onRegisterPerformListedImagesBoundingBoxPredictionAction());
     }
 
     /**
@@ -212,7 +217,7 @@ public class EditorToolBarView extends ToolBar implements View {
         return maskToolBox;
     }
 
-    public Button getPredictButton() {
+    public SplitMenuButton getPredictButton() {
         return predictButton;
     }
 
@@ -415,7 +420,10 @@ public class EditorToolBarView extends ToolBar implements View {
 
         modeToggleGroup.selectToggle(rectangleModeButton);
 
+        predictButton.setText(PREDICT_BUTTON_TEXT);
         predictButton.setId(PREDICT_BUTTON_ID);
+        predictButton.setFocusTraversable(false);
+        predictAllMenuItem.setId(PREDICT_ALL_MENU_ITEM_ID);
 
         drawingModeToolBox.setId(DRAWING_MODE_TOOLBOX_ID);
     }

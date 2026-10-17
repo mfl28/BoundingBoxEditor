@@ -150,6 +150,8 @@ class PreferencesStoreTest {
         assertFalse(predictorConfig.isInferenceEnabled());
         assertEquals(0.5, predictorConfig.getMinimumScore());
         assertTrue(predictorConfig.isMergeCategories());
+        assertTrue(predictorConfig.isSkipDuplicates());
+        assertEquals(0.7, predictorConfig.getDuplicateMinIntersectionOverUnion());
         assertTrue(predictorConfig.isResizeImages());
         assertEquals(600, predictorConfig.getImageResizeWidth());
     }
@@ -170,6 +172,8 @@ class PreferencesStoreTest {
         savedPredictorConfig.setInferenceEnabled(true);
         savedPredictorConfig.setMinimumScore(0.75);
         savedPredictorConfig.setMergeCategories(false);
+        savedPredictorConfig.setSkipDuplicates(false);
+        savedPredictorConfig.setDuplicateMinIntersectionOverUnion(0.5);
         savedPredictorConfig.setResizeImages(false);
         savedPredictorConfig.setImageResizeWidth(800);
         savedPredictorConfig.setImageResizeHeight(400);
@@ -192,6 +196,8 @@ class PreferencesStoreTest {
         assertTrue(predictorConfig.isInferenceEnabled());
         assertEquals(0.75, predictorConfig.getMinimumScore());
         assertFalse(predictorConfig.isMergeCategories());
+        assertFalse(predictorConfig.isSkipDuplicates());
+        assertEquals(0.5, predictorConfig.getDuplicateMinIntersectionOverUnion());
         assertFalse(predictorConfig.isResizeImages());
         assertEquals(800, predictorConfig.getImageResizeWidth());
         assertEquals(400, predictorConfig.getImageResizeHeight());

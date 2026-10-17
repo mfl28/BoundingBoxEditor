@@ -53,6 +53,8 @@ class PreferencesStore {
     private static final String INFERENCE_PREDICTION_PATH = "inferencePredictionPath";
     private static final String INFERENCE_MINIMUM_SCORE = "inferenceMinimumScore";
     private static final String INFERENCE_MERGE_CATEGORIES = "inferenceMergeCategories";
+    private static final String INFERENCE_SKIP_DUPLICATES = "inferenceSkipDuplicates";
+    private static final String INFERENCE_DUPLICATE_MIN_IOU = "inferenceDuplicateMinIoU";
     private static final String INFERENCE_RESIZE_IMAGES = "inferenceResizeImages";
     private static final String INFERENCE_RESIZE_WIDTH = "inferenceResizeWidth";
     private static final String INFERENCE_RESIZE_HEIGHT = "inferenceResizeHeight";
@@ -147,6 +149,10 @@ class PreferencesStore {
                 predictorConfig.getMinimumScore()));
         predictorConfig.setMergeCategories(preferences.getBoolean(INFERENCE_MERGE_CATEGORIES,
                 predictorConfig.isMergeCategories()));
+        predictorConfig.setSkipDuplicates(preferences.getBoolean(INFERENCE_SKIP_DUPLICATES,
+                predictorConfig.isSkipDuplicates()));
+        predictorConfig.setDuplicateMinIntersectionOverUnion(preferences.getDouble(INFERENCE_DUPLICATE_MIN_IOU,
+                predictorConfig.getDuplicateMinIntersectionOverUnion()));
         predictorConfig.setResizeImages(preferences.getBoolean(INFERENCE_RESIZE_IMAGES,
                 predictorConfig.isResizeImages()));
         predictorConfig.setImageResizeWidth(preferences.getInt(INFERENCE_RESIZE_WIDTH,
@@ -176,6 +182,8 @@ class PreferencesStore {
         preferences.putBoolean(INFERENCE_ENABLED, predictorConfig.isInferenceEnabled());
         preferences.putDouble(INFERENCE_MINIMUM_SCORE, predictorConfig.getMinimumScore());
         preferences.putBoolean(INFERENCE_MERGE_CATEGORIES, predictorConfig.isMergeCategories());
+        preferences.putBoolean(INFERENCE_SKIP_DUPLICATES, predictorConfig.isSkipDuplicates());
+        preferences.putDouble(INFERENCE_DUPLICATE_MIN_IOU, predictorConfig.getDuplicateMinIntersectionOverUnion());
         preferences.putBoolean(INFERENCE_RESIZE_IMAGES, predictorConfig.isResizeImages());
         preferences.putInt(INFERENCE_RESIZE_WIDTH, predictorConfig.getImageResizeWidth());
         preferences.putInt(INFERENCE_RESIZE_HEIGHT, predictorConfig.getImageResizeHeight());
